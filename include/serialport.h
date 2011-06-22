@@ -20,7 +20,7 @@
 class SerialPortInfo;
 class SerialPortPrivate;
  
-class QSERIALDEVICE_EXPORT SerialPort : public QIODevice
+class SERIALPORT_EXPORT SerialPort : public QIODevice
 {
     Q_OBJECT
 
@@ -145,10 +145,10 @@ public:
     bool setFlowControl(FlowControl flow);
     FlowControl flowControl() const;
  
-    void setDataInterval(int usecs);
+    bool setDataInterval(int usecs);
     int dataInterval() const;
  
-    void setReadTimeout(int msecs);
+    bool setReadTimeout(int msecs);
     int readTimeout() const;
  
     bool dtr() const;
@@ -159,7 +159,7 @@ public:
     bool flush();
     virtual bool reset();
  
-    void setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
+    bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
     DataErrorPolicy dataErrorPolicy() const;
  
     PortError error() const;

@@ -11,143 +11,175 @@ class SerialPortPrivate
 {
 public:
     SerialPortPrivate()
-        : mInRate(SerialPort::UnknownRate)
-        , mOutRate(SerialPort::UnknownRate)
-        , mDataBits(SerialPort::UnknownDataBits)
-        , mParity(SerialPort::UnknownParity)
-        , mStopBits(SerialPort::UnknownStopBits)
-        , mFlow(SerialPort::UnknownFlowControl)
-        , mDataInterval(0)
-        , mReadTimeout(0)
-        , mPolicy(SerialPort::IgnorePolicy)
-        , mError(SerialPort::NoError)
+        : m_inRate(SerialPort::UnknownRate)
+        , m_outRate(SerialPort::UnknownRate)
+        , m_dataBits(SerialPort::UnknownDataBits)
+        , m_parity(SerialPort::UnknownParity)
+        , m_stopBits(SerialPort::UnknownStopBits)
+        , m_flow(SerialPort::UnknownFlowControl)
+        , m_dataInterval(0)
+        , m_readTimeout(0)
+        , m_policy(SerialPort::IgnorePolicy)
+        , m_portError(SerialPort::NoError)
+        , m_oldSettingsIsSaved(false)
     {}
 
-    void setPort(const QString &port) { mPort = port; }
-    const QString& port() const { return mPort; }
+    SerialPortPrivate(const QString &port)
+        : m_inRate(SerialPort::UnknownRate)
+        , m_outRate(SerialPort::UnknownRate)
+        , m_dataBits(SerialPort::UnknownDataBits)
+        , m_parity(SerialPort::UnknownParity)
+        , m_stopBits(SerialPort::UnknownStopBits)
+        , m_flow(SerialPort::UnknownFlowControl)
+        , m_dataInterval(0)
+        , m_readTimeout(0)
+        , m_policy(SerialPort::IgnorePolicy)
+        , m_portError(SerialPort::NoError)
+        , m_oldSettingsIsSaved(false)
+    {
 
-    virtual bool open(QIODevice::OpenMode mode) = 0;
-    virtual void close() = 0;
+    }
+
+    void setPort(const QString &port) { m_systemLocation = nativeToSystemLocation(port); }
+    QString port() const { return nativeFromSystemLocation(m_systemLocation); }
+
+    virtual bool open(QIODevice::OpenMode mode) {}
+    virtual void close() {}
 
     bool setRate(qint32 rate, SerialPort::Directions dir) {
         if (setNativeRate(rate, dir)) {
-            mRate = rate;
+            if (SerialPort::Input & dir)
+                m_inRate = rate;
+            if (SerialPort::Output & dir)
+                m_outRate = rate;
             return true;
         }
         return false;
     }
     qint32 rate(SerialPort::Directions dir) const {
-        if (dir & Input)
-            return (dir & Output) ? ((mInRate + mOutRate)/2) : mInRate;
-        return mOutRate;
+        if (SerialPort::AllDirections == dir)
+            return (m_inRate == m_outRate) ? (m_inRate) : SerialPort::UnknownRate;
+        return (SerialPort::Input & dir) ? (m_inRate) : (m_outRate);
     }
+
     bool setDataBits(SerialPort::DataBits dataBits) {
         if (setNativeDataBits(dataBits)) {
-            mDataBits = dataBits;
+            m_dataBits = dataBits;
             return true;
         }
         return false;
     }
-    SerialPort::DataBits dataBits() const { return mDataBits; }
+    SerialPort::DataBits dataBits() const { return m_dataBits; }
 
     bool setParity(SerialPort::Parity parity) {
         if (setNativeParity(parity)) {
-            mParity = parity;
+            m_parity = parity;
             return true;
         }
         return false;
     }
-    SerialPort::Parity parity() const { return mParity; }
+    SerialPort::Parity parity() const { return m_parity; }
 
     bool setStopBits(SerialPort::StopBits stopBits) {
         if (setNativeStopBits(stopBits)) {
-            mStopBits = stopBits;
+            m_stopBits = stopBits;
             return true;
         }
         return false;
     }
-    SerialPort::StopBits stopBits() const { return mStopBits; }
+    SerialPort::StopBits stopBits() const { return m_stopBits; }
 
     bool setFlowControl(SerialPort::FlowControl flow) {
         if (setNativeFlowControl(flow)) {
-            mFlow = flow;
+            m_flow = flow;
             return true;
         }
         return false;
     }
-    SerialPort::FlowControl flowControl() const { return mFlow; }
+    SerialPort::FlowControl flowControl() const { return m_flow; }
 
-    void setDataInterval(int usecs) {
+    bool setDataInterval(int usecs) {
         if (setNativeDataInterval(usecs)) {
-            mDataInterval = usecs;
+            m_dataInterval = usecs;
             return true;
         }
         return false;
     }
-    int dataInterval() const { return mDataInterval; }
+    int dataInterval() const { return m_dataInterval; }
 
-    void setReadTimeout(int msecs) {
+    bool setReadTimeout(int msecs) {
         if (setNativeReadTimeout(msecs)) {
-            mReadTimeout = msecs;
+            m_readTimeout = msecs;
             return true;
         }
         return false;
     }
-    int readTimeout() const { return mReadTimeout; }
+    int readTimeout() const { return m_readTimeout; }
 
-    virtual bool dtr() const = 0;
-    virtual bool rts() const = 0;
+    virtual bool dtr() const {}
+    virtual bool rts() const {}
 
-    virtual SerialPort::Lines lines() const = 0;
+    virtual SerialPort::Lines lines() const {}
 
-    virtual bool flush() = 0;
-    virtual bool reset() = 0;
+    virtual bool flush() {}
+    virtual bool reset() {}
 
-    void setDataErrorPolicy(SerialPort::DataErrorPolicy policy) {
+    bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy) {
         if (setNativeDataErrorPolicy(policy)) {
-            mPolicy = policy;
+            m_policy = policy;
             return true;
         }
         return false;
     }
-    SerialPort::DataErrorPolicy dataErrorPolicy() const { return mPolicy; }
+    SerialPort::DataErrorPolicy dataErrorPolicy() const { return m_policy; }
 
-    SerialPort::PortError error() const { return mError; }
-    void unsetError() { mError = SerialPort::NoError; }
+    SerialPort::PortError error() const { return m_portError; }
+    void unsetError() { m_portError = SerialPort::NoError; }
 
-    void setError(SerialPort::PortError error) { mError = error; }
+    void setError(SerialPort::PortError error) { m_portError = error; }
 
-    virtual qint64 bytesAvailable() const = 0;
+    virtual qint64 bytesAvailable() const {}
 
-    virtual qint64 read(char *data, qint64 len) = 0;
-    virtual qint64 write(const char *data, qint64 len) = 0;
-    virtual bool waitForReadyRead(int msec) = 0;
-    virtual bool waitForBytesWritten(int msec) = 0;
+    virtual qint64 read(char *data, qint64 len) {}
+    virtual qint64 write(const char *data, qint64 len) {}
+    virtual bool waitForReadOrWrite(int timeout,
+                             bool checkRead, bool checkWrite,
+                             bool *selectForRead, bool *selectForWrite) {}
+
 protected:
     //General (for any OS) private parameters
-    QString mPort;
-    qint32 mInRate;
-    qint32 mOutRate;
-    SerialPort::DataBits mDataBits;
-    SerialPort::Parity mParity;
-    SerialPort::StopBits mStopBits;
-    SerialPort::FlowControl mFlow;
-    int mDataInterval;
-    int mReadTimeout;
-    SerialPort::DataErrorPolicy mPolicy;
-    SerialPort::PortError mError;
+    QString m_systemLocation;
+    qint32 m_inRate;
+    qint32 m_outRate;
+    SerialPort::DataBits m_dataBits;
+    SerialPort::Parity m_parity;
+    SerialPort::StopBits m_stopBits;
+    SerialPort::FlowControl m_flow;
+    int m_dataInterval;
+    int m_readTimeout;
+    SerialPort::DataErrorPolicy m_policy;
+    SerialPort::PortError m_portError;
 
-    virtual bool setNativeRate(int rate, SerialPort::Directions dir) = 0;
-    virtual bool setNativeDataBits(SerialPort::DataBits dataBits) = 0;
-    virtual bool setNativeParity(SerialPort::Parity parity) = 0;
-    virtual bool setNativeStopBits(SerialPort::StopBits stopBits) = 0;
-    virtual bool setNativeFlowControl(SerialPort::FlowControl flowControl) = 0;
-    virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy) = 0;
+    bool m_oldSettingsIsSaved;
+
+    virtual QString nativeToSystemLocation(const QString &port) const {}
+    virtual QString nativeFromSystemLocation(const QString &location) const {}
+
+    virtual bool setNativeRate(qint32 rate, SerialPort::Directions dir) {}
+    virtual bool setNativeDataBits(SerialPort::DataBits dataBits) {}
+    virtual bool setNativeParity(SerialPort::Parity parity) {}
+    virtual bool setNativeStopBits(SerialPort::StopBits stopBits) {}
+    virtual bool setNativeFlowControl(SerialPort::FlowControl flowControl) {}
+
+    virtual bool setNativeDataInterval(int usecs) {}
+    virtual bool setNativeReadTimeout(int msecs) {}
+
+    virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy) {}
 
     virtual void detectDefaultSettings() {}
 
-    virtual bool saveOldsettings() = 0;
-    virtual bool restoreOldsettings() = 0;
+    virtual bool saveOldsettings() {}
+    virtual bool restoreOldsettings() {}
 };
 
 #endif // SERIALPORT_P_H

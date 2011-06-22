@@ -32,15 +32,23 @@ public:
     virtual qint64 read(char *data, qint64 len);
     virtual qint64 write(const char *data, qint64 len);
 
-    virtual bool waitForReadyRead(int msec);
-    virtual bool waitForBytesWritten(int msec);
+    virtual bool waitForReadOrWrite(int timeout,
+                             bool checkRead, bool checkWrite,
+                             bool *selectForRead, bool *selectForWrite);
 
 protected:
+    virtual QString nativeToSystemLocation(const QString &port) const;
+    virtual QString nativeFromSystemLocation(const QString &location) const;
+
     virtual bool setNativeRate(int rate, SerialPort::Directions dir);
     virtual bool setNativeDataBits(SerialPort::DataBits dataBits);
     virtual bool setNativeParity(SerialPort::Parity parity);
     virtual bool setNativeStopBits(SerialPort::StopBits stopBits);
     virtual bool setNativeFlowControl(SerialPort::FlowControl flowControl);
+
+    virtual bool setNativeDataInterval(int usecs);
+    virtual bool setNativeReadTimeout(int msecs);
+
     virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy);
 
     virtual void detectDefaultSettings();
@@ -55,14 +63,16 @@ private:
         WriteTotalTimeoutConstant
     };
 
-    DCB mDCB, mOldDCB;
-    COMMTIMEOUTS mCommTimeouts, mOldCommTimeouts;
-    OVERLAPPED mOvRead;
-    OVERLAPPED mOvWrite;
-    OVERLAPPED mOvSelect;
+    DCB m_currDCB, m_oldDCB;
+    COMMTIMEOUTS m_currCommTimeouts, m_oldCommTimeouts;
+    OVERLAPPED m_ovRead;
+    OVERLAPPED m_ovWrite;
+    OVERLAPPED m_ovSelect;
+
+    HANDLE m_descriptor;
 
     bool createEvents(bool rx, bool tx);
-    bool closeEvents() const;
+    void closeEvents() const;
     void recalcTotalReadTimeoutConstant();
     void prepareCommTimeouts(CommTimeouts cto, DWORD msecs);
     bool updateDcb();

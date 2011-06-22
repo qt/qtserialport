@@ -4,9 +4,13 @@ QT -= gui
 OBJECTS_DIR = build/obj
 MOC_DIR = build/moc
 
-win32:DEFINES += QSERIALDEVICE_SHARED
+win32:DEFINES += SERIALPORT_BUILD SERIALPORT_SHARED
 
 INCLUDEPATH += src include
+
+HEADERS += \
+    include/serialport.h \
+    include/serialportinfo.h
 
 include(src/src.pri)
 

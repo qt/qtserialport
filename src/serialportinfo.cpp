@@ -12,8 +12,8 @@ SerialPortInfo::SerialPortInfo()
     : d_ptr(0)
 {}
 
-SerialPortInfo(const QString &port)
-    : d_ptr(new SerialPortInfoPrivate(port)
+SerialPortInfo::SerialPortInfo(const QString &port)
+    : d_ptr(new SerialPortInfoPrivate(port))
 {}
 
 SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
@@ -21,7 +21,7 @@ SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
 {}
 
 SerialPortInfo::SerialPortInfo(const SerialPort &port)
-    : d_ptr(new SerialPortInfoPrivate(port.portName())
+    : d_ptr(new SerialPortInfoPrivate(port.portName()))
 {}
 
 SerialPortInfo::~SerialPortInfo()
@@ -78,10 +78,11 @@ bool SerialPortInfo::isBusy() const
 bool SerialPortInfo::isValid() const
 {
     Q_D(const SerialPortInfo);
+    /*
     if (d != 0)
         return SerialPort(d->portName).open();
-
     return false;
+    */
 }
 
 QList<int> SerialPortInfo::standardRates() const
@@ -89,7 +90,7 @@ QList<int> SerialPortInfo::standardRates() const
     QList<int> ret;
     Q_D(const SerialPortInfo);
     if (d != 0) {
-
+        //
     }
     return ret;
 }

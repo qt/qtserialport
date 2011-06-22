@@ -113,7 +113,7 @@ SerialPort::FlowControl SerialPort::flowControl() const
 
 }
 
-void SerialPort::setDataInterval(int usecs)
+bool SerialPort::setDataInterval(int usecs)
 {
 
 }
@@ -123,7 +123,7 @@ int SerialPort::dataInterval() const
 
 }
 
-void SerialPort::setReadTimeout(int msecs)
+bool SerialPort::setReadTimeout(int msecs)
 {
 
 }
@@ -158,7 +158,7 @@ bool SerialPort::reset()
 
 }
 
-void SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
+bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
 
 }
