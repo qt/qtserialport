@@ -3,19 +3,19 @@
 */
  
 #ifndef SERIALPORT_H
-# define SERIALPORT_H
+#define SERIALPORT_H
 
-# include <QtCore/QIODevice>
+#include <QtCore/QIODevice>
 
-# ifdef SERIALPORT_SHARED
+#ifdef SERIALPORT_SHARED
 #  ifdef SERIALPORT_BUILD
-#   define SERIALPORT_EXPORT Q_DECL_EXPORT
+#    define SERIALPORT_EXPORT Q_DECL_EXPORT
 #  else
-#   define SERIALPORT_EXPORT Q_DECL_IMPORT
+#    define SERIALPORT_EXPORT Q_DECL_IMPORT
 #  endif
-# else
+#else
 #  define SERIALPORT_EXPORT
-# endif
+#endif
  
 class SerialPortInfo;
 class SerialPortPrivate;

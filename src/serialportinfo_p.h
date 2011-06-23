@@ -1,24 +1,29 @@
 /*
+    License...
 */
 
 #ifndef SERIALPORTINFO_P_H
 #define SERIALPORTINFO_P_H
 
-#include <QtCore/QString>
 #include "serialportinfo.h"
 
+#include <QtCore/QString>
 
 class SerialPortInfoPrivate
 {
+    Q_DECLARE_PUBLIC(SerialPortInfo)
 public:
-    SerialPortInfoPrivate(const QString &port);
+    SerialPortInfoPrivate();
+    SerialPortInfoPrivate(const QString &name);
+    ~SerialPortInfoPrivate();
 
-    QString portName;
-    QString device;
-    QString description;
-    QString manufacturer;
+private:
+    QString m_portName;
+    QString m_device;
+    QString m_description;
+    QString m_manufacturer;
 
-    bool isBusy() const;
+    SerialPortInfo *q_ptr;
 };
 
 #endif // SERIALPORTINFO_P_H

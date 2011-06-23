@@ -2,137 +2,179 @@
     License...
 */
 
-#include "serialport_p_unix.h"
+#include "serialport_p.h"
 
+#include <errno.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+
+#if defined (Q_OS_LINUX)
+  #include <linux/serial.h>
+#endif
+
+#include <QtCore/QRegExp>
 
 /* Public */
 
-SerialPortPrivateUnix::SerialPortPrivateUnix()
-    : SerialPortPrivate()
-{
-}
-
-SerialPortPrivateUnix::~SerialPortPrivateUnix()
-{
-}
-
-bool SerialPortPrivateUnix::open(QIODevice::OpenMode mode)
+SerialPortPrivate::SerialPortPrivate()
+    : AbstractSerialPortPrivate()
+    , m_descriptor(-1)
 {
 
 }
 
-void SerialPortPrivateUnix::close()
+SerialPortPrivate::SerialPortPrivate(const QString &port)
+    : AbstractSerialPortPrivate(port)
+    , m_descriptor(-1)
 {
 
 }
 
-bool SerialPortPrivateUnix::dtr() const
+bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
 
 }
 
-bool SerialPortPrivateUnix::rts() const
+void SerialPortPrivate::close()
+{
+}
+
+SerialPort::Lines SerialPortPrivate::lines() const
 {
 
 }
 
-SerialPort::Lines SerialPortPrivateUnix::lines() const
+bool SerialPortPrivate::flush()
 {
 
 }
 
-bool SerialPortPrivateUnix::flush()
+bool SerialPortPrivate::reset()
 {
 
 }
 
-bool SerialPortPrivateUnix::reset()
+qint64 SerialPortPrivate::bytesAvailable() const
 {
 
 }
 
-qint64 SerialPortPrivateUnix::bytesAvailable() const
+qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
 
 }
 
-qint64 SerialPortPrivateUnix::read(char *data, qint64 len)
+qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
 
 }
 
-qint64 SerialPortPrivateUnix::write(const char *data, qint64 len)
+bool SerialPortPrivate::waitForReadOrWrite(int timeout,
+                                           bool checkRead, bool checkWrite,
+                                           bool *selectForRead, bool *selectForWrite)
 {
 
 }
 
-bool SerialPortPrivateUnix::waitForReadyRead(int msec)
+/* Protected */
+
+static const QString defaultPathPrefix = "/dev/";
+
+QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
+{
+    QString result;
+    if (!port.contains(defaultPathPrefix))
+        result.append(defaultPathPrefix);
+    result.append(port);
+    return result;
+}
+
+QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) const
+{
+    QString result = location;
+    if (result.contains(defaultPathPrefix))
+        result.remove(defaultPathPrefix);
+    return result;
+}
+
+bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
 
 }
 
-bool SerialPortPrivateUnix::waitForBytesWritten(int msec)
+bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 {
 
 }
 
-// protected
-
-bool SerialPortPrivateUnix::setNativeRate(qint32 rate, SerialPort::Directions dir)
+bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 {
 
 }
 
-bool SerialPortPrivateUnix::setNativeDataBits(SerialPort::DataBits dataBits)
+bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 {
 
 }
 
-bool SerialPortPrivateUnix::setNativeParity(SerialPort::Parity parity)
+bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 {
 
 }
 
-bool SerialPortPrivateUnix::setNativeStopBits(SerialPort::StopBits stopBits)
+bool SerialPortPrivate::setNativeDataInterval(int usecs)
 {
 
 }
 
-bool SerialPortPrivateUnix::setNativeFlowControl(SerialPort::FlowControl flow)
+bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
 
 }
 
-void SerialPortPrivateUnix::setNativeDataInterval(int usecs)
+bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
 
 }
 
-void SerialPortPrivateUnix::setNativeReadTimeout(int msecs)
+void SerialPortPrivate::detectDefaultSettings()
 {
 
 }
 
-void SerialPortPrivateUnix::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+// Used only in method SerialPortPrivate::open(SerialPort::OpenMode mode).
+bool SerialPortPrivate::saveOldsettings()
 {
 
 }
 
-void SerialPortPrivateUnix::detectDefaultSettings()
-{
-
-}
-
-bool SerialPortPrivateUnix::saveOldsettings()
-{
-
-}
-
-bool SerialPortPrivateUnix::restoreOldsettings()
+// Used only in method SerialPortPrivate::close().
+bool SerialPortPrivate::restoreOldsettings()
 {
 
 }
 
 /* Private */
+
+void SerialPortPrivate::prepareTimeouts(int msecs)
+{
+
+}
+
+bool SerialPortPrivate::updateTermious()
+{
+
+}
+
+bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t speed)
+{
+
+}
+
+bool SerialPortPrivate::setCustomRate(qint32 speed)
+{
+
+}
+
 
 
