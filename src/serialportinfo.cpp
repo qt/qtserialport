@@ -6,100 +6,83 @@
 #include "serialportinfo_p.h"
 #include "serialport.h"
 
-static SerialPortInfoPrivate nullSerialPortInfoPrivate;
-
-class SerialInfoPrivateDeleter
-{
-public:
-    static inline void cleanup(SerialPortInfoPrivate *d)
-    {
-        if (d != &nullSerialPortInfoPrivate)
-            delete d;
-    }
-};
-
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
 SerialPortInfo::SerialPortInfo()
-    : d_ptr(&nullSerialPortInfoPrivate)
+    : d_ptr(0)
 {
 }
 
 SerialPortInfo::SerialPortInfo(const QString &name)
     : d_ptr(new SerialPortInfoPrivate(name))
 {
-    d_ptr->q_ptr = this;
 }
 
 SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
-    : d_ptr(&nullSerialPortInfoPrivate)
+    : d_ptr(other.d_ptr ? new SerialPortInfoPrivate(*other.d_ptr) : 0)
 {
-    *this = other;
 }
 
 SerialPortInfo::SerialPortInfo(const SerialPort &port)
-    : d_ptr(&nullSerialPortInfoPrivate)
+    : d_ptr(0)
 {
-    QList<SerialPortInfo> list = availablePorts();
-    int size = list.size();
-    for (int i = 0; i < size; ++i) {
-        if (port.portName() == list[i].portName()) {
-            *this = list[i];
-            return;
+    foreach(const SerialPortInfo &info, availablePorts()) {
+        if (port.portName() == info.portName()) {
+            *this = info;
+            break;
         }
     }
-
-    *this = SerialPortInfo();
 }
 
 SerialPortInfo::~SerialPortInfo()
 {
 }
 
+void SerialPortInfo::swap(SerialPortInfo &other)
+{
+    d_ptr.swap(other.d_ptr);
+}
+
 SerialPortInfo& SerialPortInfo::operator=(const SerialPortInfo &other)
 {
-    Q_ASSERT(d_ptr);
-    d_ptr.reset(new SerialPortInfoPrivate(*other.d_ptr));
-    d_ptr->q_ptr = this;
+    SerialPortInfo(other).swap(*this);
     return *this;
 }
 
 QString SerialPortInfo::portName() const
 {
     Q_D(const SerialPortInfo);
-    return d->m_portName;
+    return !d ? QString() : d->portName;
 }
 
 QString SerialPortInfo::systemLocation() const
 {
     Q_D(const SerialPortInfo);
-    return d->m_device;
+    return !d ? QString() : d->device;
 }
 
 QString SerialPortInfo::description() const
 {
     Q_D(const SerialPortInfo);
-    return d->m_description;
+    return !d ? QString() : d->description;
 }
 
 QString SerialPortInfo::manufacturer() const
 {
     Q_D(const SerialPortInfo);
-    return d->m_manufacturer;
+    return !d ? QString() : d->manufacturer;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
 SerialPortInfoPrivate::SerialPortInfoPrivate()
-    : q_ptr(0)
 {
 }
 
 SerialPortInfoPrivate::SerialPortInfoPrivate(const QString &name)
-    : m_portName(name)
-    , q_ptr(0)
+    : portName(name)
 {
 }
 

@@ -15,6 +15,7 @@ public:
     QString manufacturer;
 
     virtual bool isBusy() const = 0;
+    virtual bool isValid() const = 0;
 };
 
 #endif // SERIALPORTINFO_P_H

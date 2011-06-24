@@ -9,21 +9,24 @@
 
 #include <QtCore/QString>
 
-class SerialPortInfoPrivate
+struct SerialPortInfoPrivate
 {
-    Q_DECLARE_PUBLIC(SerialPortInfo)
 public:
     SerialPortInfoPrivate();
     SerialPortInfoPrivate(const QString &name);
     ~SerialPortInfoPrivate();
 
-private:
-    QString m_portName;
-    QString m_device;
-    QString m_description;
-    QString m_manufacturer;
+    QString portName;
+    QString device;
+    QString description;
+    QString manufacturer;
+};
 
-    SerialPortInfo *q_ptr;
+struct SerialInfoPrivateDeleter
+{
+    static void cleanup(SerialPortInfoPrivate *p) {
+        delete p;
+    }
 };
 
 #endif // SERIALPORTINFO_P_H

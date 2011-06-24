@@ -32,14 +32,14 @@ public:
     ~SerialPortInfo();
 
     SerialPortInfo& operator=(const SerialPortInfo &other);
-    //void swap(SerialPortInfo &other);
+    void swap(SerialPortInfo &other);
 
     QString portName() const;
     QString systemLocation() const;
     QString description() const;
     QString manufacturer() const;
 
-    //bool isNull() const;
+    bool isNull() const;
     bool isBusy() const;
     bool isValid() const;
 
@@ -50,5 +50,8 @@ private:
     SerialPortInfo(const QString &name);
     QScopedPointer<SerialPortInfoPrivate, SerialInfoPrivateDeleter> d_ptr;
 };
+
+inline bool SerialPortInfo::isNull() const
+{ return !d_ptr; }
 
 #endif // SERIALPORTINFO_H

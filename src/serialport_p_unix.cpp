@@ -23,13 +23,6 @@ SerialPortPrivate::SerialPortPrivate()
 
 }
 
-SerialPortPrivate::SerialPortPrivate(const QString &port)
-    : AbstractSerialPortPrivate(port)
-    , m_descriptor(-1)
-{
-
-}
-
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
 
