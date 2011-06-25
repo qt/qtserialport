@@ -10,7 +10,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 SerialPortInfo::SerialPortInfo()
-    : d_ptr(0)
+    : d_ptr(new SerialPortInfoPrivate)
 {
 }
 
@@ -25,7 +25,7 @@ SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
 }
 
 SerialPortInfo::SerialPortInfo(const SerialPort &port)
-    : d_ptr(0)
+    : d_ptr(new SerialPortInfoPrivate)
 {
     foreach(const SerialPortInfo &info, availablePorts()) {
         if (port.portName() == info.portName()) {
