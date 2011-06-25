@@ -4,32 +4,32 @@ HEADERS += \
     ../include/serialportinfo.h
 
 HEADERS += \
-    abstractserialport_p.h \
-    serialport_p.h \
-    serialportinfo_p.h
+    $$PWD/abstractserialport_p.h \
+    $$PWD/serialport_p.h \
+    $$PWD/serialportinfo_p.h
 
 
 SOURCES += \
-    serialport.cpp \
-    serialportinfo.cpp
+    $$PWD/serialport.cpp \
+    $$PWD/serialportinfo.cpp
     
 win32 {
     SOURCES += \
-        serialport_p_win.cpp \
-        serialportinfo_win.cpp
+        $$PWD/serialport_p_win.cpp \
+        $$PWD/serialportinfo_win.cpp
 
     LIBS += -lsetupapi -luuid -ladvapi32
 }
 
 unix { 
     SOURCES += \
-        serialport_p_unix.cpp
+        $$PWD/serialport_p_unix.cpp
 
     macx {
-        SOURCES += serialportinfo_mac.cpp
+        SOURCES += $$PWD/serialportinfo_mac.cpp
         LIBS += -framework IOKit -framework CoreFoundation
     } else {
-        SOURCES += serialportinfo_unix.cpp
+        SOURCES += $$PWD/serialportinfo_unix.cpp
         #LIBS += -ludev
     }
 }
