@@ -325,29 +325,10 @@ bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
 
 bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 {
-    if (SerialPort::UnknownDataBits == dataBits)
+    if ((dataBits == SerialPort::UnknownDataBits)
+            || isRestrictedAreaSettings(dataBits, m_stopBits))
         return false;
 
-    if ((SerialPort::Data5 == dataBits)
-            && (SerialPort::TwoStop == m_stopBits)) {
-        //
-        return false;
-    }
-    if ((SerialPort::Data6 == dataBits)
-            && (SerialPort::OneAndHalfStop == m_stopBits)) {
-        //
-        return false;
-    }
-    if ((SerialPort::Data7 == dataBits)
-            && (SerialPort::OneAndHalfStop == m_stopBits)) {
-        //
-        return false;
-    }
-    if ((SerialPort::Data8 == dataBits)
-            && (SerialPort::OneAndHalfStop == m_stopBits)) {
-        //
-        return false;
-    }
     m_currDCB.ByteSize = BYTE(dataBits);
     return (updateDcb());
 }
@@ -375,25 +356,9 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 
 bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 {
-    if (SerialPort::UnknownStopBits == stopBits)
+    if ((SerialPort::UnknownStopBits == stopBits)
+            || isRestrictedAreaSettings(m_dataBits, stopBits))
         return false;
-
-    if ((SerialPort::Data5 == m_dataBits)
-            && (SerialPort::TwoStop == m_stopBits)) {
-        return false;
-    }
-    if ((SerialPort::Data6 == m_dataBits)
-            && (SerialPort::OneAndHalfStop == m_stopBits)) {
-        return false;
-    }
-    if ((SerialPort::Data7 == m_dataBits)
-            && (SerialPort::OneAndHalfStop == m_stopBits)) {
-        return false;
-    }
-    if ((SerialPort::Data8 == m_dataBits)
-            && (SerialPort::OneAndHalfStop == m_stopBits)) {
-        return false;
-    }
 
     switch (stopBits) {
     case SerialPort::OneStop: m_currDCB.StopBits = ONESTOPBIT; break;
@@ -530,5 +495,12 @@ inline bool SerialPortPrivate::updateCommTimeouts()
     return (0 != ::SetCommTimeouts(m_descriptor, &m_currCommTimeouts));
 }
 
-
+bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                                 SerialPort::StopBits stopBits) const
+{
+    return (((dataBits == SerialPort::Data5) && (stopBits == SerialPort::TwoStop))
+            || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
+            || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
+            || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
+}
 

@@ -78,6 +78,9 @@ private:
     void prepareCommTimeouts(CommTimeouts cto, DWORD msecs);
     bool updateDcb();
     bool updateCommTimeouts();
+
+    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                  SerialPort::StopBits stopBits) const;
 #else
     struct termios m_currTermios;
     struct termios m_oldTermios;
