@@ -155,22 +155,26 @@ SerialPort::Lines SerialPortPrivate::lines() const
 
 bool SerialPortPrivate::flush()
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPortPrivate::reset()
 {
-
+    // Impl me
+    return false;
 }
 
 qint64 SerialPortPrivate::bytesAvailable() const
 {
-
+    // Impl me
+    return -1;
 }
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
-
+    // Impl me
+    return -1;
 }
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
@@ -431,17 +435,20 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 
 bool SerialPortPrivate::setNativeDataInterval(int usecs)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
-
+    // Impl me
+    return false;
 }
 
 void SerialPortPrivate::detectDefaultSettings()

@@ -89,6 +89,8 @@ void SerialPort::close()
 
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
+    // Impl me
+    return false;
 }
 
 qint32 SerialPort::rate(Directions dir) const
@@ -99,7 +101,8 @@ qint32 SerialPort::rate(Directions dir) const
 
 bool SerialPort::setDataBits(DataBits dataBits)
 {
-
+    // Impl me
+    return false;
 }
 
 SerialPort::DataBits SerialPort::dataBits() const
@@ -110,7 +113,8 @@ SerialPort::DataBits SerialPort::dataBits() const
 
 bool SerialPort::setParity(Parity parity)
 {
-
+    // Impl me
+    return false;
 }
 
 SerialPort::Parity SerialPort::parity() const
@@ -121,7 +125,8 @@ SerialPort::Parity SerialPort::parity() const
 
 bool SerialPort::setStopBits(StopBits stopBits)
 {
-
+    // Impl me
+    return false;
 }
 
 SerialPort::StopBits SerialPort::stopBits() const
@@ -132,7 +137,8 @@ SerialPort::StopBits SerialPort::stopBits() const
 
 bool SerialPort::setFlowControl(FlowControl flow)
 {
-
+    // Impl me
+    return false;
 }
 
 SerialPort::FlowControl SerialPort::flowControl() const
@@ -143,7 +149,8 @@ SerialPort::FlowControl SerialPort::flowControl() const
 
 bool SerialPort::setDataInterval(int usecs)
 {
-
+    // Impl me
+    return false;
 }
 
 int SerialPort::dataInterval() const
@@ -154,7 +161,8 @@ int SerialPort::dataInterval() const
 
 bool SerialPort::setReadTimeout(int msecs)
 {
-
+    // Impl me
+    return false;
 }
 
 int SerialPort::readTimeout() const
@@ -183,17 +191,20 @@ SerialPort::Lines SerialPort::lines() const
 
 bool SerialPort::flush()
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::reset()
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
-
+    // Impl me
+    return false;
 }
 
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
@@ -221,52 +232,62 @@ bool SerialPort::isSequential() const
 
 qint64 SerialPort::bytesAvailable() const
 {
-
+    // Impl me
+    return -1;
 }
 
 qint64 SerialPort::bytesToWrite() const
 {
-
+    // Impl me
+    return -1;
 }
 
 bool SerialPort::waitForReadyRead(int msecs)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::waitForBytesWritten(int msecs)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::setDtr(bool set)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::setRts(bool set)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::sendBreak(int duration)
 {
-
+    // Impl me
+    return false;
 }
 
 bool SerialPort::setBreak(bool set)
 {
-
+    // Impl me
+    return false;
 }
 
 qint64 SerialPort::readData(char *data, qint64 maxSize)
 {
-
+    // Impl me
+    return -1;
 }
 
 qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 {
-
+    // Impl me
+    return -1;
 }
 
 
