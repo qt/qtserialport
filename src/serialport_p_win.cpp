@@ -15,11 +15,11 @@
 #endif //Q_CC_MSVC
 
 #ifndef SERIAL_DTR_STATE
-#  define SERIAL_DTR_STATE                  0x00000001
+#  define SERIAL_DTR_STATE  0x00000001
 #endif
 
 #ifndef SERIAL_RTS_STATE
-#  define SERIAL_RTS_STATE                  0x00000002
+#  define SERIAL_RTS_STATE  0x00000002
 #endif
 
 #endif
@@ -50,25 +50,22 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     bool rxflag = false;
     bool txflag = false;
 
-    if (QIODevice::ReadOnly & mode) {
+    if (mode & QIODevice::ReadOnly) {
         access |= GENERIC_READ; //sharing = FILE_SHARE_READ;
         rxflag = true;
     }
-    if (QIODevice::WriteOnly & mode) {
+    if (mode & QIODevice::WriteOnly) {
         access |= GENERIC_WRITE; //sharing = FILE_SHARE_WRITE;
         txflag = true;
     }
 
-    QByteArray nativeFilePath = QByteArray((const char *)m_systemLocation.utf16(), m_systemLocation.size() * 2 + 1);
-    m_descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
-                                access,
-                                sharing,
-                                0,
-                                OPEN_EXISTING,
-                                FILE_FLAG_OVERLAPPED,
-                                0);
+    QByteArray nativeFilePath = QByteArray((const char *)m_systemLocation.utf16(),
+                                           m_systemLocation.size() * 2 + 1);
 
-    if (INVALID_HANDLE_VALUE == m_descriptor) {
+    m_descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
+                                access, sharing, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+
+    if (m_descriptor == INVALID_HANDLE_VALUE) {
         //
         return false;
     }
@@ -125,7 +122,7 @@ SerialPort::Lines SerialPortPrivate::lines() const
     DWORD modemStat = 0;
     SerialPort::Lines result = 0;
 
-    if (0 == ::GetCommModemStatus(m_descriptor, &modemStat)) {
+    if (::GetCommModemStatus(m_descriptor, &modemStat) == 0) {
         // Print error?
         return result;
     }
@@ -188,7 +185,7 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
     if (::WriteFile(m_descriptor, (LPCVOID)data, (DWORD)len, &writeBytes, &m_ovWrite))
         sucessResult = true;
     else {
-        if (ERROR_IO_PENDING == ::GetLastError()) {
+        if (::GetLastError() == ERROR_IO_PENDING) {
             //not to loop the function, instead of setting INFINITE put 5000 milliseconds wait!
             switch (::WaitForSingleObject(m_ovWrite.hEvent, 5000)) {
             case WAIT_OBJECT_0: {
@@ -235,7 +232,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         currEventMask |= EV_TXEMPTY;
 
     //save old mask
-    if (0 == ::GetCommMask(m_descriptor, &oldEventMask)) {
+    if (::GetCommMask(m_descriptor, &oldEventMask) == 0) {
         //Print error?
         return -1;
     }
@@ -243,7 +240,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     if (currEventMask != (oldEventMask & currEventMask)) {
         currEventMask |= oldEventMask;
         //set mask
-        if(0 == ::SetCommMask(m_descriptor, currEventMask)) {
+        if(::SetCommMask(m_descriptor, currEventMask) == 0) {
             //Print error?
             return -1;
         }
@@ -255,7 +252,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     if (::WaitCommEvent(m_descriptor, &currEventMask, &m_ovSelect))
         selectResult = true;
     else {
-        if (ERROR_IO_PENDING == ::GetLastError()) {
+        if (::GetLastError() == ERROR_IO_PENDING) {
             DWORD bytesTransferred = 0;
             switch (::WaitForSingleObject(m_ovSelect.hEvent, (timeout < 0) ? 0 : timeout)) {
             case WAIT_OBJECT_0: {
@@ -283,10 +280,8 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     }
 
     if (selectResult) {
-        *selectForRead = (currEventMask & EV_RXCHAR)
-                && (checkRead)
-                && (bytesAvailable());
-        *selectForWrite = (currEventMask & EV_TXEMPTY) && (checkWrite);
+        *selectForRead = (checkRead && (EV_RXCHAR & currEventMask) && (bytesAvailable()));
+        *selectForWrite = (checkWrite && (EV_TXEMPTY & currEventMask));
     }
     ::SetCommMask(m_descriptor, oldEventMask); //rerair old mask
     return int(selectResult);
@@ -315,8 +310,7 @@ QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) con
 
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
-    if ((SerialPort::UnknownRate == rate)
-            || (SerialPort::AllDirections != dir)) {
+    if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
         return false;
     }
     m_currDCB.BaudRate = DWORD(rate);
@@ -335,7 +329,7 @@ bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 
 bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 {
-    if (SerialPort::UnknownParity == parity)
+    if (parity == SerialPort::UnknownParity)
         return false;
 
     m_currDCB.fParity = true;
@@ -356,7 +350,7 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 
 bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 {
-    if ((SerialPort::UnknownStopBits == stopBits)
+    if ((stopBits == SerialPort::UnknownStopBits)
             || isRestrictedAreaSettings(m_dataBits, stopBits))
         return false;
 
@@ -371,7 +365,7 @@ bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 
 bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 {
-    if (SerialPort::UnknownFlowControl == flow)
+    if (flow == SerialPort::UnknownFlowControl)
         return false;
 
     switch (flow) {
@@ -425,12 +419,12 @@ void SerialPortPrivate::detectDefaultSettings()
 bool SerialPortPrivate::saveOldsettings()
 {
     DWORD confSize = sizeof(DCB);
-    if (0 == ::GetCommState(m_descriptor, &m_oldDCB))
+    if (::GetCommState(m_descriptor, &m_oldDCB) == 0)
         return false;
     ::memcpy((void *)(&m_currDCB), (const void *)(&m_oldDCB), confSize);
 
     confSize = sizeof(COMMTIMEOUTS);
-    if (0 == ::GetCommTimeouts(m_descriptor, &m_oldCommTimeouts))
+    if (::GetCommTimeouts(m_descriptor, &m_oldCommTimeouts) == 0)
         return false;
     ::memcpy((void *)(&m_currCommTimeouts), (const void *)(&m_oldCommTimeouts), confSize);
 
@@ -444,9 +438,9 @@ bool SerialPortPrivate::restoreOldsettings()
     bool restoreResult = true;
     if (m_oldSettingsIsSaved) {
         m_oldSettingsIsSaved = false;
-        if (0 != ::GetCommState(m_descriptor, &m_oldDCB))
+        if (::GetCommState(m_descriptor, &m_oldDCB) != 0)
             restoreResult = false;
-        if (0 == ::SetCommTimeouts(m_descriptor, &m_oldCommTimeouts))
+        if (::SetCommTimeouts(m_descriptor, &m_oldCommTimeouts) == 0)
             restoreResult = false;
     }
     return restoreResult;
@@ -460,9 +454,9 @@ bool SerialPortPrivate::createEvents(bool rx, bool tx)
     if (tx) { m_ovWrite.hEvent = ::CreateEvent(0, false, false, 0); }
     m_ovSelect.hEvent = ::CreateEvent(0, false, false, 0);
 
-    return ((rx && (0 == m_ovRead.hEvent))
-            || (tx && (0 == m_ovWrite.hEvent))
-            || (0 == m_ovSelect.hEvent)) ? false : true;
+    return ((rx && (m_ovRead.hEvent == 0))
+            || (tx && (m_ovWrite.hEvent == 0))
+            || (m_ovSelect.hEvent) == 0) ? false : true;
 }
 
 void SerialPortPrivate::closeEvents() const
@@ -487,12 +481,12 @@ void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 
 inline bool SerialPortPrivate::updateDcb()
 {
-    return (0 != ::SetCommState(m_descriptor, &m_currDCB));
+    return (::SetCommState(m_descriptor, &m_currDCB) != 0);
 }
 
 inline bool SerialPortPrivate::updateCommTimeouts()
 {
-    return (0 != ::SetCommTimeouts(m_descriptor, &m_currCommTimeouts));
+    return (::SetCommTimeouts(m_descriptor, &m_currCommTimeouts) != 0);
 }
 
 bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,

@@ -32,9 +32,9 @@ public:
 
     bool setRate(qint32 rate, SerialPort::Directions dir) {
         if (setNativeRate(rate, dir)) {
-            if (SerialPort::Input & dir)
+            if (dir & SerialPort::Input)
                 m_inRate = rate;
-            if (SerialPort::Output & dir)
+            if (dir & SerialPort::Output)
                 m_outRate = rate;
             return true;
         }
@@ -42,9 +42,9 @@ public:
     }
 
     qint32 rate(SerialPort::Directions dir) const {
-        if (SerialPort::AllDirections == dir)
+        if (dir == SerialPort::AllDirections)
             return (m_inRate == m_outRate) ? (m_inRate) : SerialPort::UnknownRate;
-        return (SerialPort::Input & dir) ? (m_inRate) : (m_outRate);
+        return (dir & SerialPort::Input) ? (m_inRate) : (m_outRate);
     }
 
     bool setDataBits(SerialPort::DataBits dataBits) {
@@ -107,8 +107,8 @@ public:
 
     int readTimeout() const { return m_readTimeout; }
 
-    bool dtr() const { return SerialPort::Dtr & lines(); }
-    bool rts() const { return SerialPort::Rts & lines(); }
+    bool dtr() const { return lines() & SerialPort::Dtr; }
+    bool rts() const { return lines() & SerialPort::Rts; }
 
     virtual SerialPort::Lines lines() const = 0;
 
