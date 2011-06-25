@@ -75,7 +75,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    // prepareOtherOptions();
+    prepareOtherOptions();
 
     if (!updateDcb()) {
         //
@@ -152,32 +152,86 @@ SerialPort::Lines SerialPortPrivate::lines() const
 
 bool SerialPortPrivate::flush()
 {
-    // Impl me
-    return false;
+    bool ret = ::FlushFileBuffers(m_descriptor);
+    if (!ret) {
+        // Print error?
+    }
+    return ret;
 }
 
 bool SerialPortPrivate::reset()
 {
-    // Impl me
-    return false;
+    bool ret = true;
+    DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+    if (::PurgeComm(m_descriptor, flags) == 0) {
+        // Print error?
+        ret = false;
+    }
+    return ret;
 }
 
 qint64 SerialPortPrivate::bytesAvailable() const
 {
-    // Impl me
-    return -1;
+    DWORD err;
+    COMSTAT cs;
+    qint64 available = -1;
+
+    if ((::ClearCommError(m_descriptor, &err, &cs) == 0)
+            || err) {
+        // Print error?
+        return available;
+    }
+    available = qint64(cs.cbInQue);
+    return available;
+}
+
+// Clear overlapped structure, but does not affect the event.
+static void clear_overlapped(OVERLAPPED *overlapped)
+{
+    overlapped->Internal = 0;
+    overlapped->InternalHigh = 0;
+    overlapped->Offset = 0;
+    overlapped->OffsetHigh = 0;
 }
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
-    // Impl me
-    return -1;
+    clear_overlapped(&m_ovRead);
+
+    DWORD readBytes = 0;
+    bool sucessResult = false;
+
+    if (::ReadFile(m_descriptor, (PVOID)data, (DWORD)len, &readBytes, &m_ovRead))
+        sucessResult = true;
+    else {
+        if (::GetLastError() == ERROR_IO_PENDING) {
+            //not to loop the function, instead of setting INFINITE put 5000 milliseconds wait!
+            switch (::WaitForSingleObject(m_ovRead.hEvent, 5000)) {
+            case WAIT_OBJECT_0:
+                if (::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, false))
+                    sucessResult = true;
+                else {
+                    // Print error?
+                    ;
+                }
+                break;
+            default:
+                // Print error?
+                ;
+            }
+        }
+        else {
+            // Print error?
+            ;
+        }
+    }
+
+    return (sucessResult) ? qint64(readBytes) : qint64(-1);
 }
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
-    //if (!clear_overlapped(&m_ovWrite))
-    //    return qint64(-1);
+    clear_overlapped(&m_ovWrite);
 
     DWORD writeBytes = 0;
     bool sucessResult = false;
@@ -220,8 +274,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         return 1;
     }
 
-    //if (!clear_overlapped(&m_ovSelect))
-    //    return int(-1);
+    clear_overlapped(&m_ovSelect);
 
     DWORD oldEventMask = 0;
     DWORD currEventMask = 0;
@@ -412,10 +465,59 @@ bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy pol
 
 void SerialPortPrivate::detectDefaultSettings()
 {
+    // Detect rate
+    m_inRate = quint32(m_currDCB.BaudRate);
+    m_outRate = m_inRate;
 
+    // Detect databits
+    switch (m_currDCB.ByteSize) {
+    case 5: m_dataBits = SerialPort::Data5; break;
+    case 6: m_dataBits = SerialPort::Data6; break;
+    case 7: m_dataBits = SerialPort::Data7; break;
+    case 8: m_dataBits = SerialPort::Data8; break;
+    default: m_dataBits = SerialPort::UnknownDataBits;
+    }
+
+    // Detect parity
+    if ((m_currDCB.Parity == NOPARITY) && (!m_currDCB.fParity))
+        m_parity = SerialPort::NoParity;
+    else if ((m_currDCB.Parity == SPACEPARITY) && m_currDCB.fParity)
+        m_parity = SerialPort::SpaceParity;
+    else if ((m_currDCB.Parity == MARKPARITY) && m_currDCB.fParity)
+        m_parity = SerialPort::MarkParity;
+    else if ((m_currDCB.Parity == EVENPARITY) && m_currDCB.fParity)
+        m_parity = SerialPort::EvenParity;
+    else if ((m_currDCB.Parity == ODDPARITY) && m_currDCB.fParity)
+        m_parity = SerialPort::OddParity;
+    else
+        m_parity = SerialPort::UnknownParity;
+
+    // Detect stopbits
+    switch (m_currDCB.StopBits) {
+    case ONESTOPBIT: m_stopBits = SerialPort::OneStop; break;
+    case ONE5STOPBITS: m_stopBits = SerialPort::OneAndHalfStop; break;
+    case TWOSTOPBITS: m_stopBits = SerialPort::TwoStop; break;
+    default: m_stopBits = SerialPort::UnknownStopBits;
+    }
+
+    // Detect flow control
+    if ((!m_currDCB.fOutxCtsFlow) && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
+            && (!m_currDCB.fInX) && (!m_currDCB.fOutX)) {
+        m_flow = SerialPort::NoFlowControl;
+    }
+    else if ((!m_currDCB.fOutxCtsFlow) && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
+             && (m_currDCB.fInX) && (m_currDCB.fOutX)) {
+        m_flow = SerialPort::SoftwareControl;
+    }
+    else if ((m_currDCB.fOutxCtsFlow) && (m_currDCB.fRtsControl == RTS_CONTROL_HANDSHAKE)
+             && (!m_currDCB.fInX) && (!m_currDCB.fOutX)) {
+        m_flow = SerialPort::HardwareControl;
+    }
+    else
+        m_flow = SerialPort::UnknownFlowControl;
 }
 
-// Used only in method SerialPortPrivate::open(SerialPort::OpenMode mode).
+// Used only in method SerialPortPrivate::open().
 bool SerialPortPrivate::saveOldsettings()
 {
     DWORD confSize = sizeof(DCB);
@@ -496,5 +598,16 @@ bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
             || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
             || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
             || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
+}
+
+// Prepares other parameters of the structures port configuration.
+// Used only in method SerialPortPrivate::open().
+void SerialPortPrivate::prepareOtherOptions()
+{
+    m_currDCB.fBinary = true;
+    m_currDCB.fInX = false;
+    m_currDCB.fOutX = false;
+    m_currDCB.fAbortOnError = false;
+    m_currDCB.fNull = false;
 }
 

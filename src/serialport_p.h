@@ -81,6 +81,7 @@ private:
 
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
+    void prepareOtherOptions();
 #else
     struct termios m_currTermios;
     struct termios m_oldTermios;
