@@ -37,53 +37,56 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     QList<SerialPortInfo> ports;
 
     struct udev *udev = ::udev_new();
-    if (!udev)
-        return ports;
+    if (udev) {
 
-    struct udev_enumerate *enumerate = ::udev_enumerate_new(udev);
-    if (!enumerate)
-        return ports;
+        struct udev_enumerate *enumerate = ::udev_enumerate_new(udev);
+        if (enumerate) {
 
-    ::udev_enumerate_add_match_subsystem(enumerate, "tty");
-    ::udev_enumerate_scan_devices(enumerate);
+            ::udev_enumerate_add_match_subsystem(enumerate, "tty");
+            ::udev_enumerate_scan_devices(enumerate);
 
-    struct udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate);
+            struct udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate);
 
-    struct udev_list_entry *dev_list_entry;
-    udev_list_entry_foreach(dev_list_entry, devices) {
+            struct udev_list_entry *dev_list_entry;
+            udev_list_entry_foreach(dev_list_entry, devices) {
 
-        const char *syspath = ::udev_list_entry_get_name(dev_list_entry);
-        struct udev_device *udev_device = ::udev_device_new_from_syspath(udev, syspath);
+                const char *syspath = ::udev_list_entry_get_name(dev_list_entry);
+                struct udev_device *udev_device = ::udev_device_new_from_syspath(udev, syspath);
 
-        if (udev_device) {
+                if (udev_device) {
 
-            SerialPortInfo info;
-            //get device name
-            QString s(::udev_device_get_devnode(udev_device));
+                    SerialPortInfo info;
+                    //get device name
+                    QString s(::udev_device_get_devnode(udev_device));
 
-            foreach (QString mask, nameFilters()) {
+                    foreach (QString mask, nameFilters()) {
 
-                if (s.contains(mask)) {
-                    //name
-                    info.d_ptr->portName = s; //< Here add regexp, e.g. for delete /dev/
-                    //location
-                    info.d_ptr->device = s;
-                    //description
-                    info.d_ptr->description = QString(::udev_device_get_property_value(udev_device,
-                                                                                       "ID_MODEL_FROM_DATABASE"));
-                    //manufacturer
-                    info.d_ptr->manufacturer = QString(::udev_device_get_property_value(udev_device,
-                                                                                        "ID_VENDOR_FROM_DATABASE"));
+                        if (s.contains(mask)) {
+                            //name
+                            info.d_ptr->portName = s; //< Here add regexp, e.g. for delete /dev/
+                            //location
+                            info.d_ptr->device = s;
+                            //description
+                            info.d_ptr->description = QString(::udev_device_get_property_value(udev_device,
+                                                                                               "ID_MODEL_FROM_DATABASE"));
+                            //manufacturer
+                            info.d_ptr->manufacturer = QString(::udev_device_get_property_value(udev_device,
+                                                                                                "ID_VENDOR_FROM_DATABASE"));
 
-                    ports.append(info);
+                            ports.append(info);
+                        }
+                    }
+                    ::udev_device_unref(udev_device);
                 }
             }
-            ::udev_device_unref(udev_device);
         }
+
+        if (enumerate)
+            ::udev_enumerate_unref(enumerate);
     }
 
-    ::udev_enumerate_unref(enumerate);
-    ::udev_unref(udev);
+    if (udev)
+        ::udev_unref(udev);
 
     return ports;
 }
