@@ -4,30 +4,32 @@
 
 #include "serialport.h"
 #include "serialportinfo.h"
-
 #include "serialport_p.h"
 
+#include <QtCore/QElapsedTimer>
 
 SerialPort::SerialPort(QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate())
 {
-
+    Q_D(SerialPort);
+    d->q_ptr = this;
 }
-
 
 SerialPort::SerialPort(const QString &name, QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate())
 {
-
+    Q_D(SerialPort);
+    d->q_ptr = this;
 }
 
 SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate())
 {
-
+    Q_D(SerialPort);
+    d->q_ptr = this;
 }
 
 SerialPort::~SerialPort()
@@ -59,15 +61,30 @@ QString SerialPort::portName() const
 bool SerialPort::open(OpenMode mode)
 {
     Q_D(SerialPort);
+
+    // Define while not supported modes.
+    static OpenMode unsupportedModes = (Append | Truncate | Text);
+
+    if ((mode & unsupportedModes) || (mode == NotOpen))
+        return false;
+
     if (!isOpen()) {
         if (d->open(mode)) {
             QIODevice::open(mode);
+
+            d->clearBuffers();
+
+            if (mode & ReadOnly)
+                d->setReadNotificationEnabled(true);
+            if (mode & WriteOnly)
+                d->setWriteNotificationEnabled(true);
+
+            d->m_isBuffered = (0 == (mode & Unbuffered));
             d->setError(SerialPort::NoError);
-            return true;
+            return QIODevice::open(mode);
         }
         else
             d->setError(SerialPort::PermissionDeniedError);
-
     }
     else
         d->setError(SerialPort::DeviceAlreadyOpenedError);
@@ -79,6 +96,9 @@ void SerialPort::close()
 {
     Q_D(SerialPort);
     if (isOpen()) {
+        d->setReadNotificationEnabled(false, true);
+        d->setWriteNotificationEnabled(false, true);
+        d->clearBuffers();
         d->close();
         QIODevice::close();
         d->setError(SerialPort::NoError);
@@ -232,25 +252,91 @@ bool SerialPort::isSequential() const
 
 qint64 SerialPort::bytesAvailable() const
 {
-    // Impl me
-    return -1;
+    Q_D(const SerialPort);
+    qint64 available = QIODevice::bytesAvailable();
+    if (d->m_isBuffered)
+        available += qint64(d->m_readBuffer.size());
+    else
+        available += d->bytesAvailable();
+    return available;
 }
 
 qint64 SerialPort::bytesToWrite() const
 {
-    // Impl me
-    return -1;
+    Q_D(const SerialPort);
+    return qint64(d->m_writeBuffer.size());
+}
+
+/*
+   Returns the difference between msecs and elapsed. If msecs is -1,
+   however, -1 is returned.
+*/
+static int qt_timeout_value(int msecs, int elapsed)
+{
+    if (msecs == -1) { return msecs; }
+    msecs -= elapsed;
+    return (msecs < 0) ? 0 : msecs;
 }
 
 bool SerialPort::waitForReadyRead(int msecs)
 {
-    // Impl me
+    Q_D(SerialPort);
+
+    if (d->m_isBuffered && (!d->m_readBuffer.isEmpty()))
+        return true;
+
+    if (d->isReadNotificationEnabled())
+        d->setReadNotificationEnabled(false);
+
+    QElapsedTimer stopWatch;
+    stopWatch.start();
+
+    forever {
+        bool readyToRead = false;
+        bool readyToWrite = false;
+        if (!d->waitForReadOrWrite(qt_timeout_value(msecs, stopWatch.elapsed()),
+                                   true, (!d->m_writeBuffer.isEmpty()),
+                                   &readyToRead, &readyToWrite)) {
+            return false;
+        }
+        if (readyToRead) {
+            if (d->canReadNotification())
+                return true;
+        }
+        if (readyToWrite)
+            d->canWriteNotification();
+    }
     return false;
 }
 
 bool SerialPort::waitForBytesWritten(int msecs)
 {
-    // Impl me
+    Q_D(SerialPort);
+
+    if (d->m_isBuffered && d->m_writeBuffer.isEmpty())
+        return false;
+
+    QElapsedTimer stopWatch;
+    stopWatch.start();
+
+    forever {
+        bool readyToRead = false;
+        bool readyToWrite = false;
+        if (!d->waitForReadOrWrite(qt_timeout_value(msecs, stopWatch.elapsed()),
+                                   true, (!d->m_writeBuffer.isEmpty()),
+                                   &readyToRead, &readyToWrite)) {
+            return false;
+        }
+        if (readyToRead) {
+            if(!d->canReadNotification())
+                return false;
+        }
+        if (readyToWrite) {
+            if (d->canWriteNotification()) {
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -280,14 +366,73 @@ bool SerialPort::setBreak(bool set)
 
 qint64 SerialPort::readData(char *data, qint64 maxSize)
 {
-    // Impl me
-    return -1;
+    Q_D(SerialPort);
+
+    if (!this->isReadable())
+        return -1;
+
+    if (d->isReadNotificationEnabled() && d->m_isBuffered)
+        d->setReadNotificationEnabled(true);
+
+    if (!d->m_isBuffered) {
+        qint64 readBytes = d->read(data, maxSize);
+        return readBytes;
+    }
+
+    if (d->m_readBuffer.isEmpty())
+        return qint64(0);
+
+    // If readFromSerial() read data, copy it to its destination.
+    if (maxSize == 1) {
+        *data = d->m_readBuffer.getChar();
+        return 1;
+    }
+
+    qint64 bytesToRead = qMin(qint64(d->m_readBuffer.size()), maxSize);
+    qint64 readSoFar = 0;
+    while (readSoFar < bytesToRead) {
+        const char *ptr = d->m_readBuffer.readPointer();
+        int bytesToReadFromThisBlock = qMin(int(bytesToRead - readSoFar),
+                                            d->m_readBuffer.nextDataBlockSize());
+        memcpy(data + readSoFar, ptr, bytesToReadFromThisBlock);
+        readSoFar += bytesToReadFromThisBlock;
+        d->m_readBuffer.free(bytesToReadFromThisBlock);
+    }
+    return readSoFar;
 }
 
 qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 {
-    // Impl me
-    return -1;
+    Q_D(SerialPort);
+
+    if (!this->isWritable())
+        return -1;
+
+    if (!d->m_isBuffered) {
+        qint64 written = d->write(data, maxSize);
+        if (written < 0) {
+            //Error
+        } else if (!d->m_writeBuffer.isEmpty()) {
+            d->setWriteNotificationEnabled(true);
+        }
+
+        if (written >= 0)
+            emit bytesWritten(written);
+        return written;
+    }
+
+    char *ptr = d->m_writeBuffer.reserve(maxSize);
+    if (maxSize == 1)
+        *ptr = *data;
+    else
+        memcpy(ptr, data, maxSize);
+
+    qint64 written = maxSize;
+
+    if (!d->m_writeBuffer.isEmpty())
+        d->setWriteNotificationEnabled(true);
+
+    return written;
 }
 
 

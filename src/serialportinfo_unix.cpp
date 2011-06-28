@@ -18,7 +18,6 @@ extern "C"
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
-
 //If OS GNU/Linus
 static QStringList nameFilters()
 {

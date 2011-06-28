@@ -13,7 +13,6 @@
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
-
 static const ::GUID guidArray[] =
 {
     /* Windows Ports Class GUID */

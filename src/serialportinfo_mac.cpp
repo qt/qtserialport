@@ -19,8 +19,6 @@
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
-
-
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
@@ -32,8 +30,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     CFDictionaryAddValue(classesToMatch,
                          CFSTR(kIOSerialBSDTypeKey),
                          CFSTR(kIOSerialBSDAllTypes));
-
-
 
     io_iterator_t serialPortIterator = 0;
     kern_return_t kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault,

@@ -14,9 +14,9 @@
 #  include <termios.h>
 #endif
 
-
 class SerialPortPrivate : public AbstractSerialPortPrivate
 {
+    Q_DECLARE_PUBLIC(SerialPort)
 public:
     SerialPortPrivate();
 
@@ -35,6 +35,15 @@ public:
     virtual bool waitForReadOrWrite(int timeout,
                                     bool checkRead, bool checkWrite,
                                     bool *selectForRead, bool *selectForWrite);
+
+#if defined (Q_OS_WIN)
+    HANDLE descriptor() { return m_descriptor; }
+#else
+    int descriptor() { return m_descriptor; }
+#endif
+
+    inline void readNotification() { canReadNotification(); }
+    inline void writeNotification() { canWriteNotification(); }
 
 protected:
     virtual QString nativeToSystemLocation(const QString &port) const;
@@ -93,6 +102,22 @@ private:
     bool setStandartRate(SerialPort::Directions dir, speed_t speed);
     bool setCustomRate(qint32 speed);
 #endif
+
+    //
+    SerialPort *q_ptr;
+
+    bool canReadNotification();
+    bool canWriteNotification();
+
+    bool isReadNotificationEnabled() const;
+    void setReadNotificationEnabled(bool enable, bool onClose = false);
+    bool isWriteNotificationEnabled() const;
+    void setWriteNotificationEnabled(bool enable, bool onClose = false);
+
+    void clearNotification();
+
+    void clearBuffers();
+    bool readFromSerial();
 };
 
 #endif // SERIALPORT_P_H

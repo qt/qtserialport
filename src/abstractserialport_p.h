@@ -6,6 +6,9 @@
 #define ABSTRACTSERIALPORT_P_H
 
 #include "serialport.h"
+#include "ringbuffer_p.h"
+
+class AbstractSerialPortNotifier;
 
 class AbstractSerialPortPrivate
 {
@@ -22,10 +25,25 @@ public:
         , m_policy(SerialPort::IgnorePolicy)
         , m_portError(SerialPort::NoError)
         , m_oldSettingsIsSaved(false)
+        , m_readBufferMaxSize(0)
+        , m_readBuffer(16384)
+        , m_writeBuffer(16384)
+        , m_isBuffered(false)
+        , m_readSerialNotifierCalled(false)
+        , m_readSerialNotifierState(false)
+        , m_readSerialNotifierStateSet(false)
+        , m_emittedReadyRead(false)
+        , m_emittedBytesWritten(false)
+        , m_notifier(0)
     {}
 
-    void setPort(const QString &port) { m_systemLocation = nativeToSystemLocation(port); }
-    QString port() const { return nativeFromSystemLocation(m_systemLocation); }
+    void setPort(const QString &port) {
+        m_systemLocation = nativeToSystemLocation(port);
+    }
+
+    QString port() const {
+        return nativeFromSystemLocation(m_systemLocation);
+    }
 
     virtual bool open(QIODevice::OpenMode mode) = 0;
     virtual void close() = 0;
@@ -153,6 +171,20 @@ protected:
     SerialPort::PortError m_portError;
 
     bool m_oldSettingsIsSaved;
+
+    qint64 m_readBufferMaxSize;
+    RingBuffer m_readBuffer;
+    RingBuffer m_writeBuffer;
+    bool m_isBuffered;
+
+    bool m_readSerialNotifierCalled;
+    bool m_readSerialNotifierState;
+    bool m_readSerialNotifierStateSet;
+
+    bool m_emittedReadyRead;
+    bool m_emittedBytesWritten;
+
+    AbstractSerialPortNotifier *m_notifier;
 
     virtual QString nativeToSystemLocation(const QString &port) const = 0;
     virtual QString nativeFromSystemLocation(const QString &location) const = 0;
