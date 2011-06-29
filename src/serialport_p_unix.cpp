@@ -75,19 +75,19 @@ static const QString defaultPathPrefix = "/dev/";
 
 QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
 {
-    QString result;
+    QString ret;
     if (!port.contains(defaultPathPrefix))
-        result.append(defaultPathPrefix);
-    result.append(port);
-    return result;
+        ret.append(defaultPathPrefix);
+    ret.append(port);
+    return ret;
 }
 
 QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) const
 {
-    QString result = location;
-    if (result.contains(defaultPathPrefix))
-        result.remove(defaultPathPrefix);
-    return result;
+    QString ret = location;
+    if (ret.contains(defaultPathPrefix))
+        ret.remove(defaultPathPrefix);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)

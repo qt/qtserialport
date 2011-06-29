@@ -1,8 +1,6 @@
 #include "serialportnotifier_p.h"
 #include "serialport_p.h"
 
-#include <sys/ioctl.h>
-
 #include <QtCore/QSocketNotifier>
 
 SerialPortNotifier::SerialPortNotifier(SerialPortPrivate *parent)

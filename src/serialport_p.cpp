@@ -11,7 +11,7 @@ bool SerialPortPrivate::canReadNotification()
 {
     Q_Q(SerialPort);
 
-    // Prevent recursive calls
+    // Prevent recursive calls.
     if (m_readSerialNotifierCalled) {
         if (!m_readSerialNotifierStateSet) {
             m_readSerialNotifierStateSet = true;
@@ -24,10 +24,10 @@ bool SerialPortPrivate::canReadNotification()
     //if (!m_isBuffered)
     //    this->serialEngine->setReadNotificationEnabled(false);
 
-    // If buffered, read data from the serial into the read buffer
+    // If buffered, read data from the serial into the read buffer.
     qint64 newBytes = 0;
     if (m_isBuffered) {
-        // Return if there is no space in the buffer
+        // Return if there is no space in the buffer.
         if (m_readBufferMaxSize
                 && (m_readBuffer.size() >= m_readBufferMaxSize)) {
 
@@ -53,7 +53,7 @@ bool SerialPortPrivate::canReadNotification()
         }
     }
 
-    // only emit readyRead() when not recursing, and only if there is data available
+    // Only emit readyRead() when not recursing, and only if there is data available.
     bool hasData = (m_isBuffered) ? (newBytes > 0) : (bytesAvailable() > 0);
 
     if ((!m_emittedReadyRead) && hasData) {
@@ -65,7 +65,7 @@ bool SerialPortPrivate::canReadNotification()
     if ((!hasData) && isReadNotificationEnabled())
         setReadNotificationEnabled(true);
 
-    // reset the read serial notifier state if we reentered inside the
+    // Reset the read serial notifier state if we reentered inside the
     // readyRead() connected slot.
     if (m_readSerialNotifierStateSet &&
             (m_readSerialNotifierState != isReadNotificationEnabled())) {

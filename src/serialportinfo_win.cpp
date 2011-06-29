@@ -13,7 +13,7 @@
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
-static const ::GUID guidArray[] =
+static const GUID guidArray[] =
 {
     /* Windows Ports Class GUID */
     { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
@@ -159,7 +159,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
 
-    static int guidCount = sizeof(guidArray)/sizeof(::GUID);
+    static int guidCount = sizeof(guidArray)/sizeof(GUID);
     for (int i = 0; i < guidCount; ++i) {
 
         HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidArray[i], 0, 0, DIGCF_PRESENT);

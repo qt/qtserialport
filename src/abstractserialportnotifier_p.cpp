@@ -8,9 +8,6 @@ AbstractSerialPortNotifier *AbstractSerialPortNotifier::createNotifier(SerialPor
 
 void AbstractSerialPortNotifier::deleteNotifier(AbstractSerialPortNotifier *notifier)
 {
-    if (notifier) {
-        SerialPortNotifier *ptr = reinterpret_cast <SerialPortNotifier *> (notifier);
-        if (ptr)
-            delete ptr;
-    }
+    if (notifier)
+        delete notifier;
 }

@@ -110,8 +110,8 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void SerialPortPrivate::close()
 {
-    restoreOldsettings();
     ::CancelIo(m_descriptor);
+    restoreOldsettings();
     ::CloseHandle(m_descriptor);
     closeEvents();
     m_descriptor = INVALID_HANDLE_VALUE;
@@ -120,21 +120,21 @@ void SerialPortPrivate::close()
 SerialPort::Lines SerialPortPrivate::lines() const
 {
     DWORD modemStat = 0;
-    SerialPort::Lines result = 0;
+    SerialPort::Lines ret = 0;
 
     if (::GetCommModemStatus(m_descriptor, &modemStat) == 0) {
         // Print error?
-        return result;
+        return ret;
     }
 
     if (modemStat & MS_CTS_ON)
-        result |= SerialPort::Cts;
+        ret |= SerialPort::Cts;
     if (modemStat & MS_DSR_ON)
-        result |= SerialPort::Dsr;
+        ret |= SerialPort::Dsr;
     if (modemStat & MS_RING_ON)
-        result |= SerialPort::Ri;
+        ret |= SerialPort::Ri;
     if (modemStat & MS_RLSD_ON)
-        result |= SerialPort::Dcd;
+        ret |= SerialPort::Dcd;
 
     DWORD bytesReturned = 0;
     if (::DeviceIoControl(m_descriptor, IOCTL_SERIAL_GET_DTRRTS, 0, 0,
@@ -142,12 +142,12 @@ SerialPort::Lines SerialPortPrivate::lines() const
                           &bytesReturned, 0)) {
 
         if (modemStat & SERIAL_DTR_STATE)
-            result |= SerialPort::Dtr;
+            ret |= SerialPort::Dtr;
         if (modemStat & SERIAL_RTS_STATE)
-            result |= SerialPort::Rts;
+            ret |= SerialPort::Rts;
     }
 
-    return result;
+    return ret;
 }
 
 bool SerialPortPrivate::flush()
@@ -174,15 +174,12 @@ qint64 SerialPortPrivate::bytesAvailable() const
 {
     DWORD err;
     COMSTAT cs;
-    qint64 available = -1;
-
     if ((::ClearCommError(m_descriptor, &err, &cs) == 0)
             || err) {
         // Print error?
-        return available;
+        return -1;
     }
-    available = qint64(cs.cbInQue);
-    return available;
+    return qint64(cs.cbInQue);
 }
 
 // Clear overlapped structure, but does not affect the event.
@@ -205,16 +202,18 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
         sucessResult = true;
     else {
         if (::GetLastError() == ERROR_IO_PENDING) {
-            //not to loop the function, instead of setting INFINITE put 5000 milliseconds wait!
+            // Instead of an infinite wait I/O (not looped), we expect, for example 5 seconds.
+            // Although, maybe there is a better solution.
             switch (::WaitForSingleObject(m_ovRead.hEvent, 5000)) {
-            case WAIT_OBJECT_0:
+            case WAIT_OBJECT_0: {
                 if (::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, false))
                     sucessResult = true;
                 else {
                     // Print error?
                     ;
                 }
-                break;
+            }
+            break;
             default:
                 // Print error?
                 ;
@@ -240,7 +239,8 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
         sucessResult = true;
     else {
         if (::GetLastError() == ERROR_IO_PENDING) {
-            //not to loop the function, instead of setting INFINITE put 5000 milliseconds wait!
+            // Instead of an infinite wait I/O (not looped), we expect, for example 5 seconds.
+            // Although, maybe there is a better solution.
             switch (::WaitForSingleObject(m_ovWrite.hEvent, 5000)) {
             case WAIT_OBJECT_0: {
                 if (::GetOverlappedResult(m_descriptor, &m_ovWrite, &writeBytes, false))
@@ -269,6 +269,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
                                            bool checkRead, bool checkWrite,
                                            bool *selectForRead, bool *selectForWrite)
 {
+    // Forward checking data for read.
     if (checkRead && (bytesAvailable() > 0)) {
         *selectForRead = true;
         return 1;
@@ -284,18 +285,19 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     if (checkWrite)
         currEventMask |= EV_TXEMPTY;
 
-    //save old mask
+    // Save old mask.
     if (::GetCommMask(m_descriptor, &oldEventMask) == 0) {
         //Print error?
-        return -1;
+        return false;
     }
 
+    // Checking the old mask bits as in the current mask.
+    // And if these bits are not exists, then add them and set the reting mask.
     if (currEventMask != (oldEventMask & currEventMask)) {
         currEventMask |= oldEventMask;
-        //set mask
-        if(::SetCommMask(m_descriptor, currEventMask) == 0) {
+        if (::SetCommMask(m_descriptor, currEventMask) == 0) {
             //Print error?
-            return -1;
+            return false;
         }
     }
 
@@ -333,11 +335,17 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     }
 
     if (selectResult) {
-        *selectForRead = (checkRead && (EV_RXCHAR & currEventMask) && (bytesAvailable()));
-        *selectForWrite = (checkWrite && (EV_TXEMPTY & currEventMask));
+        // Here call the bytesAvailable() to protect against false positives WaitForSingleObject(),
+        // for example, when manually pulling USB/Serial converter from system,
+        // ie when devices are in fact not.
+        // While it may be possible to make additional checks - to catch an event EV_ERR,
+        // adding (in the code above) extra bits in the mask currEventMask.
+        *selectForRead = checkRead && (currEventMask & EV_RXCHAR) && bytesAvailable();
+        *selectForWrite = checkWrite && (currEventMask & EV_TXEMPTY);
     }
-    ::SetCommMask(m_descriptor, oldEventMask); //rerair old mask
-    return int(selectResult);
+    // Rerair old mask.
+    ::SetCommMask(m_descriptor, oldEventMask);
+    return selectResult;
 }
 
 /* Protected */
@@ -346,19 +354,19 @@ static const QString defaultPathPrefix = "\\\\.\\";
 
 QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
 {
-    QString result;
+    QString ret;
     if (!port.contains(defaultPathPrefix))
-        result.append(defaultPathPrefix);
-    result.append(port);
-    return result;
+        ret.append(defaultPathPrefix);
+    ret.append(port);
+    return ret;
 }
 
 QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) const
 {
-    QString result = location;
-    if (result.contains(defaultPathPrefix))
-        result.remove(defaultPathPrefix);
-    return result;
+    QString ret = location;
+    if (ret.contains(defaultPathPrefix))
+        ret.remove(defaultPathPrefix);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
@@ -465,11 +473,11 @@ bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy pol
 
 void SerialPortPrivate::detectDefaultSettings()
 {
-    // Detect rate
+    // Detect rate.
     m_inRate = quint32(m_currDCB.BaudRate);
     m_outRate = m_inRate;
 
-    // Detect databits
+    // Detect databits.
     switch (m_currDCB.ByteSize) {
     case 5: m_dataBits = SerialPort::Data5; break;
     case 6: m_dataBits = SerialPort::Data6; break;
@@ -478,7 +486,7 @@ void SerialPortPrivate::detectDefaultSettings()
     default: m_dataBits = SerialPort::UnknownDataBits;
     }
 
-    // Detect parity
+    // Detect parity.
     if ((m_currDCB.Parity == NOPARITY) && (!m_currDCB.fParity))
         m_parity = SerialPort::NoParity;
     else if ((m_currDCB.Parity == SPACEPARITY) && m_currDCB.fParity)
@@ -492,7 +500,7 @@ void SerialPortPrivate::detectDefaultSettings()
     else
         m_parity = SerialPort::UnknownParity;
 
-    // Detect stopbits
+    // Detect stopbits.
     switch (m_currDCB.StopBits) {
     case ONESTOPBIT: m_stopBits = SerialPort::OneStop; break;
     case ONE5STOPBITS: m_stopBits = SerialPort::OneAndHalfStop; break;
@@ -500,7 +508,7 @@ void SerialPortPrivate::detectDefaultSettings()
     default: m_stopBits = SerialPort::UnknownStopBits;
     }
 
-    // Detect flow control
+    // Detect flow control.
     if ((!m_currDCB.fOutxCtsFlow) && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
             && (!m_currDCB.fInX) && (!m_currDCB.fOutX)) {
         m_flow = SerialPort::NoFlowControl;

@@ -6,7 +6,7 @@ class SerialPortPrivate;
 class AbstractSerialPortNotifier
 {
 public:
-    static AbstractSerialPortNotifier *createNotifier(SerialPortPrivate *parent);
+    static AbstractSerialPortNotifier *sreateNotifier(SerialPortPrivate *parent);
     static void deleteNotifier(AbstractSerialPortNotifier *notifier);
 
     virtual bool isReadNotificationEnabled() const = 0;
