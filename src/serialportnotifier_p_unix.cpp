@@ -4,9 +4,9 @@
 #include <QtCore/QSocketNotifier>
 
 SerialPortNotifier::SerialPortNotifier(SerialPortPrivate *parent)
-        : QObject(parent)
-        , readNotifier(0)
-        , writeNotifier(0)
+        : QObject(parent->q_ptr)
+        , m_readNotifier(0)
+        , m_writeNotifier(0)
 {
     m_parent = parent;
 }

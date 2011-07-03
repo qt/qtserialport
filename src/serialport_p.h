@@ -101,6 +101,7 @@ private:
     bool updateTermious();
     bool setStandartRate(SerialPort::Directions dir, speed_t speed);
     bool setCustomRate(qint32 speed);
+    friend class SerialPortNotifier;
 #endif
 
     //
