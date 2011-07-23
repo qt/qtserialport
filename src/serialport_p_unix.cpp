@@ -166,7 +166,11 @@ bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t spee
 
 bool SerialPortPrivate::setCustomRate(qint32 speed)
 {
-
+#if defined (Q_OS_LINUX)
+    //
+#else
+    //
+#endif
 }
 
 

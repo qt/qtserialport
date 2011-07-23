@@ -267,6 +267,13 @@ qint64 SerialPort::bytesToWrite() const
     return qint64(d->m_writeBuffer.size());
 }
 
+bool SerialPort::canReadLine() const
+{
+    Q_D(const SerialPort);
+    bool hasLine = d->m_readBuffer.canReadLine();
+    return (hasLine || QIODevice::canReadLine());
+}
+
 /*
    Returns the difference between msecs and elapsed. If msecs is -1,
    however, -1 is returned.
@@ -399,6 +406,11 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
         d->m_readBuffer.free(bytesToReadFromThisBlock);
     }
     return readSoFar;
+}
+
+qint64 SerialPort::readLineData(char *data, qint64 maxSize)
+{
+    return QIODevice::readLineData(data, maxSize);
 }
 
 qint64 SerialPort::writeData(const char *data, qint64 maxSize)

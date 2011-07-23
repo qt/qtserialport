@@ -169,6 +169,7 @@ public:
 
     virtual qint64 bytesAvailable() const;
     virtual qint64 bytesToWrite() const;
+    virtual bool canReadLine() const;
 
     virtual bool waitForReadyRead(int msecs);
     virtual bool waitForBytesWritten(int msecs);
@@ -182,6 +183,7 @@ public Q_SLOTS:
 
 protected:
     virtual qint64 readData(char *data, qint64 maxSize);
+    virtual qint64 readLineData(char *data, qint64 maxSize);
     virtual qint64 writeData(const char *data, qint64 maxSize);
 
 private:
