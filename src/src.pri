@@ -7,7 +7,6 @@ HEADERS += \
     $$PWD/abstractserialport_p.h \
     $$PWD/ringbuffer_p.h \
     $$PWD/serialport_p.h \
-    $$PWD/abstractserialportnotifier_p.h \
     $$PWD/serialportnotifier_p.h \
     $$PWD/serialportinfo_p.h
 
@@ -15,7 +14,6 @@ HEADERS += \
 SOURCES += \
     $$PWD/serialport.cpp \
     $$PWD/serialport_p.cpp \
-    $$PWD/abstractserialportnotifier_p.cpp \
     $$PWD/serialportinfo.cpp
 
 win32 {
