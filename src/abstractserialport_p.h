@@ -8,7 +8,6 @@
 #include "serialport.h"
 #include "ringbuffer_p.h"
 
-class AbstractSerialPortNotifier;
 
 class AbstractSerialPortPrivate
 {
@@ -34,7 +33,6 @@ public:
         , m_readSerialNotifierStateSet(false)
         , m_emittedReadyRead(false)
         , m_emittedBytesWritten(false)
-        , m_notifier(0)
     {}
 
     void setPort(const QString &port) {
@@ -128,10 +126,16 @@ public:
     bool dtr() const { return lines() & SerialPort::Dtr; }
     bool rts() const { return lines() & SerialPort::Rts; }
 
+    virtual bool setDtr(bool set) = 0;
+    virtual bool setRts(bool set) = 0;
+
     virtual SerialPort::Lines lines() const = 0;
 
     virtual bool flush() = 0;
     virtual bool reset() = 0;
+
+    virtual bool sendBreak(int duration) = 0;
+    virtual bool setBreak(bool set) = 0;
 
     bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy) {
         if (setNativeDataErrorPolicy(policy)) {
@@ -149,6 +153,7 @@ public:
     void setError(SerialPort::PortError error) { m_portError = error; }
 
     virtual qint64 bytesAvailable() const = 0;
+    virtual qint64 bytesToWrite() const = 0;
 
     virtual qint64 read(char *data, qint64 len) = 0;
     virtual qint64 write(const char *data, qint64 len) = 0;
@@ -169,22 +174,16 @@ protected:
     int m_readTimeout;
     SerialPort::DataErrorPolicy m_policy;
     SerialPort::PortError m_portError;
-
     bool m_oldSettingsIsSaved;
-
     qint64 m_readBufferMaxSize;
     RingBuffer m_readBuffer;
     RingBuffer m_writeBuffer;
     bool m_isBuffered;
-
     bool m_readSerialNotifierCalled;
     bool m_readSerialNotifierState;
     bool m_readSerialNotifierStateSet;
-
     bool m_emittedReadyRead;
     bool m_emittedBytesWritten;
-
-    AbstractSerialPortNotifier *m_notifier;
 
     virtual QString nativeToSystemLocation(const QString &port) const = 0;
     virtual QString nativeFromSystemLocation(const QString &location) const = 0;
@@ -199,6 +198,8 @@ protected:
     virtual bool setNativeReadTimeout(int msecs) = 0;
 
     virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy) = 0;
+
+    virtual bool nativeFlush() = 0;
 
     virtual void detectDefaultSettings() = 0;
 

@@ -25,22 +25,25 @@
 #endif
 
 
-/* Public */
+/* Public methods */
+
 
 SerialPortPrivate::SerialPortPrivate()
     : AbstractSerialPortPrivate()
     , m_descriptor(INVALID_HANDLE_VALUE)
 {
     size_t size = sizeof(DCB);
-    ::memset((void *)(&m_currDCB), 0, size);
-    ::memset((void *)(&m_oldDCB), 0, size);
+    ::memset(&m_currDCB, 0, size);
+    ::memset(&m_oldDCB, 0, size);
     size = sizeof(COMMTIMEOUTS);
-    ::memset((void *)(&m_currCommTimeouts), 0, size);
-    ::memset((void *)(&m_oldCommTimeouts), 0, size);
+    ::memset(&m_currCommTimeouts, 0, size);
+    ::memset(&m_oldCommTimeouts, 0, size);
     size = sizeof(OVERLAPPED);
-    ::memset((void *)(&m_ovRead), 0, size);
-    ::memset((void *)(&m_ovWrite), 0, size);
-    ::memset((void *)(&m_ovSelect), 0, size);
+    ::memset(&m_ovRead, 0, size);
+    ::memset(&m_ovWrite, 0, size);
+    ::memset(&m_ovSelect, 0, size);
+
+    m_notifier.setRef(this);
 }
 
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
@@ -62,50 +65,46 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     QByteArray nativeFilePath = QByteArray((const char *)m_systemLocation.utf16(),
                                            m_systemLocation.size() * 2 + 1);
 
+    // Try opened serial device.
     m_descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
                                 access, sharing, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
 
     if (m_descriptor == INVALID_HANDLE_VALUE) {
-        //
+        switch (::GetLastError()) {
+        case ERROR_FILE_NOT_FOUND:
+            setError(SerialPort::NoSuchDeviceError); break;
+        case ERROR_ACCESS_DENIED:
+            setError(SerialPort::PermissionDeniedError); break;
+        default:
+            setError(SerialPort::UnknownPortError);
+        }
         return false;
     }
 
-    if (!saveOldsettings()) {
-        //
-        return false;
+    if (saveOldsettings()) {
+        // Call before updateDcb().
+        prepareOtherOptions();
+
+        if (updateDcb()) {
+            prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, MAXWORD);
+            prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutMultiplier, 0);
+            prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutConstant, 0);
+            prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutMultiplier, 0);
+            prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutConstant, 0);
+
+            if (updateCommTimeouts()) {
+                // Disable autocalculate total read interval.
+                // isAutoCalcReadTimeoutConstant = false;
+
+                if (createEvents(rxflag, txflag)) {
+                    detectDefaultSettings();
+                    return true;
+                }
+            }
+        }
     }
-
-    prepareOtherOptions();
-
-    if (!updateDcb()) {
-        //
-        return false;
-    }
-
-    // Prepare timeouts.
-    /*
-    prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, MAXWORD);
-    prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutMultiplier, 0);
-    prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutConstant, 0);
-    prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutMultiplier, 0);
-    prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutConstant, 0);
-    */
-
-    if (!updateCommTimeouts()) {
-        //
-        return false;
-    }
-
-    // Disable autocalculate total read interval.
-    //this->isAutoCalcReadTimeoutConstant = false;
-
-    if (!createEvents(rxflag, txflag)) {
-        //
-        return false;
-    }
-
-    detectDefaultSettings();
-    return true;
+    setError(SerialPort::ConfiguringError);
+    return false;
 }
 
 void SerialPortPrivate::close()
@@ -150,22 +149,55 @@ SerialPort::Lines SerialPortPrivate::lines() const
     return ret;
 }
 
-bool SerialPortPrivate::flush()
+bool SerialPortPrivate::setDtr(bool set)
 {
-    bool ret = ::FlushFileBuffers(m_descriptor);
+    bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
     if (!ret) {
-        // Print error?
+        // FIXME: Here need call ::GetLastError()
+        // and set error type.
+    }
+    return ret;
+}
+
+bool SerialPortPrivate::setRts(bool set)
+{
+    bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
+    if (!ret) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type.
     }
     return ret;
 }
 
 bool SerialPortPrivate::reset()
 {
-    bool ret = true;
     DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-    if (::PurgeComm(m_descriptor, flags) == 0) {
-        // Print error?
-        ret = false;
+    bool ret = ::PurgeComm(m_descriptor, flags);
+    if (!ret) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type.
+    }
+    return ret;
+}
+
+bool SerialPortPrivate::sendBreak(int duration)
+{
+    // FIXME:
+    if (setBreak(true)) {
+        ::Sleep(DWORD(duration));
+        if (setBreak(false))
+            return true;
+    }
+    return false;
+}
+
+bool SerialPortPrivate::setBreak(bool set)
+{
+    bool ret = (set) ?
+                (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
+    if (!ret) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type.
     }
     return ret;
 }
@@ -176,10 +208,20 @@ qint64 SerialPortPrivate::bytesAvailable() const
     COMSTAT cs;
     if ((::ClearCommError(m_descriptor, &err, &cs) == 0)
             || err) {
-        // Print error?
         return -1;
     }
     return qint64(cs.cbInQue);
+}
+
+qint64 SerialPortPrivate::bytesToWrite() const
+{
+    DWORD err;
+    COMSTAT cs;
+    if ((::ClearCommError(m_descriptor, &err, &cs) == 0)
+            || err) {
+        return -1;
+    }
+    return qint64(cs.cbOutQue);
 }
 
 // Clear overlapped structure, but does not affect the event.
@@ -208,24 +250,19 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
             case WAIT_OBJECT_0: {
                 if (::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, false))
                     sucessResult = true;
-                else {
-                    // Print error?
-                    ;
-                }
             }
             break;
-            default:
-                // Print error?
-                ;
+            default: ;
             }
         }
-        else {
-            // Print error?
-            ;
-        }
     }
-
-    return (sucessResult) ? qint64(readBytes) : qint64(-1);
+    if(!sucessResult) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type?
+        setError(SerialPort::IoError);
+        return -1;
+    }
+    return qint64(readBytes);
 }
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
@@ -245,24 +282,19 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
             case WAIT_OBJECT_0: {
                 if (::GetOverlappedResult(m_descriptor, &m_ovWrite, &writeBytes, false))
                     sucessResult = true;
-                else {
-                    // Print error?
-                    ;
-                }
             }
-            break;//WAIT_OBJECT_0
-            default:
-                //Print error ?
-                ;
-            }//switch (rc)
-        }
-        else {
-            //Print error ?
-            ;
+            break;
+            default: ;
+            }
         }
     }
-
-    return (sucessResult) ? quint64(writeBytes) : qint64(-1);
+    if(!sucessResult) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type?
+        setError(SerialPort::IoError);
+        return -1;
+    }
+    return quint64(writeBytes);
 }
 
 bool SerialPortPrivate::waitForReadOrWrite(int timeout,
@@ -302,53 +334,41 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     }
 
     currEventMask = 0;
-    bool selectResult = false;
+    bool sucessResult = false;
 
     if (::WaitCommEvent(m_descriptor, &currEventMask, &m_ovSelect))
-        selectResult = true;
+        sucessResult = true;
     else {
         if (::GetLastError() == ERROR_IO_PENDING) {
             DWORD bytesTransferred = 0;
             switch (::WaitForSingleObject(m_ovSelect.hEvent, (timeout < 0) ? 0 : timeout)) {
             case WAIT_OBJECT_0: {
                 if (::GetOverlappedResult(m_descriptor, &m_ovSelect, &bytesTransferred, false))
-                    selectResult = true;
-                else {
-                    //Print error?
-                    ;
-                }
+                    sucessResult = true;
             }
             break;
-            case WAIT_TIMEOUT:
-                //Print error?
-                ;
-                break;
-            default:
-                //Print error?
-                ;
+            default: ;
             }
-        }
-        else {
-            //Print error?
-            ;
         }
     }
 
-    if (selectResult) {
+    if (sucessResult) {
         // Here call the bytesAvailable() to protect against false positives WaitForSingleObject(),
         // for example, when manually pulling USB/Serial converter from system,
         // ie when devices are in fact not.
         // While it may be possible to make additional checks - to catch an event EV_ERR,
         // adding (in the code above) extra bits in the mask currEventMask.
-        *selectForRead = checkRead && (currEventMask & EV_RXCHAR) && bytesAvailable();
+        *selectForRead = checkRead && (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
         *selectForWrite = checkWrite && (currEventMask & EV_TXEMPTY);
     }
     // Rerair old mask.
     ::SetCommMask(m_descriptor, oldEventMask);
-    return selectResult;
+    return sucessResult;
 }
 
-/* Protected */
+
+/* Protected methods */
+
 
 static const QString defaultPathPrefix = "\\\\.\\";
 
@@ -372,26 +392,37 @@ QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) con
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
     if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
+        setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     m_currDCB.BaudRate = DWORD(rate);
-    return (updateDcb());
+    bool ret = updateDcb();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
-            || isRestrictedAreaSettings(dataBits, m_stopBits))
-        return false;
+            || isRestrictedAreaSettings(dataBits, m_stopBits)) {
 
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
     m_currDCB.ByteSize = BYTE(dataBits);
-    return (updateDcb());
+    bool ret = updateDcb();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 {
-    if (parity == SerialPort::UnknownParity)
+    if (parity == SerialPort::UnknownParity) {
+        setError(SerialPort::UnsupportedPortOperationError);
         return false;
+    }
 
     m_currDCB.fParity = true;
     switch (parity) {
@@ -406,14 +437,20 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
     case SerialPort::OddParity: m_currDCB.Parity = ODDPARITY; break;
     default: return false;
     }
-    return (updateDcb());
+    bool ret = updateDcb();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
-            || isRestrictedAreaSettings(m_dataBits, stopBits))
+            || isRestrictedAreaSettings(m_dataBits, stopBits)) {
+
+        setError(SerialPort::UnsupportedPortOperationError);
         return false;
+    }
 
     switch (stopBits) {
     case SerialPort::OneStop: m_currDCB.StopBits = ONESTOPBIT; break;
@@ -421,13 +458,18 @@ bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
     case SerialPort::TwoStop: m_currDCB.StopBits = TWOSTOPBITS; break;
     default: return false;
     }
-    return (updateDcb());
+    bool ret = updateDcb();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 {
-    if (flow == SerialPort::UnknownFlowControl)
+    if (flow == SerialPort::UnknownFlowControl) {
+        setError(SerialPort::UnsupportedPortOperationError);
         return false;
+    }
 
     switch (flow) {
     case SerialPort::NoFlowControl: {
@@ -450,7 +492,10 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
     break;
     default: return false;
     }
-    return (updateDcb());
+    bool ret = updateDcb();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeDataInterval(int usecs)
@@ -469,6 +514,16 @@ bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy pol
 {
     // Impl me
     return false;
+}
+
+bool SerialPortPrivate::nativeFlush()
+{
+    bool ret = ::FlushFileBuffers(m_descriptor);
+    if (!ret) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type.
+    }
+    return ret;
 }
 
 void SerialPortPrivate::detectDefaultSettings()
@@ -556,7 +611,9 @@ bool SerialPortPrivate::restoreOldsettings()
     return restoreResult;
 }
 
-/* Private */
+
+/* Private methods */
+
 
 bool SerialPortPrivate::createEvents(bool rx, bool tx)
 {
@@ -566,7 +623,8 @@ bool SerialPortPrivate::createEvents(bool rx, bool tx)
 
     return ((rx && (m_ovRead.hEvent == 0))
             || (tx && (m_ovWrite.hEvent == 0))
-            || (m_ovSelect.hEvent) == 0) ? false : true;
+            || (m_ovSelect.hEvent) == 0) ?
+                false : true;
 }
 
 void SerialPortPrivate::closeEvents() const
@@ -586,7 +644,23 @@ void SerialPortPrivate::recalcTotalReadTimeoutConstant()
 
 void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 {
+    DWORD *ptr = 0;
+    switch (cto) {
+    case ReadIntervalTimeout:
+        ptr = &m_currCommTimeouts.ReadIntervalTimeout; break;
+    case ReadTotalTimeoutMultiplier:
+        ptr = &m_currCommTimeouts.ReadTotalTimeoutMultiplier; break;
+    case ReadTotalTimeoutConstant:
+        ptr = &m_currCommTimeouts.ReadTotalTimeoutConstant; break;
+    case WriteTotalTimeoutMultiplier:
+        ptr = &m_currCommTimeouts.WriteTotalTimeoutMultiplier; break;
+    case WriteTotalTimeoutConstant:
+        ptr = &m_currCommTimeouts.WriteTotalTimeoutConstant; break;
+    default:;
+    }
 
+    if (*ptr != msecs)
+        *ptr = msecs;
 }
 
 inline bool SerialPortPrivate::updateDcb()

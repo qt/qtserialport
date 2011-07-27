@@ -8,6 +8,10 @@
 
 #include <QtCore/QElapsedTimer>
 
+
+/* Public methods */
+
+
 SerialPort::SerialPort(QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate())
@@ -51,7 +55,6 @@ void SerialPort::setPort(const SerialPortInfo &info)
     d->setPort(info.systemLocation());
 }
 
-
 QString SerialPort::portName() const
 {
     Q_D(const SerialPort);
@@ -65,13 +68,14 @@ bool SerialPort::open(OpenMode mode)
     // Define while not supported modes.
     static OpenMode unsupportedModes = (Append | Truncate | Text);
 
-    if ((mode & unsupportedModes) || (mode == NotOpen))
+    if ((mode & unsupportedModes) || (mode == NotOpen)) {
+        d->setError(SerialPort::UnsupportedPortOperationError);
         return false;
+    }
 
     if (!isOpen()) {
         if (d->open(mode)) {
             QIODevice::open(mode);
-
             d->clearBuffers();
 
             if (mode & ReadOnly)
@@ -79,16 +83,14 @@ bool SerialPort::open(OpenMode mode)
             if (mode & WriteOnly)
                 d->setWriteNotificationEnabled(true);
 
-            d->m_isBuffered = (0 == (mode & Unbuffered));
-            d->setError(SerialPort::NoError);
+            d->m_isBuffered = !(mode & Unbuffered);
             return QIODevice::open(mode);
         }
-        else
-            d->setError(SerialPort::PermissionDeniedError);
     }
     else
         d->setError(SerialPort::DeviceAlreadyOpenedError);
 
+    close();
     return false;
 }
 
@@ -96,12 +98,11 @@ void SerialPort::close()
 {
     Q_D(SerialPort);
     if (isOpen()) {
-        d->setReadNotificationEnabled(false, true);
-        d->setWriteNotificationEnabled(false, true);
+        d->setReadNotificationEnabled(false);
+        d->setWriteNotificationEnabled(false);
         d->clearBuffers();
         d->close();
         QIODevice::close();
-        d->setError(SerialPort::NoError);
     }
     else
         d->setError(SerialPort::DeviceIsNotOpenedError);
@@ -109,8 +110,8 @@ void SerialPort::close()
 
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setRate(rate, dir);
 }
 
 qint32 SerialPort::rate(Directions dir) const
@@ -121,8 +122,8 @@ qint32 SerialPort::rate(Directions dir) const
 
 bool SerialPort::setDataBits(DataBits dataBits)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setDataBits(dataBits);
 }
 
 SerialPort::DataBits SerialPort::dataBits() const
@@ -133,8 +134,8 @@ SerialPort::DataBits SerialPort::dataBits() const
 
 bool SerialPort::setParity(Parity parity)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setParity(parity);
 }
 
 SerialPort::Parity SerialPort::parity() const
@@ -145,8 +146,8 @@ SerialPort::Parity SerialPort::parity() const
 
 bool SerialPort::setStopBits(StopBits stopBits)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setStopBits(stopBits);
 }
 
 SerialPort::StopBits SerialPort::stopBits() const
@@ -157,8 +158,8 @@ SerialPort::StopBits SerialPort::stopBits() const
 
 bool SerialPort::setFlowControl(FlowControl flow)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setFlowControl(flow);
 }
 
 SerialPort::FlowControl SerialPort::flowControl() const
@@ -169,8 +170,8 @@ SerialPort::FlowControl SerialPort::flowControl() const
 
 bool SerialPort::setDataInterval(int usecs)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setDataInterval(usecs);
 }
 
 int SerialPort::dataInterval() const
@@ -181,8 +182,8 @@ int SerialPort::dataInterval() const
 
 bool SerialPort::setReadTimeout(int msecs)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setReadTimeout(msecs);
 }
 
 int SerialPort::readTimeout() const
@@ -211,14 +212,15 @@ SerialPort::Lines SerialPort::lines() const
 
 bool SerialPort::flush()
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->flush() || d->nativeFlush();
 }
 
 bool SerialPort::reset()
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    d->clearBuffers();
+    return d->reset();
 }
 
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
@@ -253,18 +255,17 @@ bool SerialPort::isSequential() const
 qint64 SerialPort::bytesAvailable() const
 {
     Q_D(const SerialPort);
-    qint64 available = QIODevice::bytesAvailable();
     if (d->m_isBuffered)
-        available += qint64(d->m_readBuffer.size());
-    else
-        available += d->bytesAvailable();
-    return available;
+        return qint64(d->m_readBuffer.size());
+    return d->bytesAvailable();
 }
 
 qint64 SerialPort::bytesToWrite() const
 {
     Q_D(const SerialPort);
-    return qint64(d->m_writeBuffer.size());
+    if (d->m_isBuffered)
+        return qint64(d->m_writeBuffer.size());
+    return d->bytesToWrite();
 }
 
 bool SerialPort::canReadLine() const
@@ -347,36 +348,41 @@ bool SerialPort::waitForBytesWritten(int msecs)
     return false;
 }
 
+
+/* Public slots */
+
+
 bool SerialPort::setDtr(bool set)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setDtr(set);
 }
 
 bool SerialPort::setRts(bool set)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setRts(set);
 }
 
 bool SerialPort::sendBreak(int duration)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->sendBreak(duration);
 }
 
 bool SerialPort::setBreak(bool set)
 {
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setBreak(set);
 }
+
+
+/* Protected methods */
+
 
 qint64 SerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
-
-    if (!this->isReadable())
-        return -1;
 
     if (d->isReadNotificationEnabled() && d->m_isBuffered)
         d->setReadNotificationEnabled(true);
@@ -417,9 +423,6 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
 
-    if (!this->isWritable())
-        return -1;
-
     if (!d->m_isBuffered) {
         qint64 written = d->write(data, maxSize);
         if (written < 0) {
@@ -430,6 +433,7 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 
         if (written >= 0)
             emit bytesWritten(written);
+
         return written;
     }
 
@@ -439,12 +443,10 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
     else
         memcpy(ptr, data, maxSize);
 
-    qint64 written = maxSize;
-
-    if (!d->m_writeBuffer.isEmpty())
+     if (!d->m_writeBuffer.isEmpty())
         d->setWriteNotificationEnabled(true);
 
-    return written;
+    return maxSize;
 }
 
 

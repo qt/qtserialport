@@ -7,6 +7,7 @@
 
 #include "serialport.h"
 #include "abstractserialport_p.h"
+#include "serialportnotifier_p.h"
 
 #if defined (Q_OS_WIN)
 #  include <qt_windows.h>
@@ -25,25 +26,23 @@ public:
 
     virtual SerialPort::Lines lines() const;
 
+    bool setDtr(bool set);
+    bool setRts(bool set);
+
     virtual bool flush();
     virtual bool reset();
 
+    virtual bool sendBreak(int duration);
+    virtual bool setBreak(bool set);
+
     virtual qint64 bytesAvailable() const;
+    virtual qint64 bytesToWrite() const;
 
     virtual qint64 read(char *data, qint64 len);
     virtual qint64 write(const char *data, qint64 len);
     virtual bool waitForReadOrWrite(int timeout,
                                     bool checkRead, bool checkWrite,
                                     bool *selectForRead, bool *selectForWrite);
-
-#if defined (Q_OS_WIN)
-    HANDLE descriptor() { return m_descriptor; }
-#else
-    int descriptor() { return m_descriptor; }
-#endif
-
-    inline void readNotification() { canReadNotification(); }
-    inline void writeNotification() { canWriteNotification(); }
 
 protected:
     virtual QString nativeToSystemLocation(const QString &port) const;
@@ -59,6 +58,8 @@ protected:
     virtual bool setNativeReadTimeout(int msecs);
 
     virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy);
+
+    virtual bool nativeFlush();
 
     virtual void detectDefaultSettings();
 
@@ -90,7 +91,6 @@ private:
 
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
-    void prepareOtherOptions();
 #else
     struct termios m_currTermios;
     struct termios m_oldTermios;
@@ -99,26 +99,26 @@ private:
 
     void prepareTimeouts(int msecs);
     bool updateTermious();
-    bool setStandartRate(SerialPort::Directions dir, speed_t speed);
-    bool setCustomRate(qint32 speed);
-    friend class SerialPortNotifier;
+    bool setStandartRate(SerialPort::Directions dir, speed_t rate);
+    bool setCustomRate(qint32 rate);
 #endif
+    friend class SerialPortNotifier;
+    SerialPortNotifier m_notifier;
 
-    //
     SerialPort *q_ptr;
 
     bool canReadNotification();
     bool canWriteNotification();
 
     bool isReadNotificationEnabled() const;
-    void setReadNotificationEnabled(bool enable, bool onClose = false);
+    void setReadNotificationEnabled(bool enable);
     bool isWriteNotificationEnabled() const;
-    void setWriteNotificationEnabled(bool enable, bool onClose = false);
-
-    void clearNotification();
+    void setWriteNotificationEnabled(bool enable);
 
     void clearBuffers();
-    bool readFromSerial();
+    bool readFromPort();
+
+    void prepareOtherOptions();
 };
 
 #endif // SERIALPORT_P_H

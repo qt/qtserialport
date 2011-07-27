@@ -3,9 +3,47 @@
 */
 
 #include "serialport_p.h"
-#include "abstractserialportnotifier_p.h"
 
-#include <QtCore/QAbstractEventDispatcher>
+
+/* Public methods */
+
+bool SerialPortPrivate::flush()
+{
+    Q_Q(SerialPort);
+
+    if (m_writeBuffer.isEmpty())
+        return false;
+
+    int nextSize = m_writeBuffer.nextDataBlockSize();
+    const char *ptr = m_writeBuffer.readPointer();
+
+    // Attempt to write it all in one chunk.
+    qint64 written = write(ptr, nextSize);
+    if (written < 0) {
+        m_writeBuffer.clear();
+        return false;
+    }
+
+    // Remove what we wrote so far.
+    m_writeBuffer.free(written);
+    if (written > 0) {
+        // Don't emit bytesWritten() recursively.
+        if (!m_emittedBytesWritten) {
+            m_emittedBytesWritten = true;
+            emit q->bytesWritten(written);
+            m_emittedBytesWritten = false;
+        }
+    }
+
+    if (m_writeBuffer.isEmpty() && isWriteNotificationEnabled())
+        setWriteNotificationEnabled(false);
+
+    return true;
+}
+
+
+/* Private methods */
+
 
 bool SerialPortPrivate::canReadNotification()
 {
@@ -39,7 +77,7 @@ bool SerialPortPrivate::canReadNotification()
         // notification, close the serial.
         newBytes = m_readBuffer.size();
 
-        if (!readFromSerial()) {
+        if (!readFromPort()) {
             m_readSerialNotifierCalled = false;
             return false;
         }
@@ -98,48 +136,22 @@ bool SerialPortPrivate::canWriteNotification() {
 
 bool SerialPortPrivate::isReadNotificationEnabled() const
 {
-    return (m_notifier
-            && m_notifier->isReadNotificationEnabled());
+    return m_notifier.isReadNotificationEnabled();
 }
 
-void SerialPortPrivate::setReadNotificationEnabled(bool enable, bool onClose)
+void SerialPortPrivate::setReadNotificationEnabled(bool enable)
 {
-    if (onClose)
-        enable = false;
-
-    if (!m_notifier && enable)
-            m_notifier = AbstractSerialPortNotifier::createNotifier(this);
-
-    if (m_notifier)
-        m_notifier->setReadNotificationEnabled(enable);
-    if (onClose && m_notifier)
-        clearNotification();
+    m_notifier.setReadNotificationEnabled(enable);
 }
 
 bool SerialPortPrivate::isWriteNotificationEnabled() const
 {
-    return (m_notifier
-            && m_notifier->isWriteNotificationEnabled());
+    return m_notifier.isWriteNotificationEnabled();
 }
 
-void SerialPortPrivate::setWriteNotificationEnabled(bool enable, bool onClose)
+void SerialPortPrivate::setWriteNotificationEnabled(bool enable)
 {
-    if (onClose)
-        enable = false;
-
-    if (!m_notifier && enable)
-            m_notifier = AbstractSerialPortNotifier::createNotifier(this);
-
-    if (m_notifier)
-        m_notifier->setWriteNotificationEnabled(enable);
-    if (onClose && m_notifier)
-        clearNotification();
-}
-
-void SerialPortPrivate::clearNotification()
-{
-    AbstractSerialPortNotifier::deleteNotifier(m_notifier);
-    m_notifier = 0;
+    m_notifier.setWriteNotificationEnabled(enable);
 }
 
 void SerialPortPrivate::clearBuffers()
@@ -148,7 +160,7 @@ void SerialPortPrivate::clearBuffers()
     m_readBuffer.clear();
 }
 
-bool SerialPortPrivate::readFromSerial()
+bool SerialPortPrivate::readFromPort()
 {
     qint64 bytesToRead = bytesAvailable();
 
@@ -156,7 +168,7 @@ bool SerialPortPrivate::readFromSerial()
         return false;
 
     if (m_readBufferMaxSize
-        && (bytesToRead > (m_readBufferMaxSize - m_readBuffer.size()))) {
+            && (bytesToRead > (m_readBufferMaxSize - m_readBuffer.size()))) {
 
         bytesToRead = m_readBufferMaxSize - m_readBuffer.size();
     }
