@@ -155,6 +155,10 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
     return result;
 }
 
+
+/* Public methods */
+
+
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
@@ -216,7 +220,6 @@ QList<int> SerialPortInfo::standardRates() const
 
     return rates;
 }
-
 
 bool SerialPortInfo::isBusy() const
 {

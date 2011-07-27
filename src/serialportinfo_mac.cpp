@@ -19,6 +19,10 @@
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
+
+/* Public methods */
+
+
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
@@ -139,7 +143,6 @@ QList<int> SerialPortInfo::standardRates() const
 
     return rates;
 }
-
 
 bool SerialPortInfo::isBusy() const
 {

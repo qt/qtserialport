@@ -6,6 +6,10 @@
 #include "serialportinfo_p.h"
 #include "serialport.h"
 
+
+/* Public methods */
+
+
 SerialPortInfo::SerialPortInfo()
     : d_ptr(new SerialPortInfoPrivate)
 {
@@ -70,17 +74,3 @@ QString SerialPortInfo::manufacturer() const
     Q_D(const SerialPortInfo);
     return !d ? QString() : d->manufacturer;
 }
-
-SerialPortInfoPrivate::SerialPortInfoPrivate()
-{
-}
-
-SerialPortInfoPrivate::SerialPortInfoPrivate(const QString &name)
-    : portName(name)
-{
-}
-
-SerialPortInfoPrivate::~SerialPortInfoPrivate()
-{
-}
-

@@ -18,7 +18,7 @@ extern "C"
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
-//If OS GNU/Linus
+//If OS is GNU/Linux
 static QStringList nameFilters()
 {
     static QStringList list;
@@ -30,6 +30,10 @@ static QStringList nameFilters()
 
     return list;
 }
+
+
+/* Public methods */
+
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {

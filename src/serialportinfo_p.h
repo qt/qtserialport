@@ -12,9 +12,9 @@
 struct SerialPortInfoPrivate
 {
 public:
-    SerialPortInfoPrivate();
-    SerialPortInfoPrivate(const QString &name);
-    ~SerialPortInfoPrivate();
+    SerialPortInfoPrivate() {}
+    SerialPortInfoPrivate(const QString &name) : portName(name) {}
+    ~SerialPortInfoPrivate() {}
 
     QString portName;
     QString device;
