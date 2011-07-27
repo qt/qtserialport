@@ -34,7 +34,7 @@ class SERIALPORT_EXPORT SerialPort : public QIODevice
     Q_PROPERTY(bool rts READ rts WRITE setRts)
     Q_PROPERTY(PortError error READ error RESET unsetError)
 
-    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError ) 
+    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError )
 
 public:
 
@@ -115,7 +115,11 @@ public:
         DeviceAlreadyOpenedError,
         DeviceIsNotOpenedError,
         ParityError,
-        IoError
+        FramingError,
+        IoError,
+        ConfiguringError,
+        UnsupportedPortOperationError,
+        UnknownPortError
     };
 
     explicit SerialPort(QObject *parent = 0);
