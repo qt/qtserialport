@@ -500,18 +500,21 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 
 bool SerialPortPrivate::setNativeDataInterval(int usecs)
 {
+    Q_UNUSED(usecs)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
+    Q_UNUSED(msecs)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
+    Q_UNUSED(policy)
     // Impl me
     return false;
 }
