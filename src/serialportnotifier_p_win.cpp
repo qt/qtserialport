@@ -1,12 +1,19 @@
+/*
+    License...
+*/
+
 #include "serialportnotifier_p.h"
 #include "serialport_p.h"
 
-SerialPortNotifier::SerialPortNotifier(SerialPortPrivate *parent)
+
+/* Public methods */
+
+
+SerialPortNotifier::SerialPortNotifier(QObject *parent)
         : QWinEventNotifier(parent)
         , m_currentMask(0)
         , m_setMask(0)
 {
-    m_parent = parent;
     ::memset(&m_ov, 0, sizeof(OVERLAPPED));
     m_ov.hEvent = ::CreateEvent(0, false, false, 0);
     setHandle(m_ov.hEvent);
@@ -50,38 +57,45 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
     // This only for OS Windows, as EV_TXEMPTY event is triggered only
     // after the last byte of data (as opposed to events such as Write QSocketNotifier).
     // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
-    if (enable)
-        m_parent->writeNotification();
+    if (enable && m_ref)
+        m_ref->canWriteNotification();
 }
+
+
+/* Protected methods */
+
 
 bool SerialPortNotifier::event(QEvent *e)
 {
     bool ret = false;
-    if (e->type() == QEvent::WinEventAct) {
-
+    if (m_ref && (e->type() == QEvent::WinEventAct)) {
         if (EV_RXCHAR & m_currentMask & m_setMask) {
-            m_parent->readNotification();
+            m_ref->canReadNotification();
             ret = true;
         }
         //TODO: This is why it does not work?
         if (EV_TXEMPTY & m_currentMask & m_setMask) {
-            m_parent->writeNotification();
+            m_ref->canWriteNotification();
             ret = true;
         }
     }
     else
         ret = QWinEventNotifier::event(e);
 
-    ::WaitCommEvent(m_parent->descriptor(), &m_currentMask, &m_ov);
+    ::WaitCommEvent(m_ref->m_descriptor, &m_currentMask, &m_ov);
     return ret;
 }
 
+
+/* Private methods */
+
+
 void SerialPortNotifier::setMaskAndActivateEvent()
 {
-    ::SetCommMask(m_parent->descriptor(), m_setMask);
+    ::SetCommMask(m_ref->m_descriptor, m_setMask);
 
     if (m_setMask)
-        ::WaitCommEvent(m_parent->descriptor(), &m_currentMask, &m_ov);
+        ::WaitCommEvent(m_ref->m_descriptor, &m_currentMask, &m_ov);
 
     switch (m_setMask) {
     case 0:

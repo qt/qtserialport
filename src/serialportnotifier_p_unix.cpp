@@ -1,14 +1,21 @@
+/*
+    License...
+*/
+
 #include "serialportnotifier_p.h"
 #include "serialport_p.h"
 
 #include <QtCore/QSocketNotifier>
 
-SerialPortNotifier::SerialPortNotifier(SerialPortPrivate *parent)
-        : QObject(parent->q_ptr)
-        , m_readNotifier(0)
-        , m_writeNotifier(0)
+
+/* Public methods */
+
+
+SerialPortNotifier::SerialPortNotifier(QObject *parent)
+    : QObject(parent)
+    , m_readNotifier(0)
+    , m_writeNotifier(0)
 {
-    m_parent = parent;
 }
 
 SerialPortNotifier::~SerialPortNotifier()
@@ -31,7 +38,7 @@ void SerialPortNotifier::setReadNotificationEnabled(bool enable)
     }
     else {
         if (enable) {
-            m_readNotifier = new QSocketNotifier(m_parent->descriptor(), QSocketNotifier::Read, this);
+            m_readNotifier = new QSocketNotifier(m_ref->m_descriptor, QSocketNotifier::Read, this);
             m_readNotifier->installEventFilter(this);
             m_readNotifier->setEnabled(true);
         }
@@ -50,22 +57,28 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
     }
     else {
         if (enable) {
-            m_writeNotifier = new QSocketNotifier(m_parent->descriptor(), QSocketNotifier::Write, this);
+            m_writeNotifier = new QSocketNotifier(m_ref->m_descriptor, QSocketNotifier::Write, this);
             m_writeNotifier->installEventFilter(this);
             m_writeNotifier->setEnabled(true);
         }
     }
 }
 
+
+/* Protected methods */
+
+
 bool SerialPortNotifier::eventFilter(QObject *obj, QEvent *e)
 {
-    if ((obj == m_readNotifier) && (e->type() == QEvent::SockAct)) {
-        m_parent->readNotification();
-        return true;
-    }
-    if ((obj == m_writeNotifier) && (e->type() == QEvent::SockAct)) {
-        m_parent->writeNotification();
-        return true;
+    if (m_ref) {
+        if ((obj == m_readNotifier) && (e->type() == QEvent::SockAct)) {
+            m_ref->canReadNotification();
+            return true;
+        }
+        if ((obj == m_writeNotifier) && (e->type() == QEvent::SockAct)) {
+            m_ref->canWriteNotification();
+            return true;
+        }
     }
     return SerialPortNotifier::eventFilter(obj, e);
 }

@@ -1,23 +1,45 @@
+/*
+    License...
+*/
+
 #ifndef SERIALPORTNOTIFIER_P_H
 #define SERIALPORTNOTIFIER_P_H
 
-#include "abstractserialportnotifier_p.h"
+class SerialPortPrivate;
+
+// Serial port notifier interface.
+class AbstractSerialPortNotifier
+{
+public:
+    AbstractSerialPortNotifier() : m_ref(0) {}
+    void setRef(SerialPortPrivate *ref) { m_ref = ref; }
+
+    virtual bool isReadNotificationEnabled() const = 0;
+    virtual void setReadNotificationEnabled(bool enable) = 0;
+    virtual bool isWriteNotificationEnabled() const = 0;
+    virtual void setWriteNotificationEnabled(bool enable) = 0;
+
+protected:
+    SerialPortPrivate *m_ref;
+};
+
+
 #include <QtCore/QEvent>
 
 #if defined (Q_OS_WIN)
 #  include <QtCore/private/qwineventnotifier_p.h>
+#  include <qt_windows.h>
 #else
 #  include <QtCore/QThread>
 class QSocketNotifier;
 #endif
 
-class SerialPortPrivate;
 
 #if defined (Q_OS_WIN)
 class SerialPortNotifier : public QWinEventNotifier, public AbstractSerialPortNotifier
 {
 public:
-    SerialPortNotifier(SerialPortPrivate *parent);
+    explicit SerialPortNotifier(QObject *parent = 0);
     virtual ~SerialPortNotifier();
 
     virtual bool isReadNotificationEnabled() const;
@@ -39,7 +61,7 @@ private:
 class SerialPortNotifier : public QObject, public AbstractSerialPortNotifier
 {
 public:
-    SerialPortNotifier(SerialPortPrivate *parent);
+    explicit SerialPortNotifier(QObject *parent = 0);
     virtual ~SerialPortNotifier();
 
     virtual bool isReadNotificationEnabled() const;
