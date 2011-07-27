@@ -9,7 +9,7 @@
 
 #include <QtCore/QString>
 
-struct SerialPortInfoPrivate
+class SerialPortInfoPrivate
 {
 public:
     SerialPortInfoPrivate() {}
@@ -22,8 +22,9 @@ public:
     QString manufacturer;
 };
 
-struct SerialInfoPrivateDeleter
+class SerialInfoPrivateDeleter
 {
+public:
     static void cleanup(SerialPortInfoPrivate *p) {
         delete p;
     }
