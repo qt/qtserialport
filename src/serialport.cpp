@@ -26,6 +26,7 @@ SerialPort::SerialPort(const QString &name, QObject *parent)
 {
     Q_D(SerialPort);
     d->q_ptr = this;
+    setPort(name);
 }
 
 SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
@@ -34,6 +35,7 @@ SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
 {
     Q_D(SerialPort);
     d->q_ptr = this;
+    setPort(info);
 }
 
 SerialPort::~SerialPort()
@@ -225,6 +227,7 @@ bool SerialPort::reset()
 
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
+    Q_UNUSED(policy)
     // Impl me
     return false;
 }
