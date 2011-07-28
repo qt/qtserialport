@@ -379,40 +379,227 @@ QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) con
     return ret;
 }
 
+// Returned -1 if it is custom baud
+// otherwise returned speed as speed_t.
+static qint32 detect_standard_rate(qint32 rate)
+{
+    switch (rate) {
+#if defined (B0)
+    case 0: return B0;
+#endif
+#if defined (B50)
+    case 50: return B50;
+#endif
+#if defined (B75)
+    case 75: return B75;
+#endif
+#if defined (B110)
+    case 110: return B110;
+#endif
+#if defined (B134)
+    case 134: return B134;
+#endif
+#if defined (B150)
+    case 150: return B150;
+#endif
+#if defined (B200)
+    case 200: return B200;
+#endif
+#if defined (B300)
+    case 300: return B300;
+#endif
+#if defined (B600)
+    case 600: return B600;
+#endif
+#if defined (B1200)
+    case 1200: return B1200;
+#endif
+#if defined (B1800)
+    case 1800: return B1800;
+#endif
+#if defined (B2400)
+    case 2400: return B2400;
+#endif
+#if defined (B4800)
+    case 4800: return B4800;
+#endif
+#if defined (B9600)
+    case 9600: return B9600;
+#endif
+#if defined (B19200)
+    case 19200: return B19200;
+#endif
+#if defined (B38400)
+    case 38400: return B38400;
+#endif
+#if defined (B57600)
+    case 57600: return B57600;
+#endif
+#if defined (B115200)
+    case 115200: return B115200;
+#endif
+#if defined (B230400)
+    case 230400: return B230400;
+#endif
+#if defined (B460800)
+    case 460800: return B460800;
+#endif
+#if defined (B500000)
+    case 500000: return B500000;
+#endif
+#if defined (B576000)
+    case 576000: return B576000;
+#endif
+#if defined (B921600)
+    case 921600: return B921600;
+#endif
+#if defined (B1000000)
+    case 1000000: return B1000000;
+#endif
+#if defined (B1152000)
+    case 1152000: return B1152000;
+#endif
+#if defined (B1500000)
+    case 1500000: return B1500000;
+#endif
+#if defined (B2000000)
+    case 2000000: return B2000000;
+#endif
+#if defined (B2500000)
+    case 2500000: return B2500000;
+#endif
+#if defined (B3000000)
+    case 3000000: return B3000000;
+#endif
+#if defined (B3500000)
+    case 3500000: return B3500000;
+#endif
+#if defined (B4000000)
+    case 4000000: return B4000000;
+#endif
+    default: ;
+
+    }
+    return -1;
+}
+
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
-    Q_UNUSED(rate)
-    Q_UNUSED(dir)
-    // Impl me
-    return false;
+    if (rate == SerialPort::UnknownRate) {
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+
+    qint32 detectedRate = detect_standard_rate(rate);
+    bool ret = false;
+    if (detectedRate == -1)
+        ret = setCustomRate(rate);
+    else
+        ret = setStandartRate(dir, detectedRate);
+
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 {
-    Q_UNUSED(dataBits)
-    // Impl me
-    return false;
+    if ((dataBits == SerialPort::UnknownDataBits)
+            || isRestrictedAreaSettings(dataBits, m_stopBits)) {
+
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+
+    m_currTermios.c_cflag &= (~CSIZE);
+    switch (dataBits) {
+    case SerialPort::Data5:
+        m_currTermios.c_cflag |= CS5;
+        break;
+    case SerialPort::Data6:
+        m_currTermios.c_cflag |= CS6;
+        break;
+    case SerialPort::Data7:
+        m_currTermios.c_cflag |= CS7;
+        break;
+    case SerialPort::Data8:
+        m_currTermios.c_cflag |= CS8;
+        break;
+    default:
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+    bool ret = updateTermious();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 {
-    Q_UNUSED(parity)
-    // Impl me
+    if (parity == SerialPort::UnknownParity) {
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+
+    // Impl me.
     return false;
 }
 
 bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 {
-    Q_UNUSED(stopBits)
-    // Impl me
-    return false;
+    if ((stopBits == SerialPort::UnknownStopBits)
+            || isRestrictedAreaSettings(m_dataBits, stopBits)) {
+
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+
+    switch (stopBits) {
+    case SerialPort::OneStop:
+        m_currTermios.c_cflag &= (~CSTOPB);
+        break;
+    case SerialPort::TwoStop:
+        m_currTermios.c_cflag |= CSTOPB;
+        break;
+    default:
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+    bool ret = updateTermious();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 {
-    Q_UNUSED(flow)
-    // Impl me
-    return false;
+    if (flow == SerialPort::UnknownFlowControl) {
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+
+    switch (flow) {
+    case SerialPort::NoFlowControl:
+        m_currTermios.c_cflag &= (~CRTSCTS);
+        m_currTermios.c_iflag &= (~(IXON | IXOFF | IXANY));
+        break;
+    case SerialPort::HardwareControl:
+        m_currTermios.c_cflag |= CRTSCTS;
+        m_currTermios.c_iflag &= (~(IXON | IXOFF | IXANY));
+        break;
+    case SerialPort::SoftwareControl:
+        m_currTermios.c_cflag &= (~CRTSCTS);
+        m_currTermios.c_iflag |= (IXON | IXOFF | IXANY);
+        break;
+    default:
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+    bool ret = updateTermious();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeDataInterval(int usecs)
@@ -491,22 +678,42 @@ inline bool SerialPortPrivate::updateTermious()
 
 bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t rate)
 {
-    Q_UNUSED(dir)
-    Q_UNUSED(rate)
-    // Impl me
-    return false;
+    if ((dir & SerialPort::Input)
+            && (::cfsetispeed(&m_currTermios, rate) == -1)) {
+
+        return false;
+    }
+
+    if ((dir & SerialPort::Output)
+            && (::cfsetospeed(&m_currTermios, rate) == -1)) {
+
+        return false;
+    }
+
+    return updateTermious();
 }
 
 bool SerialPortPrivate::setCustomRate(qint32 rate)
 {
-    Q_UNUSED(rate)
+    int result = -1;
 #if defined (Q_OS_LINUX)
-    //
+#  if defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
+    if (rate > 0) {
+        struct serial_struct ser_info;
+        result = ::ioctl(m_descriptor, TIOCGSERIAL, &ser_info);
+        if (result != -1) {
+            ser_info.flags &= ~ASYNC_SPD_MASK;
+            ser_info.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+            ser_info.custom_divisor = ser_info.baud_base / rate;
+            if (ser_info.custom_divisor)
+                result = ::ioctl(m_descriptor, TIOCSSERIAL, &ser_info);
+        }
+    }
+#  endif
 #else
     //
 #endif
-    // Impl me
-    return false;
+    return (result != -1);
 }
 
 // Prepares other parameters of the structures port configuration.
@@ -517,5 +724,12 @@ void SerialPortPrivate::prepareOtherOptions()
     m_currTermios.c_cflag |= (CREAD | CLOCAL);
 }
 
-
+bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                                 SerialPort::StopBits stopBits) const
+{
+    return (((dataBits == SerialPort::Data5) && (stopBits == SerialPort::TwoStop))
+            || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
+            || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
+            || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
+}
 

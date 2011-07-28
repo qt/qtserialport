@@ -101,6 +101,9 @@ private:
     bool updateTermious();
     bool setStandartRate(SerialPort::Directions dir, speed_t rate);
     bool setCustomRate(qint32 rate);
+
+    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                  SerialPort::StopBits stopBits) const;
 #endif
     friend class SerialPortNotifier;
     SerialPortNotifier m_notifier;
