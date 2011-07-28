@@ -125,7 +125,7 @@ bool SerialPortPrivate::canWriteNotification() {
     flush();
 
 #if defined (Q_OS_WIN)
-    if (m_writeBuffer.isEmpty())
+    if (!m_writeBuffer.isEmpty())
         setWriteNotificationEnabled(true);
 #else
     if (m_writeBuffer.isEmpty())
