@@ -227,9 +227,8 @@ bool SerialPort::reset()
 
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
-    Q_UNUSED(policy)
-    // Impl me
-    return false;
+    Q_D(SerialPort);
+    return d->setDataErrorPolicy(policy);
 }
 
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
@@ -446,7 +445,7 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
     else
         memcpy(ptr, data, maxSize);
 
-     if (!d->m_writeBuffer.isEmpty())
+    if (!d->m_writeBuffer.isEmpty())
         d->setWriteNotificationEnabled(true);
 
     return maxSize;
