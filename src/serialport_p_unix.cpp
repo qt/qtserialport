@@ -3,10 +3,12 @@
 */
 
 #include "serialport_p.h"
+#include "ttylocker_p_unix.h"
 
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <fcntl.h>
 
 #if defined (Q_OS_LINUX)
 #include <linux/serial.h>
@@ -19,7 +21,7 @@
 
 
 SerialPortPrivate::SerialPortPrivate()
-    : SerialPortPortPrivate()
+    : AbstractSerialPortPrivate()
     , m_descriptor(-1)
 {
     int size = sizeof(struct termios);
@@ -32,9 +34,8 @@ SerialPortPrivate::SerialPortPrivate()
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     // First, here need check locked device or not.
-    bool locked = false;
-
-    if (locked) {
+    bool byCurrPid = false;
+    if (TTYLocker::isLocked(m_systemLocation, &byCurrPid)) {
         setError(SerialPort::PermissionDeniedError);
         return false;
     }
@@ -65,14 +66,18 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     */
 
     // Try lock device by location and check it state is locked.
-    //...
+    TTYLocker::lock(m_systemLocation);
+    if (!TTYLocker::isLocked(m_systemLocation, &byCurrPid)) {
+        setError(SerialPort::PermissionDeniedError);
+        return false;
+    }
 
     // Try set exclusive mode.
 #if defined (TIOCEXCL)
     ::ioctl(m_descriptor, TIOCEXCL);
 #endif
 
-    if (saveOldSettings()) {
+    if (saveOldsettings()) {
 
         prepareOtherOptions();
         prepareTimeouts(0);
@@ -81,10 +86,12 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
             // Disable autocalculate total read interval.
             // isAutoCalcReadTimeoutConstant = false;
 
-            detectDefaultCurrentSettings();
+            detectDefaultSettings();
             return true;
         }
     }
+    setError(SerialPort::ConfiguringError);
+    return false;
 }
 
 void SerialPortPrivate::close()
@@ -99,7 +106,9 @@ void SerialPortPrivate::close()
     ::close(m_descriptor);
 
     // Try unlock device by location.
-    //...
+    bool byCurrPid = false;
+    if (TTYLocker::isLocked(m_systemLocation, &byCurrPid) && byCurrPid)
+        TTYLocker::unlock(m_systemLocation);
 
     m_descriptor = -1;
 }
@@ -372,48 +381,57 @@ QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) con
 
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
+    Q_UNUSED(rate)
+    Q_UNUSED(dir)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 {
+    Q_UNUSED(dataBits)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 {
+    Q_UNUSED(parity)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
 {
+    Q_UNUSED(stopBits)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 {
+    Q_UNUSED(flow)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeDataInterval(int usecs)
 {
+    Q_UNUSED(usecs)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
+    Q_UNUSED(msecs)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
+    Q_UNUSED(policy)
     // Impl me
     return false;
 }
@@ -473,12 +491,15 @@ inline bool SerialPortPrivate::updateTermious()
 
 bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t rate)
 {
+    Q_UNUSED(dir)
+    Q_UNUSED(rate)
     // Impl me
     return false;
 }
 
 bool SerialPortPrivate::setCustomRate(qint32 rate)
 {
+    Q_UNUSED(rate)
 #if defined (Q_OS_LINUX)
     //
 #else
