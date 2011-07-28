@@ -26,9 +26,12 @@ win32 {
 }
 
 unix {
+    HEADERS += \
+        $$PWD/ttylocker_p_unix.h
     SOURCES += \
         $$PWD/serialport_p_unix.cpp \
-        $$PWD/serialportnotifier_p_unix.cpp
+        $$PWD/serialportnotifier_p_unix.cpp \
+        $$PWD/ttylocker_p_unix.cpp
 
     macx {
         SOURCES += $$PWD/serialportinfo_mac.cpp
