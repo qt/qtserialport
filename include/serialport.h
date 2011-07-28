@@ -105,7 +105,8 @@ public:
         SkipPolicy,
         PassZeroPolicy,
         IgnorePolicy,
-        StopReceivingPolicy
+        StopReceivingPolicy,
+        UnknownPolicy
     };
 
     enum PortError {
