@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>OptionsWidget</class>
+ <widget class="QWidget" name="OptionsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>161</width>
+    <height>197</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QLabel" name="Label1">
+     <property name="text">
+      <string>Baud rate:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QComboBox" name="baudBox"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="Label2">
+     <property name="text">
+      <string>Data bits:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="dataBox"/>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="Label3">
+     <property name="text">
+      <string>Parity:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="parityBox"/>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="Label4">
+     <property name="text">
+      <string>Stop bits:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="stopBox"/>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="Label5">
+     <property name="text">
+      <string>Flow control:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="flowBox"/>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="Label6">
+     <property name="text">
+      <string>Policy:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QComboBox" name="policyBox"/>
+   </item>
+   <item row="6" column="1">
+    <widget class="QPushButton" name="applyButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Apply</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
