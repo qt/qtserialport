@@ -32,6 +32,7 @@
 SerialPortPrivate::SerialPortPrivate()
     : AbstractSerialPortPrivate()
     , m_descriptor(INVALID_HANDLE_VALUE)
+    , m_flagErrorFromCommEvent(false)
 {
     size_t size = sizeof(DCB);
     ::memset(&m_currDCB, 0, size);
@@ -209,21 +210,6 @@ qint64 SerialPortPrivate::bytesAvailable() const
     COMSTAT cs;
     if (::ClearCommError(m_descriptor, &err, &cs) == 0)
         return -1;
-
-    if (err) {
-        // FIXME: Trying to circumvent the
-        //        restriction of data changes (call setError()) in the constant method.
-        SerialPortPrivate *ptr = (SerialPortPrivate *)(this);
-        if (ptr) {
-            if (err & CE_FRAME)
-                ptr->setError(SerialPort::FramingError);
-            else if (err & CE_RXPARITY)
-                ptr->setError(SerialPort::ParityError);
-            else
-                ptr->setError(SerialPort::UnknownPortError);
-        }
-    }
-
     return qint64(cs.cbInQue);
 }
 
@@ -231,10 +217,8 @@ qint64 SerialPortPrivate::bytesToWrite() const
 {
     DWORD err;
     COMSTAT cs;
-    if ((::ClearCommError(m_descriptor, &err, &cs) == 0)
-            || err) {
+    if (::ClearCommError(m_descriptor, &err, &cs) == 0)
         return -1;
-    }
     return qint64(cs.cbOutQue);
 }
 
@@ -254,6 +238,10 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     DWORD readBytes = 0;
     bool sucessResult = false;
 
+    // FIXME:
+    if (m_policy != SerialPort::IgnorePolicy)
+        len = 1;
+
     if (::ReadFile(m_descriptor, data, len, &readBytes, &m_ovRead))
         sucessResult = true;
     else {
@@ -271,21 +259,21 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
         }
     }
     if(!sucessResult) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type?
-        DWORD err = 0;
-        COMSTAT cs;
-        if (::ClearCommError(m_descriptor, &err, &cs) != 0) {
-            if (err & CE_FRAME)
-                setError(SerialPort::FramingError);
-            else if (err & CE_RXPARITY)
-                setError(SerialPort::ParityError);
-            else
-                setError(SerialPort::UnknownPortError);
-        }
-        else
-            setError(SerialPort::IoError);
+        setError(SerialPort::IoError);
         return -1;
+    }
+
+    // FIXME: Process emulate policy.
+    if (m_flagErrorFromCommEvent) {
+        m_flagErrorFromCommEvent = false;
+
+        switch (m_policy) {
+        case SerialPort::SkipPolicy: return 0;
+        case SerialPort::PassZeroPolicy:
+            *data = '\0'; break;
+        case SerialPort::StopReceivingPolicy: break;
+        default:;
+        }
     }
     return qint64(readBytes);
 }
@@ -314,11 +302,6 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
         }
     }
     if(!sucessResult) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type?
-        DWORD err = 0;
-        COMSTAT cs;
-        ::ClearCommError(m_descriptor, &err, &cs);
         setError(SerialPort::IoError);
         return -1;
     }
@@ -542,28 +525,7 @@ bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
-    // FIXME:
-    if (policy == SerialPort::StopReceivingPolicy) {
-        m_currDCB.fErrorChar = false;
-        m_currDCB.ErrorChar = 0;
-        m_currDCB.fAbortOnError = true;
-    } else if (policy == SerialPort::PassZeroPolicy) {
-        m_currDCB.fErrorChar = true;
-        m_currDCB.ErrorChar = '\0';
-        m_currDCB.fAbortOnError = false;
-    } else if (policy == SerialPort::IgnorePolicy) {
-        m_currDCB.fErrorChar = false;
-        m_currDCB.ErrorChar = 0;
-        m_currDCB.fAbortOnError = false;
-    } else {
-        setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
-    bool ret = updateDcb();
-    if (!ret)
-        setError(SerialPort::ConfiguringError);
-    return ret;
+    return true;
 }
 
 bool SerialPortPrivate::nativeFlush()
@@ -618,24 +580,13 @@ void SerialPortPrivate::detectDefaultSettings()
             && !m_currDCB.fInX && !m_currDCB.fOutX) {
         m_flow = SerialPort::NoFlowControl;
     } else if (!m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
-             && m_currDCB.fInX && m_currDCB.fOutX) {
+               && m_currDCB.fInX && m_currDCB.fOutX) {
         m_flow = SerialPort::SoftwareControl;
     } else if (m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_HANDSHAKE)
-             && !m_currDCB.fInX && !m_currDCB.fOutX) {
+               && !m_currDCB.fInX && !m_currDCB.fOutX) {
         m_flow = SerialPort::HardwareControl;
     } else
         m_flow = SerialPort::UnknownFlowControl;
-
-    // Detect policy.
-    if (m_currDCB.fAbortOnError && !m_currDCB.fErrorChar)
-        m_policy = SerialPort::StopReceivingPolicy;
-    else if (m_currDCB.fErrorChar && (m_currDCB.ErrorChar == '\0')
-             && !m_currDCB.fAbortOnError)
-        m_policy = SerialPort::PassZeroPolicy;
-    else if (!m_currDCB.fErrorChar && !m_currDCB.fAbortOnError)
-        m_policy = SerialPort::IgnorePolicy;
-    else
-        m_policy = SerialPort::UnknownPolicy;
 }
 
 // Used only in method SerialPortPrivate::open().
@@ -749,5 +700,24 @@ void SerialPortPrivate::prepareOtherOptions()
     m_currDCB.fOutX = false;
     m_currDCB.fAbortOnError = false;
     m_currDCB.fNull = false;
+    m_currDCB.fErrorChar = false;
+}
+
+bool SerialPortPrivate::processCommEventError()
+{
+    DWORD err = 0;
+    COMSTAT cs;
+    bool ret = (::ClearCommError(m_descriptor, &err, &cs) != 0);
+    if (ret && err) {
+        if (err & CE_FRAME)
+            setError(SerialPort::FramingError);
+        else if (err & CE_RXPARITY)
+            setError(SerialPort::ParityError);
+        else
+            setError(SerialPort::UnknownPortError);
+
+        m_flagErrorFromCommEvent = true;
+    }
+    return ret;
 }
 

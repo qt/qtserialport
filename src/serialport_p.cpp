@@ -115,7 +115,8 @@ bool SerialPortPrivate::canReadNotification()
     return true;
 }
 
-bool SerialPortPrivate::canWriteNotification() {
+bool SerialPortPrivate::canWriteNotification()
+{
 #if defined (Q_OS_WIN)
     if (isWriteNotificationEnabled())
         setWriteNotificationEnabled(false);
@@ -132,6 +133,14 @@ bool SerialPortPrivate::canWriteNotification() {
         setWriteNotificationEnabled(false);
 #endif
     return (m_writeBuffer.size() < tmp);
+}
+
+bool SerialPortPrivate::canErrorNotification()
+{
+#if defined (Q_OS_WIN)
+    return processCommEventError();
+#endif
+    return true;
 }
 
 bool SerialPortPrivate::isReadNotificationEnabled() const
@@ -162,7 +171,8 @@ void SerialPortPrivate::clearBuffers()
 
 bool SerialPortPrivate::readFromPort()
 {
-    qint64 bytesToRead = bytesAvailable();
+    qint64 bytesToRead = (m_policy == SerialPort::IgnorePolicy) ?
+                bytesAvailable() : 1;
 
     if (bytesToRead <= 0)
         return false;

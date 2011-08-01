@@ -79,8 +79,8 @@ private:
     OVERLAPPED m_ovRead;
     OVERLAPPED m_ovWrite;
     OVERLAPPED m_ovSelect;
-
     HANDLE m_descriptor;
+    bool m_flagErrorFromCommEvent;
 
     bool createEvents(bool rx, bool tx);
     void closeEvents() const;
@@ -91,6 +91,8 @@ private:
 
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
+
+    bool processCommEventError();
 #else
     struct termios m_currTermios;
     struct termios m_oldTermios;
@@ -112,6 +114,7 @@ private:
 
     bool canReadNotification();
     bool canWriteNotification();
+    bool canErrorNotification();
 
     bool isReadNotificationEnabled() const;
     void setReadNotificationEnabled(bool enable);

@@ -14,7 +14,7 @@
 SerialPortNotifier::SerialPortNotifier(QObject *parent)
         : QWinEventNotifier(parent)
         , m_currentMask(0)
-        , m_setMask(0)
+        , m_setMask(EV_ERR)
 {
     ::memset(&m_ov, 0, sizeof(OVERLAPPED));
     m_ov.hEvent = ::CreateEvent(0, false, false, 0);
@@ -71,11 +71,15 @@ bool SerialPortNotifier::event(QEvent *e)
 {
     bool ret = false;
     if (m_ref && (e->type() == QEvent::WinEventAct)) {
+        if (EV_ERR & m_currentMask & m_setMask) {
+            m_ref->canErrorNotification();
+            ret = true;
+        }
         if (EV_RXCHAR & m_currentMask & m_setMask) {
             m_ref->canReadNotification();
             ret = true;
         }
-        //TODO: This is why it does not work?
+        //FIXME: This is why it does not work?
         if (EV_TXEMPTY & m_currentMask & m_setMask) {
             m_ref->canWriteNotification();
             ret = true;
