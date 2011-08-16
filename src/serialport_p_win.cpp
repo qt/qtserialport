@@ -40,27 +40,37 @@ SerialPortPrivate::SerialPortPrivate()
     size = sizeof(COMMTIMEOUTS);
     ::memset(&m_currCommTimeouts, 0, size);
     ::memset(&m_oldCommTimeouts, 0, size);
+
+#if !defined (Q_OS_WINCE)
     size = sizeof(OVERLAPPED);
     ::memset(&m_ovRead, 0, size);
     ::memset(&m_ovWrite, 0, size);
     ::memset(&m_ovSelect, 0, size);
+#endif
 
     m_notifier.setRef(this);
 }
 
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
-    DWORD access = 0;
-    DWORD sharing = 0;
+    DWORD desiredAccess = 0;
+    DWORD shareMode = 0;
+    DWORD flagsAndAttributes = 0;
     bool rxflag = false;
     bool txflag = false;
 
+#if !defined (Q_OS_WINCE)
+    flagsAndAttributes |= FILE_FLAG_OVERLAPPED;
+#endif
+
     if (mode & QIODevice::ReadOnly) {
-        access |= GENERIC_READ; //sharing = FILE_SHARE_READ;
+        desiredAccess |= GENERIC_READ;
+        //shareMode = FILE_SHARE_READ;
         rxflag = true;
     }
     if (mode & QIODevice::WriteOnly) {
-        access |= GENERIC_WRITE; //sharing = FILE_SHARE_WRITE;
+        desiredAccess |= GENERIC_WRITE;
+        //shareMode = FILE_SHARE_WRITE;
         txflag = true;
     }
 
@@ -69,7 +79,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
     // Try opened serial device.
     m_descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
-                                access, sharing, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+                                desiredAccess, shareMode, 0, OPEN_EXISTING, flagsAndAttributes, 0);
 
     if (m_descriptor == INVALID_HANDLE_VALUE) {
         switch (::GetLastError()) {
@@ -98,10 +108,14 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
                 // Disable autocalculate total read interval.
                 // isAutoCalcReadTimeoutConstant = false;
 
+#if !defined (Q_OS_WINCE)
                 if (createEvents(rxflag, txflag)) {
+#endif
                     detectDefaultSettings();
                     return true;
+#if !defined (Q_OS_WINCE)
                 }
+#endif
             }
         }
     }
@@ -114,7 +128,11 @@ void SerialPortPrivate::close()
     ::CancelIo(m_descriptor);
     restoreOldsettings();
     ::CloseHandle(m_descriptor);
+
+#if !defined (Q_OS_WINCE)
     closeEvents();
+#endif
+
     m_descriptor = INVALID_HANDLE_VALUE;
 }
 
@@ -204,24 +222,27 @@ bool SerialPortPrivate::setBreak(bool set)
     return ret;
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+enum CommStatQue { CS_IN_QUE, CS_OUT_QUE };
+static qint64 get_commstat_que(HANDLE descriptor, enum CommStatQue que)
 {
     DWORD err;
     COMSTAT cs;
-    if (::ClearCommError(m_descriptor, &err, &cs) == 0)
+    if (::ClearCommError(descriptor, &err, &cs) == 0)
         return -1;
-    return qint64(cs.cbInQue);
+    return qint64((que == CS_IN_QUE) ? (cs.cbInQue) : (cs.cbOutQue));
+}
+
+qint64 SerialPortPrivate::bytesAvailable() const
+{
+    return get_commstat_que(m_descriptor, CS_IN_QUE);
 }
 
 qint64 SerialPortPrivate::bytesToWrite() const
 {
-    DWORD err;
-    COMSTAT cs;
-    if (::ClearCommError(m_descriptor, &err, &cs) == 0)
-        return -1;
-    return qint64(cs.cbOutQue);
+    return get_commstat_que(m_descriptor, CS_OUT_QUE);
 }
 
+#if !defined (Q_OS_WINCE)
 // Clear overlapped structure, but does not affect the event.
 static void clear_overlapped(OVERLAPPED *overlapped)
 {
@@ -230,10 +251,13 @@ static void clear_overlapped(OVERLAPPED *overlapped)
     overlapped->Offset = 0;
     overlapped->OffsetHigh = 0;
 }
+#endif
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
+#if !defined (Q_OS_WINCE)
     clear_overlapped(&m_ovRead);
+#endif
 
     DWORD readBytes = 0;
     bool sucessResult = false;
@@ -242,6 +266,9 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     if (m_policy != SerialPort::IgnorePolicy)
         len = 1;
 
+#if defined (Q_OS_WINCE)
+    sucessResult = ::ReadFile(m_descriptor, data, len, &readBytes, 0);
+#else
     if (::ReadFile(m_descriptor, data, len, &readBytes, &m_ovRead))
         sucessResult = true;
     else {
@@ -258,6 +285,8 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
             }
         }
     }
+ #endif
+
     if(!sucessResult) {
         setError(SerialPort::IoError);
         return -1;
@@ -280,11 +309,16 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
+#if !defined (Q_OS_WINCE)
     clear_overlapped(&m_ovWrite);
+#endif
 
     DWORD writeBytes = 0;
     bool sucessResult = false;
 
+#if defined (Q_OS_WINCE)
+    sucessResult = ::WriteFile(m_descriptor, data, len, &writeBytes, 0);
+#else
     if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_ovWrite))
         sucessResult = true;
     else {
@@ -301,6 +335,8 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
             }
         }
     }
+#endif
+
     if(!sucessResult) {
         setError(SerialPort::IoError);
         return -1;
@@ -315,8 +351,10 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     // Forward checking data for read.
     if (checkRead && (bytesAvailable() > 0)) {
         *selectForRead = true;
-        return 1;
+        return true;
     }
+
+#if !defined (Q_OS_WINCE)
 
     clear_overlapped(&m_ovSelect);
 
@@ -375,6 +413,9 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     // Rerair old mask.
     ::SetCommMask(m_descriptor, oldEventMask);
     return sucessResult;
+#else
+    return false;
+#endif
 }
 
 
@@ -525,6 +566,7 @@ bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
+    Q_UNUSED(policy)
     return true;
 }
 
@@ -624,6 +666,7 @@ bool SerialPortPrivate::restoreOldsettings()
 /* Private methods */
 
 
+#if !defined (Q_OS_WINCE)
 bool SerialPortPrivate::createEvents(bool rx, bool tx)
 {
     if (rx) { m_ovRead.hEvent = ::CreateEvent(0, false, false, 0); }
@@ -645,6 +688,7 @@ void SerialPortPrivate::closeEvents() const
     if (m_ovSelect.hEvent)
         ::CloseHandle(m_ovSelect.hEvent);
 }
+#endif
 
 void SerialPortPrivate::recalcTotalReadTimeoutConstant()
 {
@@ -674,6 +718,16 @@ void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 
 inline bool SerialPortPrivate::updateDcb()
 {
+#if defined (Q_OS_WINCE)
+    // Grab a mutex, in order after exit WaitCommEvent (see class SerialPortNotifier)
+    // block the flow of run() notifier until there is a change DCB.
+    QMutexLocker locker(&m_settingsChangeMutex);
+    // This way, we reset in class WaitCommEvent SerialPortNotifier to
+    // be able to change the DCB.
+    // Otherwise WaitCommEvent blocking any change!
+    ::SetCommMask(m_descriptor, 0);
+#endif
+
     return (::SetCommState(m_descriptor, &m_currDCB) != 0);
 }
 

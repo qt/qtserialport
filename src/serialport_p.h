@@ -11,6 +11,9 @@
 
 #if defined (Q_OS_WIN)
 #  include <qt_windows.h>
+#  if defined (Q_OS_WINCE)
+#    include <QtCore/QMutex>
+#  endif
 #else
 #  include <termios.h>
 #endif
@@ -76,14 +79,23 @@ private:
 
     DCB m_currDCB, m_oldDCB;
     COMMTIMEOUTS m_currCommTimeouts, m_oldCommTimeouts;
-    OVERLAPPED m_ovRead;
-    OVERLAPPED m_ovWrite;
-    OVERLAPPED m_ovSelect;
     HANDLE m_descriptor;
     bool m_flagErrorFromCommEvent;
 
+#  if defined (Q_OS_WINCE)
+    QMutex m_readNotificationMutex;
+    QMutex m_writeNotificationMutex;
+    QMutex m_errorNotificationMutex;
+    QMutex m_settingsChangeMutex;
+#  else
+    OVERLAPPED m_ovRead;
+    OVERLAPPED m_ovWrite;
+    OVERLAPPED m_ovSelect;
+
     bool createEvents(bool rx, bool tx);
     void closeEvents() const;
+#  endif
+
     void recalcTotalReadTimeoutConstant();
     void prepareCommTimeouts(CommTimeouts cto, DWORD msecs);
     bool updateDcb();

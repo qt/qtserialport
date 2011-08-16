@@ -47,6 +47,10 @@ bool SerialPortPrivate::flush()
 
 bool SerialPortPrivate::canReadNotification()
 {
+#if defined (Q_OS_WINCE)
+    QMutexLocker locker(&m_readNotificationMutex);
+#endif
+
     Q_Q(SerialPort);
 
     // Prevent recursive calls.
@@ -117,6 +121,10 @@ bool SerialPortPrivate::canReadNotification()
 
 bool SerialPortPrivate::canWriteNotification()
 {
+#if defined (Q_OS_WINCE)
+    QMutexLocker locker(&m_writeNotificationMutex);
+#endif
+
 #if defined (Q_OS_WIN)
     if (isWriteNotificationEnabled())
         setWriteNotificationEnabled(false);
@@ -137,6 +145,10 @@ bool SerialPortPrivate::canWriteNotification()
 
 bool SerialPortPrivate::canErrorNotification()
 {
+#if defined (Q_OS_WINCE)
+    QMutexLocker locker(&m_errorNotificationMutex);
+#endif
+
 #if defined (Q_OS_WIN)
     return processCommEventError();
 #endif

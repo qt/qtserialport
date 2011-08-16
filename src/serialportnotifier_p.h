@@ -27,8 +27,13 @@ protected:
 #include <QtCore/QEvent>
 
 #if defined (Q_OS_WIN)
-#  include <QtCore/private/qwineventnotifier_p.h>
 #  include <qt_windows.h>
+#  if defined (Q_OS_WINCE)
+#    include <QtCore/QThread>
+#    include <QtCore/QMutex>
+#  else
+#    include <QtCore/private/qwineventnotifier_p.h>
+#  endif
 #else
 #  include <QtCore/QThread>
 class QSocketNotifier;
@@ -36,7 +41,11 @@ class QSocketNotifier;
 
 
 #if defined (Q_OS_WIN)
+#  if defined (Q_OS_WINCE)
+class SerialPortNotifier : public QThread, public AbstractSerialPortNotifier
+#  else
 class SerialPortNotifier : public QWinEventNotifier, public AbstractSerialPortNotifier
+#  endif
 {
 public:
     explicit SerialPortNotifier(QObject *parent = 0);
@@ -48,14 +57,23 @@ public:
     virtual void setWriteNotificationEnabled(bool enable);
 
 protected:
+#  if defined (Q_OS_WINCE)
+    virtual void run();
+#  else
     virtual bool event(QEvent *e);
+#  endif
 
 private:
-    OVERLAPPED m_ov;
     DWORD m_currentMask;
     DWORD m_setMask;
+#  if defined (Q_OS_WINCE)
+    volatile bool m_running;
+    QMutex m_setCommMaskMutex;
+#  else
+    OVERLAPPED m_ov;
 
     void setMaskAndActivateEvent();
+#  endif
 };
 #else
 class SerialPortNotifier : public QObject, public AbstractSerialPortNotifier
