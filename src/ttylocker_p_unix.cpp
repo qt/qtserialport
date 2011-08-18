@@ -48,7 +48,7 @@ static QString short_name_from_location(const QString &location)
 
 enum {
     LOCK_DIRS_COUNT = 5,
-    LOCK_FILE_FORMS_COUNT = 2
+    LOCK_FILE_FORMS_COUNT = 2 //< while unused
 };
 
 static const char *lock_dir_list[LOCK_DIRS_COUNT] = {
@@ -72,6 +72,7 @@ static QString get_first_shared_lock_dir()
     return QString();
 }
 
+/*
 // Returns the name of the lock file, which is tied to the
 // major and minor device number, eg "LCK.30.50" etc.
 static QString get_lock_file_in_numeric_form(const QString &location)
@@ -88,12 +89,13 @@ static QString get_lock_file_in_numeric_form(const QString &location)
     }
     return result;
 }
+*/
 
 // Returns the name of the lock file which is tied to the
 // device name, eg "LCK..ttyS0", etc.
 static QString get_lock_file_in_named_form(const QString &location)
 {
-    QString result = get_first_shared_lock_dir();
+    QString result(get_first_shared_lock_dir());
     if (!result.isEmpty()) {
         result.append("/LCK..%1");
         result = result.arg(short_name_from_location(location));
@@ -101,32 +103,28 @@ static QString get_lock_file_in_named_form(const QString &location)
     return result;
 }
 
+/*
 // Returns the name of the lock file, which is tied to the number of
 // the process which uses a device, such as "LCK...999", etc.
-//static QString get_lock_file_in_pid_form(const QString &location)
-//{
-//    QString result = get_first_shared_lock_dir();
-//    if (!result.isEmpty()) {
-//        result.append("/LCK...%1");
-//        result = result.arg(::getpid());
-//    }
-//    return result;
-//}
+static QString get_lock_file_in_pid_form(const QString &location)
+{
+    QString result = get_first_shared_lock_dir();
+    if (!result.isEmpty()) {
+        result.append("/LCK...%1");
+        result = result.arg(::getpid());
+    }
+    return result;
+}
+*/
 
-enum {
-    CHK_PID_PROCESS_NOT_EXISTS,
-    CHK_PID_PROCESS_EXISTS_FOREIGN,
-    CHK_PID_PROCESS_EXISTS_CURRENT,
-    CHK_PID_UNKNOWN_ERROR
+enum CheckPidResult {
+    CHK_PID_PROCESS_NOT_EXISTS,     /* process does not exist */
+    CHK_PID_PROCESS_EXISTS_FOREIGN, /* process exists and it is "foreign" (ie not current) */
+    CHK_PID_PROCESS_EXISTS_CURRENT, /* process exists and it is "their" (ie, current) */
+    CHK_PID_UNKNOWN_ERROR           /* another error */
 };
-
 // Checks the validity of the process number that was obtained from the Lock file.
-// Returns the following values:
-//  CHK_PID_PROCESS_NOT_EXISTS     - process does not exist
-//  CHK_PID_PROCESS_EXISTS_FOREIGN - process exists and it is "foreign" (ie not current)
-//  CHK_PID_PROCESS_EXISTS_CURRENT - process exists and it is "their" (ie, current)
-//  CHK_PID_UNKNOWN_ERROR          - another error
-static int check_pid(int pid)
+static enum CheckPidResult check_pid(int pid)
 {
     if (::kill(pid_t(pid), 0) == -1) {
         return (errno == ESRCH) ?
@@ -138,117 +136,57 @@ static int check_pid(int pid)
 
 static bool m_islocked(const QString &location, bool *current_pid)
 {
-    QFile f; //<- lock file
     bool result = false;
     *current_pid = false;
 
-    for (int i = 0; i < LOCK_FILE_FORMS_COUNT; ++i) {
-        switch (i) {
-        case 0:
-            f.setFileName(get_lock_file_in_numeric_form(location));
-            break;
-        case 1:
-            f.setFileName(get_lock_file_in_named_form(location));
-            break;
-            //case 2:
-            //    f.setFileName(get_lock_file_in_pid_form(location));
-            //    break;
-        default: ;
-        }
+    QFile f(get_lock_file_in_named_form(location));
 
-        if (!f.exists())
-            continue;
+    if (f.exists()) {
         if (!f.open(QIODevice::ReadOnly)) {
             result = true;
-            break;
+        } else {
+            QString content(f.readAll());
+            f.close();
+            bool ok = false;
+            int pid = content.section(' ', 0, 0, QString::SectionSkipEmpty).toInt(&ok);
+            if (ok) {
+                switch (check_pid(pid)) {
+                case CHK_PID_PROCESS_NOT_EXISTS:
+                    break;
+                case CHK_PID_PROCESS_EXISTS_FOREIGN:
+                    result = true;
+                    break;
+                case CHK_PID_PROCESS_EXISTS_CURRENT:
+                    result = true;
+                    *current_pid = true;
+                    break;
+                default:
+                    result = true;
+                }
+            }
         }
-
-        QString content(f.readAll());
-        f.close();
-
-        int pid = content.section(' ', 0, 0, QString::SectionSkipEmpty).toInt();
-
-        switch (check_pid(pid)) {
-        case CHK_PID_PROCESS_NOT_EXISTS:
-            break;
-        case CHK_PID_PROCESS_EXISTS_FOREIGN:
-            result = true;
-            break;
-        case CHK_PID_PROCESS_EXISTS_CURRENT:
-            result = true;
-            *current_pid = true;
-            break;
-        default:
-            result = true;
-        }
-
-        if (result)
-            break;
     }
     return result;
 }
 
 static bool m_unlock(const QString &location) {
-    QFile f;
-    for (int i = 0; i < LOCK_FILE_FORMS_COUNT; ++i) {
-        switch (i) {
-        case 0:
-            f.setFileName(get_lock_file_in_numeric_form(location));
-            break;
-        case 1:
-            f.setFileName(get_lock_file_in_named_form(location));
-            break;
-        //case 2:
-        //    f.setFileName(get_lock_file_in_pid_form(location));
-        default:
-            continue;
-        }
-        f.remove();
-    }
+    QFile f(get_lock_file_in_named_form(location));
+    f.remove();
     return true;
 }
 
 bool m_lock(const QString &location)
 {
-    bool result = true;
-    int flags = (O_WRONLY | O_CREAT | O_EXCL);
-    int mode = (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    bool result = false;
+    QFile f(get_lock_file_in_named_form(location));
+    if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QString content("     %1 %2\x0A");
+        content = content.arg(::getpid()).arg(::getuid());
 
-    for (int i = 0; i < LOCK_FILE_FORMS_COUNT; ++i) {
-        QString f;
-        switch (i) {
-        case 0:
-            f = get_lock_file_in_numeric_form(location);
-            break;
-        case 1:
-            f = get_lock_file_in_named_form(location);
-            break;
-        //case 2:
-        //    f = get_lock_file_in_pid_form(location);
-        //    break;
-        default: ;
-        }
-
-        int fd = ::open(f.toLocal8Bit().constData(), flags, mode);
-
-        if (fd == -1) {
-            result = false;
-            break;
-        }
-
-        // Make lock file content.
-        f = "     %1 %2\x0A";
-        f = f.arg(::getpid()).arg(::getuid());
-
-        if (::write(fd, f.toLocal8Bit().constData(), f.length()) == -1)
-            result = false;
-
-        ::close(fd);
-        if (!result)
-            break;
+        if (f.write(content.toLocal8Bit()) > 0)
+              result = true;
+        f.close();
     }
-    if (!result)
-        m_unlock(location);
     return result;
 }
 
