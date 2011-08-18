@@ -10,6 +10,7 @@ namespace Ui {
 class SerialPort;
 class OptionsWidget;
 class TraceWidget;
+class QTimer;
 
 class MainWidget : public QWidget
 {
@@ -28,12 +29,22 @@ private slots:
     void procControlButtonClick();
     void procOptionsButtonClick();
     void procIOButtonClick();
+    void procRtsButtonClick();
+    void procDtrButtonClick();
+
+    void procUpdateLines();
 
 private:
     Ui::MainWidget *ui;
     OptionsWidget *m_optionsWidget;
     TraceWidget *m_traceWidget;
     SerialPort *m_port;
+    QTimer *m_timer;
+
+    bool m_rts;
+    bool m_dtr;
+
+    void fillOpenModeComboBox();
 
 };
 

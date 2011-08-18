@@ -34,5 +34,5 @@ win32 {
     LIBS += -lsetupapi -luuid -ladvapi32
 }
 unix:!macx {
-    LIBS += -ludev
+    #LIBS += -ludev
 }

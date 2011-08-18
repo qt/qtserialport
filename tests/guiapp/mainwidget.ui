@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>344</width>
-    <height>207</height>
+    <width>411</width>
+    <height>240</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,14 +15,19 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0">
-    <widget class="QPushButton" name="controlButton">
-     <property name="text">
-      <string>Open</string>
+    <widget class="QGroupBox" name="modeGroupBox">
+     <property name="title">
+      <string>Open mode:</string>
      </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <widget class="QComboBox" name="modeComboBox"/>
+      </item>
+     </layout>
     </widget>
    </item>
-   <item row="0" column="1" rowspan="3">
-    <widget class="QGroupBox" name="groupBox">
+   <item row="0" column="1" rowspan="5">
+    <widget class="QGroupBox" name="infoGroupBox">
      <property name="title">
       <string>Available ports:</string>
      </property>
@@ -97,6 +102,13 @@
     </widget>
    </item>
    <item row="1" column="0">
+    <widget class="QPushButton" name="controlButton">
+     <property name="text">
+      <string>Open</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
     <widget class="QPushButton" name="optionsButton">
      <property name="enabled">
       <bool>false</bool>
@@ -106,7 +118,7 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
+   <item row="3" column="0">
     <widget class="QPushButton" name="ioButton">
      <property name="enabled">
       <bool>false</bool>
@@ -116,7 +128,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
+   <item row="4" column="0" rowspan="2">
     <widget class="QPushButton" name="rtsButton">
      <property name="enabled">
       <bool>false</bool>
@@ -126,7 +138,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
+   <item row="5" column="1">
     <widget class="QLabel" name="lineLabel">
      <property name="text">
       <string>Serial lines states</string>
@@ -136,7 +148,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item row="6" column="0">
     <widget class="QPushButton" name="dtrButton">
      <property name="enabled">
       <bool>false</bool>
@@ -146,7 +158,7 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
+   <item row="6" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="Line" name="line1">
