@@ -151,8 +151,9 @@ bool SerialPortPrivate::canErrorNotification()
 
 #if defined (Q_OS_WIN)
     return processCommEventError();
-#endif
+#else
     return true;
+#endif
 }
 
 bool SerialPortPrivate::isReadNotificationEnabled() const

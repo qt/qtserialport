@@ -42,28 +42,29 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
     int flags = (O_NOCTTY | O_NDELAY);
 
-    if (mode & QIODevice::ReadOnly)
-        flags |= O_RDONLY;
-    if (mode & QIODevice::WriteOnly)
-        flags |= O_WRONLY;
+    switch (mode & QIODevice::ReadWrite) {
+    case QIODevice::WriteOnly:
+        flags |= O_WRONLY; break;
+    case QIODevice::ReadWrite:
+        flags |= O_RDWR; break;
+    default:
+        flags |= O_RDONLY; break;
+    }
 
     // Try opened serial device.
     m_descriptor = ::open(m_systemLocation.toLocal8Bit().constData(), flags);
 
-    // FIXME:
-    /*
     if (m_descriptor == -1) {
         switch (errno) {
-        case "file not found" :
+        case ENODEV:
             setError(SerialPort::NoSuchDeviceError); break;
-        case "access denied":
+        case EACCES:
             setError(SerialPort::PermissionDeniedError); break;
         default:
             setError(SerialPort::UnknownPortError);
         }
         return false;
     }
-    */
 
     // Try lock device by location and check it state is locked.
     TTYLocker::lock(m_systemLocation);
@@ -279,14 +280,14 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
         case EWOULDBLOCK:
 #endif
         case EAGAIN:
-            // No data was available for reading
+            // No data was available for reading.
             bytesReaded = -2;
             break;
         case EBADF:
         case EINVAL:
         case EIO:
             break;
-#ifdef Q_OS_SYMBIAN
+#if defined (Q_OS_SYMBIAN)
         case EPIPE:
 #endif
         case ECONNRESET:
@@ -307,7 +308,6 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
     qint64 bytesWritten = ::write(m_descriptor, data, len);
-    nativeFlush();
 
     if (bytesWritten < 0) {
         switch (errno) {
@@ -542,8 +542,38 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
         return false;
     }
 
-    // Impl me.
-    return false;
+    switch (parity) {
+
+#if defined (CMSPAR)
+    // Here Installation parity only for GNU/Linux where the macro CMSPAR.
+    case SerialPort::SpaceParity:
+        m_currTermios.c_cflag &= (~PARODD);
+        m_currTermios.c_cflag |= (PARENB | CMSPAR);
+        break;
+    case SerialPort::MarkParity:
+        m_currTermios.c_cflag |= (PARENB | CMSPAR | PARODD);
+        break;
+#endif //CMSPAR
+
+    case SerialPort::NoParity:
+        m_currTermios.c_cflag &= (~PARENB);
+        break;
+    case SerialPort::EvenParity:
+        m_currTermios.c_cflag &= (~PARODD);
+        m_currTermios.c_cflag |= PARENB;
+        break;
+    case SerialPort::OddParity:
+        m_currTermios.c_cflag |= (PARENB | PARODD);
+        break;
+    default:
+        setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+
+    bool ret = updateTermious();
+    if (!ret)
+        setError(SerialPort::ConfiguringError);
+    return ret;
 }
 
 bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
@@ -633,9 +663,155 @@ bool SerialPortPrivate::nativeFlush()
     return ret;
 }
 
+static qint32 unixrate2valuerate(speed_t unixrate)
+{
+    qint32 ret = SerialPort::UnknownRate;
+
+    switch (unixrate) {
+#if defined (B50)
+    case B50: ret = 50; break;
+#endif
+#if defined (B75)
+    case B75: ret =  75; break;
+#endif
+#if defined (B110)
+    case B110: ret =  110; break;
+#endif
+#if defined (B134)
+    case B134: ret =  134; break;
+#endif
+#if defined (B150)
+    case B150: ret =  150; break;
+#endif
+#if defined (B200)
+    case B200: ret =  200; break;
+#endif
+#if defined (B300)
+    case B300: ret =  300; break;
+#endif
+#if defined (B600)
+    case B600: ret =  600; break;
+#endif
+#if defined (B1200)
+    case B1200: ret =  1200; break;
+#endif
+#if defined (B1800)
+    case B1800: ret =  1800; break;
+#endif
+#if defined (B2400)
+    case B2400: ret =  2400; break;
+#endif
+#if defined (B4800)
+    case B4800: ret =  4800; break;
+#endif
+#if defined (B9600)
+    case B9600: ret =  9600; break;
+#endif
+#if defined (B19200)
+    case B19200: ret =  19200; break;
+#endif
+#if defined (B38400)
+    case B38400: ret =  38400; break;
+#endif
+#if defined (B57600)
+    case B57600: ret =  57600; break;
+#endif
+#if defined (B115200)
+    case B115200: ret =  115200;  break;
+#endif
+#if defined (B230400)
+    case B230400: ret =  230400;  break;
+#endif
+#if defined (B460800)
+    case B460800: ret =  460800;  break;
+#endif
+#if defined (B500000)
+    case B500000: ret =  500000;  break;
+#endif
+#if defined (B576000)
+    case B576000: ret =  576000;  break;
+#endif
+#if defined (B921600)
+    case B921600: ret =  921600;  break;
+#endif
+#if defined (B1000000)
+    case B1000000: ret =  1000000;  break;
+#endif
+#if defined (B1152000)
+    case B1152000: ret =  1152000;  break;
+#endif
+#if defined (B1500000)
+    case B1500000: ret =  1500000;  break;
+#endif
+#if defined (B2000000)
+    case B2000000: ret =  2000000;  break;
+#endif
+#if defined (B2500000)
+    case B2500000: ret =  2500000;  break;
+#endif
+#if defined (B3000000)
+    case B3000000: ret =  3000000;  break;
+#endif
+#if defined (B3500000)
+    case B3500000: ret =  3500000;  break;
+#endif
+#if defined (B4000000)
+    case B4000000: ret =  4000000;  break;
+#endif
+    default:;
+    }
+    return ret;
+}
+
 void SerialPortPrivate::detectDefaultSettings()
 {
-    // Impl me
+    // Detect rate.
+    m_inRate = unixrate2valuerate(::cfgetispeed(&m_currTermios));
+    m_outRate = unixrate2valuerate(::cfgetospeed(&m_currTermios));
+
+    // Detect databits.
+    switch (m_currTermios.c_cflag & CSIZE) {
+    case CS5:
+        m_dataBits = SerialPort::Data5; break;
+    case CS6:
+        m_dataBits = SerialPort::Data6; break;
+    case CS7:
+        m_dataBits = SerialPort::Data7; break;
+    case CS8:
+        m_dataBits = SerialPort::Data8; break;
+    default:
+        m_dataBits = SerialPort::UnknownDataBits;
+    }
+
+    // Detect parity.
+#if defined (CMSPAR)
+    if (m_currTermios.c_cflag & CMSPAR) {
+        m_parity = (m_currTermios.c_cflag & PARODD) ?
+                    SerialPort::MarkParity : SerialPort::SpaceParity;
+    } else {
+#endif
+        if (m_currTermios.c_cflag & PARENB) {
+            m_parity = (m_currTermios.c_cflag & PARODD) ?
+                        SerialPort::OddParity : SerialPort::EvenParity;
+        } else
+            m_parity = SerialPort::NoParity;
+#if defined (CMSPAR)
+    }
+#endif
+
+    // Detect stopbits.
+    m_stopBits = (m_currTermios.c_cflag & CSTOPB) ?
+                SerialPort::TwoStop : SerialPort::OneStop;
+
+    // Detect flow control.
+    if ((!(m_currTermios.c_cflag & CRTSCTS)) && (!(m_currTermios.c_iflag & (IXON | IXOFF | IXANY))))
+        m_flow = SerialPort::NoFlowControl;
+    else if ((!(m_currTermios.c_cflag & CRTSCTS)) && (m_currTermios.c_iflag & (IXON | IXOFF | IXANY)))
+        m_flow = SerialPort::SoftwareControl;
+    else if ((m_currTermios.c_cflag & CRTSCTS) && (!(m_currTermios.c_iflag & (IXON | IXOFF | IXANY))))
+        m_flow = SerialPort::HardwareControl;
+    else
+        m_flow = SerialPort::UnknownFlowControl;
 }
 
 // Used only in method SerialPortPrivate::open().

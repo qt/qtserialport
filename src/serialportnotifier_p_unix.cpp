@@ -15,6 +15,7 @@ SerialPortNotifier::SerialPortNotifier(QObject *parent)
     : QObject(parent)
     , m_readNotifier(0)
     , m_writeNotifier(0)
+    , m_exceptionNotifier(0)
 {
 }
 
@@ -24,6 +25,8 @@ SerialPortNotifier::~SerialPortNotifier()
         m_readNotifier->setEnabled(false);
     if (m_writeNotifier)
         m_writeNotifier->setEnabled(false);
+    if (m_exceptionNotifier)
+        m_exceptionNotifier->setEnabled(false);
 }
 
 bool SerialPortNotifier::isReadNotificationEnabled() const
@@ -33,15 +36,14 @@ bool SerialPortNotifier::isReadNotificationEnabled() const
 
 void SerialPortNotifier::setReadNotificationEnabled(bool enable)
 {
-    if (m_readNotifier) {
+    Q_ASSERT(m_ref);
+
+    if (m_readNotifier)
         m_readNotifier->setEnabled(enable);
-    }
-    else {
-        if (enable) {
-            m_readNotifier = new QSocketNotifier(m_ref->m_descriptor, QSocketNotifier::Read, this);
-            m_readNotifier->installEventFilter(this);
-            m_readNotifier->setEnabled(true);
-        }
+    else if (enable) {
+        m_readNotifier = new QSocketNotifier(m_ref->m_descriptor, QSocketNotifier::Read, this);
+        m_readNotifier->installEventFilter(this);
+        m_readNotifier->setEnabled(true);
     }
 }
 
@@ -52,15 +54,14 @@ bool SerialPortNotifier::isWriteNotificationEnabled() const
 
 void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 {
-    if (m_writeNotifier) {
+    Q_ASSERT(m_ref);
+
+    if (m_writeNotifier)
         m_writeNotifier->setEnabled(enable);
-    }
-    else {
-        if (enable) {
-            m_writeNotifier = new QSocketNotifier(m_ref->m_descriptor, QSocketNotifier::Write, this);
-            m_writeNotifier->installEventFilter(this);
-            m_writeNotifier->setEnabled(true);
-        }
+    else if (enable) {
+        m_writeNotifier = new QSocketNotifier(m_ref->m_descriptor, QSocketNotifier::Write, this);
+        m_writeNotifier->installEventFilter(this);
+        m_writeNotifier->setEnabled(true);
     }
 }
 
@@ -70,13 +71,19 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 
 bool SerialPortNotifier::eventFilter(QObject *obj, QEvent *e)
 {
-    if (m_ref) {
-        if ((obj == m_readNotifier) && (e->type() == QEvent::SockAct)) {
+    Q_ASSERT(m_ref);
+
+    if (e->type() == QEvent::SockAct) {
+        if (obj == m_readNotifier) {
             m_ref->canReadNotification();
             return true;
         }
-        if ((obj == m_writeNotifier) && (e->type() == QEvent::SockAct)) {
+        if (obj == m_writeNotifier) {
             m_ref->canWriteNotification();
+            return true;
+        }
+        if (obj == m_exceptionNotifier) {
+            m_ref->canErrorNotification();
             return true;
         }
     }

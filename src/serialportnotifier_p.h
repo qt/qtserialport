@@ -93,6 +93,7 @@ protected:
 private:
     QSocketNotifier *m_readNotifier;
     QSocketNotifier *m_writeNotifier;
+    QSocketNotifier *m_exceptionNotifier;
 };
 #endif
 

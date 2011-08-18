@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define HAVE_UDEV
+//#define HAVE_UDEV
 
 #if defined (HAVE_UDEV)
 extern "C"
