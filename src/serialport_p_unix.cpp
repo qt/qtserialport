@@ -256,12 +256,21 @@ qint64 SerialPortPrivate::bytesToWrite() const
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
-    bool sfr = false; // select for read
-    bool sfw = false; // select for write
+    bool sfr = false; // Select for read.
+    bool sfw = false; // Select for write.
     qint64 bytesReaded = 0;
 
     do {
-        qint64 readFromDevice = ::read(m_descriptor, data, len - bytesReaded);
+        qint64 readFromDevice = 0;
+#if defined (CMSPAR)
+        readFromDevice = ::read(m_descriptor, data, len - bytesReaded);
+#else
+        if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
+            readFromDevice = ::read(m_descriptor, data, len - bytesReaded);
+        else // Perform parity emulation.
+            readFromDevice = readPerChar(data, len - bytesReaded);
+#endif
+
         if (readFromDevice < 0) {
             bytesReaded = readFromDevice;
             break;
@@ -307,7 +316,15 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
-    qint64 bytesWritten = ::write(m_descriptor, data, len);
+    qint64 bytesWritten = 0;
+#if defined (CMSPAR)
+    bytesWritten = ::write(m_descriptor, data, len);
+#else
+    if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
+        bytesWritten = ::write(m_descriptor, data, len);
+    else // Perform parity emulation.
+        bytesWritten = writePerChar(data, len);
+#endif
 
     if (bytesWritten < 0) {
         switch (errno) {
@@ -379,8 +396,8 @@ QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) con
     return ret;
 }
 
-// Returned -1 if it is custom baud
-// otherwise returned speed as speed_t.
+// Returned -1 if rate it is custom baud
+// otherwise returned unix speed as speed_t.
 static qint32 detect_standard_rate(qint32 rate)
 {
     switch (rate) {
@@ -477,10 +494,8 @@ static qint32 detect_standard_rate(qint32 rate)
 #if defined (B4000000)
     case 4000000: return B4000000;
 #endif
-    default: ;
-
+    default: return -1;
     }
-    return -1;
 }
 
 bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
@@ -553,6 +568,7 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
     case SerialPort::MarkParity:
         m_currTermios.c_cflag |= (PARENB | CMSPAR | PARODD);
         break;
+#else
 #endif //CMSPAR
 
     case SerialPort::NoParity:
@@ -566,8 +582,13 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
         m_currTermios.c_cflag |= (PARENB | PARODD);
         break;
     default:
-        setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currTermios.c_iflag &= ~(PARMRK | INPCK);
+        m_currTermios.c_iflag |= IGNPAR;
+
+        m_currTermios.c_cflag |= PARENB;
+        m_currTermios.c_iflag |= (PARMRK | INPCK);
+        m_currTermios.c_iflag &= ~IGNPAR;
+        break;
     }
 
     bool ret = updateTermious();
@@ -854,26 +875,17 @@ inline bool SerialPortPrivate::updateTermious()
 
 bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t rate)
 {
-    if ((dir & SerialPort::Input)
-            && (::cfsetispeed(&m_currTermios, rate) == -1)) {
-
+    if (((dir & SerialPort::Input) && (::cfsetispeed(&m_currTermios, rate) == -1))
+            || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currTermios, rate) == -1))) {
         return false;
     }
-
-    if ((dir & SerialPort::Output)
-            && (::cfsetospeed(&m_currTermios, rate) == -1)) {
-
-        return false;
-    }
-
     return updateTermious();
 }
 
 bool SerialPortPrivate::setCustomRate(qint32 rate)
 {
     int result = -1;
-#if defined (Q_OS_LINUX)
-#  if defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
+#if defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
     if (rate > 0) {
         struct serial_struct ser_info;
         result = ::ioctl(m_descriptor, TIOCGSERIAL, &ser_info);
@@ -885,7 +897,6 @@ bool SerialPortPrivate::setCustomRate(qint32 rate)
                 result = ::ioctl(m_descriptor, TIOCSSERIAL, &ser_info);
         }
     }
-#  endif
 #else
     //
 #endif
@@ -908,4 +919,94 @@ bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
             || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
             || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
 }
+
+#if !defined (CMSPAR)
+static inline bool evenParity(quint8 c)
+{
+    // Result:
+    // bit4 = bit4^bit5^bit6^bit7
+    // bit0 = bit0^bit1^bit2^bit3
+    c ^= (c >> 1) ^ (c >> 2) ^ (c >> 3);
+    // Result: bit4 ^ bit0
+    return (c ^ (c >> 4)) & 1;
+}
+
+qint64 SerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
+{
+    qint64 ret = 0;
+    quint8 const charMask = (0xFF >> (8 - m_dataBits));
+
+    while (ret < maxSize) {
+
+        bool par = evenParity(*data & charMask);
+        // False if need EVEN, true if need ODD.
+        par ^= (m_parity == SerialPort::MarkParity);
+        if (par ^ bool(m_currTermios.c_cflag & PARODD)) { // Need switch parity mode?
+            m_currTermios.c_cflag ^= PARODD;
+            nativeFlush(); //??
+            updateTermious();
+        }
+
+        int r = ::write(m_descriptor, data, 1);
+        if (r < 0)
+            return -1;
+        if (r > 0) {
+            data += r;
+            ret += r;
+        }
+    }
+    return ret;
+}
+
+qint64 SerialPortPrivate::readPerChar(char *data, qint64 maxSize)
+{
+    qint64 ret = 0;
+    //quint8 const charMask = (0xFF >> (8 - m_dataBits));
+
+    // 0 - prefix not started,
+    // 1 - received 0xFF,
+    // 2 - received 0xFF and 0x00
+    int prefix = 0;
+    while (ret < maxSize) {
+
+        qint64 r = ::read(m_descriptor, data, 1);
+        if (r < 0) {
+            if (errno == EAGAIN) // It is ok for nonblocking mode.
+                break;
+            return -1;
+        }
+        if (r == 0)
+            break;
+
+        bool par = true;
+        switch (prefix) {
+        case 2: // Previously received both 0377 and 0.
+            par = false;
+            prefix = 0;
+            break;
+        case 1: // Previously received 0377.
+            if (*data == '\0') {
+                ++prefix;
+                continue;
+            }
+            prefix = 0;
+            break;
+        default:
+            if (*data == '\377') {
+                prefix = 1;
+                continue;
+            }
+            break;
+        }
+        // Now: par contains parity ok or error, *data contains received character
+        // par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
+        // par ^= bool(tio.c_cflag & PARODD); //par contains parity bit value for current mode
+        // bool parity_error = (par ^ bool(parity == AbstractSerial::ParitySpace));
+        ++data;
+        ++ret;
+    }
+    return ret;
+}
+
+#endif //CMSPAR
 

@@ -16,6 +16,7 @@
 #  endif
 #else
 #  include <termios.h>
+//#  undef CMSPAR
 #endif
 
 class SerialPortPrivate : public AbstractSerialPortPrivate
@@ -118,6 +119,11 @@ private:
 
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
+#  if !defined CMSPAR
+    qint64 writePerChar(const char *data, qint64 maxSize);
+    qint64 readPerChar(char *data, qint64 maxSize);
+#  endif //CMSPAR
+
 #endif
     friend class SerialPortNotifier;
     SerialPortNotifier m_notifier;
