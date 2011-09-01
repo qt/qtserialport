@@ -31,7 +31,7 @@ CONFIG(debug, debug|release) {
 }
 
 win32 {
-    LIBS += -lsetupapi -luuid -ladvapi32
+    !wince*: LIBS += -lsetupapi -luuid -ladvapi32
 }
 unix:!macx {
     #LIBS += -ludev
