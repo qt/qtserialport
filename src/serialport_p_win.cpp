@@ -10,18 +10,37 @@
 #ifndef Q_CC_MSVC
 #  include <ddk/ntddser.h>
 #else
-#ifndef IOCTL_SERIAL_GET_DTRRTS
-#define IOCTL_SERIAL_GET_DTRRTS \
-    CTL_CODE (FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#endif //Q_CC_MSVC
 
-#ifndef SERIAL_DTR_STATE
-#  define SERIAL_DTR_STATE  0x00000001
-#endif
+#  ifndef CTL_CODE
+#    define CTL_CODE(DeviceType, Function, Method, Access) ( \
+       ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
+     )
+#  endif
 
-#ifndef SERIAL_RTS_STATE
-#  define SERIAL_RTS_STATE  0x00000002
-#endif
+#  ifndef FILE_DEVICE_SERIAL_PORT
+#    define FILE_DEVICE_SERIAL_PORT	27
+#  endif
+
+#  ifndef METHOD_BUFFERED
+#    define METHOD_BUFFERED  0
+#  endif
+
+#  ifndef FILE_ANY_ACCESS
+#    define FILE_ANY_ACCESS  0x00000000
+#  endif
+
+#  ifndef IOCTL_SERIAL_GET_DTRRTS
+#    define IOCTL_SERIAL_GET_DTRRTS \
+       CTL_CODE (FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#  endif 
+
+#  ifndef SERIAL_DTR_STATE
+#    define SERIAL_DTR_STATE  0x00000001
+#  endif
+
+#  ifndef SERIAL_RTS_STATE
+#    define SERIAL_RTS_STATE  0x00000002
+#  endif
 
 #endif
 
@@ -125,7 +144,9 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void SerialPortPrivate::close()
 {
+#if !defined (Q_OS_WINCE)
     ::CancelIo(m_descriptor);
+#endif
     restoreOldsettings();
     ::CloseHandle(m_descriptor);
 
@@ -414,6 +435,9 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     ::SetCommMask(m_descriptor, oldEventMask);
     return sucessResult;
 #else
+	Q_UNUSED(selectForWrite)
+	Q_UNUSED(checkWrite)
+	Q_UNUSED(timeout)
     return false;
 #endif
 }
@@ -697,23 +721,19 @@ void SerialPortPrivate::recalcTotalReadTimeoutConstant()
 
 void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 {
-    DWORD *ptr = 0;
     switch (cto) {
     case ReadIntervalTimeout:
-        ptr = &m_currCommTimeouts.ReadIntervalTimeout; break;
+        m_currCommTimeouts.ReadIntervalTimeout = msecs; break;
     case ReadTotalTimeoutMultiplier:
-        ptr = &m_currCommTimeouts.ReadTotalTimeoutMultiplier; break;
+        m_currCommTimeouts.ReadTotalTimeoutMultiplier = msecs; break;
     case ReadTotalTimeoutConstant:
-        ptr = &m_currCommTimeouts.ReadTotalTimeoutConstant; break;
+        m_currCommTimeouts.ReadTotalTimeoutConstant = msecs; break;
     case WriteTotalTimeoutMultiplier:
-        ptr = &m_currCommTimeouts.WriteTotalTimeoutMultiplier; break;
+        m_currCommTimeouts.WriteTotalTimeoutMultiplier = msecs; break;
     case WriteTotalTimeoutConstant:
-        ptr = &m_currCommTimeouts.WriteTotalTimeoutConstant; break;
+        m_currCommTimeouts.WriteTotalTimeoutConstant = msecs; break;
     default:;
     }
-
-    if (*ptr != msecs)
-        *ptr = msecs;
 }
 
 inline bool SerialPortPrivate::updateDcb()
