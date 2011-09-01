@@ -8,7 +8,9 @@
 #include <qt_windows.h>
 #include <objbase.h>
 #include <initguid.h>
-#include <setupapi.h>
+#if !defined (Q_OS_WINCE)
+#  include <setupapi.h>
+#endif
 
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
@@ -17,11 +19,13 @@ static const GUID guidArray[] =
 {
     /* Windows Ports Class GUID */
     { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
-    /* Virtual Ports Class GUIG (i.e. com0com, nmea and etc) */
+    /* Virtual Ports Class GUID (i.e. com0com and etc) */
     { 0xDF799E12, 0x3C56, 0x421B, { 0xB2, 0x98, 0xB6, 0xD3, 0x64, 0x2B, 0xC8, 0x78 } },
     /* Windows Modems Class GUID */
     { 0x4D36E96D, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } }
 };
+
+#if !defined (Q_OS_WINCE)
 
 static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
@@ -155,6 +159,7 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
     return result;
 }
 
+#endif
 
 /* Public methods */
 
@@ -162,9 +167,10 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
-
     static int guidCount = sizeof(guidArray)/sizeof(GUID);
-    for (int i = 0; i < guidCount; ++i) {
+
+#if !defined (Q_OS_WINCE)
+	for (int i = 0; i < guidCount; ++i) {
 
         HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidArray[i], 0, 0, DIGCF_PRESENT);
 
@@ -205,6 +211,25 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
+#else
+	for (int i = 0; i < guidCount; ++i) {
+		DEVMGR_DEVICE_INFORMATION di;
+		HANDLE hSearch = ::FindFirstDevice(DeviceSearchByGuid, &guidArray[i], &di);
+		if (hSearch != INVALID_HANDLE_VALUE) {
+			do {
+				SerialPortInfo info;
+				info.d_ptr->portName = QString::fromWCharArray(((const wchar_t *)di.szDeviceName)); 
+				info.d_ptr->device = QString::fromWCharArray(((const wchar_t *)di.szLegacyName));
+				info.d_ptr->description = QString(QObject::tr("Unknown."));
+				info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+
+				ports.append(info);
+
+			} while (::FindNextDevice(hSearch, &di));
+			FindClose(hSearch);
+		}
+	}
+#endif
     return ports;
 }
 
@@ -226,15 +251,29 @@ bool SerialPortInfo::isBusy() const
     QString location = systemLocation();
     QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
 
-    // Try open and close port by location: nativeFilePath
-    //...
-    //...
+	HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
+                                GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
+    if ((descriptor == INVALID_HANDLE_VALUE) 
+		&& (::GetLastError() == ERROR_ACCESS_DENIED)){
+        return true;
+    }
+	::CloseHandle(descriptor);
     return false;
 }
 
 bool SerialPortInfo::isValid() const
 {
-    // Impl me
-    return false;
+    QString location = systemLocation();
+    QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
+
+	HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
+                                GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+
+    if ((descriptor == INVALID_HANDLE_VALUE) 
+		&& (::GetLastError() != ERROR_ACCESS_DENIED)){
+        return false;
+    }
+	::CloseHandle(descriptor);
+    return true;
 }
