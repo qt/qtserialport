@@ -254,11 +254,12 @@ bool SerialPortInfo::isBusy() const
 	HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
                                 GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
-    if ((descriptor == INVALID_HANDLE_VALUE) 
-		&& (::GetLastError() == ERROR_ACCESS_DENIED)){
-        return true;
-    }
-	::CloseHandle(descriptor);
+    if (descriptor == INVALID_HANDLE_VALUE) {
+		if (::GetLastError() == ERROR_ACCESS_DENIED) 
+            return true;
+    } 
+    else
+	    ::CloseHandle(descriptor);
     return false;
 }
 
@@ -270,10 +271,11 @@ bool SerialPortInfo::isValid() const
 	HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
                                 GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
-    if ((descriptor == INVALID_HANDLE_VALUE) 
-		&& (::GetLastError() != ERROR_ACCESS_DENIED)){
-        return false;
+    if (descriptor == INVALID_HANDLE_VALUE) {
+		if (::GetLastError() != ERROR_ACCESS_DENIED)
+            return false;
     }
-	::CloseHandle(descriptor);
+    else
+	    ::CloseHandle(descriptor);
     return true;
 }
