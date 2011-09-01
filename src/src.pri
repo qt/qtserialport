@@ -22,7 +22,7 @@ win32 {
         $$PWD/serialportnotifier_p_win.cpp \
         $$PWD/serialportinfo_win.cpp
 
-    LIBS += -lsetupapi -luuid -ladvapi32
+    !wince*: LIBS += -lsetupapi -luuid -ladvapi32
 }
 
 unix {
