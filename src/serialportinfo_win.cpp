@@ -17,12 +17,16 @@
 
 static const GUID guidArray[] =
 {
+#if !defined (Q_OS_WINCE)
     /* Windows Ports Class GUID */
     { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
     /* Virtual Ports Class GUID (i.e. com0com and etc) */
     { 0xDF799E12, 0x3C56, 0x421B, { 0xB2, 0x98, 0xB6, 0xD3, 0x64, 0x2B, 0xC8, 0x78 } },
     /* Windows Modems Class GUID */
-    { 0x4D36E96D, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } }
+	{ 0x4D36E96D, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } }
+#else
+	{ 0xCC5195AC, 0xBA49, 0x48A0, { 0xBE, 0x17, 0xDF, 0x6D, 0x1B, 0x01, 0x73, 0xDD } }
+#endif
 };
 
 #if !defined (Q_OS_WINCE)
@@ -214,12 +218,13 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 #else
 	for (int i = 0; i < guidCount; ++i) {
 		DEVMGR_DEVICE_INFORMATION di;
+		di.dwSize = sizeof(DEVMGR_DEVICE_INFORMATION);
 		HANDLE hSearch = ::FindFirstDevice(DeviceSearchByGuid, &guidArray[i], &di);
 		if (hSearch != INVALID_HANDLE_VALUE) {
 			do {
 				SerialPortInfo info;
-				info.d_ptr->portName = QString::fromWCharArray(((const wchar_t *)di.szDeviceName)); 
-				info.d_ptr->device = QString::fromWCharArray(((const wchar_t *)di.szLegacyName));
+				info.d_ptr->device = QString::fromWCharArray(((const wchar_t *)di.szDeviceName)); 
+				info.d_ptr->portName = QString::fromWCharArray(((const wchar_t *)di.szLegacyName));
 				info.d_ptr->description = QString(QObject::tr("Unknown."));
 				info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
 
