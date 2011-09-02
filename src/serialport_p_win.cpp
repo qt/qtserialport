@@ -451,8 +451,10 @@ static const QString defaultPathPrefix = "\\\\.\\";
 QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
 {
     QString ret;
+#if !defined (Q_OS_WINCE)
     if (!port.contains(defaultPathPrefix))
         ret.append(defaultPathPrefix);
+#endif
     ret.append(port);
     return ret;
 }
