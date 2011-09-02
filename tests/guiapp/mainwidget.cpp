@@ -34,7 +34,9 @@ MainWidget::MainWidget(QWidget *parent)
     connect(m_timer, SIGNAL(timeout()), this, SLOT(procUpdateLines()));
 
     procShowPorts();
-    procItemPortChanged(ui->boxName->currentIndex());
+	int idx = ui->boxName->currentIndex();
+	if (idx >= 0)
+        procItemPortChanged(idx);
 
     connect(ui->boxName, SIGNAL(currentIndexChanged(int)), this, SLOT(procItemPortChanged(int)));
     connect(ui->controlButton, SIGNAL(clicked()), this, SLOT(procControlButtonClick()));
