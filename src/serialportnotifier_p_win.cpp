@@ -59,7 +59,7 @@ bool SerialPortNotifier::isReadNotificationEnabled() const
 void SerialPortNotifier::setReadNotificationEnabled(bool enable)
 {
 #if defined (Q_OS_WINCE)
-    QMutexLocker locker(&m_setCommMaskMutex);
+    m_setCommMaskMutex.lock();
     ::GetCommMask(m_ref->m_descriptor, &m_currentMask);
 #endif
 
@@ -71,6 +71,8 @@ void SerialPortNotifier::setReadNotificationEnabled(bool enable)
 #if defined (Q_OS_WINCE)
     if (m_setMask != m_currentMask)
         ::SetCommMask(m_ref->m_descriptor, m_setMask);
+
+	m_setCommMaskMutex.unlock();
 
     if (enable && !isRunning())
         start();
@@ -92,7 +94,7 @@ bool SerialPortNotifier::isWriteNotificationEnabled() const
 void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 {
 #if defined (Q_OS_WINCE)
-    QMutexLocker locker(&m_setCommMaskMutex);
+    m_setCommMaskMutex.lock();
     ::GetCommMask(m_ref->m_descriptor, &m_currentMask);
 #endif
 
@@ -105,17 +107,18 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
     if (m_setMask != m_currentMask)
         ::SetCommMask(m_ref->m_descriptor, m_setMask);
 
+	m_setCommMaskMutex.unlock();
+
     if (enable && !isRunning())
         start();
 #else
     setMaskAndActivateEvent();
-
-    // This only for OS Windows, as EV_TXEMPTY event is triggered only
+#endif
+	// This only for OS Windows, as EV_TXEMPTY event is triggered only
     // after the last byte of data (as opposed to events such as Write QSocketNotifier).
     // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
     if (enable && m_ref)
         m_ref->canWriteNotification();
-#endif
 }
 
 
