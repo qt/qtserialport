@@ -87,6 +87,6 @@ bool SerialPortNotifier::eventFilter(QObject *obj, QEvent *e)
             return true;
         }
     }
-    return SerialPortNotifier::eventFilter(obj, e);
+    return QObject::eventFilter(obj, e);
 }
 
