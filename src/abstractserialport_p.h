@@ -162,7 +162,7 @@ public:
                                     bool *selectForRead, bool *selectForWrite) = 0;
 
 protected:
-    //General (for any OS) private parameters
+    // General (for any OS) private parameters.
     QString m_systemLocation;
     qint32 m_inRate;
     qint32 m_outRate;

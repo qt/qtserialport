@@ -446,24 +446,35 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
 /* Protected methods */
 
 
+#if !defined (Q_OS_WINCE)
 static const QString defaultPathPrefix = "\\\\.\\";
+#else
+static const QString defaultPathPostfix = ":";
+#endif
 
 QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
 {
-    QString ret;
+    QString ret = port;
 #if !defined (Q_OS_WINCE)
-    if (!port.contains(defaultPathPrefix))
-        ret.append(defaultPathPrefix);
+    if (!ret.contains(defaultPathPrefix))
+        ret.prepend(defaultPathPrefix);
+#else
+    if (!ret.contains(defaultPathPostfix))
+        ret.append(defaultPathPostfix);
 #endif
-    ret.append(port);
     return ret;
 }
 
 QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) const
 {
     QString ret = location;
+#if !defined (Q_OS_WINCE)
     if (ret.contains(defaultPathPrefix))
         ret.remove(defaultPathPrefix);
+#else
+    if (ret.contains(defaultPathPostfix))
+        ret.remove(defaultPathPostfix);
+#endif
     return ret;
 }
 
