@@ -137,9 +137,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
-QList<int> SerialPortInfo::standardRates() const
+QList<qint32> SerialPortInfo::standardRates() const
 {
-    QList<int> rates;
+    QList<qint32> rates;
 
     return rates;
 }

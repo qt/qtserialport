@@ -43,7 +43,7 @@ public:
     bool isBusy() const;
     bool isValid() const;
 
-    QList<int> standardRates() const;
+    QList<qint32> standardRates() const;
     static QList<SerialPortInfo> availablePorts();
 
 private:
