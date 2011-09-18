@@ -184,7 +184,7 @@ bool m_lock(const QString &location)
         content = content.arg(::getpid()).arg(::getuid());
 
         if (f.write(content.toLocal8Bit()) > 0)
-              result = true;
+            result = true;
         f.close();
     }
     return result;

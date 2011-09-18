@@ -117,15 +117,13 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
         foreach(QFileInfo fi, devDir.entryInfoList()) {
             if (!fi.isDir()) {
+
                 SerialPortInfo info;
-                // Location.
+
                 info.d_ptr->device = fi.absoluteFilePath();
-                // Name.
                 info.d_ptr->portName = info.d_ptr->device;
                 info.d_ptr->portName.remove(QRegExp("/[\\w|\\d|\\s]+/"));
-                // Description.
                 info.d_ptr->description = QString(QObject::tr("Unknown."));
-                // Manufacturer.
                 info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
 
                 ports.append(info);

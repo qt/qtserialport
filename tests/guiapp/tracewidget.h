@@ -4,7 +4,7 @@
 #include <QtGui/QWidget>
 
 namespace Ui {
-    class TraceWidget;
+class TraceWidget;
 }
 
 class SerialPort;

@@ -13,10 +13,10 @@
 
 #if defined (Q_OS_WINCE)
 SerialPortNotifier::SerialPortNotifier(QObject *parent)
-        : QThread(parent)
-        , m_currentMask(0)
-        , m_setMask(EV_ERR)
-        , m_running(true)
+    : QThread(parent)
+    , m_currentMask(0)
+    , m_setMask(EV_ERR)
+    , m_running(true)
 {
     //??
 }
@@ -30,9 +30,9 @@ SerialPortNotifier::~SerialPortNotifier()
 }
 #else
 SerialPortNotifier::SerialPortNotifier(QObject *parent)
-        : QWinEventNotifier(parent)
-        , m_currentMask(0)
-        , m_setMask(EV_ERR)
+    : QWinEventNotifier(parent)
+    , m_currentMask(0)
+    , m_setMask(EV_ERR)
 {
     ::memset(&m_ov, 0, sizeof(OVERLAPPED));
     m_ov.hEvent = ::CreateEvent(0, false, false, 0);
@@ -72,7 +72,7 @@ void SerialPortNotifier::setReadNotificationEnabled(bool enable)
     if (m_setMask != m_currentMask)
         ::SetCommMask(m_ref->m_descriptor, m_setMask);
 
-	m_setCommMaskMutex.unlock();
+    m_setCommMaskMutex.unlock();
 
     if (enable && !isRunning())
         start();
@@ -107,14 +107,14 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
     if (m_setMask != m_currentMask)
         ::SetCommMask(m_ref->m_descriptor, m_setMask);
 
-	m_setCommMaskMutex.unlock();
+    m_setCommMaskMutex.unlock();
 
     if (enable && !isRunning())
         start();
 #else
     setMaskAndActivateEvent();
 #endif
-	// This only for OS Windows, as EV_TXEMPTY event is triggered only
+    // This only for OS Windows, as EV_TXEMPTY event is triggered only
     // after the last byte of data (as opposed to events such as Write QSocketNotifier).
     // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
     if (enable && m_ref)

@@ -13,8 +13,8 @@
 
 #  ifndef CTL_CODE
 #    define CTL_CODE(DeviceType, Function, Method, Access) ( \
-       ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
-     )
+    ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
+    )
 #  endif
 
 #  ifndef FILE_DEVICE_SERIAL_PORT
@@ -31,7 +31,7 @@
 
 #  ifndef IOCTL_SERIAL_GET_DTRRTS
 #    define IOCTL_SERIAL_GET_DTRRTS \
-       CTL_CODE (FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+    CTL_CODE (FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #  endif 
 
 #  ifndef SERIAL_DTR_STATE
@@ -301,12 +301,12 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
                 if (::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, false))
                     sucessResult = true;
             }
-            break;
+                break;
             default: ;
             }
         }
     }
- #endif
+#endif
 
     if(!sucessResult) {
         setError(SerialPort::IoError);
@@ -351,7 +351,7 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
                 if (::GetOverlappedResult(m_descriptor, &m_ovWrite, &writeBytes, false))
                     sucessResult = true;
             }
-            break;
+                break;
             default: ;
             }
         }
@@ -416,7 +416,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
                 if (::GetOverlappedResult(m_descriptor, &m_ovSelect, &bytesTransferred, false))
                     sucessResult = true;
             }
-            break;
+                break;
             default: ;
             }
         }
@@ -435,9 +435,9 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     ::SetCommMask(m_descriptor, oldEventMask);
     return sucessResult;
 #else
-	Q_UNUSED(selectForWrite)
-	Q_UNUSED(checkWrite)
-	Q_UNUSED(timeout)
+    Q_UNUSED(selectForWrite)
+    Q_UNUSED(checkWrite)
+    Q_UNUSED(timeout)
     return false;
 #endif
 }
@@ -508,7 +508,7 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
         m_currDCB.Parity = NOPARITY;
         m_currDCB.fParity = false;
     }
-    break;
+        break;
     case SerialPort::SpaceParity: m_currDCB.Parity = SPACEPARITY; break;
     case SerialPort::MarkParity: m_currDCB.Parity = MARKPARITY; break;
     case SerialPort::EvenParity: m_currDCB.Parity = EVENPARITY; break;
@@ -555,19 +555,19 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
         m_currDCB.fRtsControl = RTS_CONTROL_DISABLE;
         m_currDCB.fInX = m_currDCB.fOutX = false;
     }
-    break;
+        break;
     case SerialPort::SoftwareControl: {
         m_currDCB.fOutxCtsFlow = false;
         m_currDCB.fRtsControl = RTS_CONTROL_DISABLE;
         m_currDCB.fInX = m_currDCB.fOutX = true;
     }
-    break;
+        break;
     case SerialPort::HardwareControl: {
         m_currDCB.fOutxCtsFlow = true;
         m_currDCB.fRtsControl = RTS_CONTROL_HANDSHAKE;
         m_currDCB.fInX = m_currDCB.fOutX = false;
     }
-    break;
+        break;
     default: return false;
     }
     bool ret = updateDcb();

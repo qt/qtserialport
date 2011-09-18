@@ -253,26 +253,26 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     }
 #else
     //for (int i = 0; i < guidCount; ++i) {
-        DEVMGR_DEVICE_INFORMATION di;
-        di.dwSize = sizeof(DEVMGR_DEVICE_INFORMATION);
-        HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/, L"COM*"/*&guidArray[i]*/, &di);
-        if (hSearch != INVALID_HANDLE_VALUE) {
-            do {
-                SerialPortInfo info;
-                info.d_ptr->device = QString::fromWCharArray(((const wchar_t *)di.szLegacyName));
-                info.d_ptr->portName = info.d_ptr->device;
-				info.d_ptr->portName.remove(':');
-                info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
-                                                          QString::fromWCharArray(((const wchar_t *)di.szDeviceKey)));
-                if (info.d_ptr->description.isEmpty())
-                    info.d_ptr->description = QString(QObject::tr("Unknown."));
-                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+    DEVMGR_DEVICE_INFORMATION di;
+    di.dwSize = sizeof(DEVMGR_DEVICE_INFORMATION);
+    HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/, L"COM*"/*&guidArray[i]*/, &di);
+    if (hSearch != INVALID_HANDLE_VALUE) {
+        do {
+            SerialPortInfo info;
+            info.d_ptr->device = QString::fromWCharArray(((const wchar_t *)di.szLegacyName));
+            info.d_ptr->portName = info.d_ptr->device;
+            info.d_ptr->portName.remove(':');
+            info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
+                                                      QString::fromWCharArray(((const wchar_t *)di.szDeviceKey)));
+            if (info.d_ptr->description.isEmpty())
+                info.d_ptr->description = QString(QObject::tr("Unknown."));
+            info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
 
-                ports.append(info);
+            ports.append(info);
 
-            } while (::FindNextDevice(hSearch, &di));
-            ::FindClose(hSearch);
-        }
+        } while (::FindNextDevice(hSearch, &di));
+        ::FindClose(hSearch);
+    }
     //}
 #endif
     return ports;
@@ -290,47 +290,47 @@ QList<qint32> SerialPortInfo::standardRates() const
                                      GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
     if (descriptor != INVALID_HANDLE_VALUE) {
-		COMMPROP prop;
-		if ((::GetCommProperties(descriptor, &prop) != 0) && prop.dwSettableBaud) {
-			if (prop.dwSettableBaud & BAUD_075)
-				rates.append(75);
-			if (prop.dwSettableBaud & BAUD_110)
-				rates.append(110);
-			if (prop.dwSettableBaud & BAUD_150)
-				rates.append(150);
-			if (prop.dwSettableBaud & BAUD_300)
-				rates.append(300);
-			if (prop.dwSettableBaud & BAUD_600)
-				rates.append(600);
-			if (prop.dwSettableBaud & BAUD_1200)
-				rates.append(1200);
-			if (prop.dwSettableBaud & BAUD_1800)
-				rates.append(1800);
-			if (prop.dwSettableBaud & BAUD_2400)
-				rates.append(2400);
-			if (prop.dwSettableBaud & BAUD_4800)
-				rates.append(4800);
-			if (prop.dwSettableBaud & BAUD_7200)
-				rates.append(7200);
-			if (prop.dwSettableBaud & BAUD_9600)
-				rates.append(9600);
-			if (prop.dwSettableBaud & BAUD_14400)
-				rates.append(14400);
-			if (prop.dwSettableBaud & BAUD_19200)
-				rates.append(19200);
-			if (prop.dwSettableBaud & BAUD_38400)
-				rates.append(38400);
-			if (prop.dwSettableBaud & BAUD_56K)
-				rates.append(56000);
-			if (prop.dwSettableBaud & BAUD_57600)
-				rates.append(57600);
-			if (prop.dwSettableBaud & BAUD_115200)
-				rates.append(115200);
-			if (prop.dwSettableBaud & BAUD_128K)
-				rates.append(128000);
-		}
-		::CloseHandle(descriptor);
-	}
+        COMMPROP prop;
+        if ((::GetCommProperties(descriptor, &prop) != 0) && prop.dwSettableBaud) {
+            if (prop.dwSettableBaud & BAUD_075)
+                rates.append(75);
+            if (prop.dwSettableBaud & BAUD_110)
+                rates.append(110);
+            if (prop.dwSettableBaud & BAUD_150)
+                rates.append(150);
+            if (prop.dwSettableBaud & BAUD_300)
+                rates.append(300);
+            if (prop.dwSettableBaud & BAUD_600)
+                rates.append(600);
+            if (prop.dwSettableBaud & BAUD_1200)
+                rates.append(1200);
+            if (prop.dwSettableBaud & BAUD_1800)
+                rates.append(1800);
+            if (prop.dwSettableBaud & BAUD_2400)
+                rates.append(2400);
+            if (prop.dwSettableBaud & BAUD_4800)
+                rates.append(4800);
+            if (prop.dwSettableBaud & BAUD_7200)
+                rates.append(7200);
+            if (prop.dwSettableBaud & BAUD_9600)
+                rates.append(9600);
+            if (prop.dwSettableBaud & BAUD_14400)
+                rates.append(14400);
+            if (prop.dwSettableBaud & BAUD_19200)
+                rates.append(19200);
+            if (prop.dwSettableBaud & BAUD_38400)
+                rates.append(38400);
+            if (prop.dwSettableBaud & BAUD_56K)
+                rates.append(56000);
+            if (prop.dwSettableBaud & BAUD_57600)
+                rates.append(57600);
+            if (prop.dwSettableBaud & BAUD_115200)
+                rates.append(115200);
+            if (prop.dwSettableBaud & BAUD_128K)
+                rates.append(128000);
+        }
+        ::CloseHandle(descriptor);
+    }
 
     return rates;
 }

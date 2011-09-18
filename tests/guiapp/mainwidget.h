@@ -4,7 +4,7 @@
 #include <QtGui/QWidget>
 
 namespace Ui {
-    class MainWidget;
+class MainWidget;
 }
 
 class SerialPort;
