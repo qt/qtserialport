@@ -18,6 +18,7 @@
 
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
+#include <QtCore/QFile>
 
 
 /* Public methods */
