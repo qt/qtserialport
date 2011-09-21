@@ -145,11 +145,9 @@ QList<qint32> SerialPortInfo::standardRates() const
 
 bool SerialPortInfo::isBusy() const
 {
-    // Try open and close port by location: systemLocation().
-    //...
-    //...
-
-    return false;
+    bool currPid = false;
+    bool ret = TTYLocker::isLocked(systemLocation(), &currPid);
+    return ret;
 }
 
 bool SerialPortInfo::isValid() const
