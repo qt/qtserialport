@@ -4,6 +4,10 @@ QT -= gui
 OBJECTS_DIR = obj
 MOC_DIR = moc
 
+unix {
+    !macx:DEFINES += HAVE_UDEV
+}
+
 INCLUDEPATH += \
     ../../include \
     ../../src
@@ -24,12 +28,3 @@ CONFIG(debug, debug|release) {
     TARGET = consoleinfo
 }
 
-win32 {
-    !wince*: LIBS += -lsetupapi -luuid -ladvapi32
-}
-unix:!macx {
-    LIBS += -ludev
-}
-macx {
-    LIBS += -framework IOKit -framework CoreFoundation
-}

@@ -1,7 +1,9 @@
 QT += core gui
 TEMPLATE = app
 
-DEFINES += HAVE_UDEV
+unix {
+    !macx:DEFINES += HAVE_UDEV
+}
 
 INCLUDEPATH += \
     ../../include \
@@ -31,13 +33,3 @@ CONFIG(debug, debug|release) {
     DESTDIR = release
     TARGET = guiapp
 }
-
-win32 {
-    !wince*: LIBS += -lsetupapi -luuid -ladvapi32
-}
-unix:!macx {
-    #contains( DEFINES, HAVE_UDEV ) {
-    #    LIBS += -ludev
-    #}
-}
-
