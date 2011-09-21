@@ -90,8 +90,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                 QByteArray stringValue(MAXPATHLEN, 0);
 
-                info.d_ptr->portName = QString(bsdPath); // FIXME: With regexp, remove /dev/
-                info.d_ptr->device = QString(bsdPath);
+                QString s(bsdPath);
+                info.d_ptr->device = s;
+                info.d_ptr->portName = s.remove(QRegExp("/[\\w|\\d|\\s]+/"));
 
                 if (descriptionRef) {
                     if (CFStringGetCString(CFStringRef(descriptionRef),
