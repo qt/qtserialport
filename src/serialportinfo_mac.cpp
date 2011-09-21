@@ -99,6 +99,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                            kCFStringEncodingUTF8)) {
 
                         info.d_ptr->description = QString(stringValue);
+                        if (info.d_ptr->description.isEmpty())
+                            info.d_ptr->description = QString(QObject::tr("Unknown."));
 
                     }
                     CFRelease(descriptionRef);
@@ -110,6 +112,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                            kCFStringEncodingUTF8)) {
 
                         info.d_ptr->manufacturer = QString(stringValue);
+                        if (info.d_ptr->manufacturer.isEmpty())
+                            info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
                     }
                     CFRelease(manufacturerRef);
                 }
