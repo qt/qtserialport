@@ -885,7 +885,9 @@ bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t rate
 bool SerialPortPrivate::setCustomRate(qint32 rate)
 {
     int result = -1;
-#if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
+#if defined (Q_OS_LINUX)
+
+#  if defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
     if (rate > 0) {
         struct serial_struct ser_info;
         result = ::ioctl(m_descriptor, TIOCGSERIAL, &ser_info);
@@ -897,8 +899,18 @@ bool SerialPortPrivate::setCustomRate(qint32 rate)
                 result = ::ioctl(m_descriptor, TIOCSSERIAL, &ser_info);
         }
     }
-#else
-    //
+#  endif
+
+#elif defined (Q_OS_MAC)
+
+#  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+    // Starting with Tiger, the IOSSIOSPEED ioctl can be used to set arbitrary baud rates
+    // other than those specified by POSIX. The driver for the underlying serial hardware
+    // ultimately determines which baud rates can be used. This ioctl sets both the input
+    // and output speed.
+    result = ::ioctl(m_descriptor, IOSSIOSPEED, &rate);
+#  endif
+
 #endif
     return (result != -1);
 }
