@@ -9,6 +9,10 @@ QT       += core gui
 TARGET = guiportinfo
 TEMPLATE = app
 
+unix {
+    !macx:DEFINES += HAVE_UDEV
+}
+
 INCLUDEPATH += \
     ../../include \
     ../../src
