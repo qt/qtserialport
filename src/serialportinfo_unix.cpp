@@ -78,13 +78,15 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                             info.d_ptr->device = s;
                             info.d_ptr->portName = s.remove(QRegExp("/[\\w|\\d|\\s]+/"));
 
-                            info.d_ptr->description = QString(::udev_device_get_property_value(udev_device,
-                                                                                               "ID_MODEL_FROM_DATABASE"));
+                            info.d_ptr->description =
+                                    QString(::udev_device_get_property_value(udev_device,
+                                                                             "ID_MODEL_FROM_DATABASE"));
                             if (info.d_ptr->description.isEmpty())
                                 info.d_ptr->description = QString(QObject::tr("Unknown."));
 
-                            info.d_ptr->manufacturer = QString(::udev_device_get_property_value(udev_device,
-                                                                                                "ID_VENDOR_FROM_DATABASE"));
+                            info.d_ptr->manufacturer =
+                                    QString(::udev_device_get_property_value(udev_device,
+                                                                             "ID_VENDOR_FROM_DATABASE"));
                             if (info.d_ptr->manufacturer.isEmpty())
                                 info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
 
