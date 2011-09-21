@@ -11,7 +11,7 @@
 #include <fcntl.h>
 
 #if defined (Q_OS_LINUX)
-#include <linux/serial.h>
+#  include <linux/serial.h>
 #endif
 
 #include <QtCore/QRegExp>
@@ -885,7 +885,7 @@ bool SerialPortPrivate::setStandartRate(SerialPort::Directions dir, speed_t rate
 bool SerialPortPrivate::setCustomRate(qint32 rate)
 {
     int result = -1;
-#if defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
+#if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
     if (rate > 0) {
         struct serial_struct ser_info;
         result = ::ioctl(m_descriptor, TIOCGSERIAL, &ser_info);
