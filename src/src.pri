@@ -38,6 +38,8 @@ unix {
         LIBS += -framework IOKit -framework CoreFoundation
     } else {
         SOURCES += $$PWD/serialportinfo_unix.cpp
-        #LIBS += -ludev
+        contains( DEFINES, HAVE_UDEV ) {
+            LIBS += -ludev
+        }
     }
 }

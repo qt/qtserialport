@@ -1,6 +1,8 @@
 QT += core gui
 TEMPLATE = app
 
+DEFINES += HAVE_UDEV
+
 INCLUDEPATH += \
     ../../include \
     ../../src
@@ -34,5 +36,8 @@ win32 {
     !wince*: LIBS += -lsetupapi -luuid -ladvapi32
 }
 unix:!macx {
-    #LIBS += -ludev
+    #contains( DEFINES, HAVE_UDEV ) {
+    #    LIBS += -ludev
+    #}
 }
+
