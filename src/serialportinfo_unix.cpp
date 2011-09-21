@@ -10,6 +10,12 @@
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+
+#if defined (Q_OS_LINUX)
+#  include <linux/serial.h>
+#endif
 
 #if defined (HAVE_UDEV)
 extern "C"
@@ -137,6 +143,40 @@ QList<qint32> SerialPortInfo::standardRates() const
 {
     QList<qint32> rates;
 
+#if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
+    int descriptor = ::open(systemLocation().toLocal8Bit().constData(), O_RDWR);
+    if (descriptor != -1) {
+
+        struct serial_struct ser_info;
+        int result = ::ioctl(descriptor, TIOCGSERIAL, &ser_info);
+
+        ::close(descriptor);
+
+        if ((result != -1) && (ser_info.baud_base > 0)) {
+
+            for (int i = 1; i < ser_info.baud_base; ++i) {
+                result = ser_info.baud_base / i;
+
+                if (result < 50)
+                    break;
+
+                switch (result) {
+                case 50: case 75: case 110: case 134: case 150:
+                case 200: case 300: case 600: case 1200: case 1800:
+                case 2400: case 4800: case 9600: case 19200: case 38400:
+                case 57600: case 115200: case 230400: case 460800:
+                case 500000: case 576000: case 921600: case 1000000:
+                case 1152000: case 1500000: case 2000000: case 2500000:
+                case 3000000: case 3500000: case 4000000:
+                    rates.append(result); break;
+                default:;
+                }
+            }
+        }
+    }
+#else
+    //
+#endif
     return rates;
 }
 
