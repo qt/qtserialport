@@ -71,12 +71,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 //
                 while ((kernResult == KERN_SUCCESS)) {
 
-                    // Description ref
                     if (!descriptionRef)
                         descriptionRef = IORegistryEntrySearchCFProperty(parent, kIOServicePlane,
                                                                          CFSTR("USB Product Name"),
                                                                          kCFAllocatorDefault, 0);
-                    // Manufacturer ref
                     if (!manufacturerRef)
                         manufacturerRef = IORegistryEntrySearchCFProperty(parent, kIOServicePlane,
                                                                           CFSTR("USB Vendor Name"),
@@ -92,12 +90,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                 QByteArray stringValue(MAXPATHLEN, 0);
 
-                //name
                 info.d_ptr->portName = QString(bsdPath); // FIXME: With regexp, remove /dev/
-                //location
                 info.d_ptr->device = QString(bsdPath);
 
-                //description
                 if (descriptionRef) {
                     if (CFStringGetCString(CFStringRef(descriptionRef),
                                            stringValue.data(), stringValue.size(),
@@ -109,7 +104,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                     CFRelease(descriptionRef);
                 }
 
-                //manufacturer
                 if (manufacturerRef) {
                     if (CFStringGetCString(CFStringRef(manufacturerRef),
                                            stringValue.data(), stringValue.size(),

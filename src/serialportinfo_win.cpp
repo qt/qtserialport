@@ -233,15 +233,17 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
 
             SerialPortInfo info;
-            // Get device name.
             QVariant v = getNativeName(deviceInfoSet, &deviceInfoData);
             QString s = v.toString();
 
             if (!(s.isEmpty() || s.contains("LPT"))) {
+
                 info.d_ptr->portName = s;
                 info.d_ptr->device = "\\\\.\\" + s;
+
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
                 info.d_ptr->description = v.toString();
+
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
                 info.d_ptr->manufacturer = v.toString();
 

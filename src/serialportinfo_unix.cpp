@@ -11,8 +11,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-//#define HAVE_UDEV
-
 #if defined (HAVE_UDEV)
 extern "C"
 {
@@ -71,22 +69,19 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 if (udev_device) {
 
                     SerialPortInfo info;
-                    // Get device name.
                     QString s(::udev_device_get_devnode(udev_device));
 
                     foreach (QString mask, nameFilters()) {
 
                         if (s.contains(mask.remove("*"))) {
-                            // Location.
                             info.d_ptr->device = s;
-                            // Name.
                             info.d_ptr->portName = s.remove(QRegExp("/[\\w|\\d|\\s]+/"));
-                            // Description.
+
                             info.d_ptr->description = QString(::udev_device_get_property_value(udev_device,
                                                                                                "ID_MODEL_FROM_DATABASE"));
                             if (info.d_ptr->description.isEmpty())
                                 info.d_ptr->description = QString(QObject::tr("Unknown."));
-                            // Manufacturer.
+
                             info.d_ptr->manufacturer = QString(::udev_device_get_property_value(udev_device,
                                                                                                 "ID_VENDOR_FROM_DATABASE"));
                             if (info.d_ptr->manufacturer.isEmpty())
