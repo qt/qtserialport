@@ -144,7 +144,8 @@ QList<qint32> SerialPortInfo::standardRates() const
     QList<qint32> rates;
 
 #if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
-    int descriptor = ::open(systemLocation().toLocal8Bit().constData(), O_RDWR);
+    int descriptor = ::open(systemLocation().toLocal8Bit().constData(),
+                            O_NOCTTY | O_NDELAY | O_RDWR);
     if (descriptor != -1) {
 
         struct serial_struct ser_info;
@@ -168,7 +169,8 @@ QList<qint32> SerialPortInfo::standardRates() const
                 case 500000: case 576000: case 921600: case 1000000:
                 case 1152000: case 1500000: case 2000000: case 2500000:
                 case 3000000: case 3500000: case 4000000:
-                    rates.append(result); break;
+                    if (!rates.contains(result))
+                        rates.append(result); break;
                 default:;
                 }
             }
