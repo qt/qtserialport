@@ -152,6 +152,6 @@ bool SerialPortInfo::isBusy() const
 
 bool SerialPortInfo::isValid() const
 {
-    // Impl me
-    return false;
+    QFile f(systemLocation());
+    return f.exists();
 }

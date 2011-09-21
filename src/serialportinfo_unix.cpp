@@ -17,12 +17,13 @@ extern "C"
 #  include <libudev.h>
 }
 #else
-#  include <QDir>
+#  include <QtCore/QDir>
 #endif
 
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 #include <QtCore/QRegExp>
+#include <QtCore/QFile>
 
 static QStringList nameFilters()
 {
@@ -146,6 +147,6 @@ bool SerialPortInfo::isBusy() const
 
 bool SerialPortInfo::isValid() const
 {
-    // Impl me
-    return false;
+    QFile f(systemLocation());
+    return f.exists();
 }
