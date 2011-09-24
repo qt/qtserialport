@@ -557,6 +557,9 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
         return false;
     }
 
+    m_currTermios.c_iflag &= ~(PARMRK | INPCK);
+    m_currTermios.c_iflag |= IGNPAR;
+
     switch (parity) {
 
 #if defined (CMSPAR)
@@ -568,9 +571,7 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
     case SerialPort::MarkParity:
         m_currTermios.c_cflag |= (PARENB | CMSPAR | PARODD);
         break;
-#else
-#endif //CMSPAR
-
+#endif
     case SerialPort::NoParity:
         m_currTermios.c_cflag &= (~PARENB);
         break;
@@ -582,9 +583,6 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
         m_currTermios.c_cflag |= (PARENB | PARODD);
         break;
     default:
-        m_currTermios.c_iflag &= ~(PARMRK | INPCK);
-        m_currTermios.c_iflag |= IGNPAR;
-
         m_currTermios.c_cflag |= PARENB;
         m_currTermios.c_iflag |= (PARMRK | INPCK);
         m_currTermios.c_iflag &= ~IGNPAR;
