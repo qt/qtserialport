@@ -173,7 +173,7 @@ SerialPort::FlowControl SerialPort::flowControl() const
 bool SerialPort::setDataInterval(int usecs)
 {
     Q_D(SerialPort);
-    return d->setDataInterval(usecs);
+    return (openMode() & Unbuffered) ? d->setDataInterval(usecs) : false;
 }
 
 int SerialPort::dataInterval() const
@@ -185,7 +185,7 @@ int SerialPort::dataInterval() const
 bool SerialPort::setReadTimeout(int msecs)
 {
     Q_D(SerialPort);
-    return d->setReadTimeout(msecs);
+    return (openMode() & Unbuffered) ? d->setReadTimeout(msecs) : false;
 }
 
 int SerialPort::readTimeout() const
