@@ -37,7 +37,6 @@ bool SerialPortNotifier::isReadNotificationEnabled() const
 void SerialPortNotifier::setReadNotificationEnabled(bool enable)
 {
     Q_ASSERT(m_ref);
-
     if (m_readNotifier)
         m_readNotifier->setEnabled(enable);
     else if (enable) {
@@ -55,7 +54,6 @@ bool SerialPortNotifier::isWriteNotificationEnabled() const
 void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 {
     Q_ASSERT(m_ref);
-
     if (m_writeNotifier)
         m_writeNotifier->setEnabled(enable);
     else if (enable) {
@@ -72,7 +70,6 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 bool SerialPortNotifier::eventFilter(QObject *obj, QEvent *e)
 {
     Q_ASSERT(m_ref);
-
     if (e->type() == QEvent::SockAct) {
         if (obj == m_readNotifier) {
             m_ref->canReadNotification();

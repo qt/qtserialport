@@ -24,6 +24,7 @@ SerialPortNotifier::SerialPortNotifier(QObject *parent)
 SerialPortNotifier::~SerialPortNotifier()
 {
     m_running = false;
+    Q_ASSERT(m_ref);
     ::SetCommMask(m_ref->m_descriptor, 0);
     //terminate();
     wait();
@@ -36,12 +37,14 @@ SerialPortNotifier::SerialPortNotifier(QObject *parent)
 {
     ::memset(&m_ov, 0, sizeof(OVERLAPPED));
     m_ov.hEvent = ::CreateEvent(0, false, false, 0);
+    Q_ASSERT(m_ov.hEvent);
     setHandle(m_ov.hEvent);
 }
 
 SerialPortNotifier::~SerialPortNotifier()
 {
     setEnabled(false);
+    Q_ASSERT(m_ov.hEvent);
     ::CloseHandle(m_ov.hEvent);
 }
 #endif
@@ -58,6 +61,7 @@ bool SerialPortNotifier::isReadNotificationEnabled() const
 
 void SerialPortNotifier::setReadNotificationEnabled(bool enable)
 {
+    Q_ASSERT(m_ref);
 #if defined (Q_OS_WINCE)
     m_setCommMaskMutex.lock();
     ::GetCommMask(m_ref->m_descriptor, &m_currentMask);
@@ -93,6 +97,7 @@ bool SerialPortNotifier::isWriteNotificationEnabled() const
 
 void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 {
+    Q_ASSERT(m_ref);
 #if defined (Q_OS_WINCE)
     m_setCommMaskMutex.lock();
     ::GetCommMask(m_ref->m_descriptor, &m_currentMask);
@@ -128,6 +133,7 @@ void SerialPortNotifier::setWriteNotificationEnabled(bool enable)
 #if defined (Q_OS_WINCE)
 void SerialPortNotifier::run()
 {
+    Q_ASSERT(m_ref);
     while (m_running) {
 
         m_setCommMaskMutex.lock();
@@ -156,8 +162,9 @@ void SerialPortNotifier::run()
 #else
 bool SerialPortNotifier::event(QEvent *e)
 {
+    Q_ASSERT(m_ref);
     bool ret = false;
-    if (m_ref && (e->type() == QEvent::WinEventAct)) {
+    if (e->type() == QEvent::WinEventAct) {
         if (EV_ERR & m_currentMask & m_setMask) {
             m_ref->canErrorNotification();
             ret = true;
@@ -187,6 +194,7 @@ bool SerialPortNotifier::event(QEvent *e)
 #if !defined (Q_OS_WINCE)
 void SerialPortNotifier::setMaskAndActivateEvent()
 {
+    Q_ASSERT(m_ref);
     ::SetCommMask(m_ref->m_descriptor, m_setMask);
 
     if (m_setMask)
