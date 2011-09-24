@@ -423,10 +423,10 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         }
     }
 #else
-	WinCeWaitCommEventBreaker breaker(m_descriptor, (timeout < 0) ? 0 : timeout);
-	::WaitCommEvent(m_descriptor, &currEventMask, 0);
-	breaker.stop();
-	sucessResult = !breaker.isWorked();
+    WinCeWaitCommEventBreaker breaker(m_descriptor, (timeout < 0) ? 0 : timeout);
+    ::WaitCommEvent(m_descriptor, &currEventMask, 0);
+    breaker.stop();
+    sucessResult = !breaker.isWorked();
 #endif
 
     if (sucessResult) {
@@ -439,7 +439,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         *selectForWrite = checkWrite && (currEventMask & EV_TXEMPTY);
     }
 
-	// Rerair old mask.
+    // Rerair old mask.
     ::SetCommMask(m_descriptor, oldEventMask);
     return sucessResult;
 }
