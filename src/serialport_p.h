@@ -19,6 +19,48 @@
 //#  undef CMSPAR
 #endif
 
+#if defined (Q_OS_WINCE)
+#  include <QtCore/QThread>
+#  include <QtCore/QTimer>
+
+class WinCeWaitCommEventBreaker : public QThread
+{
+    Q_OBJECT
+public:
+    WinCeWaitCommEventBreaker(HANDLE descriptor, int timeout, QObject *parent = 0)
+        : QThread(parent), m_descriptor(descriptor),
+          m_timeout(timeout), m_worked(false) {
+        start();
+    }
+	virtual ~WinCeWaitCommEventBreaker() {
+		stop();
+		wait();
+	}
+    void stop() { exit(0); }
+    bool isWorked() const { return m_worked; }
+
+protected:
+    void run() {
+        QTimer timer;
+		QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(procTimeout()), Qt::DirectConnection);
+        timer.start(m_timeout);
+        exec();
+        m_worked = true;
+    }
+
+private slots:
+    void procTimeout() {
+        ::SetCommMask(m_descriptor, 0);
+        stop();
+    }
+
+private:
+    HANDLE m_descriptor;
+    int m_timeout;
+    volatile bool m_worked;
+};
+#endif
+
 class SerialPortPrivate : public AbstractSerialPortPrivate
 {
     Q_DECLARE_PUBLIC(SerialPort)
@@ -119,10 +161,10 @@ private:
 
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
-#  if !defined CMSPAR
+#  if !defined (CMSPAR)
     qint64 writePerChar(const char *data, qint64 maxSize);
     qint64 readPerChar(char *data, qint64 maxSize);
-#  endif //CMSPAR
+#  endif 
 
 #endif
     friend class SerialPortNotifier;

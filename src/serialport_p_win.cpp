@@ -376,8 +376,8 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     }
 
 #if !defined (Q_OS_WINCE)
-
     clear_overlapped(&m_ovSelect);
+#endif
 
     DWORD oldEventMask = 0;
     DWORD currEventMask = 0;
@@ -406,6 +406,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     currEventMask = 0;
     bool sucessResult = false;
 
+#if !defined (Q_OS_WINCE)
     if (::WaitCommEvent(m_descriptor, &currEventMask, &m_ovSelect))
         sucessResult = true;
     else {
@@ -421,6 +422,12 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
             }
         }
     }
+#else
+	WinCeWaitCommEventBreaker breaker(m_descriptor, (timeout < 0) ? 0 : timeout);
+	::WaitCommEvent(m_descriptor, &currEventMask, 0);
+	breaker.stop();
+	sucessResult = !breaker.isWorked();
+#endif
 
     if (sucessResult) {
         // Here call the bytesAvailable() to protect against false positives WaitForSingleObject(),
@@ -431,15 +438,10 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         *selectForRead = checkRead && (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
         *selectForWrite = checkWrite && (currEventMask & EV_TXEMPTY);
     }
-    // Rerair old mask.
+
+	// Rerair old mask.
     ::SetCommMask(m_descriptor, oldEventMask);
     return sucessResult;
-#else
-    Q_UNUSED(selectForWrite)
-    Q_UNUSED(checkWrite)
-    Q_UNUSED(timeout)
-    return false;
-#endif
 }
 
 
