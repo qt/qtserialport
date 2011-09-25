@@ -12,6 +12,10 @@
 
 #if defined (Q_OS_LINUX)
 #  include <linux/serial.h>
+#elif defined (Q_OS_MAC)
+#  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+#    include <IOKit/serial/ioss.h>
+#  endif
 #endif
 
 #include <QtCore/QRegExp>

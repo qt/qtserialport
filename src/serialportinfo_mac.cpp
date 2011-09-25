@@ -4,6 +4,7 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
+#include "ttylocker_p_unix.h"
 
 #include <sys/param.h>
 
@@ -11,8 +12,8 @@
 #include <IOKit/IOKitLib.h>
 
 #include <IOKit/serial/IOSerialKeys.h>
-#if defined(MAC_OS_X_VERSION_10_3) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3)
-#include <IOKit/serial/ioss.h>
+#if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+#  include <IOKit/serial/ioss.h>
 #endif
 #include <IOKit/IOBSD.h>
 
@@ -101,12 +102,11 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                            kCFStringEncodingUTF8)) {
 
                         info.d_ptr->description = QString(stringValue);
-                        if (info.d_ptr->description.isEmpty())
-                            info.d_ptr->description = QString(QObject::tr("Unknown."));
-
                     }
                     CFRelease(descriptionRef);
                 }
+                if (info.d_ptr->description.isEmpty())
+                    info.d_ptr->description = QString(QObject::tr("Unknown."));
 
                 if (manufacturerRef) {
                     if (CFStringGetCString(CFStringRef(manufacturerRef),
@@ -114,12 +114,11 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                            kCFStringEncodingUTF8)) {
 
                         info.d_ptr->manufacturer = QString(stringValue);
-                        if (info.d_ptr->manufacturer.isEmpty())
-                            info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
                     }
                     CFRelease(manufacturerRef);
                 }
-
+                if (info.d_ptr->manufacturer.isEmpty())
+                    info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
 
                 ports.append(info);
             }
