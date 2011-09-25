@@ -6,8 +6,11 @@
 #include "serialportinfo.h"
 #include "serialport_p.h"
 
-#include <QtCore/QElapsedTimer>
-
+#if QT_VERSION >= 0x040700
+#  include <QtCore/QElapsedTimer>
+#else
+#  include <QtCore/QTime>
+#endif
 
 /* Public methods */
 
@@ -298,7 +301,12 @@ bool SerialPort::waitForReadyRead(int msecs)
     if (d->isReadNotificationEnabled())
         d->setReadNotificationEnabled(false);
 
+#if QT_VERSION >= 0x040700
     QElapsedTimer stopWatch;
+#else
+    QTime stopWatch;
+#endif
+
     stopWatch.start();
 
     forever {
@@ -326,7 +334,12 @@ bool SerialPort::waitForBytesWritten(int msecs)
     if (d->m_isBuffered && d->m_writeBuffer.isEmpty())
         return false;
 
+#if QT_VERSION >= 0x040700
     QElapsedTimer stopWatch;
+#else
+    QTime stopWatch;
+#endif
+
     stopWatch.start();
 
     forever {
