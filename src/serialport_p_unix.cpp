@@ -664,8 +664,10 @@ bool SerialPortPrivate::setNativeDataInterval(int usecs)
 
 bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
-    Q_UNUSED(msecs)
-    // Impl me
+    if (::fcntl(m_descriptor, F_SETFL, (msecs > 0) ? 0 : O_NONBLOCK) != -1) {
+        m_currTermios.c_cc[VTIME] = (msecs > 0) ? (msecs / 100) : 0;
+        return updateTermious();
+    }
     return false;
 }
 
