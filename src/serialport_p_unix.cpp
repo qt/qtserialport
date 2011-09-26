@@ -666,9 +666,9 @@ bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
     int flags = ::fcntl(m_descriptor, F_GETFL, 0);
     if (msecs > 0)
-        flags &= ~O_NONBLOCK;
+        flags &= ~O_NDELAY;
     else
-        flags |= O_NONBLOCK;
+        flags |= O_NDELAY;
 
     if (::fcntl(m_descriptor, F_SETFL, flags) != -1) {
         prepareTimeouts(msecs);
