@@ -117,7 +117,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         prepareOtherOptions();
 
         if (updateDcb()) {
-            prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, MAXWORD);
+            prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, MAXDWORD);
             prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutMultiplier, 0);
             prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutConstant, 0);
             prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutMultiplier, 0);
@@ -598,9 +598,9 @@ bool SerialPortPrivate::setNativeDataInterval(int usecs)
 
 bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
-    Q_UNUSED(msecs)
-    // Impl me
-    return false;
+    prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, (msecs > 0) ? 0 : MAXDWORD);
+    prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutConstant, (msecs > 0) ? msecs : 0);
+    return updateCommTimeouts();
 }
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
