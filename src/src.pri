@@ -43,3 +43,10 @@ unix {
         }
     }
 }
+
+symbian {
+    SOURCES += \
+        $$PWD/serialport_p_symbian.cpp \
+        $$PWD/serialportnotifier_p_symbian.cpp \
+        $$PWD/serialportinfo_symbian.cpp
+}
