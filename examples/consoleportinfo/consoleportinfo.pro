@@ -9,16 +9,15 @@ unix {
 }
 
 INCLUDEPATH += \
-    ../../include \
-    ../../src
+    ../../include
 
 HEADERS += \
     ../../include/serialport.h \
     ../../include/serialportinfo.h
 
-SOURCES += main.cpp
-
 include(../../src/src.pri)
+
+SOURCES += main.cpp
 
 CONFIG(debug, debug|release) {
     DESTDIR = debug

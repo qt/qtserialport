@@ -14,8 +14,7 @@ unix {
 }
 
 INCLUDEPATH += \
-    ../../include \
-    ../../src
+    ../../include 
 
 HEADERS += \
     ../../include/serialport.h \
