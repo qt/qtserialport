@@ -14,6 +14,8 @@
 #  if defined (Q_OS_WINCE)
 #    include <QtCore/QMutex>
 #  endif
+#elif defined (Q_OS_SYMBIAN)
+    ////
 #else
 #  include <termios.h>
 //#  undef CMSPAR
@@ -148,6 +150,10 @@ private:
                                   SerialPort::StopBits stopBits) const;
 
     bool processCommEventError();
+#elif defined (Q_OS_SYMBIAN)
+    ////
+    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                  SerialPort::StopBits stopBits) const;
 #else
     struct termios m_currTermios;
     struct termios m_oldTermios;

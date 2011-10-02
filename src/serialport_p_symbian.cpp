@@ -247,11 +247,6 @@ bool SerialPortPrivate::restoreOldsettings()
 
 
 
-void SerialPortPrivate::recalcTotalReadTimeoutConstant()
-{
-
-}
-
 bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                                  SerialPort::StopBits stopBits) const
 {

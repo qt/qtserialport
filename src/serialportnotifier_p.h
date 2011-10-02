@@ -34,6 +34,8 @@ protected:
 #  else
 #    include <QtCore/private/qwineventnotifier_p.h>
 #  endif
+#elif defined (Q_OS_SYMBIAN)
+#  include <QtCore/QObject>
 #else
 #  include <QtCore/QThread>
 class QSocketNotifier;
@@ -74,6 +76,18 @@ private:
 
     void setMaskAndActivateEvent();
 #  endif
+};
+#elif defined (Q_OS_SYMBIAN)
+class SerialPortNotifier : public QObject, public AbstractSerialPortNotifier /* public CActive ?? */
+{
+public:
+    explicit SerialPortNotifier(QObject *parent = 0);
+    virtual ~SerialPortNotifier();
+
+    virtual bool isReadNotificationEnabled() const;
+    virtual void setReadNotificationEnabled(bool enable);
+    virtual bool isWriteNotificationEnabled() const;
+    virtual void setWriteNotificationEnabled(bool enable);
 };
 #else
 class SerialPortNotifier : public QObject, public AbstractSerialPortNotifier
