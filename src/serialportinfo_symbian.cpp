@@ -6,7 +6,7 @@
 #include "serialportinfo_p.h"
 
 #include <e32base.h>
-#include <e32test.h>
+//#include <e32test.h>
 #include <c32comm.h>
 #include <f32file.h>
 
@@ -66,7 +66,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     QList<SerialPortInfo> ports;
 
     if (!loadDevices())
-    	return ports;
+        return ports;
     
     RCommServ server;
     TInt r = server.Connect();
@@ -77,7 +77,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     QString s("%1::%2");
 
     // FIXME: Get info about RS232 ports.
-  	r = server.LoadCommModule(KRS232ModuleName);
+    r = server.LoadCommModule(KRS232ModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KRS232ModuleName, nativeInfo);
@@ -100,7 +100,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     }
 
     // FIXME: Get info about Bluetooth ports.
-  	r = server.LoadCommModule(KBluetoothModuleName);
+    r = server.LoadCommModule(KBluetoothModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KBluetoothModuleName, nativeInfo);
@@ -123,7 +123,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     }
     
     // FIXME: Get info about InfraRed ports.
-  	r = server.LoadCommModule(KInfraRedModuleName);
+    r = server.LoadCommModule(KInfraRedModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KInfraRedModuleName, nativeInfo);
@@ -186,36 +186,36 @@ QList<qint32> SerialPortInfo::standardRates() const
 
 bool SerialPortInfo::isBusy() const
 {
-	if (!loadDevices())
-		return false;
-	
+    if (!loadDevices())
+        return false;
+
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone)
         return false;
-	
-	RComm port;
-	TPtrC portName(static_cast<const TUint16*>(systemLocation().utf16()), systemLocation().length());
-	r = port.Open(server, portName, ECommExclusive);
-	if (r == KErrNone)
-		port.Close();
-	return (r == KErrLocked);
+
+    RComm port;
+    TPtrC portName(static_cast<const TUint16*>(systemLocation().utf16()), systemLocation().length());
+    r = port.Open(server, portName, ECommExclusive);
+    if (r == KErrNone)
+        port.Close();
+    return (r == KErrLocked);
 }
 
 bool SerialPortInfo::isValid() const
 {
-	if (!loadDevices())
-		return false;
-	
+    if (!loadDevices())
+        return false;
+
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone)
         return false;
-	
-	RComm port;
-	TPtrC portName(static_cast<const TUint16*>(systemLocation().utf16()), systemLocation().length());
-	r = port.Open(server, portName, ECommExclusive);
-	if (r == KErrNone)
-		port.Close();
-	return (r == KErrNone ) || (r == KErrLocked);
+
+    RComm port;
+    TPtrC portName(static_cast<const TUint16*>(systemLocation().utf16()), systemLocation().length());
+    r = port.Open(server, portName, ECommExclusive);
+    if (r == KErrNone)
+        port.Close();
+    return (r == KErrNone ) || (r == KErrLocked);
 }
