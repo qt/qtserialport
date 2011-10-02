@@ -15,7 +15,7 @@
 #    include <QtCore/QMutex>
 #  endif
 #elif defined (Q_OS_SYMBIAN)
-    ////
+#  include <c32comm.h>
 #else
 #  include <termios.h>
 //#  undef CMSPAR
@@ -122,8 +122,10 @@ private:
         WriteTotalTimeoutConstant
     };
 
-    DCB m_currDCB, m_oldDCB;
-    COMMTIMEOUTS m_currCommTimeouts, m_oldCommTimeouts;
+    DCB m_currDCB;
+    DCB m_oldDCB;
+    COMMTIMEOUTS m_currCommTimeouts;
+    COMMTIMEOUTS m_oldCommTimeouts;
     HANDLE m_descriptor;
     bool m_flagErrorFromCommEvent;
 
@@ -151,7 +153,12 @@ private:
 
     bool processCommEventError();
 #elif defined (Q_OS_SYMBIAN)
-    ////
+    TCommConfig m_currSettings;
+    TCommConfig m_oldSettings;
+
+    RComm m_descriptor;
+
+    bool updateCommConfig();
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
 #else
