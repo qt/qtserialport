@@ -1,8 +1,5 @@
 TEMPLATE = subdirs
-SUBDIRS = src examples
+SUBDIRS = src 
+#examples
 
-INCLUDEPATH += include
 
-HEADERS += \
-    include/serialport.h \
-    include/serialportinfo.h
