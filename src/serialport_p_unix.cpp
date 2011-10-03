@@ -48,11 +48,14 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
     switch (mode & QIODevice::ReadWrite) {
     case QIODevice::WriteOnly:
-        flags |= O_WRONLY; break;
+        flags |= O_WRONLY;
+        break;
     case QIODevice::ReadWrite:
-        flags |= O_RDWR; break;
+        flags |= O_RDWR;
+        break;
     default:
-        flags |= O_RDONLY; break;
+        flags |= O_RDONLY;
+        break;
     }
 
     // Try opened serial device.
@@ -61,9 +64,11 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (m_descriptor == -1) {
         switch (errno) {
         case ENODEV:
-            setError(SerialPort::NoSuchDeviceError); break;
+            setError(SerialPort::NoSuchDeviceError);
+            break;
         case EACCES:
-            setError(SerialPort::PermissionDeniedError); break;
+            setError(SerialPort::PermissionDeniedError);
+            break;
         default:
             setError(SerialPort::UnknownPortError);
         }
@@ -796,13 +801,17 @@ void SerialPortPrivate::detectDefaultSettings()
     // Detect databits.
     switch (m_currTermios.c_cflag & CSIZE) {
     case CS5:
-        m_dataBits = SerialPort::Data5; break;
+        m_dataBits = SerialPort::Data5;
+        break;
     case CS6:
-        m_dataBits = SerialPort::Data6; break;
+        m_dataBits = SerialPort::Data6;
+        break;
     case CS7:
-        m_dataBits = SerialPort::Data7; break;
+        m_dataBits = SerialPort::Data7;
+        break;
     case CS8:
-        m_dataBits = SerialPort::Data8; break;
+        m_dataBits = SerialPort::Data8;
+        break;
     default:
         m_dataBits = SerialPort::UnknownDataBits;
     }
