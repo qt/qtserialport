@@ -265,12 +265,12 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     qint64 bytesRead = 0;
 
 #if defined (CMSPAR)
-        bytesRead = ::read(m_descriptor, data, len - bytesReaded);
+    bytesRead = ::read(m_descriptor, data, len);
 #else
-        if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
-            bytesRead = ::read(m_descriptor, data, len - bytesReaded);
-        else // Perform parity emulation.
-            bytesRead = readPerChar(data, len - bytesReaded);
+    if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
+        bytesRead = ::read(m_descriptor, data, len);
+    else // Perform parity emulation.
+        bytesRead = readPerChar(data, len);
 #endif
 
     // FIXME: Here 'errno' codes for sockets.
@@ -337,7 +337,7 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
         }
         // FIXME: Here need call errno
         // and set error type?
-        if (bytesRead == -1)
+        if (bytesWritten == -1)
             setError(SerialPort::IoError);
     }
     return bytesWritten;
