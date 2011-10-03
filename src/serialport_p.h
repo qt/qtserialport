@@ -157,6 +157,7 @@ private:
     TCommConfig m_oldSettings;
 
     RComm m_descriptor;
+    mutable RTimer m_selectTimer;
 
     bool updateCommConfig();
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,

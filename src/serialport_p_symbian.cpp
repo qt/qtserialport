@@ -229,14 +229,71 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
     return qint64(len);
 }
 
+// FIXME: I'm not sure in implementation this method.
+// Someone needs to check and correct.
 bool SerialPortPrivate::waitForReadOrWrite(int timeout,
                                            bool checkRead, bool checkWrite,
                                            bool *selectForRead, bool *selectForWrite)
 {
+    TRequestStatus timerStatus;
+    TRequestStatus readStatus;
+    TRequestStatus writeStatus;
 
+    if (timeout > 0)  {
+        if (!m_selectTimer.Handle()) {
+            if (m_selectTimer.CreateLocal() != KErrNone)
+                return false;
+        }
+        m_selectTimer.HighRes(timerStatus, timeout * 1000);
+    }
 
-    // Impl me
-    return -1;
+    if (checkRead)
+        m_descriptor.NotifyDataAvailable(readStatus);
+
+    if (checkWrite)
+        m_descriptor.NotifyOutputEmpty(writeStatus);
+
+    enum { STATUSES_COUNT = 3 };
+    TRequestStatus *statuses[STATUSES_COUNT];
+    TInt num = 0;
+    statuses[num++] = &timerStatus;
+    statuses[num++] = &readStatus;
+    statuses[num++] = &writeStatus;
+
+    User::WaitForNRequest(statuses, num);
+
+    bool result = false;
+
+    // By timeout?
+    if (timerStatus != KRequestPending) {
+        Q_ASSERT(selectForRead);
+        Q_ASSERT(selectForWrite);
+        *selectForRead = false;
+        *selectForWrite = false;
+    } else {
+        m_selectTimer.Cancel();
+        User::WaitForRequest(timerStatus);
+
+        // By read?
+        if (readStatus != KRequestPending) {
+            Q_ASSERT(selectForRead);
+            *selectForRead = true;
+        }
+
+        // By write?
+        if (writeStatus != KRequestPending) {
+            Q_ASSERT(selectForWrite);
+            *selectForWrite = true;
+        }
+
+        if (checkRead)
+            m_descriptor.NotifyDataAvailableCancel();
+        if (checkWrite)
+            m_descriptor.NotifyOutputEmptyCancel();
+
+        result = true;
+    }
+    return result;
 }
 
 
