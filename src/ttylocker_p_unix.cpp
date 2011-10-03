@@ -27,13 +27,13 @@ it is possible to solve the transition to CMake*/
 #  include <fcntl.h>
 #  include <sys/stat.h>
 
-#  include <QtCore/QFile>
-#  include <QtCore/QDir>
-#  include <QtCore/QStringList>
+#  include <QtCore/qfile.h>
+#  include <QtCore/qdir.h>
+#  include <QtCore/qstringlist.h>
 
 #endif
 
-#include <QtCore/QString>
+#include <QtCore/qstring.h>
 
 QT_USE_NAMESPACE
 

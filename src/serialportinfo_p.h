@@ -7,7 +7,7 @@
 
 #include "serialportinfo.h"
 
-#include <QtCore/QString>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 

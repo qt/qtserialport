@@ -5,20 +5,20 @@
 #ifndef SERIALPORTNOTIFIER_P_H
 #define SERIALPORTNOTIFIER_P_H
 
-#include <QtCore/QEvent>
+#include <QtCore/qcoreevent.h>
 
 #if defined (Q_OS_WIN)
 #  include <qt_windows.h>
 #  if defined (Q_OS_WINCE)
-#    include <QtCore/QThread>
-#    include <QtCore/QMutex>
+#    include <QtCore/qthread.h>
+#    include <QtCore/qmutex.h>
 #  else
 #    include <QtCore/private/qwineventnotifier_p.h>
 #  endif
 #elif defined (Q_OS_SYMBIAN)
-#  include <QtCore/QObject>
+#  include <QtCore/qobject.h>
 #else
-#  include <QtCore/QThread>
+#  include <QtCore/qthread.h>
 class QSocketNotifier;
 #endif
 

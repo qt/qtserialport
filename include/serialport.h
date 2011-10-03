@@ -5,7 +5,7 @@
 #ifndef SERIALPORT_H
 #define SERIALPORT_H
 
-#include <QtCore/QIODevice>
+#include <QtCore/qiodevice.h>
 
 #ifdef SERIALPORT_SHARED
 #  ifdef SERIALPORT_BUILD

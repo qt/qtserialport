@@ -23,13 +23,13 @@ extern "C"
 #  include <libudev.h>
 }
 #else
-#  include <QtCore/QDir>
+#  include <QtCore/qdir.h>
 #endif
 
-#include <QtCore/QVariant>
-#include <QtCore/QStringList>
-#include <QtCore/QRegExp>
-#include <QtCore/QFile>
+#include <QtCore/qvariant.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qregexp.h>
+#include <QtCore/qfile.h>
 
 QT_USE_NAMESPACE
 

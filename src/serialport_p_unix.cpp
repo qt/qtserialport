@@ -18,7 +18,7 @@
 #  endif
 #endif
 
-#include <QtCore/QRegExp>
+#include <QtCore/qregexp.h>
 
 QT_USE_NAMESPACE
 

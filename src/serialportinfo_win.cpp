@@ -12,8 +12,8 @@
 #  include <setupapi.h>
 #endif
 
-#include <QtCore/QVariant>
-#include <QtCore/QStringList>
+#include <QtCore/qvariant.h>
+#include <QtCore/qstringlist.h>
 
 QT_USE_NAMESPACE
 

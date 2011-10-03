@@ -5,7 +5,7 @@
 #include "serialportnotifier_p.h"
 #include "serialport_p.h"
 
-#include <QtCore/QSocketNotifier>
+#include <QtCore/qsocketnotifier.h>
 
 QT_USE_NAMESPACE
 

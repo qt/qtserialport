@@ -4,7 +4,7 @@
 
 #include "serialport_p.h"
 
-#include <QtCore/QRegExp>
+#include <QtCore/qregexp.h>
 //#include <QtCore/QDebug>
 
 #ifndef Q_CC_MSVC

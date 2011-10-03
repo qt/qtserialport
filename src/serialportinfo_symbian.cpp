@@ -10,7 +10,7 @@
 #include <c32comm.h>
 #include <f32file.h>
 
-#include <QtCore/QObject>
+#include <QtCore/qobject.h>
 
 
 // Physical device driver.

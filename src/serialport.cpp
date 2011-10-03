@@ -7,9 +7,9 @@
 #include "serialport_p.h"
 
 #if QT_VERSION >= 0x040700
-#  include <QtCore/QElapsedTimer>
+#  include <QtCore/qelapsedtimer.h>
 #else
-#  include <QtCore/QTime>
+#  include <QtCore/qtime.h>
 #endif
 
 /* Public methods */

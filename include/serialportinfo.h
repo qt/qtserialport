@@ -5,8 +5,8 @@
 #ifndef SERIALPORTINFO_H
 #define SERIALPORTINFO_H
 
-#include <QtCore/QList>
-#include <QtCore/QScopedPointer>
+#include <QtCore/qlist.h>
+#include <QtCore/qscopedpointer.h>
 
 #ifdef SERIALPORT_SHARED
 #  ifdef SERIALPORT_BUILD

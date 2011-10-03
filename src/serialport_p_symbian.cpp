@@ -8,7 +8,7 @@
 //#include <e32test.h>
 #include <f32file.h>
 
-#include <QtCore/QRegExp>
+#include <QtCore/qregexp.h>
 //#include <QtCore/QDebug>
 
 

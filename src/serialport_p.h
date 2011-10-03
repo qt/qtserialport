@@ -12,9 +12,9 @@
 #if defined (Q_OS_WIN)
 #  include <qt_windows.h>
 #  if defined (Q_OS_WINCE)
-#    include <QtCore/QMutex>
-#    include <QtCore/QThread>
-#    include <QtCore/QTimer>
+#    include <QtCore/qmutex.h>
+#    include <QtCore/qthread.h>
+#    include <QtCore/qtimer.h>
 #  endif
 #elif defined (Q_OS_SYMBIAN)
 #  include <c32comm.h>
