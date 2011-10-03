@@ -49,6 +49,7 @@ class SerialPortNotifier : public QThread, public AbstractSerialPortNotifier
 class SerialPortNotifier : public QWinEventNotifier, public AbstractSerialPortNotifier
 #  endif
 {
+    Q_OBJECT
 public:
     explicit SerialPortNotifier(QObject *parent = 0);
     virtual ~SerialPortNotifier();
@@ -80,6 +81,7 @@ private:
 #elif defined (Q_OS_SYMBIAN)
 class SerialPortNotifier : public QObject, public AbstractSerialPortNotifier /* public CActive ?? */
 {
+    Q_OBJECT
 public:
     explicit SerialPortNotifier(QObject *parent = 0);
     virtual ~SerialPortNotifier();
@@ -92,6 +94,7 @@ public:
 #else
 class SerialPortNotifier : public QObject, public AbstractSerialPortNotifier
 {
+    Q_OBJECT
 public:
     explicit SerialPortNotifier(QObject *parent = 0);
     virtual ~SerialPortNotifier();
