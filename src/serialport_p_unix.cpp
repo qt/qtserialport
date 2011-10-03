@@ -260,41 +260,28 @@ qint64 SerialPortPrivate::bytesToWrite() const
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
-    bool sfr = false; // Select for read.
-    bool sfw = false; // Select for write.
-    qint64 bytesReaded = 0;
+    //bool sfr = false; // Select for read.
+    //bool sfw = false; // Select for write.
+    qint64 bytesRead = 0;
 
-    do {
-        qint64 readFromDevice = 0;
 #if defined (CMSPAR)
-        readFromDevice = ::read(m_descriptor, data, len - bytesReaded);
+        bytesRead = ::read(m_descriptor, data, len - bytesReaded);
 #else
         if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
-            readFromDevice = ::read(m_descriptor, data, len - bytesReaded);
+            bytesRead = ::read(m_descriptor, data, len - bytesReaded);
         else // Perform parity emulation.
-            readFromDevice = readPerChar(data, len - bytesReaded);
+            bytesRead = readPerChar(data, len - bytesReaded);
 #endif
 
-        if (readFromDevice < 0) {
-            bytesReaded = readFromDevice;
-            break;
-        }
-        bytesReaded += readFromDevice;
-
-    } while ((m_dataInterval > 0)
-             && (waitForReadOrWrite(m_dataInterval, true, false, &sfr, &sfw) > 0)
-             && (sfr)
-             && (bytesReaded < len));
-
-    if (bytesReaded < 0) {
-        bytesReaded = -1;
+    if (bytesRead < 0) {
+        bytesRead = -1;
         switch (errno) {
 #if EWOULDBLOCK-0 && EWOULDBLOCK != EAGAIN
         case EWOULDBLOCK:
 #endif
         case EAGAIN:
             // No data was available for reading.
-            bytesReaded = -2;
+            bytesRead = -2;
             break;
         case EBADF:
         case EINVAL:
@@ -307,7 +294,7 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
 #if defined (Q_OS_VXWORKS)
         case ESHUTDOWN:
 #endif
-            bytesReaded = 0;
+            bytesRead = 0;
             break;
         default:;
         }
@@ -315,7 +302,7 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
         // and set error type?
         setError(SerialPort::IoError);
     }
-    return bytesReaded;
+    return bytesRead;
 }
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
