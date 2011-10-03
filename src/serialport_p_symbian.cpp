@@ -267,8 +267,8 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     // By timeout?
     if (timerStatus != KRequestPending) {
         Q_ASSERT(selectForRead);
-        Q_ASSERT(selectForWrite);
         *selectForRead = false;
+        Q_ASSERT(selectForWrite);
         *selectForWrite = false;
     } else {
         m_selectTimer.Cancel();

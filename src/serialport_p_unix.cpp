@@ -362,13 +362,22 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     tv.tv_usec = (timeout % 1000) * 1000;
 
     if (::select(m_descriptor + 1, &fdread, &fdwrite, 0, (timeout < 0) ? 0 : &tv) <= 0) {
+        Q_ASSERT(selectForRead);
         *selectForRead = false;
+        Q_ASSERT(selectForWrite);
         *selectForWrite = false;
         return false;
     }
 
-    *selectForRead = FD_ISSET(m_descriptor, &fdread);
-    *selectForWrite = FD_ISSET(m_descriptor, &fdwrite);
+    if (checkRead) {
+        Q_ASSERT(selectForRead);
+        *selectForRead = FD_ISSET(m_descriptor, &fdread);
+    }
+
+    if (checkWrite) {
+        Q_ASSERT(selectForWrite);
+        *selectForWrite = FD_ISSET(m_descriptor, &fdwrite);
+    }
     return true;
 }
 

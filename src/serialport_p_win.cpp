@@ -371,6 +371,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
 {
     // Forward checking data for read.
     if (checkRead && (bytesAvailable() > 0)) {
+        Q_ASSERT(selectForRead);
         *selectForRead = true;
         return true;
     }
@@ -435,8 +436,14 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         // ie when devices are in fact not.
         // While it may be possible to make additional checks - to catch an event EV_ERR,
         // adding (in the code above) extra bits in the mask currEventMask.
-        *selectForRead = checkRead && (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
-        *selectForWrite = checkWrite && (currEventMask & EV_TXEMPTY);
+        if (checkRead) {
+            Q_ASSERT(selectForRead);
+            *selectForRead = (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
+        }
+        if (checkWrite) {
+            Q_ASSERT(selectForWrite);
+            *selectForWrite =  (currEventMask & EV_TXEMPTY);
+        }
     }
 
     // Rerair old mask.
