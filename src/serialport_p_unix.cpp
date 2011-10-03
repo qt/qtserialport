@@ -302,7 +302,8 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
         }
         // FIXME: Here need call errno
         // and set error type?
-        setError(SerialPort::IoError);
+        if (bytesRead == -1)
+            setError(SerialPort::IoError);
     }
     return bytesRead;
 }
@@ -336,7 +337,8 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
         }
         // FIXME: Here need call errno
         // and set error type?
-        setError(SerialPort::IoError);
+        if (bytesRead == -1)
+            setError(SerialPort::IoError);
     }
     return bytesWritten;
 }
