@@ -193,40 +193,50 @@ qint64 SerialPortPrivate::bytesAvailable() const
 
 qint64 SerialPortPrivate::bytesToWrite() const
 {
-    // Impl me
-    return -1;
+    return 0;
 }
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
+    TPtr8 buffer((TUint8 *)data, (int)len);
     TRequestStatus status;
-    //TBuf8< 512 > buf;
-    //TPtr8 buf(TUint8(data), TInt(len));
+    int r = (m_readTimeout > 0) ? (m_readTimeout * 1000) : 0;
+    m_descriptor.Read(status, TTimeIntervalMicroSeconds32(r), buffer);
+    User::WaitForRequest(status);
+    TInt err = status.Int();
+    r = buffer.Length();
 
-    // m_descriptor.Read(status, TTimeIntervalMicroSeconds32(0), buf);
-    // User::WaitForRequest(status);
-    //TInt r = status.Int();
-
-
-
-
-
-    // Impl me
-    return -1;
+    if (err != KErrNone) {
+        setError(SerialPort::IoError);
+        r = -1;
+    }
+    return qint64(r);
 }
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
-    // Impl me
-    return -1;
+    TPtrC8 buffer((TUint8*)data, (int)len);
+    TRequestStatus status;
+    m_descriptor.Write(status, buffer);
+    User::WaitForRequest(status);
+    TInt err = status.Int();
+
+    if (err != KErrNone) {
+        setError(SerialPort::IoError);
+        len = -1;
+    }
+    // FIXME: How to get the actual number of bytes written?
+    return qint64(len);
 }
 
 bool SerialPortPrivate::waitForReadOrWrite(int timeout,
                                            bool checkRead, bool checkWrite,
                                            bool *selectForRead, bool *selectForWrite)
 {
+
+
     // Impl me
-    return false;
+    return -1;
 }
 
 
@@ -386,8 +396,8 @@ bool SerialPortPrivate::setNativeDataInterval(int usecs)
 
 bool SerialPortPrivate::setNativeReadTimeout(int msecs)
 {
-    // Impl me
-    return false;
+    Q_UNUSED(msecs)
+    return true;
 }
 
 bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
