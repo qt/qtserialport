@@ -273,6 +273,8 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
             bytesRead = readPerChar(data, len - bytesReaded);
 #endif
 
+    // FIXME: Here 'errno' codes for sockets.
+    // You need to replace the codes for the serial port.
     if (bytesRead < 0) {
         bytesRead = -1;
         switch (errno) {
@@ -317,6 +319,8 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
         bytesWritten = writePerChar(data, len);
 #endif
 
+    // FIXME: Here 'errno' codes for sockets.
+    // You need to replace the codes for the serial port.
     if (bytesWritten < 0) {
         switch (errno) {
         case EPIPE:
