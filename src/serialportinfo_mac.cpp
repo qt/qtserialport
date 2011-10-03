@@ -21,6 +21,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QFile>
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

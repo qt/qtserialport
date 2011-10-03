@@ -58,6 +58,7 @@ static bool loadDevices()
     return true;
 }
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

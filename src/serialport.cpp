@@ -14,6 +14,7 @@
 
 /* Public methods */
 
+QT_USE_NAMESPACE
 
 SerialPort::SerialPort(QObject *parent)
     : QIODevice(parent)

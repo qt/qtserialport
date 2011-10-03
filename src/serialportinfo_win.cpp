@@ -15,6 +15,8 @@
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
 
+QT_USE_NAMESPACE
+
 static const GUID guidArray[] =
 {
 #if !defined (Q_OS_WINCE)

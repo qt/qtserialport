@@ -44,6 +44,7 @@
 
 #endif
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

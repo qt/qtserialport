@@ -18,6 +18,8 @@
 #  define SERIALPORT_EXPORT
 #endif
 
+QT_BEGIN_NAMESPACE
+
 class SerialPort;
 class SerialPortInfoPrivate;
 class SerialInfoPrivateDeleter;
@@ -53,5 +55,7 @@ private:
 
 inline bool SerialPortInfo::isNull() const
 { return !d_ptr; }
+
+QT_END_NAMESPACE
 
 #endif // SERIALPORTINFO_H

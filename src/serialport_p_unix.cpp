@@ -20,6 +20,7 @@
 
 #include <QtCore/QRegExp>
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

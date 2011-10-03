@@ -31,6 +31,8 @@ extern "C"
 #include <QtCore/QRegExp>
 #include <QtCore/QFile>
 
+QT_USE_NAMESPACE
+
 static QStringList nameFilters()
 {
     static QStringList list;

@@ -8,6 +8,7 @@
 #include "serialport.h"
 #include "ringbuffer_p.h"
 
+QT_BEGIN_NAMESPACE
 
 class AbstractSerialPortPrivate
 {
@@ -208,5 +209,7 @@ protected:
     virtual bool saveOldsettings() = 0;
     virtual bool restoreOldsettings() = 0;
 };
+
+QT_END_NAMESPACE
 
 #endif // ABSTRACTSERIALPORT_P_H

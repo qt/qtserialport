@@ -13,6 +13,8 @@
 #  include <qt_windows.h>
 #  if defined (Q_OS_WINCE)
 #    include <QtCore/QMutex>
+#    include <QtCore/QThread>
+#    include <QtCore/QTimer>
 #  endif
 #elif defined (Q_OS_SYMBIAN)
 #  include <c32comm.h>
@@ -21,9 +23,9 @@
 //#  undef CMSPAR
 #endif
 
+QT_BEGIN_NAMESPACE
+
 #if defined (Q_OS_WINCE)
-#  include <QtCore/QThread>
-#  include <QtCore/QTimer>
 
 class WinCeWaitCommEventBreaker : public QThread
 {
@@ -197,5 +199,7 @@ private:
 
     void prepareOtherOptions();
 };
+
+QT_END_NAMESPACE
 
 #endif // SERIALPORT_P_H

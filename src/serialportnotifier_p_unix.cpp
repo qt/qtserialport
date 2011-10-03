@@ -7,6 +7,7 @@
 
 #include <QtCore/QSocketNotifier>
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

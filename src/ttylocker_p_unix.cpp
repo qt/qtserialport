@@ -35,6 +35,7 @@ it is possible to solve the transition to CMake*/
 
 #include <QtCore/QString>
 
+QT_USE_NAMESPACE
 
 // Truncate the full name of the device to short.
 // For example the long name "/dev/ttyS0" will cut up to "ttyS0".

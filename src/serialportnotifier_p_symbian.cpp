@@ -7,6 +7,7 @@
 
 //#include <QtCore/QDebug>
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 
