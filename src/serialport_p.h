@@ -74,8 +74,8 @@ public:
 
     virtual SerialPort::Lines lines() const;
 
-    bool setDtr(bool set);
-    bool setRts(bool set);
+    virtual bool setDtr(bool set);
+    virtual bool setRts(bool set);
 
     virtual bool flush();
     virtual bool reset();
