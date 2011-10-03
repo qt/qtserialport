@@ -62,8 +62,8 @@ static bool loadDevices()
 /* Public methods */
 
 
-SerialPortPrivate::SerialPortPrivate()
-    : AbstractSerialPortPrivate()
+SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
+    : AbstractSerialPortPrivate(parent)
 {
     // Impl me
 

@@ -12,8 +12,9 @@
 class AbstractSerialPortPrivate
 {
 public:
-    AbstractSerialPortPrivate()
-        : m_inRate(SerialPort::UnknownRate)
+    AbstractSerialPortPrivate(SerialPort *parent)
+        : q_ptr(parent)
+        , m_inRate(SerialPort::UnknownRate)
         , m_outRate(SerialPort::UnknownRate)
         , m_dataBits(SerialPort::UnknownDataBits)
         , m_parity(SerialPort::UnknownParity)
@@ -163,6 +164,7 @@ public:
 
 protected:
     // General (for any OS) private parameters.
+    SerialPort *q_ptr;
     QString m_systemLocation;
     qint32 m_inRate;
     qint32 m_outRate;

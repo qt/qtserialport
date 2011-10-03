@@ -24,8 +24,8 @@
 /* Public methods */
 
 
-SerialPortPrivate::SerialPortPrivate()
-    : AbstractSerialPortPrivate()
+SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
+    : AbstractSerialPortPrivate(parent)
     , m_descriptor(-1)
 {
     int size = sizeof(struct termios);

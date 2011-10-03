@@ -17,27 +17,20 @@
 
 SerialPort::SerialPort(QObject *parent)
     : QIODevice(parent)
-    , d_ptr(new SerialPortPrivate())
-{
-    Q_D(SerialPort);
-    d->q_ptr = this;
-}
+    , d_ptr(new SerialPortPrivate(this))
+{}
 
 SerialPort::SerialPort(const QString &name, QObject *parent)
     : QIODevice(parent)
-    , d_ptr(new SerialPortPrivate())
+    , d_ptr(new SerialPortPrivate(this))
 {
-    Q_D(SerialPort);
-    d->q_ptr = this;
     setPort(name);
 }
 
 SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
     : QIODevice(parent)
-    , d_ptr(new SerialPortPrivate())
+    , d_ptr(new SerialPortPrivate(this))
 {
-    Q_D(SerialPort);
-    d->q_ptr = this;
     setPort(info);
 }
 

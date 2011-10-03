@@ -67,7 +67,7 @@ class SerialPortPrivate : public AbstractSerialPortPrivate
 {
     Q_DECLARE_PUBLIC(SerialPort)
 public:
-    SerialPortPrivate();
+    SerialPortPrivate(SerialPort *parent);
 
     virtual bool open(QIODevice::OpenMode mode);
     virtual void close();
@@ -182,8 +182,6 @@ private:
 #endif
     friend class SerialPortNotifier;
     SerialPortNotifier m_notifier;
-
-    SerialPort *q_ptr;
 
     bool canReadNotification();
     bool canWriteNotification();
