@@ -5,7 +5,7 @@
 #ifndef SERIALPORT_H
 #define SERIALPORT_H
 
-#include <QtCore/QIODevice>
+#include <QtCore/qiodevice.h>
 
 #ifdef SERIALPORT_SHARED
 #  ifdef SERIALPORT_BUILD
@@ -16,6 +16,8 @@
 #else
 #  define SERIALPORT_EXPORT
 #endif
+
+QT_BEGIN_NAMESPACE
 
 class SerialPortInfo;
 class SerialPortPrivate;
@@ -203,5 +205,7 @@ inline bool SerialPort::clearBreak(bool clear)
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(SerialPort::Directions)
 Q_DECLARE_OPERATORS_FOR_FLAGS(SerialPort::Lines)
+
+QT_END_NAMESPACE
 
 #endif // SERIALPORT_H

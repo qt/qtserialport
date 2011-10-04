@@ -12,7 +12,9 @@
 #if defined (Q_OS_WIN)
 #  include <qt_windows.h>
 #  if defined (Q_OS_WINCE)
-#    include <QtCore/QMutex>
+#    include <QtCore/qmutex.h>
+#    include <QtCore/qthread.h>
+#    include <QtCore/qtimer.h>
 #  endif
 #elif defined (Q_OS_SYMBIAN)
 #  include <c32comm.h>
@@ -21,9 +23,9 @@
 //#  undef CMSPAR
 #endif
 
+QT_BEGIN_NAMESPACE
+
 #if defined (Q_OS_WINCE)
-#  include <QtCore/QThread>
-#  include <QtCore/QTimer>
 
 class WinCeWaitCommEventBreaker : public QThread
 {
@@ -67,15 +69,15 @@ class SerialPortPrivate : public AbstractSerialPortPrivate
 {
     Q_DECLARE_PUBLIC(SerialPort)
 public:
-    SerialPortPrivate();
+    SerialPortPrivate(SerialPort *parent);
 
     virtual bool open(QIODevice::OpenMode mode);
     virtual void close();
 
     virtual SerialPort::Lines lines() const;
 
-    bool setDtr(bool set);
-    bool setRts(bool set);
+    virtual bool setDtr(bool set);
+    virtual bool setRts(bool set);
 
     virtual bool flush();
     virtual bool reset();
@@ -184,8 +186,6 @@ private:
     friend class SerialPortNotifier;
     SerialPortNotifier m_notifier;
 
-    SerialPort *q_ptr;
-
     bool canReadNotification();
     bool canWriteNotification();
     bool canErrorNotification();
@@ -200,5 +200,7 @@ private:
 
     void prepareOtherOptions();
 };
+
+QT_END_NAMESPACE
 
 #endif // SERIALPORT_P_H

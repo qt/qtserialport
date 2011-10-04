@@ -4,6 +4,7 @@
 
 #include "serialport_p.h"
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

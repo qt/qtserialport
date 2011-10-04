@@ -10,7 +10,7 @@
 #include <c32comm.h>
 #include <f32file.h>
 
-#include <QtCore/QObject>
+#include <QtCore/qobject.h>
 
 
 // Physical device driver.
@@ -58,6 +58,7 @@ static bool loadDevices()
     return true;
 }
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

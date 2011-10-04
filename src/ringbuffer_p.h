@@ -1,6 +1,11 @@
 #ifndef RINGBUFFER_P_H
 #define RINGBUFFER_P_H
 
+#include <QtCore/qbytearray.h>
+#include <QtCore/qlist.h>
+
+QT_BEGIN_NAMESPACE
+
 class RingBuffer
 {
 public:
@@ -364,5 +369,7 @@ private:
     int basicBlockSize;
     int bufferSize;
 };
+
+QT_END_NAMESPACE
 
 #endif // RINGBUFFER_P_H

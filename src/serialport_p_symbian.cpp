@@ -8,7 +8,7 @@
 //#include <e32test.h>
 #include <f32file.h>
 
-#include <QtCore/QRegExp>
+#include <QtCore/qregexp.h>
 //#include <QtCore/QDebug>
 
 
@@ -57,13 +57,13 @@ static bool loadDevices()
     return true;
 }
 
-
+QT_USE_NAMESPACE
 
 /* Public methods */
 
 
-SerialPortPrivate::SerialPortPrivate()
-    : AbstractSerialPortPrivate()
+SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
+    : AbstractSerialPortPrivate(parent)
 {
     // Impl me
 

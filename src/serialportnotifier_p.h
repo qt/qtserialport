@@ -5,6 +5,25 @@
 #ifndef SERIALPORTNOTIFIER_P_H
 #define SERIALPORTNOTIFIER_P_H
 
+#include <QtCore/qcoreevent.h>
+
+#if defined (Q_OS_WIN)
+#  include <qt_windows.h>
+#  if defined (Q_OS_WINCE)
+#    include <QtCore/qthread.h>
+#    include <QtCore/qmutex.h>
+#  else
+#    include <QtCore/private/qwineventnotifier_p.h>
+#  endif
+#elif defined (Q_OS_SYMBIAN)
+#  include <QtCore/qobject.h>
+#else
+#  include <QtCore/qthread.h>
+class QSocketNotifier;
+#endif
+
+QT_BEGIN_NAMESPACE
+
 class SerialPortPrivate;
 
 // Serial port notifier interface.
@@ -22,25 +41,6 @@ public:
 protected:
     SerialPortPrivate *m_ref;
 };
-
-
-#include <QtCore/QEvent>
-
-#if defined (Q_OS_WIN)
-#  include <qt_windows.h>
-#  if defined (Q_OS_WINCE)
-#    include <QtCore/QThread>
-#    include <QtCore/QMutex>
-#  else
-#    include <QtCore/private/qwineventnotifier_p.h>
-#  endif
-#elif defined (Q_OS_SYMBIAN)
-#  include <QtCore/QObject>
-#else
-#  include <QtCore/QThread>
-class QSocketNotifier;
-#endif
-
 
 #if defined (Q_OS_WIN)
 #  if defined (Q_OS_WINCE)
@@ -113,5 +113,7 @@ private:
     QSocketNotifier *m_exceptionNotifier;
 };
 #endif
+
+QT_END_NAMESPACE
 
 #endif // SERIALPORTNOTIFIER_P_H

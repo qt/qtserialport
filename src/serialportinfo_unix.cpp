@@ -23,13 +23,15 @@ extern "C"
 #  include <libudev.h>
 }
 #else
-#  include <QtCore/QDir>
+#  include <QtCore/qdir.h>
 #endif
 
-#include <QtCore/QVariant>
-#include <QtCore/QStringList>
-#include <QtCore/QRegExp>
-#include <QtCore/QFile>
+#include <QtCore/qvariant.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qregexp.h>
+#include <QtCore/qfile.h>
+
+QT_USE_NAMESPACE
 
 static QStringList nameFilters()
 {
@@ -139,9 +141,22 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
+static
+const qint32 standardRates_begin[] =
+{
+    50, 75, 110, 134, 150,
+    200, 300, 600, 1200, 1800,
+    2400, 4800, 9600, 19200, 38400,
+    57600, 115200, 230400, 460800,
+    500000, 576000, 921600, 1000000,
+    1152000, 1500000, 2000000, 2500000,
+    3000000, 3500000, 4000000
+}, *standardRates_end = standardRates_begin + sizeof(::standardRates_begin)/sizeof(*::standardRates_begin);
+
 QList<qint32> SerialPortInfo::standardRates() const
 {
     QList<qint32> rates;
+    rates.reserve(standardRates_end - standardRates_begin);
 
 #if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
     int descriptor = ::open(systemLocation().toLocal8Bit().constData(),
@@ -155,29 +170,19 @@ QList<qint32> SerialPortInfo::standardRates() const
 
         if ((result != -1) && (ser_info.baud_base > 0)) {
 
-            for (int i = 1; i < ser_info.baud_base; ++i) {
+            for (int i = 1, max = ser_info.baud_base / 50; i <= max; ++i) {
                 result = ser_info.baud_base / i;
 
-                if (result < 50)
-                    break;
-
-                switch (result) {
-                case 50: case 75: case 110: case 134: case 150:
-                case 200: case 300: case 600: case 1200: case 1800:
-                case 2400: case 4800: case 9600: case 19200: case 38400:
-                case 57600: case 115200: case 230400: case 460800:
-                case 500000: case 576000: case 921600: case 1000000:
-                case 1152000: case 1500000: case 2000000: case 2500000:
-                case 3000000: case 3500000: case 4000000:
-                    if (!rates.contains(result))
-                        rates.append(result); break;
-                default:;
-                }
+                //append to list only rates presented in array standardRates_begin
+                if ((qBinaryFind(standardRates_begin, standardRates_end, result) != standardRates_end) &&
+                        !rates.contains(result))
+                    rates.append(result);
             }
         }
     }
 #else
-    //
+    for (const qint32 *i = standardRates_begin; i != standardRates_end; ++i)
+        rates.append(*i);
 #endif
     return rates;
 }

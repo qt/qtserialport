@@ -4,7 +4,7 @@
 
 #include "serialport_p.h"
 
-#include <QtCore/QRegExp>
+#include <QtCore/qregexp.h>
 //#include <QtCore/QDebug>
 
 #ifndef Q_CC_MSVC
@@ -44,12 +44,13 @@
 
 #endif
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 
 
-SerialPortPrivate::SerialPortPrivate()
-    : AbstractSerialPortPrivate()
+SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
+    : AbstractSerialPortPrivate(parent)
     , m_descriptor(INVALID_HANDLE_VALUE)
     , m_flagErrorFromCommEvent(false)
 {

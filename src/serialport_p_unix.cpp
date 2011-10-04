@@ -18,14 +18,15 @@
 #  endif
 #endif
 
-#include <QtCore/QRegExp>
+#include <QtCore/qregexp.h>
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 
 
-SerialPortPrivate::SerialPortPrivate()
-    : AbstractSerialPortPrivate()
+SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
+    : AbstractSerialPortPrivate(parent)
     , m_descriptor(-1)
 {
     int size = sizeof(struct termios);
@@ -48,11 +49,14 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
     switch (mode & QIODevice::ReadWrite) {
     case QIODevice::WriteOnly:
-        flags |= O_WRONLY; break;
+        flags |= O_WRONLY;
+        break;
     case QIODevice::ReadWrite:
-        flags |= O_RDWR; break;
+        flags |= O_RDWR;
+        break;
     default:
-        flags |= O_RDONLY; break;
+        flags |= O_RDONLY;
+        break;
     }
 
     // Try opened serial device.
@@ -61,9 +65,11 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (m_descriptor == -1) {
         switch (errno) {
         case ENODEV:
-            setError(SerialPort::NoSuchDeviceError); break;
+            setError(SerialPort::NoSuchDeviceError);
+            break;
         case EACCES:
-            setError(SerialPort::PermissionDeniedError); break;
+            setError(SerialPort::PermissionDeniedError);
+            break;
         default:
             setError(SerialPort::UnknownPortError);
         }
@@ -265,12 +271,12 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     qint64 bytesRead = 0;
 
 #if defined (CMSPAR)
-        bytesRead = ::read(m_descriptor, data, len - bytesReaded);
+    bytesRead = ::read(m_descriptor, data, len);
 #else
-        if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
-            bytesRead = ::read(m_descriptor, data, len - bytesReaded);
-        else // Perform parity emulation.
-            bytesRead = readPerChar(data, len - bytesReaded);
+    if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
+        bytesRead = ::read(m_descriptor, data, len);
+    else // Perform parity emulation.
+        bytesRead = readPerChar(data, len);
 #endif
 
     // FIXME: Here 'errno' codes for sockets.
@@ -337,7 +343,7 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
         }
         // FIXME: Here need call errno
         // and set error type?
-        if (bytesRead == -1)
+        if (bytesWritten == -1)
             setError(SerialPort::IoError);
     }
     return bytesWritten;
@@ -805,13 +811,17 @@ void SerialPortPrivate::detectDefaultSettings()
     // Detect databits.
     switch (m_currTermios.c_cflag & CSIZE) {
     case CS5:
-        m_dataBits = SerialPort::Data5; break;
+        m_dataBits = SerialPort::Data5;
+        break;
     case CS6:
-        m_dataBits = SerialPort::Data6; break;
+        m_dataBits = SerialPort::Data6;
+        break;
     case CS7:
-        m_dataBits = SerialPort::Data7; break;
+        m_dataBits = SerialPort::Data7;
+        break;
     case CS8:
-        m_dataBits = SerialPort::Data8; break;
+        m_dataBits = SerialPort::Data8;
+        break;
     default:
         m_dataBits = SerialPort::UnknownDataBits;
     }

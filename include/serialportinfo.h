@@ -5,8 +5,8 @@
 #ifndef SERIALPORTINFO_H
 #define SERIALPORTINFO_H
 
-#include <QtCore/QList>
-#include <QtCore/QScopedPointer>
+#include <QtCore/qlist.h>
+#include <QtCore/qscopedpointer.h>
 
 #ifdef SERIALPORT_SHARED
 #  ifdef SERIALPORT_BUILD
@@ -17,6 +17,8 @@
 #else
 #  define SERIALPORT_EXPORT
 #endif
+
+QT_BEGIN_NAMESPACE
 
 class SerialPort;
 class SerialPortInfoPrivate;
@@ -53,5 +55,7 @@ private:
 
 inline bool SerialPortInfo::isNull() const
 { return !d_ptr; }
+
+QT_END_NAMESPACE
 
 #endif // SERIALPORTINFO_H

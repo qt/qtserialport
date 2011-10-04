@@ -17,10 +17,11 @@
 #endif
 #include <IOKit/IOBSD.h>
 
-#include <QtCore/QVariant>
-#include <QtCore/QStringList>
-#include <QtCore/QFile>
+#include <QtCore/qvariant.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qfile.h>
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 

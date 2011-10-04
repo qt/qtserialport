@@ -6,6 +6,7 @@
 #include "serialportinfo_p.h"
 #include "serialport.h"
 
+QT_USE_NAMESPACE
 
 /* Public methods */
 
