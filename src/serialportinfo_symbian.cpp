@@ -149,39 +149,22 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
+static QList<qint32> emptyList()
+{
+    QList<qint32> list;
+    return list;
+}
+
 QList<qint32> SerialPortInfo::standardRates() const
 {
-    QList<qint32> rates;
-    
     // See enum TBps in SDK:
     // - epoc32/include/platform/d32comm.h for Symbian^3
     // - epoc32/include/platform/d32public.h for Symbian SR1
-    rates.append(50);
-    rates.append(75);
-    rates.append(110);
-    rates.append(134);
-    rates.append(150);
-    rates.append(300);
-    rates.append(600);
-    rates.append(1200);
-    rates.append(1800);
-    rates.append(2000);
-    rates.append(2400);
-    rates.append(3600);
-    rates.append(4800);
-    rates.append(7200);
-    rates.append(9600);
-    rates.append(19200);
-    rates.append(38400);
-    rates.append(57600);
-    rates.append(115200);
-    rates.append(230400);
-    rates.append(460800);
-    rates.append(576000);
-    rates.append(1152000);
-    rates.append(4000000);
-    rates.append(921600);
-    rates.append(1843200); // Only for  Symbian SR1
+    static QList<qint32> rates = emptyList()
+    << 50 << 75 << 110 << 134 << 150 << 300 << 600 << 1200 << 1800 << 2000
+    << 2400 << 3600 << 4800 << 7200 << 9600 << 19200 << 38400 << 57600
+    << 115200 << 230400 << 460800 << 576000 << 1152000 << 4000000 << 921600
+    << 1843200; // 1843200 only for  Symbian SR1!
     return rates;
 }
 
