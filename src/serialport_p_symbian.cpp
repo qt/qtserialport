@@ -322,31 +322,81 @@ bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
     }
 
     switch (rate) {
-    case 50: m_currSettings().iRate = EBps50; break;
-    case 75: m_currSettings().iRate = EBps75; break;
-    case 110: m_currSettings().iRate = EBps110; break;
-    case 134: m_currSettings().iRate = EBps134; break;
-    case 150: m_currSettings().iRate = EBps150; break;
-    case 300: m_currSettings().iRate = EBps300; break;
-    case 600: m_currSettings().iRate = EBps600; break;
-    case 1200: m_currSettings().iRate = EBps1200; break;
-    case 1800: m_currSettings().iRate = EBps1800; break;
-    case 2000: m_currSettings().iRate = EBps2000; break;
-    case 2400: m_currSettings().iRate = EBps2400; break;
-    case 3600: m_currSettings().iRate = EBps3600; break;
-    case 4800: m_currSettings().iRate = EBps4800; break;
-    case 7200: m_currSettings().iRate = EBps7200; break;
-    case 9600: m_currSettings().iRate = EBps9600; break;
-    case 19200: m_currSettings().iRate = EBps19200; break;
-    case 38400: m_currSettings().iRate = EBps38400; break;
-    case 57600: m_currSettings().iRate = EBps57600; break;
-    case 115200: m_currSettings().iRate = EBps115200; break;
-    case 230400: m_currSettings().iRate = EBps230400; break;
-    case 460800: m_currSettings().iRate = EBps460800; break;
-    case 576000: m_currSettings().iRate = EBps576000; break;
-    case 1152000: m_currSettings().iRate = EBps1152000; break;
-    case 4000000: m_currSettings().iRate = EBps4000000; break;
-    case 921600: m_currSettings().iRate = EBps921600; break;
+    case 50:
+        m_currSettings().iRate = EBps50;
+        break;
+    case 75:
+        m_currSettings().iRate = EBps75;
+        break;
+    case 110:
+        m_currSettings().iRate = EBps110;
+        break;
+    case 134:
+        m_currSettings().iRate = EBps134;
+        break;
+    case 150:
+        m_currSettings().iRate = EBps150;
+        break;
+    case 300:
+        m_currSettings().iRate = EBps300;
+        break;
+    case 600:
+        m_currSettings().iRate = EBps600;
+        break;
+    case 1200:
+        m_currSettings().iRate = EBps1200;
+        break;
+    case 1800:
+        m_currSettings().iRate = EBps1800;
+        break;
+    case 2000:
+        m_currSettings().iRate = EBps2000;
+        break;
+    case 2400:
+        m_currSettings().iRate = EBps2400;
+        break;
+    case 3600:
+        m_currSettings().iRate = EBps3600;
+        break;
+    case 4800:
+        m_currSettings().iRate = EBps4800;
+        break;
+    case 7200:
+        m_currSettings().iRate = EBps7200;
+        break;
+    case 9600:
+        m_currSettings().iRate = EBps9600;
+        break;
+    case 19200:
+        m_currSettings().iRate = EBps19200;
+        break;
+    case 38400:
+        m_currSettings().iRate = EBps38400;
+        break;
+    case 57600:
+        m_currSettings().iRate = EBps57600;
+        break;
+    case 115200:
+        m_currSettings().iRate = EBps115200;
+        break;
+    case 230400:
+        m_currSettings().iRate = EBps230400;
+        break;
+    case 460800:
+        m_currSettings().iRate = EBps460800;
+        break;
+    case 576000:
+        m_currSettings().iRate = EBps576000;
+        break;
+    case 1152000:
+        m_currSettings().iRate = EBps1152000;
+        break;
+    case 4000000:
+        m_currSettings().iRate = EBps4000000;
+        break;
+    case 921600:
+        m_currSettings().iRate = EBps921600;
+        break;
         //case 1843200:; // Only for  Symbian SR1
     default:
         setError(SerialPort::UnsupportedPortOperationError);
@@ -369,10 +419,18 @@ bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
     }
 
     switch (dataBits) {
-    case SerialPort::Data5: m_currSettings().iDataBits = EData5; break;
-    case SerialPort::Data6: m_currSettings().iDataBits = EData6; break;
-    case SerialPort::Data7: m_currSettings().iDataBits = EData7; break;
-    case SerialPort::Data8: m_currSettings().iDataBits = EData8; break;
+    case SerialPort::Data5:
+        m_currSettings().iDataBits = EData5;
+        break;
+    case SerialPort::Data6:
+        m_currSettings().iDataBits = EData6;
+        break;
+    case SerialPort::Data7:
+        m_currSettings().iDataBits = EData7;
+        break;
+    case SerialPort::Data8:
+        m_currSettings().iDataBits = EData8;
+        break;
     }
 
     bool ret = updateCommConfig();
@@ -389,11 +447,21 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
     }
 
     switch (parity) {
-    case SerialPort::NoParity: m_currSettings().iParity = EParityNone; break;
-    case SerialPort::EvenParity: m_currSettings().iParity = EParityEven; break;
-    case SerialPort::OddParity: m_currSettings().iParity = EParityOdd; break;
-    case SerialPort::MarkParity: m_currSettings().iParity = EParityMark; break;
-    case SerialPort::SpaceParity: m_currSettings().iParity = EParitySpace; break;
+    case SerialPort::NoParity:
+        m_currSettings().iParity = EParityNone;
+        break;
+    case SerialPort::EvenParity:
+        m_currSettings().iParity = EParityEven;
+        break;
+    case SerialPort::OddParity:
+        m_currSettings().iParity = EParityOdd;
+        break;
+    case SerialPort::MarkParity:
+        m_currSettings().iParity = EParityMark;
+        break;
+    case SerialPort::SpaceParity:
+        m_currSettings().iParity = EParitySpace;
+        break;
     }
 
     bool ret = updateCommConfig();
@@ -412,8 +480,12 @@ bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
     }
 
     switch (stopBits) {
-    case SerialPort::OneStop: m_currSettings().iStopBits = EStop1; break;
-    case SerialPort::TwoStop: m_currSettings().iStopBits = EStop2; break;
+    case SerialPort::OneStop:
+        m_currSettings().iStopBits = EStop1;
+        break;
+    case SerialPort::TwoStop:
+        m_currSettings().iStopBits = EStop2;
+        break;
     default:
         setError(SerialPort::UnsupportedPortOperationError);
         return false;
@@ -433,9 +505,15 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
     }
 
     switch (flow) {
-    case SerialPort::NoFlowControl: m_currSettings().iHandshake = KConfigFailDSR; break;
-    case SerialPort::HardwareControl: m_currSettings().iHandshake = KConfigObeyCTS | KConfigFreeRTS; break;
-    case SerialPort::SoftwareControl: m_currSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff; break;
+    case SerialPort::NoFlowControl:
+        m_currSettings().iHandshake = KConfigFailDSR;
+        break;
+    case SerialPort::HardwareControl:
+        m_currSettings().iHandshake = KConfigObeyCTS | KConfigFreeRTS;
+        break;
+    case SerialPort::SoftwareControl:
+        m_currSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
+        break;
     }
 
     bool ret = updateCommConfig();
@@ -473,60 +551,136 @@ void SerialPortPrivate::detectDefaultSettings()
 {
     // Detect rate.
     switch (m_currSettings().iRate) {
-    case EBps50: m_inRate = 50; break;
-    case EBps75: m_inRate = 75; break;
-    case EBps110: m_inRate = 110; break;
-    case EBps134: m_inRate = 134; break;
-    case EBps150: m_inRate = 150; break;
-    case EBps300: m_inRate = 300; break;
-    case EBps600: m_inRate = 600; break;
-    case EBps1200: m_inRate = 1200; break;
-    case EBps1800: m_inRate = 1800; break;
-    case EBps2000: m_inRate = 2000; break;
-    case EBps2400: m_inRate = 2400; break;
-    case EBps3600: m_inRate = 3600; break;
-    case EBps4800: m_inRate = 4800; break;
-    case EBps7200: m_inRate = 7200; break;
-    case EBps9600: m_inRate = 9600; break;
-    case EBps19200: m_inRate = 19200; break;
-    case EBps38400: m_inRate = 38400; break;
-    case EBps57600: m_inRate = 57600; break;
-    case EBps115200: m_inRate = 115200; break;
-    case EBps230400: m_inRate = 230400; break;
-    case EBps460800: m_inRate = 460800; break;
-    case EBps576000: m_inRate = 576000; break;
-    case EBps1152000: m_inRate = 1152000; break;
-    case EBps4000000: m_inRate = 4000000; break;
-    case EBps921600: m_inRate = 921600; break;
+    case EBps50:
+        m_inRate = 50;
+        break;
+    case EBps75:
+        m_inRate = 75;
+        break;
+    case EBps110:
+        m_inRate = 110;
+        break;
+    case EBps134:
+        m_inRate = 134;
+        break;
+    case EBps150:
+        m_inRate = 150;
+        break;
+    case EBps300:
+        m_inRate = 300;
+        break;
+    case EBps600:
+        m_inRate = 600;
+        break;
+    case EBps1200:
+        m_inRate = 1200;
+        break;
+    case EBps1800:
+        m_inRate = 1800;
+        break;
+    case EBps2000:
+        m_inRate = 2000;
+        break;
+    case EBps2400:
+        m_inRate = 2400;
+        break;
+    case EBps3600:
+        m_inRate = 3600;
+        break;
+    case EBps4800:
+        m_inRate = 4800;
+        break;
+    case EBps7200:
+        m_inRate = 7200;
+        break;
+    case EBps9600:
+        m_inRate = 9600;
+        break;
+    case EBps19200:
+        m_inRate = 19200;
+        break;
+    case EBps38400:
+        m_inRate = 38400;
+        break;
+    case EBps57600:
+        m_inRate = 57600;
+        break;
+    case EBps115200:
+        m_inRate = 115200;
+        break;
+    case EBps230400:
+        m_inRate = 230400;
+        break;
+    case EBps460800:
+        m_inRate = 460800;
+        break;
+    case EBps576000:
+        m_inRate = 576000;
+        break;
+    case EBps1152000:
+        m_inRate = 1152000;
+        break;
+    case EBps4000000:
+        m_inRate = 4000000;
+        break;
+    case EBps921600:
+        m_inRate = 921600;
+        break;
         //case EBps1843200: m_inRate = 1843200; break;
-    default: m_inRate = SerialPort::UnknownRate;
+    default:
+        m_inRate = SerialPort::UnknownRate;
     }
     m_outRate = m_inRate;
 
     // Detect databits.
     switch (m_currSettings().iDataBits) {
-    case EData5: m_dataBits = SerialPort::Data5; break;
-    case EData6: m_dataBits = SerialPort::Data6; break;
-    case EData7: m_dataBits = SerialPort::Data7; break;
-    case EData8: m_dataBits = SerialPort::Data8; break;
-    default: m_dataBits = SerialPort::UnknownDataBits;
+    case EData5:
+        m_dataBits = SerialPort::Data5;
+        break;
+    case EData6:
+        m_dataBits = SerialPort::Data6;
+        break;
+    case EData7:
+        m_dataBits = SerialPort::Data7;
+        break;
+    case EData8:
+        m_dataBits = SerialPort::Data8;
+        break;
+    default:
+        m_dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
     switch (m_currSettings().iParity) {
-    case EParityNone: m_parity = SerialPort::NoParity; break;
-    case EParityEven: m_parity = SerialPort::EvenParity; break;
-    case EParityOdd: m_parity = SerialPort::OddParity; break;
-    case EParityMark: m_parity = SerialPort::MarkParity; break;
-    case EParitySpace: m_parity = SerialPort::SpaceParity; break;
-    default: m_parity = SerialPort::UnknownParity;
+    case EParityNone:
+        m_parity = SerialPort::NoParity;
+        break;
+    case EParityEven:
+        m_parity = SerialPort::EvenParity;
+        break;
+    case EParityOdd:
+        m_parity = SerialPort::OddParity;
+        break;
+    case EParityMark:
+        m_parity = SerialPort::MarkParity;
+        break;
+    case EParitySpace:
+        m_parity = SerialPort::SpaceParity;
+        break;
+    default:
+        m_parity = SerialPort::UnknownParity;
     }
 
     // Detect stopbits.
     switch (m_currSettings().iStopBits) {
-    case EStop1: m_stopBits = SerialPort::OneStop;
-    case EStop2: m_stopBits = SerialPort::TwoStop;
-    default:  m_stopBits = SerialPort::UnknownStopBits;
+    case EStop1:
+        m_stopBits = SerialPort::OneStop;
+        break;
+    case EStop2:
+        m_stopBits = SerialPort::TwoStop;
+        break;
+    default:
+        m_stopBits = SerialPort::UnknownStopBits;
     }
 
     // Detect flow control.

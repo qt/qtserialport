@@ -104,9 +104,11 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (m_descriptor == INVALID_HANDLE_VALUE) {
         switch (::GetLastError()) {
         case ERROR_FILE_NOT_FOUND:
-            setError(SerialPort::NoSuchDeviceError); break;
+            setError(SerialPort::NoSuchDeviceError);
+            break;
         case ERROR_ACCESS_DENIED:
-            setError(SerialPort::PermissionDeniedError); break;
+            setError(SerialPort::PermissionDeniedError);
+            break;
         default:
             setError(SerialPort::UnknownPortError);
         }
@@ -298,10 +300,9 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
             // Instead of an infinite wait I/O (not looped), we expect, for example 5 seconds.
             // Although, maybe there is a better solution.
             switch (::WaitForSingleObject(m_ovRead.hEvent, 5000)) {
-            case WAIT_OBJECT_0: {
+            case WAIT_OBJECT_0:
                 if (::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, false))
                     sucessResult = true;
-            }
                 break;
             default: ;
             }
@@ -319,10 +320,13 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
         m_flagErrorFromCommEvent = false;
 
         switch (m_policy) {
-        case SerialPort::SkipPolicy: return 0;
+        case SerialPort::SkipPolicy:
+            return 0;
         case SerialPort::PassZeroPolicy:
-            *data = '\0'; break;
-        case SerialPort::StopReceivingPolicy: break;
+            *data = '\0';
+            break;
+        case SerialPort::StopReceivingPolicy:
+            break;
         default:;
         }
     }
@@ -348,10 +352,9 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
             // Instead of an infinite wait I/O (not looped), we expect, for example 5 seconds.
             // Although, maybe there is a better solution.
             switch (::WaitForSingleObject(m_ovWrite.hEvent, 5000)) {
-            case WAIT_OBJECT_0: {
+            case WAIT_OBJECT_0:
                 if (::GetOverlappedResult(m_descriptor, &m_ovWrite, &writeBytes, false))
                     sucessResult = true;
-            }
                 break;
             default: ;
             }
@@ -415,10 +418,9 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         if (::GetLastError() == ERROR_IO_PENDING) {
             DWORD bytesTransferred = 0;
             switch (::WaitForSingleObject(m_ovSelect.hEvent, (timeout < 0) ? 0 : timeout)) {
-            case WAIT_OBJECT_0: {
+            case WAIT_OBJECT_0:
                 if (::GetOverlappedResult(m_descriptor, &m_ovSelect, &bytesTransferred, false))
                     sucessResult = true;
-            }
                 break;
             default: ;
             }
@@ -525,16 +527,24 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 
     m_currDCB.fParity = true;
     switch (parity) {
-    case SerialPort::NoParity:  {
+    case SerialPort::NoParity:
         m_currDCB.Parity = NOPARITY;
         m_currDCB.fParity = false;
-    }
         break;
-    case SerialPort::SpaceParity: m_currDCB.Parity = SPACEPARITY; break;
-    case SerialPort::MarkParity: m_currDCB.Parity = MARKPARITY; break;
-    case SerialPort::EvenParity: m_currDCB.Parity = EVENPARITY; break;
-    case SerialPort::OddParity: m_currDCB.Parity = ODDPARITY; break;
-    default: return false;
+    case SerialPort::SpaceParity:
+        m_currDCB.Parity = SPACEPARITY;
+        break;
+    case SerialPort::MarkParity:
+        m_currDCB.Parity = MARKPARITY;
+        break;
+    case SerialPort::EvenParity:
+        m_currDCB.Parity = EVENPARITY;
+        break;
+    case SerialPort::OddParity:
+        m_currDCB.Parity = ODDPARITY;
+        break;
+    default:
+        return false;
     }
     bool ret = updateDcb();
     if (!ret)
@@ -552,10 +562,17 @@ bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
     }
 
     switch (stopBits) {
-    case SerialPort::OneStop: m_currDCB.StopBits = ONESTOPBIT; break;
-    case SerialPort::OneAndHalfStop: m_currDCB.StopBits = ONE5STOPBITS; break;
-    case SerialPort::TwoStop: m_currDCB.StopBits = TWOSTOPBITS; break;
-    default: return false;
+    case SerialPort::OneStop:
+        m_currDCB.StopBits = ONESTOPBIT;
+        break;
+    case SerialPort::OneAndHalfStop:
+        m_currDCB.StopBits = ONE5STOPBITS;
+        break;
+    case SerialPort::TwoStop:
+        m_currDCB.StopBits = TWOSTOPBITS;
+        break;
+    default:
+        return false;
     }
     bool ret = updateDcb();
     if (!ret)
@@ -571,23 +588,20 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
     }
 
     switch (flow) {
-    case SerialPort::NoFlowControl: {
+    case SerialPort::NoFlowControl:
         m_currDCB.fOutxCtsFlow = false;
         m_currDCB.fRtsControl = RTS_CONTROL_DISABLE;
         m_currDCB.fInX = m_currDCB.fOutX = false;
-    }
         break;
-    case SerialPort::SoftwareControl: {
+    case SerialPort::SoftwareControl:
         m_currDCB.fOutxCtsFlow = false;
         m_currDCB.fRtsControl = RTS_CONTROL_DISABLE;
         m_currDCB.fInX = m_currDCB.fOutX = true;
-    }
         break;
-    case SerialPort::HardwareControl: {
+    case SerialPort::HardwareControl:
         m_currDCB.fOutxCtsFlow = true;
         m_currDCB.fRtsControl = RTS_CONTROL_HANDSHAKE;
         m_currDCB.fInX = m_currDCB.fOutX = false;
-    }
         break;
     default: return false;
     }
@@ -635,11 +649,20 @@ void SerialPortPrivate::detectDefaultSettings()
 
     // Detect databits.
     switch (m_currDCB.ByteSize) {
-    case 5: m_dataBits = SerialPort::Data5; break;
-    case 6: m_dataBits = SerialPort::Data6; break;
-    case 7: m_dataBits = SerialPort::Data7; break;
-    case 8: m_dataBits = SerialPort::Data8; break;
-    default: m_dataBits = SerialPort::UnknownDataBits;
+    case 5:
+        m_dataBits = SerialPort::Data5;
+        break;
+    case 6:
+        m_dataBits = SerialPort::Data6;
+        break;
+    case 7:
+        m_dataBits = SerialPort::Data7;
+        break;
+    case 8:
+        m_dataBits = SerialPort::Data8;
+        break;
+    default:
+        m_dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
@@ -658,10 +681,17 @@ void SerialPortPrivate::detectDefaultSettings()
 
     // Detect stopbits.
     switch (m_currDCB.StopBits) {
-    case ONESTOPBIT: m_stopBits = SerialPort::OneStop; break;
-    case ONE5STOPBITS: m_stopBits = SerialPort::OneAndHalfStop; break;
-    case TWOSTOPBITS: m_stopBits = SerialPort::TwoStop; break;
-    default: m_stopBits = SerialPort::UnknownStopBits;
+    case ONESTOPBIT:
+        m_stopBits = SerialPort::OneStop;
+        break;
+    case ONE5STOPBITS:
+        m_stopBits = SerialPort::OneAndHalfStop;
+        break;
+    case TWOSTOPBITS:
+        m_stopBits = SerialPort::TwoStop;
+        break;
+    default:
+        m_stopBits = SerialPort::UnknownStopBits;
     }
 
     // Detect flow control.
@@ -746,15 +776,20 @@ void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 {
     switch (cto) {
     case ReadIntervalTimeout:
-        m_currCommTimeouts.ReadIntervalTimeout = msecs; break;
+        m_currCommTimeouts.ReadIntervalTimeout = msecs;
+        break;
     case ReadTotalTimeoutMultiplier:
-        m_currCommTimeouts.ReadTotalTimeoutMultiplier = msecs; break;
+        m_currCommTimeouts.ReadTotalTimeoutMultiplier = msecs;
+        break;
     case ReadTotalTimeoutConstant:
-        m_currCommTimeouts.ReadTotalTimeoutConstant = msecs; break;
+        m_currCommTimeouts.ReadTotalTimeoutConstant = msecs;
+        break;
     case WriteTotalTimeoutMultiplier:
-        m_currCommTimeouts.WriteTotalTimeoutMultiplier = msecs; break;
+        m_currCommTimeouts.WriteTotalTimeoutMultiplier = msecs;
+        break;
     case WriteTotalTimeoutConstant:
-        m_currCommTimeouts.WriteTotalTimeoutConstant = msecs; break;
+        m_currCommTimeouts.WriteTotalTimeoutConstant = msecs;
+        break;
     default:;
     }
 }

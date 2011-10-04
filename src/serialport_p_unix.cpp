@@ -414,99 +414,131 @@ static qint32 detect_standard_rate(qint32 rate)
 {
     switch (rate) {
 #if defined (B0)
-    case 0: return B0;
+    case 0:
+        return B0;
 #endif
 #if defined (B50)
-    case 50: return B50;
+    case 50:
+        return B50;
 #endif
 #if defined (B75)
-    case 75: return B75;
+    case 75:
+        return B75;
 #endif
 #if defined (B110)
-    case 110: return B110;
+    case 110:
+        return B110;
 #endif
 #if defined (B134)
-    case 134: return B134;
+    case 134:
+        return B134;
 #endif
 #if defined (B150)
-    case 150: return B150;
+    case 150:
+        return B150;
 #endif
 #if defined (B200)
-    case 200: return B200;
+    case 200:
+        return B200;
 #endif
 #if defined (B300)
-    case 300: return B300;
+    case 300:
+        return B300;
 #endif
 #if defined (B600)
-    case 600: return B600;
+    case 600:
+        return B600;
 #endif
 #if defined (B1200)
-    case 1200: return B1200;
+    case 1200:
+        return B1200;
 #endif
 #if defined (B1800)
-    case 1800: return B1800;
+    case 1800:
+        return B1800;
 #endif
 #if defined (B2400)
-    case 2400: return B2400;
+    case 2400:
+        return B2400;
 #endif
 #if defined (B4800)
-    case 4800: return B4800;
+    case 4800:
+        return B4800;
 #endif
 #if defined (B9600)
-    case 9600: return B9600;
+    case 9600:
+        return B9600;
 #endif
 #if defined (B19200)
-    case 19200: return B19200;
+    case 19200:
+        return B19200;
 #endif
 #if defined (B38400)
-    case 38400: return B38400;
+    case 38400:
+        return B38400;
 #endif
 #if defined (B57600)
-    case 57600: return B57600;
+    case 57600:
+        return B57600;
 #endif
 #if defined (B115200)
-    case 115200: return B115200;
+    case 115200:
+        return B115200;
 #endif
 #if defined (B230400)
-    case 230400: return B230400;
+    case 230400:
+        return B230400;
 #endif
 #if defined (B460800)
-    case 460800: return B460800;
+    case 460800:
+        return B460800;
 #endif
 #if defined (B500000)
-    case 500000: return B500000;
+    case 500000:
+        return B500000;
 #endif
 #if defined (B576000)
-    case 576000: return B576000;
+    case 576000:
+        return B576000;
 #endif
 #if defined (B921600)
-    case 921600: return B921600;
+    case 921600:
+        return B921600;
 #endif
 #if defined (B1000000)
-    case 1000000: return B1000000;
+    case 1000000:
+        return B1000000;
 #endif
 #if defined (B1152000)
-    case 1152000: return B1152000;
+    case 1152000:
+        return B1152000;
 #endif
 #if defined (B1500000)
-    case 1500000: return B1500000;
+    case 1500000:
+        return B1500000;
 #endif
 #if defined (B2000000)
-    case 2000000: return B2000000;
+    case 2000000:
+        return B2000000;
 #endif
 #if defined (B2500000)
-    case 2500000: return B2500000;
+    case 2500000:
+        return B2500000;
 #endif
 #if defined (B3000000)
-    case 3000000: return B3000000;
+    case 3000000:
+        return B3000000;
 #endif
 #if defined (B3500000)
-    case 3500000: return B3500000;
+    case 3500000:
+        return B3500000;
 #endif
 #if defined (B4000000)
-    case 4000000: return B4000000;
+    case 4000000:
+        return B4000000;
 #endif
-    default: return -1;
+    default:
+        return -1;
     }
 }
 
@@ -708,94 +740,154 @@ static qint32 unixrate2valuerate(speed_t unixrate)
 
     switch (unixrate) {
 #if defined (B50)
-    case B50: ret = 50; break;
+    case B50:
+        ret = 50;
+        break;
 #endif
 #if defined (B75)
-    case B75: ret =  75; break;
+    case B75:
+        ret = 75;
+        break;
 #endif
 #if defined (B110)
-    case B110: ret =  110; break;
+    case B110:
+        ret = 110;
+        break;
 #endif
 #if defined (B134)
-    case B134: ret =  134; break;
+    case B134:
+        ret = 134;
+        break;
 #endif
 #if defined (B150)
-    case B150: ret =  150; break;
+    case B150:
+        ret = 150;
+        break;
 #endif
 #if defined (B200)
-    case B200: ret =  200; break;
+    case B200:
+        ret = 200;
+        break;
 #endif
 #if defined (B300)
-    case B300: ret =  300; break;
+    case B300:
+        ret = 300;
+        break;
 #endif
 #if defined (B600)
-    case B600: ret =  600; break;
+    case B600:
+        ret = 600;
+        break;
 #endif
 #if defined (B1200)
-    case B1200: ret =  1200; break;
+    case B1200:
+        ret = 1200;
+        break;
 #endif
 #if defined (B1800)
-    case B1800: ret =  1800; break;
+    case B1800:
+        ret = 1800;
+        break;
 #endif
 #if defined (B2400)
-    case B2400: ret =  2400; break;
+    case B2400:
+        ret = 2400;
+        break;
 #endif
 #if defined (B4800)
-    case B4800: ret =  4800; break;
+    case B4800:
+        ret = 4800;
+        break;
 #endif
 #if defined (B9600)
-    case B9600: ret =  9600; break;
+    case B9600:
+        ret = 9600;
+        break;
 #endif
 #if defined (B19200)
-    case B19200: ret =  19200; break;
+    case B19200:
+        ret = 19200;
+        break;
 #endif
 #if defined (B38400)
-    case B38400: ret =  38400; break;
+    case B38400:
+        ret = 38400;
+        break;
 #endif
 #if defined (B57600)
-    case B57600: ret =  57600; break;
+    case B57600:
+        ret = 57600;
+        break;
 #endif
 #if defined (B115200)
-    case B115200: ret =  115200;  break;
+    case B115200:
+        ret = 115200;
+        break;
 #endif
 #if defined (B230400)
-    case B230400: ret =  230400;  break;
+    case B230400:
+        ret = 230400;
+        break;
 #endif
 #if defined (B460800)
-    case B460800: ret =  460800;  break;
+    case B460800:
+        ret = 460800;
+        break;
 #endif
 #if defined (B500000)
-    case B500000: ret =  500000;  break;
+    case B500000:
+        ret = 500000;
+        break;
 #endif
 #if defined (B576000)
-    case B576000: ret =  576000;  break;
+    case B576000:
+        ret = 576000;
+        break;
 #endif
 #if defined (B921600)
-    case B921600: ret =  921600;  break;
+    case B921600:
+        ret = 921600;
+        break;
 #endif
 #if defined (B1000000)
-    case B1000000: ret =  1000000;  break;
+    case B1000000:
+        ret = 1000000;
+        break;
 #endif
 #if defined (B1152000)
-    case B1152000: ret =  1152000;  break;
+    case B1152000:
+        ret = 1152000;
+        break;
 #endif
 #if defined (B1500000)
-    case B1500000: ret =  1500000;  break;
+    case B1500000:
+        ret = 1500000;
+        break;
 #endif
 #if defined (B2000000)
-    case B2000000: ret =  2000000;  break;
+    case B2000000:
+        ret = 2000000;
+        break;
 #endif
 #if defined (B2500000)
-    case B2500000: ret =  2500000;  break;
+    case B2500000:
+        ret = 2500000;
+        break;
 #endif
 #if defined (B3000000)
-    case B3000000: ret =  3000000;  break;
+    case B3000000:
+        ret = 3000000;
+        break;
 #endif
 #if defined (B3500000)
-    case B3500000: ret =  3500000;  break;
+    case B3500000:
+        ret = 3500000;
+        break;
 #endif
 #if defined (B4000000)
-    case B4000000: ret =  4000000;  break;
+    case B4000000:
+        ret = 4000000;
+        break;
 #endif
     default:;
     }
