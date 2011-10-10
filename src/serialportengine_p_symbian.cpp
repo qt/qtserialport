@@ -63,6 +63,7 @@ QT_USE_NAMESPACE
 
 SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *parent)
 {
+    Q_ASSERT(parent);
     // Impl me
     m_parent = parent;
     m_oldSettingsIsSaved = false;

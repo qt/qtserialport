@@ -32,6 +32,7 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *parent)
     , m_writeNotifier(0)
     , m_exceptionNotifier(0)
 {
+    Q_ASSERT(parent);
     m_parent = parent;
     m_oldSettingsIsSaved = false;
     int size = sizeof(struct termios);
@@ -749,7 +750,6 @@ bool UnixSerialPortEngine::isReadNotificationEnabled() const
 
 void UnixSerialPortEngine::setReadNotificationEnabled(bool enable)
 {
-    Q_ASSERT(m_parent);
     if (m_readNotifier)
         m_readNotifier->setEnabled(enable);
     else if (enable) {
@@ -768,7 +768,6 @@ bool UnixSerialPortEngine::isWriteNotificationEnabled() const
 
 void UnixSerialPortEngine::setWriteNotificationEnabled(bool enable)
 {
-    Q_ASSERT(m_parent);
     if (m_writeNotifier)
         m_writeNotifier->setEnabled(enable);
     else if (enable) {
@@ -1035,7 +1034,6 @@ void UnixSerialPortEngine::prepareOtherOptions()
 
 bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 {
-    Q_ASSERT(m_parent);
     if (e->type() == QEvent::SockAct) {
         if (obj == m_readNotifier) {
             m_parent->canReadNotification();

@@ -60,6 +60,7 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *parent)
     , m_running(true)
 #endif
 {
+    Q_ASSERT(parent);
     m_parent = parent;
     m_oldSettingsIsSaved = false;
     size_t size = sizeof(DCB);
@@ -453,6 +454,9 @@ bool WinSerialPortEngine::nativeSelect(int timeout,
         }
     }
 #else
+    // FIXME: Here the situation is not properly handled with zero timeout:
+    // breaker can work out before you call a method WaitCommEvent()
+    // and so it will loop forever!
     WinCeWaitCommEventBreaker breaker(m_descriptor, (timeout < 0) ? 0 : timeout);
     ::WaitCommEvent(m_descriptor, &currEventMask, 0);
     breaker.stop();
@@ -722,9 +726,8 @@ void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
     setMaskAndActivateEvent();
 #endif
     // This only for OS Windows, as EV_TXEMPTY event is triggered only
-    // after the last byte of data (as opposed to events such as Write QSocketNotifier).
+    // after the last byte of data.
     // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
-    Q_ASSERT(m_parent);
     if (enable)
         m_parent->canWriteNotification();
 }
@@ -862,7 +865,6 @@ void WinSerialPortEngine::prepareOtherOptions()
 #if defined (Q_OS_WINCE)
 void WinSerialPortEngine::run()
 {
-    Q_ASSERT(m_parent);
     while (m_running) {
 
         m_setCommMaskMutex.lock();
@@ -871,7 +873,8 @@ void WinSerialPortEngine::run()
 
         if (::WaitCommEvent(m_descriptor, &m_currentMask, 0) != 0) {
 
-            // Wait until complete the operation changes the port settings.
+            // Wait until complete the operation changes the port settings,
+            // see updateDcb().
             m_settingsChangeMutex.lock();
             m_settingsChangeMutex.unlock();
 
@@ -891,7 +894,6 @@ void WinSerialPortEngine::run()
 #else
 bool WinSerialPortEngine::event(QEvent *e)
 {
-    Q_ASSERT(m_parent);
     bool ret = false;
     if (e->type() == QEvent::WinEventAct) {
         if (EV_ERR & m_currentMask & m_setMask) {
@@ -998,10 +1000,10 @@ void WinSerialPortEngine::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 inline bool WinSerialPortEngine::updateDcb()
 {
 #if defined (Q_OS_WINCE)
-    // Grab a mutex, in order after exit WaitCommEvent (see class SerialPortNotifier)
+    // Grab a mutex, in order after exit WaitCommEvent
     // block the flow of run() notifier until there is a change DCB.
     QMutexLocker locker(&m_settingsChangeMutex);
-    // This way, we reset in class WaitCommEvent SerialPortNotifier to
+    // This way, we reset in class WaitCommEvent to
     // be able to change the DCB.
     // Otherwise WaitCommEvent blocking any change!
     ::SetCommMask(m_descriptor, 0);
