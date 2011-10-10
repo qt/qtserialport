@@ -637,20 +637,6 @@ bool WinSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeDataInterval(int usecs)
-{
-    Q_UNUSED(usecs)
-    // Impl me
-    return false;
-}
-
-bool WinSerialPortEngine::setNativeReadTimeout(int msecs)
-{
-    prepareCommTimeouts(WinSerialPortEngine::ReadIntervalTimeout, (msecs > 0) ? 0 : MAXDWORD);
-    prepareCommTimeouts(WinSerialPortEngine::ReadTotalTimeoutConstant, (msecs > 0) ? msecs : 0);
-    return updateCommTimeouts();
-}
-
 bool WinSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)

@@ -37,8 +37,6 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     , m_parity(SerialPort::UnknownParity)
     , m_stopBits(SerialPort::UnknownStopBits)
     , m_flow(SerialPort::UnknownFlowControl)
-    , m_dataInterval(0)
-    , m_readTimeout(0)
     , m_policy(SerialPort::IgnorePolicy)
     , m_portError(SerialPort::NoError)
 {}
@@ -136,34 +134,6 @@ bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
 SerialPort::FlowControl SerialPortPrivate::flowControl() const
 {
     return m_flow;
-}
-
-bool SerialPortPrivate::setDataInterval(int usecs)
-{
-    if (m_engine->setNativeDataInterval(usecs)) {
-        m_dataInterval = usecs;
-        return true;
-    }
-    return false;
-}
-
-int SerialPortPrivate::dataInterval() const
-{
-    return m_dataInterval;
-}
-
-bool SerialPortPrivate::setReadTimeout(int msecs)
-{
-    if (m_engine->setNativeReadTimeout(msecs)) {
-        m_readTimeout = msecs;
-        return true;
-    }
-    return false;
-}
-
-int SerialPortPrivate::readTimeout() const
-{
-    return m_readTimeout;
 }
 
 bool SerialPortPrivate::dtr() const
@@ -585,30 +555,6 @@ SerialPort::FlowControl SerialPort::flowControl() const
 {
     Q_D(const SerialPort);
     return d->flowControl();
-}
-
-bool SerialPort::setDataInterval(int usecs)
-{
-    Q_D(SerialPort);
-    return (openMode() & Unbuffered) ? d->setDataInterval(usecs) : false;
-}
-
-int SerialPort::dataInterval() const
-{
-    Q_D(const SerialPort);
-    return d->dataInterval();
-}
-
-bool SerialPort::setReadTimeout(int msecs)
-{
-    Q_D(SerialPort);
-    return (openMode() & Unbuffered) ? d->setReadTimeout(msecs) : false;
-}
-
-int SerialPort::readTimeout() const
-{
-    Q_D(const SerialPort);
-    return d->readTimeout();
 }
 
 bool SerialPort::dtr() const

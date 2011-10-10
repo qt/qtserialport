@@ -55,9 +55,6 @@ public:
     virtual bool setNativeStopBits(SerialPort::StopBits stopBits) = 0;
     virtual bool setNativeFlowControl(SerialPort::FlowControl flowControl) = 0;
 
-    virtual bool setNativeDataInterval(int usecs) = 0;
-    virtual bool setNativeReadTimeout(int msecs) = 0;
-
     virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy) = 0;
 
     virtual bool isReadNotificationEnabled() const = 0;

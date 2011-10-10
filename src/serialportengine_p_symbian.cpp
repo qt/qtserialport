@@ -212,18 +212,14 @@ qint64 SymbianSerialPortEngine::nativeRead(char *data, qint64 len)
 {
     TPtr8 buffer((TUint8 *)data, (int)len);
     TRequestStatus status;
-    int r = (m_parent->m_readTimeout > 0) ?
-                (m_parent->m_readTimeout * 1000) : 0;
-    m_descriptor.Read(status, TTimeIntervalMicroSeconds32(r), buffer);
+    m_descriptor.Read(status, TTimeIntervalMicroSeconds32(0), buffer);
     User::WaitForRequest(status);
     TInt err = status.Int();
-    r = buffer.Length();
-
     if (err != KErrNone) {
         m_parent->setError(SerialPort::IoError);
         r = -1;
     }
-    return qint64(r);
+    return qint64(buffer.Length());
 }
 
 qint64 SymbianSerialPortEngine::nativeWrite(const char *data, qint64 len)
@@ -529,20 +525,6 @@ bool SymbianSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
     if (!ret)
         m_parent->setError(SerialPort::ConfiguringError);
     return ret;
-}
-
-bool SymbianSerialPortEngine::setNativeDataInterval(int usecs)
-{
-    Q_UNUSED(usecs)
-    // Impl me
-    return false;
-}
-
-bool SymbianSerialPortEngine::setNativeReadTimeout(int msecs)
-{
-    Q_UNUSED(msecs)
-    // Impl me
-    return true;
 }
 
 bool SymbianSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)

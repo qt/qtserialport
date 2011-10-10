@@ -714,28 +714,6 @@ bool UnixSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeDataInterval(int usecs)
-{
-    Q_UNUSED(usecs)
-    // Impl me
-    return false;
-}
-
-bool UnixSerialPortEngine::setNativeReadTimeout(int msecs)
-{
-    int flags = ::fcntl(m_descriptor, F_GETFL, 0);
-    if (msecs > 0)
-        flags &= ~O_NDELAY;
-    else
-        flags |= O_NDELAY;
-
-    if (::fcntl(m_descriptor, F_SETFL, flags) != -1) {
-        prepareTimeouts(msecs);
-        return updateTermious();
-    }
-    return false;
-}
-
 bool UnixSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)

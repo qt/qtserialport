@@ -152,12 +152,6 @@ public:
     bool setFlowControl(FlowControl flow);
     FlowControl flowControl() const;
 
-    bool setDataInterval(int usecs);
-    int dataInterval() const;
-
-    bool setReadTimeout(int msecs);
-    int readTimeout() const;
-
     bool dtr() const;
     bool rts() const;
 

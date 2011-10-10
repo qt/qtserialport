@@ -39,12 +39,6 @@ public:
     bool setFlowControl(SerialPort::FlowControl flow);
     SerialPort::FlowControl flowControl() const;
 
-    bool setDataInterval(int usecs);
-    int dataInterval() const;
-
-    bool setReadTimeout(int msecs);
-    int readTimeout() const;
-
     bool dtr() const;
     bool rts() const;
 
@@ -104,8 +98,6 @@ public:
     SerialPort::Parity m_parity;
     SerialPort::StopBits m_stopBits;
     SerialPort::FlowControl m_flow;
-    int m_dataInterval;
-    int m_readTimeout;
     SerialPort::DataErrorPolicy m_policy;
     SerialPort::PortError m_portError;
 };
