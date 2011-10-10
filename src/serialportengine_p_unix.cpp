@@ -785,6 +785,19 @@ bool UnixSerialPortEngine::processNativeIOErrors()
     return false;
 }
 
+void UnixSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
+{
+    Q_UNUSED(type);
+    Q_UNUSED(uselocker);
+    // For *nix is not used! Used only for WinCE!
+}
+
+void UnixSerialPortEngine::unlockNotification(NotificationLockerType type)
+{
+    Q_UNUSED(type);
+    // For *nix is not used! Used only for WinCE!
+}
+
 /* Protected methods */
 
 static qint32 unixrate2valuerate(speed_t unixrate)

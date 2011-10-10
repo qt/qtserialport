@@ -114,6 +114,9 @@ public:
 
     virtual bool processNativeIOErrors();
 
+    virtual void lockNotification(NotificationLockerType type, bool uselocker);
+    virtual void unlockNotification(NotificationLockerType type);
+
 protected:
     virtual void detectDefaultSettings();
     virtual bool saveOldsettings();

@@ -750,6 +750,47 @@ bool WinSerialPortEngine::processNativeIOErrors()
     return ret;
 }
 
+void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
+{
+#if defined (Q_OS_WINCE)
+    QMutex *mutex = 0;
+    switch (type) {
+    case CanReadLocker: mutex = &m_readNotificationMutex;
+        break;
+    case CanWriteLocker:  mutex = m_writeNotificationMutex;
+        break;
+    case CanErrorLocker:  mutex = m_errorNotificationMutex;
+        break;
+    }
+
+    if (uselocker)
+        QMutexLocker locker(mutex);
+    else
+        mutex->lock();
+#else
+    Q_UNUSED(type);
+    Q_UNUSED(uselocker);
+    // For win32 is not used! Used only for WinCE!
+#endif
+}
+
+void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
+{
+#if defined (Q_OS_WINCE)
+    switch (type) {
+    case CanReadLocker: m_readNotificationMutex.unlock();
+        break;
+    case CanWriteLocker: m_writeNotificationMutex.unlock();
+        break;
+    case CanErrorLocker: m_errorNotificationMutex.unlock();
+        break;
+    }
+#else
+    Q_UNUSED(type);
+    // For win32 is not used! Used only for WinCE!
+#endif
+}
+
 /* Protected methods */
 
 void WinSerialPortEngine::detectDefaultSettings()

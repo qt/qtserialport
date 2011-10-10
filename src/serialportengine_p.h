@@ -13,6 +13,14 @@ QT_BEGIN_NAMESPACE
 class SerialPortEngine
 {
 public:
+
+    // Only for WinCE.
+    enum NotificationLockerType {
+        CanReadLocker,
+        CanWriteLocker,
+        CanErrorLocker
+    };
+
     static SerialPortEngine *create(SerialPortPrivate *parent);
 
     virtual bool nativeOpen(const QString &location, QIODevice::OpenMode mode) = 0;
@@ -58,6 +66,9 @@ public:
     virtual void setWriteNotificationEnabled(bool enable) = 0;
 
     virtual bool processNativeIOErrors() = 0;
+
+    virtual void lockNotification(NotificationLockerType type, bool uselocker) = 0;
+    virtual void unlockNotification(NotificationLockerType type) = 0;
 
 protected:
     bool m_oldSettingsIsSaved;
