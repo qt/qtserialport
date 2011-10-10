@@ -437,12 +437,7 @@ bool SerialPortPrivate::canErrorNotification()
 #endif
     */
 
-#if defined (Q_OS_WIN)
-    //return processCommEventError();
-#else
-    return true;
-#endif
-    return false;
+    return m_engine->processNativeIOErrors();
 }
 
 //----------------------------------------------------------------

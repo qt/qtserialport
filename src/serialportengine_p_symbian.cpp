@@ -575,6 +575,12 @@ void SymbianSerialPortEngine::setWriteNotificationEnabled(bool enable)
     // Impl me
 }
 
+bool SymbianSerialPortEngine::processNativeIOErrors()
+{
+    // Impl me
+    return false;
+}
+
 /* Protected methods */
 
 void SymbianSerialPortEngine::detectDefaultSettings()

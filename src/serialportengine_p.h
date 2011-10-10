@@ -69,6 +69,8 @@ public:
     virtual bool isWriteNotificationEnabled() const = 0;
     virtual void setWriteNotificationEnabled(bool enable) = 0;
 
+    virtual bool processNativeIOErrors() = 0;
+
 protected:
     bool m_oldSettingsIsSaved;
 

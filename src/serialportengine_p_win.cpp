@@ -729,6 +729,24 @@ void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
         m_parent->canWriteNotification();
 }
 
+bool WinSerialPortEngine::processNativeIOErrors()
+{
+    DWORD err = 0;
+    COMSTAT cs;
+    bool ret = (::ClearCommError(m_descriptor, &err, &cs) != 0);
+    if (ret && err) {
+        if (err & CE_FRAME)
+            m_parent->setError(SerialPort::FramingError);
+        else if (err & CE_RXPARITY)
+            m_parent->setError(SerialPort::ParityError);
+        else
+            m_parent->setError(SerialPort::UnknownPortError);
+
+        m_flagErrorFromCommEvent = true;
+    }
+    return ret;
+}
+
 /* Protected methods */
 
 void WinSerialPortEngine::detectDefaultSettings()
@@ -1003,24 +1021,6 @@ bool WinSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits
             || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
             || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
             || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
-}
-
-bool WinSerialPortEngine::processCommEventError()
-{
-    DWORD err = 0;
-    COMSTAT cs;
-    bool ret = (::ClearCommError(m_descriptor, &err, &cs) != 0);
-    if (ret && err) {
-        if (err & CE_FRAME)
-            m_parent->setError(SerialPort::FramingError);
-        else if (err & CE_RXPARITY)
-            m_parent->setError(SerialPort::ParityError);
-        else
-            m_parent->setError(SerialPort::UnknownPortError);
-
-        m_flagErrorFromCommEvent = true;
-    }
-    return ret;
 }
 
 // From <serialportengine_p.h>

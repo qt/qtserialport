@@ -780,6 +780,12 @@ void UnixSerialPortEngine::setWriteNotificationEnabled(bool enable)
     }
 }
 
+bool UnixSerialPortEngine::processNativeIOErrors()
+{
+    // Impl me
+    return false;
+}
+
 /* Protected methods */
 
 static qint32 unixrate2valuerate(speed_t unixrate)

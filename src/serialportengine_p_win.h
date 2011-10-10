@@ -112,6 +112,8 @@ public:
     virtual bool isWriteNotificationEnabled() const;
     virtual void setWriteNotificationEnabled(bool enable);
 
+    virtual bool processNativeIOErrors();
+
 protected:
     virtual void detectDefaultSettings();
     virtual bool saveOldsettings();
@@ -164,8 +166,6 @@ private:
 
     bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                   SerialPort::StopBits stopBits) const;
-
-    bool processCommEventError();
 };
 
 QT_END_NAMESPACE
