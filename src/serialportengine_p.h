@@ -10,19 +10,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class SerialPortNotifier
-{
-public:
-    virtual bool isReadNotificationEnabled() const = 0;
-    virtual void setReadNotificationEnabled(bool enable) = 0;
-    virtual bool isWriteNotificationEnabled() const = 0;
-    virtual void setWriteNotificationEnabled(bool enable) = 0;
-
-protected:
-    SerialPortPrivate *m_parent;
-};
-
-class SerialPortEngine : public SerialPortNotifier
+class SerialPortEngine
 {
 public:
     static SerialPortEngine *create(SerialPortPrivate *parent);
@@ -73,6 +61,7 @@ public:
 
 protected:
     bool m_oldSettingsIsSaved;
+    SerialPortPrivate *m_parent;
 
     virtual void detectDefaultSettings() = 0;
     virtual bool saveOldsettings() = 0;
