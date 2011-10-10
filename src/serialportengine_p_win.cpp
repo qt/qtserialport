@@ -2,9 +2,12 @@
     License...
 */
 
-#include "serialport_p.h"
+#include "serialportengine_p_win.h"
 
 #include <QtCore/qregexp.h>
+#if !defined (Q_OS_WINCE)
+#  include <QtCore/qcoreevent.h>
+#endif
 //#include <QtCore/QDebug>
 
 #ifndef Q_CC_MSVC
@@ -48,12 +51,17 @@ QT_USE_NAMESPACE
 
 /* Public methods */
 
-
-SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
-    : AbstractSerialPortPrivate(parent)
-    , m_descriptor(INVALID_HANDLE_VALUE)
+WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *parent)
+    : m_descriptor(INVALID_HANDLE_VALUE)
     , m_flagErrorFromCommEvent(false)
+    , m_currentMask(0)
+    , m_setMask(EV_ERR)
+#if defined (Q_OS_WINCE)
+    , m_running(true)
+#endif
 {
+    m_parent = parent;
+    m_oldSettingsIsSaved = false;
     size_t size = sizeof(DCB);
     ::memset(&m_currDCB, 0, size);
     ::memset(&m_oldDCB, 0, size);
@@ -66,12 +74,23 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     ::memset(&m_ovRead, 0, size);
     ::memset(&m_ovWrite, 0, size);
     ::memset(&m_ovSelect, 0, size);
+    ::memset(&m_ov, 0, size);
 #endif
-
-    m_notifier.setRef(this);
 }
 
-bool SerialPortPrivate::open(QIODevice::OpenMode mode)
+WinSerialPortEngine::~WinSerialPortEngine()
+{
+#if defined (Q_OS_WINCE)
+    m_running = false;
+    ::SetCommMask(m_descriptor, 0);
+    //terminate();
+    wait();
+#else
+    setEnabled(false);
+#endif
+}
+
+bool WinSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
     DWORD shareMode = 0;
@@ -94,8 +113,8 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         txflag = true;
     }
 
-    QByteArray nativeFilePath = QByteArray((const char *)m_systemLocation.utf16(),
-                                           m_systemLocation.size() * 2 + 1);
+    QByteArray nativeFilePath = QByteArray((const char *)location.utf16(),
+                                           location.size() * 2 + 1);
 
     // Try opened serial device.
     m_descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
@@ -104,13 +123,13 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (m_descriptor == INVALID_HANDLE_VALUE) {
         switch (::GetLastError()) {
         case ERROR_FILE_NOT_FOUND:
-            setError(SerialPort::NoSuchDeviceError);
+            m_parent->setError(SerialPort::NoSuchDeviceError);
             break;
         case ERROR_ACCESS_DENIED:
-            setError(SerialPort::PermissionDeniedError);
+            m_parent->setError(SerialPort::PermissionDeniedError);
             break;
         default:
-            setError(SerialPort::UnknownPortError);
+            m_parent->setError(SerialPort::UnknownPortError);
         }
         return false;
     }
@@ -120,16 +139,13 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         prepareOtherOptions();
 
         if (updateDcb()) {
-            prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, MAXDWORD);
-            prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutMultiplier, 0);
-            prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutConstant, 0);
-            prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutMultiplier, 0);
-            prepareCommTimeouts(SerialPortPrivate::WriteTotalTimeoutConstant, 0);
+            prepareCommTimeouts(WinSerialPortEngine::ReadIntervalTimeout, MAXDWORD);
+            prepareCommTimeouts(WinSerialPortEngine::ReadTotalTimeoutMultiplier, 0);
+            prepareCommTimeouts(WinSerialPortEngine::ReadTotalTimeoutConstant, 0);
+            prepareCommTimeouts(WinSerialPortEngine::WriteTotalTimeoutMultiplier, 0);
+            prepareCommTimeouts(WinSerialPortEngine::WriteTotalTimeoutConstant, 0);
 
             if (updateCommTimeouts()) {
-                // Disable autocalculate total read interval.
-                // isAutoCalcReadTimeoutConstant = false;
-
 #if !defined (Q_OS_WINCE)
                 if (createEvents(rxflag, txflag)) {
 #endif
@@ -141,12 +157,13 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
             }
         }
     }
-    setError(SerialPort::ConfiguringError);
+    m_parent->setError(SerialPort::ConfiguringError);
     return false;
 }
 
-void SerialPortPrivate::close()
+void WinSerialPortEngine::nativeClose(const QString &location)
 {
+    Q_UNUSED(location);
 #if !defined (Q_OS_WINCE)
     ::CancelIo(m_descriptor);
 #endif
@@ -156,11 +173,10 @@ void SerialPortPrivate::close()
 #if !defined (Q_OS_WINCE)
     closeEvents();
 #endif
-
     m_descriptor = INVALID_HANDLE_VALUE;
 }
 
-SerialPort::Lines SerialPortPrivate::lines() const
+SerialPort::Lines WinSerialPortEngine::nativeLines() const
 {
     DWORD modemStat = 0;
     SerialPort::Lines ret = 0;
@@ -193,7 +209,7 @@ SerialPort::Lines SerialPortPrivate::lines() const
     return ret;
 }
 
-bool SerialPortPrivate::setDtr(bool set)
+bool WinSerialPortEngine::setNativeDtr(bool set)
 {
     bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
     if (!ret) {
@@ -203,7 +219,7 @@ bool SerialPortPrivate::setDtr(bool set)
     return ret;
 }
 
-bool SerialPortPrivate::setRts(bool set)
+bool WinSerialPortEngine::setNativeRts(bool set)
 {
     bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
     if (!ret) {
@@ -213,7 +229,17 @@ bool SerialPortPrivate::setRts(bool set)
     return ret;
 }
 
-bool SerialPortPrivate::reset()
+bool WinSerialPortEngine::nativeFlush()
+{
+    bool ret = ::FlushFileBuffers(m_descriptor);
+    if (!ret) {
+        // FIXME: Here need call ::GetLastError()
+        // and set error type.
+    }
+    return ret;
+}
+
+bool WinSerialPortEngine::nativeReset()
 {
     DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
     bool ret = ::PurgeComm(m_descriptor, flags);
@@ -224,18 +250,18 @@ bool SerialPortPrivate::reset()
     return ret;
 }
 
-bool SerialPortPrivate::sendBreak(int duration)
+bool WinSerialPortEngine::nativeSendBreak(int duration)
 {
     // FIXME:
-    if (setBreak(true)) {
+    if (nativeSetBreak(true)) {
         ::Sleep(duration);
-        if (setBreak(false))
+        if (nativeSetBreak(false))
             return true;
     }
     return false;
 }
 
-bool SerialPortPrivate::setBreak(bool set)
+bool WinSerialPortEngine::nativeSetBreak(bool set)
 {
     bool ret = (set) ?
                 (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
@@ -256,12 +282,12 @@ static qint64 get_commstat_que(HANDLE descriptor, enum CommStatQue que)
     return qint64((que == CS_IN_QUE) ? (cs.cbInQue) : (cs.cbOutQue));
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 WinSerialPortEngine::nativeBytesAvailable() const
 {
     return get_commstat_que(m_descriptor, CS_IN_QUE);
 }
 
-qint64 SerialPortPrivate::bytesToWrite() const
+qint64 WinSerialPortEngine::nativeBytesToWrite() const
 {
     return get_commstat_que(m_descriptor, CS_OUT_QUE);
 }
@@ -277,7 +303,7 @@ static void clear_overlapped(OVERLAPPED *overlapped)
 }
 #endif
 
-qint64 SerialPortPrivate::read(char *data, qint64 len)
+qint64 WinSerialPortEngine::nativeRead(char *data, qint64 len)
 {
 #if !defined (Q_OS_WINCE)
     clear_overlapped(&m_ovRead);
@@ -287,7 +313,7 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     bool sucessResult = false;
 
     // FIXME:
-    if (m_policy != SerialPort::IgnorePolicy)
+    if (m_parent->m_policy != SerialPort::IgnorePolicy)
         len = 1;
 
 #if defined (Q_OS_WINCE)
@@ -311,7 +337,7 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
 #endif
 
     if(!sucessResult) {
-        setError(SerialPort::IoError);
+        m_parent->setError(SerialPort::IoError);
         return -1;
     }
 
@@ -319,7 +345,7 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     if (m_flagErrorFromCommEvent) {
         m_flagErrorFromCommEvent = false;
 
-        switch (m_policy) {
+        switch (m_parent->m_policy) {
         case SerialPort::SkipPolicy:
             return 0;
         case SerialPort::PassZeroPolicy:
@@ -333,7 +359,7 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
     return qint64(readBytes);
 }
 
-qint64 SerialPortPrivate::write(const char *data, qint64 len)
+qint64 WinSerialPortEngine::nativeWrite(const char *data, qint64 len)
 {
 #if !defined (Q_OS_WINCE)
     clear_overlapped(&m_ovWrite);
@@ -363,18 +389,18 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
 #endif
 
     if(!sucessResult) {
-        setError(SerialPort::IoError);
+        m_parent->setError(SerialPort::IoError);
         return -1;
     }
     return quint64(writeBytes);
 }
 
-bool SerialPortPrivate::waitForReadOrWrite(int timeout,
-                                           bool checkRead, bool checkWrite,
-                                           bool *selectForRead, bool *selectForWrite)
+bool WinSerialPortEngine::nativeSelect(int timeout,
+                                       bool checkRead, bool checkWrite,
+                                       bool *selectForRead, bool *selectForWrite)
 {
     // Forward checking data for read.
-    if (checkRead && (bytesAvailable() > 0)) {
+    if (checkRead && (nativeBytesAvailable() > 0)) {
         Q_ASSERT(selectForRead);
         *selectForRead = true;
         return true;
@@ -441,7 +467,7 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
         // adding (in the code above) extra bits in the mask currEventMask.
         if (checkRead) {
             Q_ASSERT(selectForRead);
-            *selectForRead = (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
+            *selectForRead = (currEventMask & EV_RXCHAR) && (nativeBytesAvailable() > 0);
         }
         if (checkWrite) {
             Q_ASSERT(selectForWrite);
@@ -454,17 +480,13 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     return sucessResult;
 }
 
-
-/* Protected methods */
-
-
 #if !defined (Q_OS_WINCE)
 static const QString defaultPathPrefix = "\\\\.\\";
 #else
 static const QString defaultPathPostfix = ":";
 #endif
 
-QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
+QString WinSerialPortEngine::nativeToSystemLocation(const QString &port) const
 {
     QString ret = port;
 #if !defined (Q_OS_WINCE)
@@ -477,7 +499,7 @@ QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
     return ret;
 }
 
-QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) const
+QString WinSerialPortEngine::nativeFromSystemLocation(const QString &location) const
 {
     QString ret = location;
 #if !defined (Q_OS_WINCE)
@@ -490,38 +512,38 @@ QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) con
     return ret;
 }
 
-bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
+bool WinSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
     if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     m_currDCB.BaudRate = DWORD(rate);
     bool ret = updateDcb();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
+bool WinSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
-            || isRestrictedAreaSettings(dataBits, m_stopBits)) {
+            || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
 
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     m_currDCB.ByteSize = BYTE(dataBits);
     bool ret = updateDcb();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
+bool WinSerialPortEngine::setNativeParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -548,16 +570,16 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
     }
     bool ret = updateDcb();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
+bool WinSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
-            || isRestrictedAreaSettings(m_dataBits, stopBits)) {
+            || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
 
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -576,14 +598,14 @@ bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
     }
     bool ret = updateDcb();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
+bool WinSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -607,109 +629,177 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
     }
     bool ret = updateDcb();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeDataInterval(int usecs)
+bool WinSerialPortEngine::setNativeDataInterval(int usecs)
 {
     Q_UNUSED(usecs)
     // Impl me
     return false;
 }
 
-bool SerialPortPrivate::setNativeReadTimeout(int msecs)
+bool WinSerialPortEngine::setNativeReadTimeout(int msecs)
 {
-    prepareCommTimeouts(SerialPortPrivate::ReadIntervalTimeout, (msecs > 0) ? 0 : MAXDWORD);
-    prepareCommTimeouts(SerialPortPrivate::ReadTotalTimeoutConstant, (msecs > 0) ? msecs : 0);
+    prepareCommTimeouts(WinSerialPortEngine::ReadIntervalTimeout, (msecs > 0) ? 0 : MAXDWORD);
+    prepareCommTimeouts(WinSerialPortEngine::ReadTotalTimeoutConstant, (msecs > 0) ? msecs : 0);
     return updateCommTimeouts();
 }
 
-bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+bool WinSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)
     return true;
 }
 
-bool SerialPortPrivate::nativeFlush()
+bool WinSerialPortEngine::isReadNotificationEnabled() const
 {
-    bool ret = ::FlushFileBuffers(m_descriptor);
-    if (!ret) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type.
-    }
-    return ret;
+#if defined (Q_OS_WINCE)
+    bool flag = isRunning();
+#else
+    bool flag = isEnabled();
+#endif
+    return (flag && (m_setMask & EV_RXCHAR));
 }
 
-void SerialPortPrivate::detectDefaultSettings()
+void WinSerialPortEngine::setReadNotificationEnabled(bool enable)
+{
+#if defined (Q_OS_WINCE)
+    m_setCommMaskMutex.lock();
+    ::GetCommMask(m_descriptor, &m_currentMask);
+#endif
+
+    if (enable)
+        m_setMask |= EV_RXCHAR;
+    else
+        m_setMask &= ~EV_RXCHAR;
+
+#if defined (Q_OS_WINCE)
+    if (m_setMask != m_currentMask)
+        ::SetCommMask(m_descriptor, m_setMask);
+
+    m_setCommMaskMutex.unlock();
+
+    if (enable && !isRunning())
+        start();
+#else
+    setMaskAndActivateEvent();
+#endif
+}
+
+bool WinSerialPortEngine::isWriteNotificationEnabled() const
+{
+#if defined (Q_OS_WINCE)
+    bool flag = isRunning();
+#else
+    bool flag = isEnabled();
+#endif
+    return (flag && (m_setMask & EV_TXEMPTY));
+}
+
+void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
+{
+#if defined (Q_OS_WINCE)
+    m_setCommMaskMutex.lock();
+    ::GetCommMask(m_descriptor, &m_currentMask);
+#endif
+
+    if (enable)
+        m_setMask |= EV_TXEMPTY;
+    else
+        m_setMask &= ~EV_TXEMPTY;
+
+#if defined (Q_OS_WINCE)
+    if (m_setMask != m_currentMask)
+        ::SetCommMask(m_descriptor, m_setMask);
+
+    m_setCommMaskMutex.unlock();
+
+    if (enable && !isRunning())
+        start();
+#else
+    setMaskAndActivateEvent();
+#endif
+    // This only for OS Windows, as EV_TXEMPTY event is triggered only
+    // after the last byte of data (as opposed to events such as Write QSocketNotifier).
+    // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
+    Q_ASSERT(m_parent);
+    if (enable)
+        m_parent->canWriteNotification();
+}
+
+/* Protected methods */
+
+void WinSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
-    m_inRate = quint32(m_currDCB.BaudRate);
-    m_outRate = m_inRate;
+    m_parent->m_inRate = quint32(m_currDCB.BaudRate);
+    m_parent->m_outRate = m_parent->m_inRate;
 
     // Detect databits.
     switch (m_currDCB.ByteSize) {
     case 5:
-        m_dataBits = SerialPort::Data5;
+        m_parent->m_dataBits = SerialPort::Data5;
         break;
     case 6:
-        m_dataBits = SerialPort::Data6;
+        m_parent->m_dataBits = SerialPort::Data6;
         break;
     case 7:
-        m_dataBits = SerialPort::Data7;
+        m_parent->m_dataBits = SerialPort::Data7;
         break;
     case 8:
-        m_dataBits = SerialPort::Data8;
+        m_parent->m_dataBits = SerialPort::Data8;
         break;
     default:
-        m_dataBits = SerialPort::UnknownDataBits;
+        m_parent->m_dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
     if ((m_currDCB.Parity == NOPARITY) && !m_currDCB.fParity)
-        m_parity = SerialPort::NoParity;
+        m_parent->m_parity = SerialPort::NoParity;
     else if ((m_currDCB.Parity == SPACEPARITY) && m_currDCB.fParity)
-        m_parity = SerialPort::SpaceParity;
+        m_parent->m_parity = SerialPort::SpaceParity;
     else if ((m_currDCB.Parity == MARKPARITY) && m_currDCB.fParity)
-        m_parity = SerialPort::MarkParity;
+        m_parent->m_parity = SerialPort::MarkParity;
     else if ((m_currDCB.Parity == EVENPARITY) && m_currDCB.fParity)
-        m_parity = SerialPort::EvenParity;
+        m_parent->m_parity = SerialPort::EvenParity;
     else if ((m_currDCB.Parity == ODDPARITY) && m_currDCB.fParity)
-        m_parity = SerialPort::OddParity;
+        m_parent->m_parity = SerialPort::OddParity;
     else
-        m_parity = SerialPort::UnknownParity;
+        m_parent->m_parity = SerialPort::UnknownParity;
 
     // Detect stopbits.
     switch (m_currDCB.StopBits) {
     case ONESTOPBIT:
-        m_stopBits = SerialPort::OneStop;
+        m_parent->m_stopBits = SerialPort::OneStop;
         break;
     case ONE5STOPBITS:
-        m_stopBits = SerialPort::OneAndHalfStop;
+        m_parent->m_stopBits = SerialPort::OneAndHalfStop;
         break;
     case TWOSTOPBITS:
-        m_stopBits = SerialPort::TwoStop;
+        m_parent->m_stopBits = SerialPort::TwoStop;
         break;
     default:
-        m_stopBits = SerialPort::UnknownStopBits;
+        m_parent->m_stopBits = SerialPort::UnknownStopBits;
     }
 
     // Detect flow control.
     if (!m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
             && !m_currDCB.fInX && !m_currDCB.fOutX) {
-        m_flow = SerialPort::NoFlowControl;
+        m_parent->m_flow = SerialPort::NoFlowControl;
     } else if (!m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
                && m_currDCB.fInX && m_currDCB.fOutX) {
-        m_flow = SerialPort::SoftwareControl;
+        m_parent->m_flow = SerialPort::SoftwareControl;
     } else if (m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_HANDSHAKE)
                && !m_currDCB.fInX && !m_currDCB.fOutX) {
-        m_flow = SerialPort::HardwareControl;
+        m_parent->m_flow = SerialPort::HardwareControl;
     } else
-        m_flow = SerialPort::UnknownFlowControl;
+        m_parent->m_flow = SerialPort::UnknownFlowControl;
 }
 
-// Used only in method SerialPortPrivate::open().
-bool SerialPortPrivate::saveOldsettings()
+// Used only in method WinSerialPortEngine::open().
+bool WinSerialPortEngine::saveOldsettings()
 {
     DWORD confSize = sizeof(DCB);
     if (::GetCommState(m_descriptor, &m_oldDCB) == 0)
@@ -725,8 +815,8 @@ bool SerialPortPrivate::saveOldsettings()
     return true;
 }
 
-// Used only in method SerialPortPrivate::close().
-bool SerialPortPrivate::restoreOldsettings()
+// Used only in method WinSerialPortEngine::close().
+bool WinSerialPortEngine::restoreOldsettings()
 {
     bool restoreResult = true;
     if (m_oldSettingsIsSaved) {
@@ -739,24 +829,98 @@ bool SerialPortPrivate::restoreOldsettings()
     return restoreResult;
 }
 
+// Prepares other parameters of the structures port configuration.
+// Used only in method WinSerialPortEngine::open().
+void WinSerialPortEngine::prepareOtherOptions()
+{
+    m_currDCB.fBinary = true;
+    m_currDCB.fInX = false;
+    m_currDCB.fOutX = false;
+    m_currDCB.fAbortOnError = false;
+    m_currDCB.fNull = false;
+    m_currDCB.fErrorChar = false;
+}
+
+#if defined (Q_OS_WINCE)
+void WinSerialPortEngine::run()
+{
+    Q_ASSERT(m_parent);
+    while (m_running) {
+
+        m_setCommMaskMutex.lock();
+        ::SetCommMask(m_descriptor, m_setMask);
+        m_setCommMaskMutex.unlock();
+
+        if (::WaitCommEvent(m_descriptor, &m_currentMask, 0) != 0) {
+
+            // Wait until complete the operation changes the port settings.
+            m_settingsChangeMutex.lock();
+            m_settingsChangeMutex.unlock();
+
+            if (EV_ERR & m_currentMask & m_setMask) {
+                m_parent->canErrorNotification();
+            }
+            if (EV_RXCHAR & m_currentMask & m_setMask) {
+                m_parent->canReadNotification();
+            }
+            //FIXME: This is why it does not work?
+            if (EV_TXEMPTY & m_currentMask & m_setMask) {
+                m_parent->canWriteNotification();
+            }
+        }
+    }
+}
+#else
+bool WinSerialPortEngine::event(QEvent *e)
+{
+    Q_ASSERT(m_parent);
+    bool ret = false;
+    if (e->type() == QEvent::WinEventAct) {
+        if (EV_ERR & m_currentMask & m_setMask) {
+            m_parent->canErrorNotification();
+            ret = true;
+        }
+        if (EV_RXCHAR & m_currentMask & m_setMask) {
+            m_parent->canReadNotification();
+            ret = true;
+        }
+        //FIXME: This is why it does not work?
+        if (EV_TXEMPTY & m_currentMask & m_setMask) {
+            m_parent->canWriteNotification();
+            ret = true;
+        }
+    }
+    else
+        ret = QWinEventNotifier::event(e);
+
+    ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ov);
+    return ret;
+}
+#endif
 
 /* Private methods */
 
-
 #if !defined (Q_OS_WINCE)
-bool SerialPortPrivate::createEvents(bool rx, bool tx)
+bool WinSerialPortEngine::createEvents(bool rx, bool tx)
 {
-    if (rx) { m_ovRead.hEvent = ::CreateEvent(0, false, false, 0); }
-    if (tx) { m_ovWrite.hEvent = ::CreateEvent(0, false, false, 0); }
+    if (rx) {
+        m_ovRead.hEvent = ::CreateEvent(0, false, false, 0);
+        Q_ASSERT(m_ovRead.hEvent);
+    }
+    if (tx) {
+        m_ovWrite.hEvent = ::CreateEvent(0, false, false, 0);
+        Q_ASSERT(m_ovWrite.hEvent);
+    }
     m_ovSelect.hEvent = ::CreateEvent(0, false, false, 0);
+    Q_ASSERT(m_ovSelect.hEvent);
+    m_ov.hEvent = ::CreateEvent(0, false, false, 0);
+    Q_ASSERT(m_ov.hEvent);
 
-    return ((rx && (m_ovRead.hEvent == 0))
-            || (tx && (m_ovWrite.hEvent == 0))
-            || (m_ovSelect.hEvent) == 0) ?
-                false : true;
+    setHandle(m_ov.hEvent);
+    return true;
 }
 
-void SerialPortPrivate::closeEvents() const
+void WinSerialPortEngine::closeEvents()
 {
     if (m_ovRead.hEvent)
         ::CloseHandle(m_ovRead.hEvent);
@@ -764,15 +928,34 @@ void SerialPortPrivate::closeEvents() const
         ::CloseHandle(m_ovWrite.hEvent);
     if (m_ovSelect.hEvent)
         ::CloseHandle(m_ovSelect.hEvent);
+    if (m_ov.hEvent)
+        ::CloseHandle(m_ov.hEvent);
+
+    size_t size = sizeof(OVERLAPPED);
+    ::memset(&m_ovRead, 0, size);
+    ::memset(&m_ovWrite, 0, size);
+    ::memset(&m_ovSelect, 0, size);
+    ::memset(&m_ov, 0, size);
+}
+
+void WinSerialPortEngine::setMaskAndActivateEvent()
+{
+    ::SetCommMask(m_descriptor, m_setMask);
+    if (m_setMask)
+        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ov);
+    switch (m_setMask) {
+    case 0:
+        if (isEnabled())
+            setEnabled(false);
+        break;
+    default:
+        if (!isEnabled())
+            setEnabled(true);
+    }
 }
 #endif
 
-void SerialPortPrivate::recalcTotalReadTimeoutConstant()
-{
-
-}
-
-void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
+void WinSerialPortEngine::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
 {
     switch (cto) {
     case ReadIntervalTimeout:
@@ -794,7 +977,7 @@ void SerialPortPrivate::prepareCommTimeouts(CommTimeouts cto, DWORD msecs)
     }
 }
 
-inline bool SerialPortPrivate::updateDcb()
+inline bool WinSerialPortEngine::updateDcb()
 {
 #if defined (Q_OS_WINCE)
     // Grab a mutex, in order after exit WaitCommEvent (see class SerialPortNotifier)
@@ -805,17 +988,16 @@ inline bool SerialPortPrivate::updateDcb()
     // Otherwise WaitCommEvent blocking any change!
     ::SetCommMask(m_descriptor, 0);
 #endif
-
     return (::SetCommState(m_descriptor, &m_currDCB) != 0);
 }
 
-inline bool SerialPortPrivate::updateCommTimeouts()
+inline bool WinSerialPortEngine::updateCommTimeouts()
 {
     return (::SetCommTimeouts(m_descriptor, &m_currCommTimeouts) != 0);
 }
 
-bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                                 SerialPort::StopBits stopBits) const
+bool WinSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                                   SerialPort::StopBits stopBits) const
 {
     return (((dataBits == SerialPort::Data5) && (stopBits == SerialPort::TwoStop))
             || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
@@ -823,33 +1005,27 @@ bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
             || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
 }
 
-// Prepares other parameters of the structures port configuration.
-// Used only in method SerialPortPrivate::open().
-void SerialPortPrivate::prepareOtherOptions()
-{
-    m_currDCB.fBinary = true;
-    m_currDCB.fInX = false;
-    m_currDCB.fOutX = false;
-    m_currDCB.fAbortOnError = false;
-    m_currDCB.fNull = false;
-    m_currDCB.fErrorChar = false;
-}
-
-bool SerialPortPrivate::processCommEventError()
+bool WinSerialPortEngine::processCommEventError()
 {
     DWORD err = 0;
     COMSTAT cs;
     bool ret = (::ClearCommError(m_descriptor, &err, &cs) != 0);
     if (ret && err) {
         if (err & CE_FRAME)
-            setError(SerialPort::FramingError);
+            m_parent->setError(SerialPort::FramingError);
         else if (err & CE_RXPARITY)
-            setError(SerialPort::ParityError);
+            m_parent->setError(SerialPort::ParityError);
         else
-            setError(SerialPort::UnknownPortError);
+            m_parent->setError(SerialPort::UnknownPortError);
 
         m_flagErrorFromCommEvent = true;
     }
     return ret;
+}
+
+// From <serialportengine_p.h>
+SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
+{
+    return new WinSerialPortEngine(parent);
 }
 

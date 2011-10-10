@@ -2,7 +2,7 @@
     License...
 */
 
-#include "serialport_p.h"
+#include "serialportengine_p_symbian.h"
 
 #include <e32base.h>
 //#include <e32test.h>
@@ -61,28 +61,31 @@ QT_USE_NAMESPACE
 
 /* Public methods */
 
-
-SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
-    : AbstractSerialPortPrivate(parent)
+SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *parent)
 {
     // Impl me
-
-    m_notifier.setRef(this);
+    m_parent = parent;
+    m_oldSettingsIsSaved = false;
 }
 
-bool SerialPortPrivate::open(QIODevice::OpenMode mode)
+SymbianSerialPortEngine::~SymbianSerialPortEngine()
+{
+
+}
+
+bool SymbianSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMode mode)
 {
     Q_UNUSED(mode)
 
     if (!loadDevices()) {
-        setError(SerialPort::UnknownPortError);
+        m_parent->setError(SerialPort::UnknownPortError);
         return false;
     }
 
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone) {
-        setError(SerialPort::UnknownPortError);
+        m_parent->setError(SerialPort::UnknownPortError);
         return false;
     }
 
@@ -90,41 +93,43 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     // name, depending on the port name.
     r = server.LoadCommModule(KRS232ModuleName);
     if (r != KErrNone) {
-        setError(SerialPort::UnknownPortError);
+        m_parent->setError(SerialPort::UnknownPortError);
         return false;
     }
 
     // In Symbian OS port opening only in R/W mode !?
-    TPtrC portName(static_cast<const TUint16*>(m_systemLocation.utf16()), m_systemLocation.length());
+    TPtrC portName(static_cast<const TUint16*>(location.utf16()), location.length());
     r = m_descriptor.Open(server, portName, ECommExclusive);
 
     if (r != KErrNone) {
         switch (r) {
         case KErrPermissionDenied:
-            setError(SerialPort::NoSuchDeviceError); break;
+            m_parent->setError(SerialPort::NoSuchDeviceError); break;
         case KErrLocked:
         case KErrAccessDenied:
-            setError(SerialPort::PermissionDeniedError); break;
+            m_parent->setError(SerialPort::PermissionDeniedError); break;
         default:
-            setError(SerialPort::UnknownPortError);
+            m_parent->setError(SerialPort::UnknownPortError);
         }
         return false;
     }
 
     if (saveOldsettings()) {
         detectDefaultSettings();
+        return true;
     }
-    setError(SerialPort::ConfiguringError);
+    m_parent->setError(SerialPort::ConfiguringError);
     return false;
 }
 
-void SerialPortPrivate::close()
+void SymbianSerialPortEngine::nativeClose(const QString &location)
 {
+    Q_UNUSED(location);
     restoreOldsettings();
     m_descriptor.Close();
 }
 
-SerialPort::Lines SerialPortPrivate::lines() const
+SerialPort::Lines SymbianSerialPortEngine::nativeLines() const
 {
     SerialPort::Lines ret = 0;
 
@@ -149,7 +154,7 @@ SerialPort::Lines SerialPortPrivate::lines() const
     return ret;
 }
 
-bool SerialPortPrivate::setDtr(bool set)
+bool SymbianSerialPortEngine::setNativeDtr(bool set)
 {
     if (set)
         m_descriptor.SetSignalsToMark(KSignalDTR);
@@ -158,7 +163,7 @@ bool SerialPortPrivate::setDtr(bool set)
     return true;
 }
 
-bool SerialPortPrivate::setRts(bool set)
+bool SymbianSerialPortEngine::setNativeRts(bool set)
 {
     if (set)
         m_descriptor.SetSignalsToMark(KSignalRTS);
@@ -167,53 +172,60 @@ bool SerialPortPrivate::setRts(bool set)
     return true;
 }
 
-bool SerialPortPrivate::reset()
+bool SymbianSerialPortEngine::nativeFlush()
+{
+    // Impl me
+    return false;
+}
+
+bool SymbianSerialPortEngine::nativeReset()
 {
     m_descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
     return true;
 }
 
-bool SerialPortPrivate::sendBreak(int duration)
+bool SymbianSerialPortEngine::nativeSendBreak(int duration)
 {
     TRequestStatus status;
     m_descriptor.Break(status, TTimeIntervalMicroSeconds32(duration * 1000));
     return false;
 }
 
-bool SerialPortPrivate::setBreak(bool set)
+bool SymbianSerialPortEngine::nativeSetBreak(bool set)
 {
     // Impl me
     return false;
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 SymbianSerialPortEngine::nativeBytesAvailable() const
 {
     return qint64(m_descriptor.QueryReceiveBuffer());
 }
 
-qint64 SerialPortPrivate::bytesToWrite() const
+qint64 SymbianSerialPortEngine::nativeBytesToWrite() const
 {
     return 0;
 }
 
-qint64 SerialPortPrivate::read(char *data, qint64 len)
+qint64 SymbianSerialPortEngine::nativeRead(char *data, qint64 len)
 {
     TPtr8 buffer((TUint8 *)data, (int)len);
     TRequestStatus status;
-    int r = (m_readTimeout > 0) ? (m_readTimeout * 1000) : 0;
+    int r = (m_parent->m_readTimeout > 0) ?
+                (m_parent->m_readTimeout * 1000) : 0;
     m_descriptor.Read(status, TTimeIntervalMicroSeconds32(r), buffer);
     User::WaitForRequest(status);
     TInt err = status.Int();
     r = buffer.Length();
 
     if (err != KErrNone) {
-        setError(SerialPort::IoError);
+        m_parent->setError(SerialPort::IoError);
         r = -1;
     }
     return qint64(r);
 }
 
-qint64 SerialPortPrivate::write(const char *data, qint64 len)
+qint64 SymbianSerialPortEngine::nativeWrite(const char *data, qint64 len)
 {
     TPtrC8 buffer((TUint8*)data, (int)len);
     TRequestStatus status;
@@ -222,7 +234,7 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
     TInt err = status.Int();
 
     if (err != KErrNone) {
-        setError(SerialPort::IoError);
+        m_parent->setError(SerialPort::IoError);
         len = -1;
     }
     // FIXME: How to get the actual number of bytes written?
@@ -231,7 +243,7 @@ qint64 SerialPortPrivate::write(const char *data, qint64 len)
 
 // FIXME: I'm not sure in implementation this method.
 // Someone needs to check and correct.
-bool SerialPortPrivate::waitForReadOrWrite(int timeout,
+bool SymbianSerialPortEngine::nativeSelect(int timeout,
                                            bool checkRead, bool checkWrite,
                                            bool *selectForRead, bool *selectForWrite)
 {
@@ -296,28 +308,24 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     return result;
 }
 
-
-/* Protected methods */
-
-
 static const QString defaultPathPostfix = ":";
 
-QString SerialPortPrivate::nativeToSystemLocation(const QString &port) const
+QString SymbianSerialPortEngine::nativeToSystemLocation(const QString &port) const
 {
     // Port name is equval to port location.
     return port;
 }
 
-QString SerialPortPrivate::nativeFromSystemLocation(const QString &location) const
+QString SymbianSerialPortEngine::nativeFromSystemLocation(const QString &location) const
 {
     // Port name is equval to port location.
     return location;
 }
 
-bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
+bool SymbianSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir)
 {
     if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -399,22 +407,22 @@ bool SerialPortPrivate::setNativeRate(qint32 rate, SerialPort::Directions dir)
         break;
         //case 1843200:; // Only for  Symbian SR1
     default:
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
     bool ret = updateCommConfig();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
+bool SymbianSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
-            || isRestrictedAreaSettings(dataBits, m_stopBits)) {
+            || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
 
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -435,14 +443,14 @@ bool SerialPortPrivate::setNativeDataBits(SerialPort::DataBits dataBits)
 
     bool ret = updateCommConfig();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
+bool SymbianSerialPortEngine::setNativeParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -466,16 +474,16 @@ bool SerialPortPrivate::setNativeParity(SerialPort::Parity parity)
 
     bool ret = updateCommConfig();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
+bool SymbianSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
-            || isRestrictedAreaSettings(m_dataBits, stopBits)) {
+            || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
 
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -487,20 +495,20 @@ bool SerialPortPrivate::setNativeStopBits(SerialPort::StopBits stopBits)
         m_currSettings().iStopBits = EStop2;
         break;
     default:
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
     bool ret = updateCommConfig();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
+bool SymbianSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
-        setError(SerialPort::UnsupportedPortOperationError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -518,186 +526,208 @@ bool SerialPortPrivate::setNativeFlowControl(SerialPort::FlowControl flow)
 
     bool ret = updateCommConfig();
     if (!ret)
-        setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::ConfiguringError);
     return ret;
 }
 
-bool SerialPortPrivate::setNativeDataInterval(int usecs)
+bool SymbianSerialPortEngine::setNativeDataInterval(int usecs)
 {
     Q_UNUSED(usecs)
     // Impl me
     return false;
 }
 
-bool SerialPortPrivate::setNativeReadTimeout(int msecs)
+bool SymbianSerialPortEngine::setNativeReadTimeout(int msecs)
 {
     Q_UNUSED(msecs)
+    // Impl me
     return true;
 }
 
-bool SerialPortPrivate::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+bool SymbianSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)
+    // Impl me
     return true;
 }
 
-bool SerialPortPrivate::nativeFlush()
+bool SymbianSerialPortEngine::isReadNotificationEnabled() const
 {
     // Impl me
     return false;
 }
 
-void SerialPortPrivate::detectDefaultSettings()
+void SymbianSerialPortEngine::setReadNotificationEnabled(bool enable)
+{
+    Q_UNUSED(enable)
+    // Impl me
+}
+
+bool SymbianSerialPortEngine::isWriteNotificationEnabled() const
+{
+    // Impl me
+    return false;
+}
+
+void SymbianSerialPortEngine::setWriteNotificationEnabled(bool enable)
+{
+    Q_UNUSED(enable)
+    // Impl me
+}
+
+/* Protected methods */
+
+void SymbianSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
     switch (m_currSettings().iRate) {
     case EBps50:
-        m_inRate = 50;
+        m_parent->m_inRate = 50;
         break;
     case EBps75:
-        m_inRate = 75;
+        m_parent->m_inRate = 75;
         break;
     case EBps110:
-        m_inRate = 110;
+        m_parent->m_inRate = 110;
         break;
     case EBps134:
-        m_inRate = 134;
+        m_parent->m_inRate = 134;
         break;
     case EBps150:
-        m_inRate = 150;
+        m_parent->m_inRate = 150;
         break;
     case EBps300:
-        m_inRate = 300;
+        m_parent->m_inRate = 300;
         break;
     case EBps600:
-        m_inRate = 600;
+        m_parent->m_inRate = 600;
         break;
     case EBps1200:
-        m_inRate = 1200;
+        m_parent->m_inRate = 1200;
         break;
     case EBps1800:
-        m_inRate = 1800;
+        m_parent->m_inRate = 1800;
         break;
     case EBps2000:
-        m_inRate = 2000;
+        m_parent->m_inRate = 2000;
         break;
     case EBps2400:
-        m_inRate = 2400;
+        m_parent->m_inRate = 2400;
         break;
     case EBps3600:
-        m_inRate = 3600;
+        m_parent->m_inRate = 3600;
         break;
     case EBps4800:
-        m_inRate = 4800;
+        m_parent->m_inRate = 4800;
         break;
     case EBps7200:
-        m_inRate = 7200;
+        m_parent->m_inRate = 7200;
         break;
     case EBps9600:
-        m_inRate = 9600;
+        m_parent->m_inRate = 9600;
         break;
     case EBps19200:
-        m_inRate = 19200;
+        m_parent->m_inRate = 19200;
         break;
     case EBps38400:
-        m_inRate = 38400;
+        m_parent->m_inRate = 38400;
         break;
     case EBps57600:
-        m_inRate = 57600;
+        m_parent->m_inRate = 57600;
         break;
     case EBps115200:
-        m_inRate = 115200;
+        m_parent->m_inRate = 115200;
         break;
     case EBps230400:
-        m_inRate = 230400;
+        m_parent->m_inRate = 230400;
         break;
     case EBps460800:
-        m_inRate = 460800;
+        m_parent->m_inRate = 460800;
         break;
     case EBps576000:
-        m_inRate = 576000;
+        m_parent->m_inRate = 576000;
         break;
     case EBps1152000:
-        m_inRate = 1152000;
+        m_parent->m_inRate = 1152000;
         break;
     case EBps4000000:
-        m_inRate = 4000000;
+        m_parent->m_inRate = 4000000;
         break;
     case EBps921600:
-        m_inRate = 921600;
+        m_parent->m_inRate = 921600;
         break;
         //case EBps1843200: m_inRate = 1843200; break;
     default:
-        m_inRate = SerialPort::UnknownRate;
+        m_parent->m_inRate = SerialPort::UnknownRate;
     }
-    m_outRate = m_inRate;
+    m_parent->m_outRate = m_parent->m_inRate;
 
     // Detect databits.
     switch (m_currSettings().iDataBits) {
     case EData5:
-        m_dataBits = SerialPort::Data5;
+        m_parent->m_dataBits = SerialPort::Data5;
         break;
     case EData6:
-        m_dataBits = SerialPort::Data6;
+        m_parent->m_dataBits = SerialPort::Data6;
         break;
     case EData7:
-        m_dataBits = SerialPort::Data7;
+        m_parent->m_dataBits = SerialPort::Data7;
         break;
     case EData8:
-        m_dataBits = SerialPort::Data8;
+        m_parent->m_dataBits = SerialPort::Data8;
         break;
     default:
-        m_dataBits = SerialPort::UnknownDataBits;
+        m_parent->m_dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
     switch (m_currSettings().iParity) {
     case EParityNone:
-        m_parity = SerialPort::NoParity;
+        m_parent->m_parity = SerialPort::NoParity;
         break;
     case EParityEven:
-        m_parity = SerialPort::EvenParity;
+        m_parent->m_parity = SerialPort::EvenParity;
         break;
     case EParityOdd:
-        m_parity = SerialPort::OddParity;
+        m_parent->m_parity = SerialPort::OddParity;
         break;
     case EParityMark:
-        m_parity = SerialPort::MarkParity;
+        m_parent->m_parity = SerialPort::MarkParity;
         break;
     case EParitySpace:
-        m_parity = SerialPort::SpaceParity;
+        m_parent->m_parity = SerialPort::SpaceParity;
         break;
     default:
-        m_parity = SerialPort::UnknownParity;
+        m_parent->m_parity = SerialPort::UnknownParity;
     }
 
     // Detect stopbits.
     switch (m_currSettings().iStopBits) {
     case EStop1:
-        m_stopBits = SerialPort::OneStop;
+        m_parent->m_stopBits = SerialPort::OneStop;
         break;
     case EStop2:
-        m_stopBits = SerialPort::TwoStop;
+        m_parent->m_stopBits = SerialPort::TwoStop;
         break;
     default:
-        m_stopBits = SerialPort::UnknownStopBits;
+        m_parent->m_stopBits = SerialPort::UnknownStopBits;
     }
 
     // Detect flow control.
     if ((m_currSettings().iHandshake & (KConfigObeyXoff | KConfigSendXoff))
             == (KConfigObeyXoff | KConfigSendXoff))
-        m_flow = SerialPort::SoftwareControl;
+        m_parent->m_flow = SerialPort::SoftwareControl;
     else if ((m_currSettings().iHandshake & (KConfigObeyCTS | KConfigFreeRTS))
              == (KConfigObeyCTS | KConfigFreeRTS))
-        m_flow = SerialPort::HardwareControl;
+        m_parent->m_flow = SerialPort::HardwareControl;
     else if (m_currSettings().iHandshake & KConfigFailDSR)
-        m_flow = SerialPort::NoFlowControl;
+        m_parent->m_flow = SerialPort::NoFlowControl;
     else
-        m_flow = SerialPort::UnknownFlowControl;
+        m_parent->m_flow = SerialPort::UnknownFlowControl;
 }
 
-// Used only in method SerialPortPrivate::open().
-bool SerialPortPrivate::saveOldsettings()
+// Used only in method SymbianSerialPortEngine::open().
+bool SymbianSerialPortEngine::saveOldsettings()
 {
     TInt r = m_descriptor.Config(m_oldSettings);
     if (r != KErrNone)
@@ -708,8 +738,8 @@ bool SerialPortPrivate::saveOldsettings()
     return true;
 }
 
-// Used only in method SerialPortPrivate::close().
-bool SerialPortPrivate::restoreOldsettings()
+// Used only in method SymbianSerialPortEngine::close().
+bool SymbianSerialPortEngine::restoreOldsettings()
 {
     TInt r = KErrNone;
     if (m_oldSettingsIsSaved) {
@@ -719,17 +749,22 @@ bool SerialPortPrivate::restoreOldsettings()
     return (r == KErrNone);
 }
 
+// Prepares other parameters of the structures port configuration.
+// Used only in method SymbianSerialPortEngine::open().
+void SymbianSerialPortEngine::prepareOtherOptions()
+{
+    // Impl me
+}
 
 /* Private methods */
 
-
-inline bool SerialPortPrivate::updateCommConfig()
+inline bool SymbianSerialPortEngine::updateCommConfig()
 {
     return (m_descriptor.SetConfig(m_currSettings) == KErrNone);
 }
 
-bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                                 SerialPort::StopBits stopBits) const
+bool SymbianSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
+                                                       SerialPort::StopBits stopBits) const
 {
     // Impl me
     return (((dataBits == SerialPort::Data5) && (stopBits == SerialPort::TwoStop))
@@ -737,13 +772,12 @@ bool SerialPortPrivate::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
             || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
             || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
 }
-
-// Prepares other parameters of the structures port configuration.
-// Used only in method SerialPortPrivate::open().
-void SerialPortPrivate::prepareOtherOptions()
+// From <serialportengine_p.h>
+SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
 {
-    // Impl me
+    return new SymbianSerialPortEngine(parent);
 }
+
 
 
 

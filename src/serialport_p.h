@@ -6,199 +6,108 @@
 #define SERIALPORT_P_H
 
 #include "serialport.h"
-#include "abstractserialport_p.h"
-#include "serialportnotifier_p.h"
-
-#if defined (Q_OS_WIN)
-#  include <qt_windows.h>
-#  if defined (Q_OS_WINCE)
-#    include <QtCore/qmutex.h>
-#    include <QtCore/qthread.h>
-#    include <QtCore/qtimer.h>
-#  endif
-#elif defined (Q_OS_SYMBIAN)
-#  include <c32comm.h>
-#else
-#  include <termios.h>
-//#  undef CMSPAR
-#endif
+#include "ringbuffer_p.h"
 
 QT_BEGIN_NAMESPACE
 
-#if defined (Q_OS_WINCE)
+class SerialPortEngine;
 
-class WinCeWaitCommEventBreaker : public QThread
-{
-    Q_OBJECT
-public:
-    WinCeWaitCommEventBreaker(HANDLE descriptor, int timeout, QObject *parent = 0)
-        : QThread(parent), m_descriptor(descriptor),
-          m_timeout(timeout), m_worked(false) {
-        start();
-    }
-	virtual ~WinCeWaitCommEventBreaker() {
-		stop();
-		wait();
-	}
-    void stop() { exit(0); }
-    bool isWorked() const { return m_worked; }
-
-protected:
-    void run() {
-        QTimer timer;
-		QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(procTimeout()), Qt::DirectConnection);
-        timer.start(m_timeout);
-        exec();
-        m_worked = true;
-    }
-
-private slots:
-    void procTimeout() {
-        ::SetCommMask(m_descriptor, 0);
-        stop();
-    }
-
-private:
-    HANDLE m_descriptor;
-    int m_timeout;
-    volatile bool m_worked;
-};
-#endif
-
-class SerialPortPrivate : public AbstractSerialPortPrivate
+class SerialPortPrivate
 {
     Q_DECLARE_PUBLIC(SerialPort)
 public:
     SerialPortPrivate(SerialPort *parent);
 
-    virtual bool open(QIODevice::OpenMode mode);
-    virtual void close();
+    void setPort(const QString &port);
+    QString port() const;
 
-    virtual SerialPort::Lines lines() const;
+    bool open(QIODevice::OpenMode mode);
+    void close();
 
-    virtual bool setDtr(bool set);
-    virtual bool setRts(bool set);
+    bool setRate(qint32 rate, SerialPort::Directions dir);
+    qint32 rate(SerialPort::Directions dir) const;
 
-    virtual bool flush();
-    virtual bool reset();
+    bool setDataBits(SerialPort::DataBits dataBits);
+    SerialPort::DataBits dataBits() const;
 
-    virtual bool sendBreak(int duration);
-    virtual bool setBreak(bool set);
+    bool setParity(SerialPort::Parity parity);
+    SerialPort::Parity parity() const;
 
-    virtual qint64 bytesAvailable() const;
-    virtual qint64 bytesToWrite() const;
+    bool setStopBits(SerialPort::StopBits stopBits);
+    SerialPort::StopBits stopBits() const;
 
-    virtual qint64 read(char *data, qint64 len);
-    virtual qint64 write(const char *data, qint64 len);
-    virtual bool waitForReadOrWrite(int timeout,
-                                    bool checkRead, bool checkWrite,
-                                    bool *selectForRead, bool *selectForWrite);
+    bool setFlowControl(SerialPort::FlowControl flow);
+    SerialPort::FlowControl flowControl() const;
 
-protected:
-    virtual QString nativeToSystemLocation(const QString &port) const;
-    virtual QString nativeFromSystemLocation(const QString &location) const;
+    bool setDataInterval(int usecs);
+    int dataInterval() const;
 
-    virtual bool setNativeRate(qint32 rate, SerialPort::Directions dir);
-    virtual bool setNativeDataBits(SerialPort::DataBits dataBits);
-    virtual bool setNativeParity(SerialPort::Parity parity);
-    virtual bool setNativeStopBits(SerialPort::StopBits stopBits);
-    virtual bool setNativeFlowControl(SerialPort::FlowControl flowControl);
+    bool setReadTimeout(int msecs);
+    int readTimeout() const;
 
-    virtual bool setNativeDataInterval(int usecs);
-    virtual bool setNativeReadTimeout(int msecs);
+    bool dtr() const;
+    bool rts() const;
 
-    virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy);
+    bool setDtr(bool set);
+    bool setRts(bool set);
 
-    virtual bool nativeFlush();
+    SerialPort::Lines lines() const;
 
-    virtual void detectDefaultSettings();
+    bool flush();
+    bool reset();
 
-    virtual bool saveOldsettings();
-    virtual bool restoreOldsettings();
+    bool sendBreak(int duration);
+    bool setBreak(bool set);
 
-private:
-#if defined (Q_OS_WIN)
-    enum CommTimeouts {
-        ReadIntervalTimeout, ReadTotalTimeoutMultiplier,
-        ReadTotalTimeoutConstant, WriteTotalTimeoutMultiplier,
-        WriteTotalTimeoutConstant
-    };
+    bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy);
+    SerialPort::DataErrorPolicy dataErrorPolicy() const;
 
-    DCB m_currDCB;
-    DCB m_oldDCB;
-    COMMTIMEOUTS m_currCommTimeouts;
-    COMMTIMEOUTS m_oldCommTimeouts;
-    HANDLE m_descriptor;
-    bool m_flagErrorFromCommEvent;
+    SerialPort::PortError error() const;
+    void unsetError();
+    void setError(SerialPort::PortError error);
 
-#  if defined (Q_OS_WINCE)
-    QMutex m_readNotificationMutex;
-    QMutex m_writeNotificationMutex;
-    QMutex m_errorNotificationMutex;
-    QMutex m_settingsChangeMutex;
-#  else
-    OVERLAPPED m_ovRead;
-    OVERLAPPED m_ovWrite;
-    OVERLAPPED m_ovSelect;
+    qint64 bytesAvailable() const;
+    qint64 bytesToWrite() const;
 
-    bool createEvents(bool rx, bool tx);
-    void closeEvents() const;
-#  endif
+    qint64 read(char *data, qint64 len);
+    qint64 write(const char *data, qint64 len);
+    bool waitForReadOrWrite(int timeout,
+                            bool checkRead, bool checkWrite,
+                            bool *selectForRead, bool *selectForWrite);
 
-    void recalcTotalReadTimeoutConstant();
-    void prepareCommTimeouts(CommTimeouts cto, DWORD msecs);
-    bool updateDcb();
-    bool updateCommTimeouts();
 
-    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                  SerialPort::StopBits stopBits) const;
-
-    bool processCommEventError();
-#elif defined (Q_OS_SYMBIAN)
-    TCommConfig m_currSettings;
-    TCommConfig m_oldSettings;
-
-    RComm m_descriptor;
-    mutable RTimer m_selectTimer;
-
-    bool updateCommConfig();
-    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                  SerialPort::StopBits stopBits) const;
-#else
-    struct termios m_currTermios;
-    struct termios m_oldTermios;
-
-    int m_descriptor;
-
-    void prepareTimeouts(int msecs);
-    bool updateTermious();
-    bool setStandartRate(SerialPort::Directions dir, speed_t rate);
-    bool setCustomRate(qint32 rate);
-
-    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                  SerialPort::StopBits stopBits) const;
-#  if !defined (CMSPAR)
-    qint64 writePerChar(const char *data, qint64 maxSize);
-    qint64 readPerChar(char *data, qint64 maxSize);
-#  endif 
-
-#endif
-    friend class SerialPortNotifier;
-    SerialPortNotifier m_notifier;
+    void clearBuffers();
+    bool readFromPort();
 
     bool canReadNotification();
     bool canWriteNotification();
     bool canErrorNotification();
 
-    bool isReadNotificationEnabled() const;
-    void setReadNotificationEnabled(bool enable);
-    bool isWriteNotificationEnabled() const;
-    void setWriteNotificationEnabled(bool enable);
+    qint64 m_readBufferMaxSize;
+    RingBuffer m_readBuffer;
+    RingBuffer m_writeBuffer;
+    bool m_isBuffered;
+    bool m_readSerialNotifierCalled;
+    bool m_readSerialNotifierState;
+    bool m_readSerialNotifierStateSet;
+    bool m_emittedReadyRead;
+    bool m_emittedBytesWritten;
 
-    void clearBuffers();
-    bool readFromPort();
+    SerialPortEngine *m_engine;
 
-    void prepareOtherOptions();
+    // General (for any OS) private parameters.
+    SerialPort *q_ptr;
+    QString m_systemLocation;
+    qint32 m_inRate;
+    qint32 m_outRate;
+    SerialPort::DataBits m_dataBits;
+    SerialPort::Parity m_parity;
+    SerialPort::StopBits m_stopBits;
+    SerialPort::FlowControl m_flow;
+    int m_dataInterval;
+    int m_readTimeout;
+    SerialPort::DataErrorPolicy m_policy;
+    SerialPort::PortError m_portError;
 };
 
 QT_END_NAMESPACE

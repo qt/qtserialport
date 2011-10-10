@@ -14,25 +14,25 @@ HEADERS += \
     ../include/serialportinfo.h
 
 HEADERS += \
-    abstractserialport_p.h \
-    ringbuffer_p.h \
     serialport_p.h \
-    serialportnotifier_p.h \
+    ringbuffer_p.h \
+    serialportengine_p.h \
     serialportinfo_p.h
 
 SOURCES += \
     serialport.cpp \
-    serialport_p.cpp \
     serialportinfo.cpp
 
 win32 {
+    HEADERS += \
+        serialportengine_p_win.h
     SOURCES += \
-        serialport_p_win.cpp \
-        serialportnotifier_p_win.cpp \
+        serialportengine_p_win.cpp \
         serialportinfo_win.cpp
 
     !wince*: LIBS += -lsetupapi -luuid -ladvapi32
 }
+
 
 symbian {
     MMP_RULES += EXPORTUNFROZEN
@@ -48,12 +48,12 @@ symbian {
     #INCLUDEPATH += c:/Nokia/devices/Nokia_Symbian3_SDK_v1.0/epoc32/include/platform
     INCLUDEPATH += c:/QtSDK/Symbian/SDKs/Symbian3Qt473/epoc32/include/platform
 
+    HEADERS += \
+        serialportengine_p_symbian.h
     SOURCES += \
-        serialport_p_symbian.cpp \
-        serialportnotifier_p_symbian.cpp \
+        serialportengine_p_symbian.cpp \
         serialportinfo_symbian.cpp
     LIBS += -leuser -lefsrv -lc32
-
 }
 
 unix:!symbian {
@@ -65,11 +65,12 @@ unix:!symbian {
     INSTALLS += target
     
     HEADERS += \
-        ttylocker_p_unix.h
+        ttylocker_p_unix.h \
+        serialportengine_p_unix.h
     SOURCES += \
-        serialport_p_unix.cpp \
-        serialportnotifier_p_unix.cpp \
-        ttylocker_p_unix.cpp
+        ttylocker_p_unix.cpp \
+        serialportengine_p_unix.cpp
+        serialportinfo_unix.cpp
 
     macx {
         SOURCES += serialportinfo_mac.cpp
