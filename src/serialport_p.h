@@ -89,7 +89,7 @@ public:
 
     SerialPortEngine *m_engine;
 
-    // General (for any OS) private parameters.
+    // General port parameters (for any OS).
     SerialPort *q_ptr;
     QString m_systemLocation;
     qint32 m_inRate;
