@@ -17,6 +17,7 @@ class SerialPortPrivate
     Q_DECLARE_PUBLIC(SerialPort)
 public:
     SerialPortPrivate(SerialPort *parent);
+    virtual ~SerialPortPrivate();
 
     void setPort(const QString &port);
     QString port() const;

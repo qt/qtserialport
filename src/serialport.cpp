@@ -41,6 +41,12 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     , m_portError(SerialPort::NoError)
 {}
 
+SerialPortPrivate::~SerialPortPrivate()
+{
+    if (m_engine)
+        delete m_engine;
+}
+
 void SerialPortPrivate::setPort(const QString &port)
 {
     m_systemLocation = m_engine->nativeToSystemLocation(port);
