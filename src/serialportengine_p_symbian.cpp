@@ -90,9 +90,13 @@ bool SymbianSerialPortEngine::nativeOpen(const QString &location, QIODevice::Ope
         return false;
     }
 
-    // Here you need to add automatic detection of loaded module
-    // name, depending on the port name.
-    r = server.LoadCommModule(KRS232ModuleName);
+    if (location.contains("BTCOMM"))
+        r = server.LoadCommModule(KBluetoothModuleName);
+    else if (location.contains("IRCOMM"))
+        r = server.LoadCommModule(KInfraRedModuleName);
+    else
+        r = server.LoadCommModule(KRS232ModuleName);
+
     if (r != KErrNone) {
         m_parent->setError(SerialPort::UnknownPortError);
         return false;
