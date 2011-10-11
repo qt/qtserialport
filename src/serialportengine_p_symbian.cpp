@@ -221,7 +221,7 @@ qint64 SymbianSerialPortEngine::nativeRead(char *data, qint64 len)
     TInt err = status.Int();
     if (err != KErrNone) {
         m_parent->setError(SerialPort::IoError);
-        r = -1;
+        return qint64(-1);
     }
     return qint64(buffer.Length());
 }
