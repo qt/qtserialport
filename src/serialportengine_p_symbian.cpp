@@ -23,9 +23,10 @@ _LIT(KPddName, "EUART");
 _LIT(KLddName,"ECOMM");
 
 // Modules names.
-_LIT(KRS232ModuleName , "ECUART");
-_LIT(KBluetoothModuleName , "BTCOMM");
-_LIT(KInfraRedModuleName , "IRCOMM");
+_LIT(KRS232ModuleName, "ECUART");
+_LIT(KBluetoothModuleName, "BTCOMM");
+_LIT(KInfraRedModuleName, "IRCOMM");
+_LIT(KACMModuleName, "ECACM");
 
 
 // Return false on error load.
@@ -94,6 +95,8 @@ bool SymbianSerialPortEngine::nativeOpen(const QString &location, QIODevice::Ope
         r = server.LoadCommModule(KBluetoothModuleName);
     else if (location.contains("IRCOMM"))
         r = server.LoadCommModule(KInfraRedModuleName);
+    else if (location.contains("ACM"))
+        r = server.LoadCommModule(KACMModuleName);
     else
         r = server.LoadCommModule(KRS232ModuleName);
 
