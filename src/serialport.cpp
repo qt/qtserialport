@@ -49,27 +49,27 @@ SerialPortPrivate::~SerialPortPrivate()
 
 void SerialPortPrivate::setPort(const QString &port)
 {
-    m_systemLocation = m_engine->nativeToSystemLocation(port);
+    m_systemLocation = m_engine->toSystemLocation(port);
 }
 
 QString SerialPortPrivate::port() const
 {
-    return m_engine->nativeFromSystemLocation(m_systemLocation);
+    return m_engine->fromSystemLocation(m_systemLocation);
 }
 
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
-    return m_engine->nativeOpen(m_systemLocation, mode);
+    return m_engine->open(m_systemLocation, mode);
 }
 
 void SerialPortPrivate::close()
 {
-    m_engine->nativeClose(m_systemLocation);
+    m_engine->close(m_systemLocation);
 }
 
 bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
 {
-    if (m_engine->setNativeRate(rate, dir)) {
+    if (m_engine->setRate(rate, dir)) {
         if (dir & SerialPort::Input)
             m_inRate = rate;
         if (dir & SerialPort::Output)
@@ -88,7 +88,7 @@ qint32 SerialPortPrivate::rate(SerialPort::Directions dir) const
 
 bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
 {
-    if (m_engine->setNativeDataBits(dataBits)) {
+    if (m_engine->setDataBits(dataBits)) {
         m_dataBits = dataBits;
         return true;
     }
@@ -102,7 +102,7 @@ SerialPort::DataBits SerialPortPrivate::dataBits() const
 
 bool SerialPortPrivate::setParity(SerialPort::Parity parity)
 {
-    if (m_engine->setNativeParity(parity)) {
+    if (m_engine->setParity(parity)) {
         m_parity = parity;
         return true;
     }
@@ -116,7 +116,7 @@ SerialPort::Parity SerialPortPrivate::parity() const
 
 bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
 {
-    if (m_engine->setNativeStopBits(stopBits)) {
+    if (m_engine->setStopBits(stopBits)) {
         m_stopBits = stopBits;
         return true;
     }
@@ -130,7 +130,7 @@ SerialPort::StopBits SerialPortPrivate::stopBits() const
 
 bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
 {
-    if (m_engine->setNativeFlowControl(flow)) {
+    if (m_engine->setFlowControl(flow)) {
         m_flow = flow;
         return true;
     }
@@ -144,27 +144,27 @@ SerialPort::FlowControl SerialPortPrivate::flowControl() const
 
 bool SerialPortPrivate::dtr() const
 {
-    return m_engine->nativeLines() & SerialPort::Dtr;
+    return m_engine->lines() & SerialPort::Dtr;
 }
 
 bool SerialPortPrivate::rts() const
 {
-    return m_engine->nativeLines() & SerialPort::Rts;
+    return m_engine->lines() & SerialPort::Rts;
 }
 
 bool SerialPortPrivate::setDtr(bool set)
 {
-    return m_engine->setNativeDtr(set);
+    return m_engine->setDtr(set);
 }
 
 bool SerialPortPrivate::setRts(bool set)
 {
-    return m_engine->setNativeRts(set);
+    return m_engine->setRts(set);
 }
 
 SerialPort::Lines SerialPortPrivate::lines() const
 {
-    return m_engine->nativeLines();
+    return m_engine->lines();
 }
 
 bool SerialPortPrivate::flush()
@@ -203,22 +203,22 @@ bool SerialPortPrivate::flush()
 
 bool SerialPortPrivate::reset()
 {
-    return m_engine->nativeReset();
+    return m_engine->reset();
 }
 
 bool SerialPortPrivate::sendBreak(int duration)
 {
-    return m_engine->nativeSendBreak(duration);
+    return m_engine->sendBreak(duration);
 }
 
 bool SerialPortPrivate::setBreak(bool set)
 {
-    return m_engine->nativeSetBreak(set);
+    return m_engine->setBreak(set);
 }
 
 bool SerialPortPrivate::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
-    if (m_engine->setNativeDataErrorPolicy(policy)) {
+    if (m_engine->setDataErrorPolicy(policy)) {
         m_policy = policy;
         return true;
     }
@@ -247,29 +247,29 @@ void SerialPortPrivate::setError(SerialPort::PortError error)
 
 qint64 SerialPortPrivate::bytesAvailable() const
 {
-    return m_engine->nativeBytesAvailable();
+    return m_engine->bytesAvailable();
 }
 
 qint64 SerialPortPrivate::bytesToWrite() const
 {
-    return m_engine->nativeBytesToWrite();
+    return m_engine->bytesToWrite();
 }
 
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
-    return m_engine->nativeRead(data, len);
+    return m_engine->read(data, len);
 }
 
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
-    return m_engine->nativeWrite(data, len);
+    return m_engine->write(data, len);
 }
 
 bool SerialPortPrivate::waitForReadOrWrite(int timeout,
                                            bool checkRead, bool checkWrite,
                                            bool *selectForRead, bool *selectForWrite)
 {
-    return m_engine->nativeSelect(timeout, checkRead, checkWrite, selectForRead, selectForWrite);
+    return m_engine->select(timeout, checkRead, checkWrite, selectForRead, selectForWrite);
 }
 
 void SerialPortPrivate::clearBuffers()
@@ -405,7 +405,7 @@ bool SerialPortPrivate::canErrorNotification()
 #if defined (Q_OS_WINCE)
     m_engine->lockNotification(SerialPortEngine::CanErrorLocker, true);
 #endif
-    return m_engine->processNativeIOErrors();
+    return m_engine->processIOErrors();
 }
 
 //----------------------------------------------------------------
@@ -584,7 +584,7 @@ SerialPort::Lines SerialPort::lines() const
 bool SerialPort::flush()
 {
     Q_D(SerialPort);
-    return d->flush() || d->m_engine->nativeFlush();
+    return d->flush() || d->m_engine->flush();
 }
 
 bool SerialPort::reset()

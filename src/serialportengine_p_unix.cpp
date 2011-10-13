@@ -50,7 +50,7 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
         m_exceptionNotifier->setEnabled(false);
 }
 
-bool UnixSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMode mode)
+bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
 {
     // First, here need check locked device or not.
     bool byCurrPid = false;
@@ -119,7 +119,7 @@ bool UnixSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMo
     return false;
 }
 
-void UnixSerialPortEngine::nativeClose(const QString &location)
+void UnixSerialPortEngine::close(const QString &location)
 {
     restoreOldsettings();
 
@@ -138,7 +138,7 @@ void UnixSerialPortEngine::nativeClose(const QString &location)
     m_descriptor = -1;
 }
 
-SerialPort::Lines UnixSerialPortEngine::nativeLines() const
+SerialPort::Lines UnixSerialPortEngine::lines() const
 {
     int arg = 0;
     SerialPort::Lines ret = 0;
@@ -208,7 +208,7 @@ static bool trigger_out_line(int fd, int bit, bool set)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeDtr(bool set)
+bool UnixSerialPortEngine::setDtr(bool set)
 {
     bool ret = trigger_out_line(m_descriptor, TIOCM_DTR, set);
     if (!ret) {
@@ -218,7 +218,7 @@ bool UnixSerialPortEngine::setNativeDtr(bool set)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeRts(bool set)
+bool UnixSerialPortEngine::setRts(bool set)
 {
     bool ret = trigger_out_line(m_descriptor, TIOCM_RTS, set);
     if (!ret) {
@@ -228,7 +228,7 @@ bool UnixSerialPortEngine::setNativeRts(bool set)
     return ret;
 }
 
-bool UnixSerialPortEngine::nativeFlush()
+bool UnixSerialPortEngine::flush()
 {
     bool ret = (::tcdrain(m_descriptor) != -1);
     if (!ret) {
@@ -238,7 +238,7 @@ bool UnixSerialPortEngine::nativeFlush()
     return ret;
 }
 
-bool UnixSerialPortEngine::nativeReset()
+bool UnixSerialPortEngine::reset()
 {
     bool ret = (::tcflush(m_descriptor, TCIOFLUSH) != -1);
     if (!ret) {
@@ -248,7 +248,7 @@ bool UnixSerialPortEngine::nativeReset()
     return ret;
 }
 
-bool UnixSerialPortEngine::nativeSendBreak(int duration)
+bool UnixSerialPortEngine::sendBreak(int duration)
 {
     bool ret = (::tcsendbreak(m_descriptor, duration) != -1);
     if (!ret) {
@@ -258,7 +258,7 @@ bool UnixSerialPortEngine::nativeSendBreak(int duration)
     return ret;
 }
 
-bool UnixSerialPortEngine::nativeSetBreak(bool set)
+bool UnixSerialPortEngine::setBreak(bool set)
 {
     bool ret = (::ioctl(m_descriptor, set ? TIOCSBRK : TIOCCBRK) != -1);
     if (!ret) {
@@ -268,7 +268,7 @@ bool UnixSerialPortEngine::nativeSetBreak(bool set)
     return ret;
 }
 
-qint64 UnixSerialPortEngine::nativeBytesAvailable() const
+qint64 UnixSerialPortEngine::bytesAvailable() const
 {
     int cmd = 0;
 #if defined (FIONREAD)
@@ -282,13 +282,13 @@ qint64 UnixSerialPortEngine::nativeBytesAvailable() const
     return nbytes;
 }
 
-qint64 UnixSerialPortEngine::nativeBytesToWrite() const
+qint64 UnixSerialPortEngine::bytesToWrite() const
 {
     // FIXME: FIONWRITE (or analogy) is exists?
     return 0;
 }
 
-qint64 UnixSerialPortEngine::nativeRead(char *data, qint64 len)
+qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 {
     qint64 bytesRead = 0;
 #if defined (CMSPAR)
@@ -335,7 +335,7 @@ qint64 UnixSerialPortEngine::nativeRead(char *data, qint64 len)
     return bytesRead;
 }
 
-qint64 UnixSerialPortEngine::nativeWrite(const char *data, qint64 len)
+qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 {
     qint64 bytesWritten = 0;
 #if defined (CMSPAR)
@@ -370,9 +370,9 @@ qint64 UnixSerialPortEngine::nativeWrite(const char *data, qint64 len)
     return bytesWritten;
 }
 
-bool UnixSerialPortEngine::nativeSelect(int timeout,
-                                        bool checkRead, bool checkWrite,
-                                        bool *selectForRead, bool *selectForWrite)
+bool UnixSerialPortEngine::select(int timeout,
+                                  bool checkRead, bool checkWrite,
+                                  bool *selectForRead, bool *selectForWrite)
 {
     fd_set fdread;
     FD_ZERO(&fdread);
@@ -410,7 +410,7 @@ bool UnixSerialPortEngine::nativeSelect(int timeout,
 
 static const QString defaultPathPrefix = "/dev/";
 
-QString UnixSerialPortEngine::nativeToSystemLocation(const QString &port) const
+QString UnixSerialPortEngine::toSystemLocation(const QString &port) const
 {
     QString ret;
     if (!port.contains(defaultPathPrefix))
@@ -419,7 +419,7 @@ QString UnixSerialPortEngine::nativeToSystemLocation(const QString &port) const
     return ret;
 }
 
-QString UnixSerialPortEngine::nativeFromSystemLocation(const QString &location) const
+QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
 {
     QString ret = location;
     if (ret.contains(defaultPathPrefix))
@@ -561,7 +561,7 @@ static qint32 detect_standard_rate(qint32 rate)
     }
 }
 
-bool UnixSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir)
+bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if (rate == SerialPort::UnknownRate) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -580,7 +580,7 @@ bool UnixSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
+bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
             || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
@@ -613,7 +613,7 @@ bool UnixSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeParity(SerialPort::Parity parity)
+bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -658,7 +658,7 @@ bool UnixSerialPortEngine::setNativeParity(SerialPort::Parity parity)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
+bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
             || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
@@ -684,7 +684,7 @@ bool UnixSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
+bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -714,7 +714,7 @@ bool UnixSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
     return ret;
 }
 
-bool UnixSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)
     // Impl me
@@ -757,7 +757,7 @@ void UnixSerialPortEngine::setWriteNotificationEnabled(bool enable)
     }
 }
 
-bool UnixSerialPortEngine::processNativeIOErrors()
+bool UnixSerialPortEngine::processIOErrors()
 {
     // Impl me
     return false;
@@ -1128,7 +1128,7 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
         par ^= (m_parity == SerialPort::MarkParity);
         if (par ^ bool(m_currTermios.c_cflag & PARODD)) { // Need switch parity mode?
             m_currTermios.c_cflag ^= PARODD;
-            nativeFlush(); //??
+            Flush(); //??
             updateTermious();
         }
 

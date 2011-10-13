@@ -56,9 +56,9 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *parent)
     , m_flagErrorFromCommEvent(false)
     , m_currentMask(0)
     , m_setMask(EV_ERR)
-#if defined (Q_OS_WINCE)
+    #if defined (Q_OS_WINCE)
     , m_running(true)
-#endif
+    #endif
 {
     Q_ASSERT(parent);
     m_parent = parent;
@@ -91,7 +91,7 @@ WinSerialPortEngine::~WinSerialPortEngine()
 #endif
 }
 
-bool WinSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMode mode)
+bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
     DWORD shareMode = 0;
@@ -114,11 +114,11 @@ bool WinSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMod
         txflag = true;
     }
 
-    QByteArray nativeFilePath = QByteArray((const char *)location.utf16(),
-                                           location.size() * 2 + 1);
+    QByteArray filePath = QByteArray((const char *)location.utf16(),
+                                     location.size() * 2 + 1);
 
     // Try opened serial device.
-    m_descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
+    m_descriptor = ::CreateFile((const wchar_t*)filePath.constData(),
                                 desiredAccess, shareMode, 0, OPEN_EXISTING, flagsAndAttributes, 0);
 
     if (m_descriptor == INVALID_HANDLE_VALUE) {
@@ -162,7 +162,7 @@ bool WinSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMod
     return false;
 }
 
-void WinSerialPortEngine::nativeClose(const QString &location)
+void WinSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
 #if !defined (Q_OS_WINCE)
@@ -177,7 +177,7 @@ void WinSerialPortEngine::nativeClose(const QString &location)
     m_descriptor = INVALID_HANDLE_VALUE;
 }
 
-SerialPort::Lines WinSerialPortEngine::nativeLines() const
+SerialPort::Lines WinSerialPortEngine::lines() const
 {
     DWORD modemStat = 0;
     SerialPort::Lines ret = 0;
@@ -210,7 +210,7 @@ SerialPort::Lines WinSerialPortEngine::nativeLines() const
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeDtr(bool set)
+bool WinSerialPortEngine::setDtr(bool set)
 {
     bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
     if (!ret) {
@@ -220,7 +220,7 @@ bool WinSerialPortEngine::setNativeDtr(bool set)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeRts(bool set)
+bool WinSerialPortEngine::setRts(bool set)
 {
     bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
     if (!ret) {
@@ -230,7 +230,7 @@ bool WinSerialPortEngine::setNativeRts(bool set)
     return ret;
 }
 
-bool WinSerialPortEngine::nativeFlush()
+bool WinSerialPortEngine::flush()
 {
     bool ret = ::FlushFileBuffers(m_descriptor);
     if (!ret) {
@@ -240,7 +240,7 @@ bool WinSerialPortEngine::nativeFlush()
     return ret;
 }
 
-bool WinSerialPortEngine::nativeReset()
+bool WinSerialPortEngine::reset()
 {
     DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
     bool ret = ::PurgeComm(m_descriptor, flags);
@@ -251,18 +251,18 @@ bool WinSerialPortEngine::nativeReset()
     return ret;
 }
 
-bool WinSerialPortEngine::nativeSendBreak(int duration)
+bool WinSerialPortEngine::sendBreak(int duration)
 {
     // FIXME:
-    if (nativeSetBreak(true)) {
+    if (setBreak(true)) {
         ::Sleep(duration);
-        if (nativeSetBreak(false))
+        if (setBreak(false))
             return true;
     }
     return false;
 }
 
-bool WinSerialPortEngine::nativeSetBreak(bool set)
+bool WinSerialPortEngine::setBreak(bool set)
 {
     bool ret = (set) ?
                 (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
@@ -283,12 +283,12 @@ static qint64 get_commstat_que(HANDLE descriptor, enum CommStatQue que)
     return qint64((que == CS_IN_QUE) ? (cs.cbInQue) : (cs.cbOutQue));
 }
 
-qint64 WinSerialPortEngine::nativeBytesAvailable() const
+qint64 WinSerialPortEngine::bytesAvailable() const
 {
     return get_commstat_que(m_descriptor, CS_IN_QUE);
 }
 
-qint64 WinSerialPortEngine::nativeBytesToWrite() const
+qint64 WinSerialPortEngine::bytesToWrite() const
 {
     return get_commstat_que(m_descriptor, CS_OUT_QUE);
 }
@@ -304,7 +304,7 @@ static void clear_overlapped(OVERLAPPED *overlapped)
 }
 #endif
 
-qint64 WinSerialPortEngine::nativeRead(char *data, qint64 len)
+qint64 WinSerialPortEngine::read(char *data, qint64 len)
 {
 #if !defined (Q_OS_WINCE)
     clear_overlapped(&m_ovRead);
@@ -360,7 +360,7 @@ qint64 WinSerialPortEngine::nativeRead(char *data, qint64 len)
     return qint64(readBytes);
 }
 
-qint64 WinSerialPortEngine::nativeWrite(const char *data, qint64 len)
+qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 {
 #if !defined (Q_OS_WINCE)
     clear_overlapped(&m_ovWrite);
@@ -396,12 +396,12 @@ qint64 WinSerialPortEngine::nativeWrite(const char *data, qint64 len)
     return quint64(writeBytes);
 }
 
-bool WinSerialPortEngine::nativeSelect(int timeout,
-                                       bool checkRead, bool checkWrite,
-                                       bool *selectForRead, bool *selectForWrite)
+bool WinSerialPortEngine::select(int timeout,
+                                 bool checkRead, bool checkWrite,
+                                 bool *selectForRead, bool *selectForWrite)
 {
     // Forward checking data for read.
-    if (checkRead && (nativeBytesAvailable() > 0)) {
+    if (checkRead && (bytesAvailable() > 0)) {
         Q_ASSERT(selectForRead);
         *selectForRead = true;
         return true;
@@ -471,7 +471,7 @@ bool WinSerialPortEngine::nativeSelect(int timeout,
         // adding (in the code above) extra bits in the mask currEventMask.
         if (checkRead) {
             Q_ASSERT(selectForRead);
-            *selectForRead = (currEventMask & EV_RXCHAR) && (nativeBytesAvailable() > 0);
+            *selectForRead = (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
         }
         if (checkWrite) {
             Q_ASSERT(selectForWrite);
@@ -490,7 +490,7 @@ static const QString defaultPathPrefix = "\\\\.\\";
 static const QString defaultPathPostfix = ":";
 #endif
 
-QString WinSerialPortEngine::nativeToSystemLocation(const QString &port) const
+QString WinSerialPortEngine::toSystemLocation(const QString &port) const
 {
     QString ret = port;
 #if !defined (Q_OS_WINCE)
@@ -503,7 +503,7 @@ QString WinSerialPortEngine::nativeToSystemLocation(const QString &port) const
     return ret;
 }
 
-QString WinSerialPortEngine::nativeFromSystemLocation(const QString &location) const
+QString WinSerialPortEngine::fromSystemLocation(const QString &location) const
 {
     QString ret = location;
 #if !defined (Q_OS_WINCE)
@@ -516,7 +516,7 @@ QString WinSerialPortEngine::nativeFromSystemLocation(const QString &location) c
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir)
+bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -529,7 +529,7 @@ bool WinSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
+bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
             || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
@@ -544,7 +544,7 @@ bool WinSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeParity(SerialPort::Parity parity)
+bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -578,7 +578,7 @@ bool WinSerialPortEngine::setNativeParity(SerialPort::Parity parity)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
+bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
             || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
@@ -606,7 +606,7 @@ bool WinSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
+bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -637,7 +637,7 @@ bool WinSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
     return ret;
 }
 
-bool WinSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+bool WinSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)
     return true;
@@ -718,7 +718,7 @@ void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
         m_parent->canWriteNotification();
 }
 
-bool WinSerialPortEngine::processNativeIOErrors()
+bool WinSerialPortEngine::processIOErrors()
 {
     DWORD err = 0;
     COMSTAT cs;

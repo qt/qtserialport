@@ -30,17 +30,17 @@ public:
           m_timeout(timeout), m_worked(false) {
         start();
     }
-	virtual ~WinCeWaitCommEventBreaker() {
-		stop();
-		wait();
-	}
+    virtual ~WinCeWaitCommEventBreaker() {
+        stop();
+        wait();
+    }
     void stop() { exit(0); }
     bool isWorked() const { return m_worked; }
 
 protected:
     void run() {
         QTimer timer;
-		QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(procTimeout()), Qt::DirectConnection);
+        QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(procTimeout()), Qt::DirectConnection);
         timer.start(m_timeout);
         exec();
         m_worked = true;
@@ -61,55 +61,55 @@ private:
 
 #if defined (Q_OS_WINCE)
 class WinSerialPortEngine : public QThread, public SerialPortEngine
-#else
+        #else
 class WinSerialPortEngine : public QWinEventNotifier, public SerialPortEngine
-#endif
+        #endif
 {
     Q_OBJECT
 public:
     WinSerialPortEngine(SerialPortPrivate *parent);
     virtual ~WinSerialPortEngine();
 
-    virtual bool nativeOpen(const QString &location, QIODevice::OpenMode mode);
-    virtual void nativeClose(const QString &location);
+    virtual bool open(const QString &location, QIODevice::OpenMode mode);
+    virtual void close(const QString &location);
 
-    virtual SerialPort::Lines nativeLines() const;
+    virtual SerialPort::Lines lines() const;
 
-    virtual bool setNativeDtr(bool set);
-    virtual bool setNativeRts(bool set);
+    virtual bool setDtr(bool set);
+    virtual bool setRts(bool set);
 
-    virtual bool nativeFlush();
-    virtual bool nativeReset();
+    virtual bool flush();
+    virtual bool reset();
 
-    virtual bool nativeSendBreak(int duration);
-    virtual bool nativeSetBreak(bool set);
+    virtual bool sendBreak(int duration);
+    virtual bool setBreak(bool set);
 
-    virtual qint64 nativeBytesAvailable() const;
-    virtual qint64 nativeBytesToWrite() const;
+    virtual qint64 bytesAvailable() const;
+    virtual qint64 bytesToWrite() const;
 
-    virtual qint64 nativeRead(char *data, qint64 len);
-    virtual qint64 nativeWrite(const char *data, qint64 len);
-    virtual bool nativeSelect(int timeout,
-                              bool checkRead, bool checkWrite,
-                              bool *selectForRead, bool *selectForWrite);
+    virtual qint64 read(char *data, qint64 len);
+    virtual qint64 write(const char *data, qint64 len);
+    virtual bool select(int timeout,
+                        bool checkRead, bool checkWrite,
+                        bool *selectForRead, bool *selectForWrite);
 
-    virtual QString nativeToSystemLocation(const QString &port) const;
-    virtual QString nativeFromSystemLocation(const QString &location) const;
+    virtual QString toSystemLocation(const QString &port) const;
+    virtual QString fromSystemLocation(const QString &location) const;
 
-    virtual bool setNativeRate(qint32 rate, SerialPort::Directions dir);
-    virtual bool setNativeDataBits(SerialPort::DataBits dataBits);
-    virtual bool setNativeParity(SerialPort::Parity parity);
-    virtual bool setNativeStopBits(SerialPort::StopBits stopBits);
-    virtual bool setNativeFlowControl(SerialPort::FlowControl flowControl);
+    virtual bool setRate(qint32 rate, SerialPort::Directions dir);
+    virtual bool setDataBits(SerialPort::DataBits dataBits);
+    virtual bool setParity(SerialPort::Parity parity);
+    virtual bool setStopBits(SerialPort::StopBits stopBits);
+    virtual bool setFlowControl(SerialPort::FlowControl flowControl);
 
-    virtual bool setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy);
+    virtual bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy);
 
     virtual bool isReadNotificationEnabled() const;
     virtual void setReadNotificationEnabled(bool enable);
     virtual bool isWriteNotificationEnabled() const;
     virtual void setWriteNotificationEnabled(bool enable);
 
-    virtual bool processNativeIOErrors();
+    virtual bool processIOErrors();
 
     virtual void lockNotification(NotificationLockerType type, bool uselocker);
     virtual void unlockNotification(NotificationLockerType type);

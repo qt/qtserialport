@@ -19,7 +19,7 @@ _LIT(KPddName, "ECDRV");
 _LIT(KPddName, "EUART");
 #endif
 
-// Logical native device driver.
+// Logical  device driver.
 _LIT(KLddName,"ECOMM");
 
 // Modules names.
@@ -75,7 +75,7 @@ SymbianSerialPortEngine::~SymbianSerialPortEngine()
 
 }
 
-bool SymbianSerialPortEngine::nativeOpen(const QString &location, QIODevice::OpenMode mode)
+bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
 {
     Q_UNUSED(mode)
 
@@ -130,14 +130,14 @@ bool SymbianSerialPortEngine::nativeOpen(const QString &location, QIODevice::Ope
     return false;
 }
 
-void SymbianSerialPortEngine::nativeClose(const QString &location)
+void SymbianSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
     restoreOldsettings();
     m_descriptor.Close();
 }
 
-SerialPort::Lines SymbianSerialPortEngine::nativeLines() const
+SerialPort::Lines SymbianSerialPortEngine::lines() const
 {
     SerialPort::Lines ret = 0;
 
@@ -162,7 +162,7 @@ SerialPort::Lines SymbianSerialPortEngine::nativeLines() const
     return ret;
 }
 
-bool SymbianSerialPortEngine::setNativeDtr(bool set)
+bool SymbianSerialPortEngine::setDtr(bool set)
 {
     if (set)
         m_descriptor.SetSignalsToMark(KSignalDTR);
@@ -171,7 +171,7 @@ bool SymbianSerialPortEngine::setNativeDtr(bool set)
     return true;
 }
 
-bool SymbianSerialPortEngine::setNativeRts(bool set)
+bool SymbianSerialPortEngine::setRts(bool set)
 {
     if (set)
         m_descriptor.SetSignalsToMark(KSignalRTS);
@@ -180,42 +180,42 @@ bool SymbianSerialPortEngine::setNativeRts(bool set)
     return true;
 }
 
-bool SymbianSerialPortEngine::nativeFlush()
+bool SymbianSerialPortEngine::flush()
 {
     // Impl me
     return false;
 }
 
-bool SymbianSerialPortEngine::nativeReset()
+bool SymbianSerialPortEngine::reset()
 {
     m_descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
     return true;
 }
 
-bool SymbianSerialPortEngine::nativeSendBreak(int duration)
+bool SymbianSerialPortEngine::sendBreak(int duration)
 {
     TRequestStatus status;
     m_descriptor.Break(status, TTimeIntervalMicroSeconds32(duration * 1000));
     return false;
 }
 
-bool SymbianSerialPortEngine::nativeSetBreak(bool set)
+bool SymbianSerialPortEngine::setBreak(bool set)
 {
     // Impl me
     return false;
 }
 
-qint64 SymbianSerialPortEngine::nativeBytesAvailable() const
+qint64 SymbianSerialPortEngine::bytesAvailable() const
 {
     return qint64(m_descriptor.QueryReceiveBuffer());
 }
 
-qint64 SymbianSerialPortEngine::nativeBytesToWrite() const
+qint64 SymbianSerialPortEngine::bytesToWrite() const
 {
     return 0;
 }
 
-qint64 SymbianSerialPortEngine::nativeRead(char *data, qint64 len)
+qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
 {
     TPtr8 buffer((TUint8 *)data, (int)len);
     TRequestStatus status;
@@ -229,7 +229,7 @@ qint64 SymbianSerialPortEngine::nativeRead(char *data, qint64 len)
     return qint64(buffer.Length());
 }
 
-qint64 SymbianSerialPortEngine::nativeWrite(const char *data, qint64 len)
+qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
 {
     TPtrC8 buffer((TUint8*)data, (int)len);
     TRequestStatus status;
@@ -247,9 +247,9 @@ qint64 SymbianSerialPortEngine::nativeWrite(const char *data, qint64 len)
 
 // FIXME: I'm not sure in implementation this method.
 // Someone needs to check and correct.
-bool SymbianSerialPortEngine::nativeSelect(int timeout,
-                                           bool checkRead, bool checkWrite,
-                                           bool *selectForRead, bool *selectForWrite)
+bool SymbianSerialPortEngine::select(int timeout,
+                                     bool checkRead, bool checkWrite,
+                                     bool *selectForRead, bool *selectForWrite)
 {
     TRequestStatus timerStatus;
     TRequestStatus readStatus;
@@ -314,19 +314,19 @@ bool SymbianSerialPortEngine::nativeSelect(int timeout,
 
 static const QString defaultPathPostfix = ":";
 
-QString SymbianSerialPortEngine::nativeToSystemLocation(const QString &port) const
+QString SymbianSerialPortEngine::toSystemLocation(const QString &port) const
 {
     // Port name is equval to port location.
     return port;
 }
 
-QString SymbianSerialPortEngine::nativeFromSystemLocation(const QString &location) const
+QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) const
 {
     // Port name is equval to port location.
     return location;
 }
 
-bool SymbianSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions dir)
+bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -421,7 +421,7 @@ bool SymbianSerialPortEngine::setNativeRate(qint32 rate, SerialPort::Directions 
     return ret;
 }
 
-bool SymbianSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
+bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
             || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
@@ -451,7 +451,7 @@ bool SymbianSerialPortEngine::setNativeDataBits(SerialPort::DataBits dataBits)
     return ret;
 }
 
-bool SymbianSerialPortEngine::setNativeParity(SerialPort::Parity parity)
+bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -482,7 +482,7 @@ bool SymbianSerialPortEngine::setNativeParity(SerialPort::Parity parity)
     return ret;
 }
 
-bool SymbianSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
+bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
             || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
@@ -509,7 +509,7 @@ bool SymbianSerialPortEngine::setNativeStopBits(SerialPort::StopBits stopBits)
     return ret;
 }
 
-bool SymbianSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
+bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -534,7 +534,7 @@ bool SymbianSerialPortEngine::setNativeFlowControl(SerialPort::FlowControl flow)
     return ret;
 }
 
-bool SymbianSerialPortEngine::setNativeDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+bool SymbianSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)
     // Impl me
@@ -565,7 +565,7 @@ void SymbianSerialPortEngine::setWriteNotificationEnabled(bool enable)
     // Impl me
 }
 
-bool SymbianSerialPortEngine::processNativeIOErrors()
+bool SymbianSerialPortEngine::processIOErrors()
 {
     // Impl me
     return false;
