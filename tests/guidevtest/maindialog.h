@@ -10,13 +10,13 @@ class MainDialog;
 
 class QState;
 class QStateMachine;
+class UnitTestManager;
 
 class MainDialog : public QDialog
 {
     Q_OBJECT
-
 signals:
-    void hasError();
+    void toIdle();
 
 public:
     explicit MainDialog(QWidget *parent = 0);
@@ -35,6 +35,7 @@ private:
     QState *m_optionsState;
     QState *m_runningState;
     QStateMachine *m_stateMachine;
+    UnitTestManager *m_utManager;
 };
 
 #endif // MAINDIALOG_H

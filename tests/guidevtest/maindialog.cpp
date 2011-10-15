@@ -5,6 +5,8 @@
 #include <QtGui/QMessageBox>
 
 #include "serialportinfo.h"
+#include "unittestmanager.h"
+#include "testsdialog.h"
 
 /* Public methods */
 
@@ -13,6 +15,7 @@ MainDialog::MainDialog(QWidget *parent)
     , ui(new Ui::MainDialog)
 {
     ui->setupUi(this);
+    m_utManager = new UnitTestManager(this);
 
     m_idleState = new QState();
     m_optionsState = new QState();
@@ -27,12 +30,11 @@ MainDialog::MainDialog(QWidget *parent)
     m_idleState->addTransition(ui->ctrlButton, SIGNAL(clicked()), m_runningState);
 
     // From Options State to ...
-    //...
-    //...
+    m_optionsState->addTransition(this, SIGNAL(toIdle()), m_idleState);
 
     // From Running State to ...
     m_runningState->addTransition(ui->ctrlButton, SIGNAL(clicked()), m_idleState);
-    m_runningState->addTransition(this, SIGNAL(hasError()), m_idleState);
+    m_runningState->addTransition(this, SIGNAL(toIdle()), m_idleState);
 
     m_stateMachine = new QStateMachine(this);
     m_stateMachine->addState(m_idleState);
@@ -61,9 +63,10 @@ void MainDialog::procIdleState()
 
 void MainDialog::procOptionsState()
 {
+    TestsDialog dlg(m_utManager);//();
+    dlg.exec();
 
-
-
+    emit toIdle();
 }
 
 void MainDialog::procRunningState()
@@ -74,7 +77,7 @@ void MainDialog::procRunningState()
         msgBox.setText(tr("You can not choose the source and\n"
                           "destination the same name."));
         msgBox.exec();
-        emit hasError();
+        emit toIdle();
         return;
     }
     ui->ctrlButton->setText(tr("Stop"));

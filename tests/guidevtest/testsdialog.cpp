@@ -1,9 +1,10 @@
 #include "testsdialog.h"
 #include "ui_testsdialog.h"
+#include "unittestmanager.h"
 
-TestsDialog::TestsDialog(QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::TestsDialog)
+TestsDialog::TestsDialog(UnitTestManager *manager)
+    : ui(new Ui::TestsDialog)
+    , m_utManager(manager)
 {
     ui->setupUi(this);
 }

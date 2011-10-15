@@ -6,13 +6,39 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>246</width>
-    <height>300</height>
+    <width>132</width>
+    <height>172</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Available tests</string>
   </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QListWidget" name="listWidget"/>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="brkBox">
+     <property name="text">
+      <string>Break tests on error</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="optButton">
+     <property name="text">
+      <string>Test options</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="aplButton">
+     <property name="text">
+      <string>Apply</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
