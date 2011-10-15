@@ -60,7 +60,6 @@ unix:!symbian {
     SOURCES += \
         $$PWD/ttylocker_p_unix.cpp \
         $$PWD/serialportengine_p_unix.cpp
-        $$PWD/serialportinfo_unix.cpp
 
     macx {
         SOURCES += $$PWD/serialportinfo_mac.cpp
