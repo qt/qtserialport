@@ -70,7 +70,6 @@ unix:!symbian {
     SOURCES += \
         ttylocker_p_unix.cpp \
         serialportengine_p_unix.cpp
-        serialportinfo_unix.cpp
 
     macx {
         SOURCES += serialportinfo_mac.cpp
