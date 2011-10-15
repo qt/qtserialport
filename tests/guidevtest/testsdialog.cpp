@@ -7,6 +7,9 @@ TestsDialog::TestsDialog(UnitTestManager *manager)
     , m_utManager(manager)
 {
     ui->setupUi(this);
+
+    foreach (UnitTestBase *unit, m_utManager->units())
+        ui->listWidget->addItem(unit->name());
 }
 
 TestsDialog::~TestsDialog()

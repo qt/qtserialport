@@ -15,8 +15,7 @@ INCLUDEPATH += \
 
 HEADERS += \
     ../../include/serialport.h \
-    ../../include/serialportinfo.h \
-    unittestmanager.h
+    ../../include/serialportinfo.h
 
 include(../../src/src.pri)
 
@@ -24,15 +23,20 @@ SOURCES += \
     main.cpp \
     maindialog.cpp \
     testsdialog.cpp \
-    unittestmanager.cpp
+    unittestmanager.cpp \
+    unittestinfo.cpp
 
 HEADERS += \
     maindialog.h \
-    testsdialog.h
+    testsdialog.h \
+    unittestmanager.h \
+    unittestinfo.h
 
 FORMS += \
     maindialog.ui \
     testsdialog.ui
+
+
 
 
 

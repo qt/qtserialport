@@ -63,7 +63,8 @@ void MainDialog::procIdleState()
 
 void MainDialog::procOptionsState()
 {
-    TestsDialog dlg(m_utManager);//();
+    TestsDialog dlg(m_utManager);
+    //dlg.setModal(true);
     dlg.exec();
 
     emit toIdle();
