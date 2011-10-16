@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>146</width>
+    <width>150</width>
     <height>172</height>
    </rect>
   </property>
@@ -21,7 +21,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QListView" name="listView"/>
    </item>
    <item>
     <widget class="QCheckBox" name="brkBox">
@@ -31,16 +31,9 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="optButton">
+    <widget class="QPushButton" name="cfgButton">
      <property name="text">
-      <string>Test options</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="aplButton">
-     <property name="text">
-      <string>Apply</string>
+      <string>Configure</string>
      </property>
     </widget>
    </item>
