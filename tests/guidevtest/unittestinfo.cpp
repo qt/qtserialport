@@ -1,6 +1,10 @@
 #include "unittestinfo.h"
 #include "serialportinfo.h"
 
+
+
+/* Public methods */
+
 UnitTestInfo::UnitTestInfo(QObject *parent)
     : UnitTestBase(UnitTestBase::InfoUnitId, parent)
 {
@@ -8,9 +12,11 @@ UnitTestInfo::UnitTestInfo(QObject *parent)
     m_description = QString(tr("Info Test Description"));
 }
 
+/* Public slots */
+
 void UnitTestInfo::start()
 {
-    bool ret = openLog();
+    bool ret = UnitTestManager::openLog();
     if (!ret) {
         emit error();
         return;
@@ -20,9 +26,9 @@ void UnitTestInfo::start()
     header = header
             .arg(m_id)
             .arg(m_name)
-            .arg(getDateTime());
+            .arg(UnitTestManager::timestamp());
 
-    if (writeToLog(header)) {
+    if (UnitTestManager::writeToLog(header)) {
         int it = 0;
         foreach (SerialPortInfo inf, SerialPortInfo::availablePorts()) {
             QString s("Port# %1, name: %2\n"
@@ -39,13 +45,12 @@ void UnitTestInfo::start()
                     .arg(inf.isValid())
                     .arg(inf.isBusy());
 
-            ret = writeToLog(s);
+            ret = UnitTestManager::writeToLog(s);
             if (!ret)
                 break;
         }
-
     }
-    closeLog();
+    UnitTestManager::closeLog();
 
     if (ret)
         emit finished();

@@ -4,6 +4,8 @@
 #include <QtCore/QObject>
 #include <QtCore/QFile>
 
+
+
 class UnitTestBase : public QObject
 {
     Q_OBJECT
@@ -35,16 +37,9 @@ protected:
     QString m_description;
     QString m_enableParam;
 
-    bool openLog();
-    bool writeToLog(const QString &content);
-    void closeLog();
-
-    QString getDateTime() const;
-
 private:
     QString m_srcPort;
     QString m_dstPort;
-    QFile m_log;
 };
 
 
@@ -67,11 +62,13 @@ signals:
 public:
     explicit UnitTestManager(QObject *parent = 0);
     void setPorts(const QString &src, const QString &dst);
-    void setLogFile(const QString &log);
-
     QList<UnitTestBase *> units() const;
 
-    static const QString logFileParam;
+    static void setLogFileName(const QString &name);
+    static bool openLog();
+    static bool writeToLog(const QString &content);
+    static void closeLog();
+    static QString timestamp();
 
 public slots:
     void start();
@@ -86,6 +83,9 @@ private:
     QString m_srcPort;
     QString m_dstPort;
     QList<UnitTestBase *> m_unitList;
+
+    static const QString m_logFileParam;
+    static QFile m_log;
 };
 
 #endif // UNITTESTMANAGER_H

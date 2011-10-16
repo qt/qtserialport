@@ -6,8 +6,6 @@
 #include <QtCore/QDateTime>
 
 
-const QString UnitTestManager::logFileParam = "UnitTestManager/logFile";
-
 
 // UnitTestBase
 
@@ -51,30 +49,6 @@ QString UnitTestBase::name() const
 QString UnitTestBase::description() const
 {
     return m_description;
-}
-
-/* Protected methods */
-
-bool UnitTestBase::openLog()
-{
-    QSettings settings;
-    m_log.setFileName(settings.value(UnitTestManager::logFileParam).toString());
-    return (m_log.exists() && m_log.open(QIODevice::WriteOnly | QIODevice::Append));
-}
-
-bool UnitTestBase::writeToLog(const QString &content)
-{
-    return (m_log.write(content.toLocal8Bit()) > 0);
-}
-
-void UnitTestBase::closeLog()
-{
-    m_log.close();
-}
-
-QString UnitTestBase::getDateTime() const
-{
-    return QDateTime::currentDateTime().toString();
 }
 
 
@@ -122,17 +96,38 @@ void UnitTestManager::setPorts(const QString &src, const QString &dst)
     m_dstPort = dst;
 }
 
-void UnitTestManager::setLogFile(const QString &log)
-{
-
-}
-
 QList<UnitTestBase *> UnitTestManager::units() const
 {
     return m_unitList;
 }
 
+void UnitTestManager::setLogFileName(const QString &name)
+{
+    QSettings settings;
+    settings.setValue(UnitTestManager::m_logFileParam, name);
+}
 
+bool UnitTestManager::openLog()
+{
+    QSettings settings;
+    m_log.setFileName(settings.value(UnitTestManager::m_logFileParam).toString());
+    return (m_log.exists() && m_log.open(QIODevice::WriteOnly | QIODevice::Append));
+}
+
+bool UnitTestManager::writeToLog(const QString &content)
+{
+    return (m_log.write(content.toLocal8Bit()) > 0);
+}
+
+void UnitTestManager::closeLog()
+{
+    m_log.close();
+}
+
+QString UnitTestManager::timestamp()
+{
+    return QDateTime::currentDateTime().toString();
+}
 
 /* Public slots */
 
@@ -163,3 +158,7 @@ void UnitTestManager::step()
     else
         step();
 }
+
+//
+const QString UnitTestManager::m_logFileParam = "UnitTestManager/logFile";
+QFile UnitTestManager::m_log;

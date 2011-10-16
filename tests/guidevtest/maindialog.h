@@ -4,6 +4,8 @@
 #include <QtGui/QDialog>
 #include <QtCore/QMap>
 
+
+
 namespace Ui {
 class MainDialog;
 }

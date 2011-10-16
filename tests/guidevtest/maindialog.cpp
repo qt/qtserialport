@@ -8,6 +8,8 @@
 #include "unittestmanager.h"
 #include "testsdialog.h"
 
+
+
 /* Public methods */
 
 MainDialog::MainDialog(QWidget *parent)
