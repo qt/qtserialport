@@ -39,7 +39,10 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     , m_flow(SerialPort::UnknownFlowControl)
     , m_policy(SerialPort::IgnorePolicy)
     , m_portError(SerialPort::NoError)
-{}
+{
+    m_engine = SerialPortEngine::create(this);
+    Q_ASSERT(m_engine);
+}
 
 SerialPortPrivate::~SerialPortPrivate()
 {
