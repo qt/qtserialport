@@ -37,6 +37,7 @@ MainDialog::MainDialog(QWidget *parent)
     // From Running State to ...
     m_runningState->addTransition(ui->ctrlButton, SIGNAL(clicked()), m_idleState);
     m_runningState->addTransition(this, SIGNAL(toIdle()), m_idleState);
+    m_runningState->addTransition(m_utManager, SIGNAL(finished()), m_idleState);
 
     m_stateMachine = new QStateMachine(this);
     m_stateMachine->addState(m_idleState);
@@ -87,6 +88,11 @@ void MainDialog::procRunningState()
     ui->srcBox->setEnabled(false);
     ui->dstBox->setEnabled(false);
     ui->optButton->setEnabled(false);
+
+    m_utManager->setLogFileName(qApp->applicationDirPath() + "/Test.log");
+    m_utManager->setPorts(ui->srcBox->currentText(),
+                          ui->dstBox->currentText());
+    m_utManager->start();
 }
 
 void MainDialog::procUbdatePortsBox()

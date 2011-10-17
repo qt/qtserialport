@@ -85,9 +85,12 @@ UnitTestManager::UnitTestManager(QObject *parent)
     //...
 
     foreach (UnitTestBase *unit, m_unitList)
-        connect(unit, SIGNAL(finished()), this, SLOT(step()));
+        connect(unit, SIGNAL(finished()), this, SLOT(procStep()));
 
     m_count = m_unitList.count();
+
+    connect(this, SIGNAL(started()), this, SLOT(procLogStart()));
+    connect(this, SIGNAL(finished()), this, SLOT(procLogFinish()));
 }
 
 void UnitTestManager::setPorts(const QString &src, const QString &dst)
@@ -110,8 +113,9 @@ void UnitTestManager::setLogFileName(const QString &name)
 bool UnitTestManager::openLog()
 {
     QSettings settings;
-    m_log.setFileName(settings.value(UnitTestManager::m_logFileParam).toString());
-    return (m_log.exists() && m_log.open(QIODevice::WriteOnly | QIODevice::Append));
+    QString name(settings.value(UnitTestManager::m_logFileParam).toString());
+    m_log.setFileName(name);
+    return (m_log.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text));
 }
 
 bool UnitTestManager::writeToLog(const QString &content)
@@ -133,8 +137,9 @@ QString UnitTestManager::timestamp()
 
 void UnitTestManager::start()
 {
+    emit started();
     m_it = 0;
-    step();
+    procStep();
 }
 
 void UnitTestManager::stop()
@@ -143,10 +148,10 @@ void UnitTestManager::stop()
 
 /* Private slots */
 
-void UnitTestManager::step()
+void UnitTestManager::procStep()
 {
     if (m_it == m_count) {
-        emit allFinished();
+        emit finished();
         return;
     }
 
@@ -156,7 +161,23 @@ void UnitTestManager::step()
         QTimer::singleShot(1000, unit, SLOT(start()));
     }
     else
-        step();
+        procStep();
+}
+
+void UnitTestManager::procLogStart()
+{
+    bool ret = UnitTestManager::openLog();
+    QString startHeader(tr("=== T E S T S   S T A R T E D ===\n\n\n"));
+    ret = UnitTestManager::writeToLog(startHeader);
+    UnitTestManager::closeLog();
+}
+
+void UnitTestManager::procLogFinish()
+{
+    bool ret = UnitTestManager::openLog();
+    QString stopHeader(tr("\n\n\n=== T E S T S   S T O P P E D ===\n\n\n"));
+    ret = UnitTestManager::writeToLog(stopHeader);
+    UnitTestManager::closeLog();
 }
 
 //

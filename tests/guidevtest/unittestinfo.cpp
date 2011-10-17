@@ -22,7 +22,7 @@ void UnitTestInfo::start()
         return;
     }
 
-    QString header("Test: ID# %1, Name: %2, %3");
+    QString header(tr("> Test: ID#%1, Name: %2 \n%3\n\n"));
     header = header
             .arg(m_id)
             .arg(m_name)
@@ -31,11 +31,11 @@ void UnitTestInfo::start()
     if (UnitTestManager::writeToLog(header)) {
         int it = 0;
         foreach (SerialPortInfo inf, SerialPortInfo::availablePorts()) {
-            QString s("Port# %1, name: %2\n"
+            QString s(tr("Port# %1, name : %2\n"
                       "  location    : %3\n"
                       "  description : %4\n"
                       "  valid       : %5\n"
-                      "  busy        : %6");
+                      "  busy        : %6\n"));
 
             s = s
                     .arg(it++)

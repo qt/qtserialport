@@ -57,7 +57,7 @@ class UnitTestManager : public QObject
     Q_OBJECT
 signals:
     void started();
-    void allFinished();
+    void finished();
 
 public:
     explicit UnitTestManager(QObject *parent = 0);
@@ -75,7 +75,9 @@ public slots:
     void stop();
 
 private slots:
-    void step();
+    void procStep();
+    void procLogStart();
+    void procLogFinish();
 
 private:
     int m_count;
