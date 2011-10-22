@@ -22,19 +22,15 @@ include(../../src/src.pri)
 SOURCES += \
     main.cpp \
     maindialog.cpp \
-    testsdialog.cpp \
-    unittestmanager.cpp \
     unittestinfo.cpp
 
 HEADERS += \
     maindialog.h \
-    testsdialog.h \
-    unittestmanager.h \
-    unittestinfo.h
+    unittests.h
 
 FORMS += \
-    maindialog.ui \
-    testsdialog.ui
+    maindialog.ui
+
 
 
 

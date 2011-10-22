@@ -6,52 +6,90 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>107</width>
-    <height>220</height>
+    <width>137</width>
+    <height>294</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Quick test</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="QGroupBox" name="pairBox">
-     <property name="title">
-      <string>Free for pair:</string>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="srcLabel">
-        <property name="text">
-         <string>Source:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QComboBox" name="srcBox"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="dstLabel">
-        <property name="text">
-         <string>Destination:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QComboBox" name="dstBox"/>
-      </item>
-     </layout>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>123</width>
+        <height>235</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QListView" name="listView"/>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="srcLabel">
+           <property name="text">
+            <string>Src:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QComboBox" name="srcComboBox"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="dstLabel">
+           <property name="text">
+            <string>Dst:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="dstComboBox"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="logLabel">
+           <property name="text">
+            <string>Log:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="logLineEdit">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" colspan="2">
+          <widget class="QCheckBox" name="clearLogCheckBox">
+           <property name="text">
+            <string>Clear log on start.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0" colspan="2">
+          <widget class="QCheckBox" name="breakAllCheckBox">
+           <property name="text">
+            <string>Break all on error</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="optButton">
-     <property name="text">
-      <string>Options</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="ctrlButton">
+    <widget class="QPushButton" name="startButton">
      <property name="text">
       <string>Start</string>
      </property>
@@ -60,7 +98,7 @@
    <item>
     <widget class="QProgressBar" name="progressBar">
      <property name="value">
-      <number>24</number>
+      <number>0</number>
      </property>
     </widget>
    </item>

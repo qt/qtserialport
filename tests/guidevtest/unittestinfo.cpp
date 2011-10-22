@@ -1,12 +1,12 @@
-#include "unittestinfo.h"
+#include "unittests.h"
 #include "serialportinfo.h"
 
 
 
 /* Public methods */
 
-UnitTestInfo::UnitTestInfo(QObject *parent)
-    : UnitTestBase(UnitTestBase::InfoUnitId, parent)
+UnitTestInfo::UnitTestInfo(Logger *logger, QObject *parent)
+    : UnitTestBase(UnitTestBase::InfoUnitId, logger, parent)
 {
     m_name = QString(tr("Info Test"));
     m_description = QString(tr("Info Test Description"));
@@ -16,44 +16,36 @@ UnitTestInfo::UnitTestInfo(QObject *parent)
 
 void UnitTestInfo::start()
 {
-    bool ret = UnitTestManager::openLog();
-    if (!ret) {
-        emit error();
-        return;
-    }
-
-    QString header(tr("> Test: ID#%1, Name: %2 \n%3\n\n"));
+    QString header(tr("\n[ Test: ID#%1, Name: %2 ]\n%3\n\n"));
     header = header
             .arg(m_id)
             .arg(m_name)
-            .arg(UnitTestManager::timestamp());
+            .arg(QString("timestamp"));/*.arg(UnitTestManager::timestamp());*/
 
-    if (UnitTestManager::writeToLog(header)) {
-        int it = 0;
-        foreach (SerialPortInfo inf, SerialPortInfo::availablePorts()) {
-            QString s(tr("Port# %1, name : %2\n"
-                      "  location    : %3\n"
-                      "  description : %4\n"
-                      "  valid       : %5\n"
-                      "  busy        : %6\n"));
+    m_logger->addContent(header);
 
-            s = s
-                    .arg(it++)
-                    .arg(inf.portName())
-                    .arg(inf.systemLocation())
-                    .arg(inf.description())
-                    .arg(inf.isValid())
-                    .arg(inf.isBusy());
+    int it = 0;
+    foreach (SerialPortInfo inf, SerialPortInfo::availablePorts()) {
+        QString body(tr("Port# %1, name : %2\n"
+                        "  location    : %3\n"
+                        "  description : %4\n"
+                        "  valid       : %5\n"
+                        "  busy        : %6\n"));
 
-            ret = UnitTestManager::writeToLog(s);
-            if (!ret)
-                break;
-        }
+        body = body
+                .arg(it++)
+                .arg(inf.portName())
+                .arg(inf.systemLocation())
+                .arg(inf.description())
+                .arg(inf.isValid())
+                .arg(inf.isBusy());
+
+        m_logger->addContent(body);
     }
-    UnitTestManager::closeLog();
 
-    if (ret)
-        emit finished();
-    else
-        emit error();
+    QString trailer(tr("\nFound %1 ports.\n"));
+    trailer = trailer.arg(it);
+    m_logger->addContent(trailer);
+
+    emit finished();
 }

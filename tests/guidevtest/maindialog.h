@@ -2,7 +2,7 @@
 #define MAINDIALOG_H
 
 #include <QtGui/QDialog>
-#include <QtCore/QMap>
+#include <QtCore/QAbstractListModel>
 
 
 
@@ -10,34 +10,60 @@ namespace Ui {
 class MainDialog;
 }
 
-class QState;
-class QStateMachine;
-class UnitTestManager;
+class UnitTestBase;
+
+class TestsViewModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    explicit TestsViewModel(const QList<UnitTestBase *> &list, QObject *parent = 0);
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index, int role) const;
+    virtual QVariant headerData(int section, Qt::Orientation orientation,
+                                int role = Qt::DisplayRole) const;
+    virtual  Qt::ItemFlags flags(const QModelIndex &index) const;
+    virtual bool setData(const QModelIndex &index, const QVariant &value,
+                         int role = Qt::EditRole);
+
+private:
+    QList<UnitTestBase *> m_testsList;
+};
+
+
+class Logger;
 
 class MainDialog : public QDialog
 {
     Q_OBJECT
-signals:
-    void toIdle();
-
 public:
     explicit MainDialog(QWidget *parent = 0);
     ~MainDialog();
 
 private slots:
-    void procIdleState();
-    void procOptionsState();
-    void procRunningState();
-    void procUbdatePortsBox();
+    void procLogChanged(const QString &log);
+    void procClearLogOnStartChanged(bool enable);
+    void procBreakAllOnErrorChanged(bool enable);
+
+    void procStartButtonClick();
+    void procTestStarted();
+    void procTestFinished();
 
 private:
     Ui::MainDialog *ui;
+    TestsViewModel *m_model;
+    QList<UnitTestBase *> m_testsList;
+    Logger *m_logger;
+    int m_enabledTestsCount;
+    int m_it;
 
-    QState *m_idleState;
-    QState *m_optionsState;
-    QState *m_runningState;
-    QStateMachine *m_stateMachine;
-    UnitTestManager *m_utManager;
+    static const QString logFileSettingsKey;
+    static const QString breakOnErrorSettingsKey;
+    static const QString clearLogOnStartSettingsKey;
+
+    void showSettings();
+    void createAvailableTests();
+    void fillPairs();
+    void enableUi(bool enable);
 };
 
 #endif // MAINDIALOG_H
