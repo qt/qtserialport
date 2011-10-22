@@ -27,7 +27,7 @@ _LIT(KLddName,"ECOMM");
 _LIT(KRS232ModuleName , "ECUART");
 _LIT(KBluetoothModuleName , "BTCOMM");
 _LIT(KInfraRedModuleName , "IRCOMM");
-
+_LIT(KACMModuleName, "ECACM");
 
 // Return false on error load. 
 static bool loadDevices()
@@ -128,6 +128,29 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KInfraRedModuleName, nativeInfo);
+        if (r == KErrNone) {
+            //
+            for (int i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+
+                SerialPortInfo info; // My (desired) info class.
+
+                info.d_ptr->device = s
+                        .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
+                        .arg(i);
+                info.d_ptr->portName = info.d_ptr->device;
+                info.d_ptr->description =
+                        QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
+                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                ports.append(info);
+            }
+        }
+    }
+
+    // FIXME: Get info about ACM ports.
+    r = server.LoadCommModule(KACMModuleName);
+    //User::LeaveIfError(r);
+    if (r == KErrNone) {
+        r = server.GetPortInfo(KACMModuleName, nativeInfo);
         if (r == KErrNone) {
             //
             for (int i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
