@@ -44,6 +44,7 @@ void Logger::addContent(const QString &content, bool clearAll)
 
 UnitTestBase::UnitTestBase(UnitID id, Logger *logger, QObject *parent)
     : QObject(parent), m_id(id), m_logger(logger)
+    , m_srcPort(0), m_dstPort(0)
 {
     Q_ASSERT(logger);
     m_enableParam = "%1/enable";
@@ -51,8 +52,8 @@ UnitTestBase::UnitTestBase(UnitID id, Logger *logger, QObject *parent)
 
 void UnitTestBase::setPair(const QString &src, const QString &dst)
 {
-    m_srcPort = src;
-    m_dstPort = dst;
+    m_srcPortName = src;
+    m_dstPortName = dst;
 }
 
 void UnitTestBase::setEnable(bool enable)

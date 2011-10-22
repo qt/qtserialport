@@ -22,7 +22,8 @@ include(../../src/src.pri)
 SOURCES += \
     main.cpp \
     maindialog.cpp \
-    unittestinfo.cpp
+    unittestinfo.cpp \
+    unittestsignals.cpp
 
 HEADERS += \
     maindialog.h \
@@ -30,6 +31,7 @@ HEADERS += \
 
 FORMS += \
     maindialog.ui
+
 
 
 

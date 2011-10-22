@@ -18,6 +18,8 @@ private:
     QFile *m_file;
 };
 
+class SerialPort;
+
 class UnitTestBase : public QObject
 {
     Q_OBJECT
@@ -48,10 +50,10 @@ protected:
     QString m_description;
     QString m_enableParam;
     Logger *m_logger;
-
-private:
-    QString m_srcPort;
-    QString m_dstPort;
+    SerialPort *m_srcPort;
+    SerialPort *m_dstPort;
+    QString m_srcPortName;
+    QString m_dstPortName;
 };
 
 
@@ -66,6 +68,20 @@ public slots:
 };
 
 
+class SerialPort;
+
+class UnitTestSignals : public UnitTestBase
+{
+    Q_OBJECT
+public:
+    explicit UnitTestSignals(Logger *logger, QObject *parent = 0);
+
+public slots:
+    virtual void start();
+
+private slots:
+    void stage();
+};
 
 
 
