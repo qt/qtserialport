@@ -30,7 +30,14 @@ void UnitTestInfo::start()
                         "  location    : %3\n"
                         "  description : %4\n"
                         "  valid       : %5\n"
-                        "  busy        : %6\n"));
+                        "  busy        : %6\n"
+                        "  rates       : %7\n"));
+
+        QString r;
+        foreach (qint32 rate, inf.standardRates()) {
+            r.append(QString::number(rate));
+            r.append(';');
+        }
 
         body = body
                 .arg(it++)
@@ -38,7 +45,8 @@ void UnitTestInfo::start()
                 .arg(inf.systemLocation())
                 .arg(inf.description())
                 .arg(inf.isValid())
-                .arg(inf.isBusy());
+                .arg(inf.isBusy())
+                .arg(r);
 
         m_logger->addContent(body);
     }
