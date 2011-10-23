@@ -9,7 +9,10 @@ UnitTestInfo::UnitTestInfo(Logger *logger, QObject *parent)
     : UnitTestBase(UnitTestBase::InfoUnitId, logger, parent)
 {
     m_name = QString(tr("Info Test"));
-    m_description = QString(tr("Info Test Description"));
+    m_description = QString(tr( "\"Info Test\" tested class SerialPortInfo,\n"
+                                "by calling its methods and write the results to a log.\n\n"
+                                "In the log lists all serial ports that were discovered,\n"
+                                "their properties, states, and supported standard rates."));
 }
 
 /* Public slots */

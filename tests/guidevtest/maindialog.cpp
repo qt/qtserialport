@@ -1,7 +1,7 @@
 #include "maindialog.h"
 #include "ui_maindialog.h"
 
-#include <QtGui/QMessageBox>
+#include <QtGui/QTextEdit>
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtCore/QFile>
@@ -161,6 +161,30 @@ bool TestsViewModel::setData(const QModelIndex &index, const QVariant &value, in
     return false;
 }
 
+QModelIndex TestsViewModel::index(int row, int column, const QModelIndex &parent) const
+{
+    Q_UNUSED(parent);
+    if (row < m_testsList.count())
+        return createIndex(row, column, m_testsList.at(row));
+    return QModelIndex();
+}
+
+
+// DescriptionDialog
+
+/* Public methods */
+
+DescriptionDialog::DescriptionDialog(const QString &content, QWidget *parent)
+    : QDialog(parent)
+{
+    QTextEdit *widget = new QTextEdit;
+    widget->setReadOnly(true);
+    widget->setText(content);
+    QHBoxLayout *layout = new QHBoxLayout;
+    layout->addWidget(widget);
+    setLayout(layout);
+}
+
 
 // MainDialog
 
@@ -190,6 +214,9 @@ MainDialog::MainDialog(QWidget *parent)
 
     connect(ui->startButton, SIGNAL(clicked()),
             this, SLOT(procStartButtonClick()));
+
+    connect(ui->listView, SIGNAL(doubleClicked(QModelIndex)),
+            this, SLOT(procItemDoubleClick(QModelIndex)));
 }
 
 MainDialog::~MainDialog()
@@ -271,6 +298,15 @@ void MainDialog::procTestFinished()
     }
     else
         procTestStarted();
+}
+
+void MainDialog::procItemDoubleClick(const QModelIndex &index)
+{
+    QString title(tr("About: <%1>"));
+    title = title.arg(index.data().toString());
+    DescriptionDialog w(static_cast<UnitTestBase *>(index.internalPointer())->description());
+    w.setWindowTitle(title);
+    w.exec();
 }
 
 /* Private methods */

@@ -24,13 +24,23 @@ public:
     virtual  Qt::ItemFlags flags(const QModelIndex &index) const;
     virtual bool setData(const QModelIndex &index, const QVariant &value,
                          int role = Qt::EditRole);
+    virtual QModelIndex index(int row, int column,
+                              const QModelIndex &parent = QModelIndex()) const;
 
 private:
     QList<UnitTestBase *> m_testsList;
 };
 
 
+class DescriptionDialog : public QDialog
+{
+public:
+    explicit DescriptionDialog(const QString &content, QWidget *parent = 0);
+};
+
+
 class Logger;
+class QModelIndex;
 
 class MainDialog : public QDialog
 {
@@ -47,6 +57,8 @@ private slots:
     void procStartButtonClick();
     void procTestStarted();
     void procTestFinished();
+
+    void procItemDoubleClick(const QModelIndex &index);
 
 private:
     Ui::MainDialog *ui;
