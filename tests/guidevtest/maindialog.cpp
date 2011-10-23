@@ -292,12 +292,25 @@ void MainDialog::procTestFinished()
         enableUi(true);
         m_it = 0;
 
-        QString header(tr("\n*** S T O P P E D ***\n"));
-        m_logger->addContent(header);
+        QString trailer(tr("\n*** S T O P P E D ***\n"));
+        m_logger->addContent(trailer);
         return;
     }
     else
         procTestStarted();
+}
+
+void MainDialog::procTestError()
+{
+    if (ui->breakAllCheckBox->isChecked()) {
+        m_enabledTestsCount = 0;
+        m_it = 0;
+        enableUi(true);
+        QString trailer(tr("\n*** B R E A K  ***\n"));
+        m_logger->addContent(trailer);
+    } else {
+        procTestFinished();
+    }
 }
 
 void MainDialog::procItemDoubleClick(const QModelIndex &index)
@@ -332,6 +345,7 @@ void MainDialog::createAvailableTests()
 
     foreach(UnitTestBase *test, m_testsList) {
         connect(test, SIGNAL(finished()), this, SLOT(procTestFinished()));
+        connect(test, SIGNAL(error()), this, SLOT(procTestError()));
     }
 }
 

@@ -57,6 +57,7 @@ private slots:
     void procStartButtonClick();
     void procTestStarted();
     void procTestFinished();
+    void procTestError();
 
     void procItemDoubleClick(const QModelIndex &index);
 
