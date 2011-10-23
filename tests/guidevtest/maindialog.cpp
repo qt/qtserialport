@@ -48,6 +48,7 @@ UnitTestBase::UnitTestBase(UnitID id, Logger *logger, QObject *parent)
 {
     Q_ASSERT(logger);
     m_enableParam = "%1/enable";
+    m_enableParam = m_enableParam.arg(id);
 }
 
 void UnitTestBase::setPair(const QString &src, const QString &dst)
@@ -59,13 +60,13 @@ void UnitTestBase::setPair(const QString &src, const QString &dst)
 void UnitTestBase::setEnable(bool enable)
 {
     QSettings settings;
-    settings.setValue(m_enableParam.arg(m_id), enable);
+    settings.setValue(m_enableParam, enable);
 }
 
 bool UnitTestBase::isEnabled() const
 {
     QSettings settings;
-    return settings.value(m_enableParam.arg(m_id)).toBool();
+    return settings.value(m_enableParam).toBool();
 }
 
 int UnitTestBase::id() const
@@ -93,6 +94,8 @@ UnitTestBase *UnitTestFactory::create(UnitTestBase::UnitID id, Logger *logger)
     switch (id) {
     case UnitTestBase::InfoUnitId:
         return new UnitTestInfo(logger);
+    case UnitTestBase::SignalsUnitId:
+        return new UnitTestSignals(logger);
     default:;
     }
 
@@ -339,8 +342,10 @@ void MainDialog::showSettings()
 // Called only in constructor!
 void MainDialog::createAvailableTests()
 {
-    //
+    // Create "Info test"
     m_testsList.append(UnitTestFactory::create(UnitTestBase::InfoUnitId, m_logger));
+    // Create "Signals test"
+    m_testsList.append(UnitTestFactory::create(UnitTestBase::SignalsUnitId, m_logger));
 
 
     foreach(UnitTestBase *test, m_testsList) {

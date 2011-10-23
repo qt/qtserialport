@@ -30,6 +30,7 @@ signals:
 public:
     enum UnitID {
         InfoUnitId,
+        SignalsUnitId,
 
     };
 
@@ -45,6 +46,7 @@ public slots:
     virtual void start() = 0;
 
 protected:
+    enum DirPorts { SrcPort, DstPort };
     int m_id;
     QString m_name;
     QString m_description;
@@ -79,8 +81,10 @@ public:
 public slots:
     virtual void start();
 
-private slots:
-    void stage();
+private:
+    bool open(DirPorts dir);
+    bool configure(DirPorts dir);
+    void close(DirPorts dir);
 };
 
 
