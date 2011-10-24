@@ -184,6 +184,7 @@ QList<qint32> SerialPortInfo::standardRates() const
     for (const qint32 *i = standardRates_begin; i != standardRates_end; ++i)
         rates.append(*i);
 #endif
+    qSort(rates);
     return rates;
 }
 
