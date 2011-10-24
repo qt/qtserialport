@@ -47,7 +47,7 @@ UnitTestBase::UnitTestBase(UnitID id, Logger *logger, QObject *parent)
     , m_srcPort(0), m_dstPort(0)
 {
     Q_ASSERT(logger);
-    m_enableParam = "%1/enable";
+    m_enableParam = "TestID%1/enable";
     m_enableParam = m_enableParam.arg(id);
 }
 
@@ -336,7 +336,7 @@ void MainDialog::showSettings()
     QSettings settings;
     ui->logLineEdit->setText(settings.value(logFileSettingsKey).toString());
     ui->clearLogCheckBox->setChecked(settings.value(clearLogOnStartSettingsKey).toBool());
-    ui->breakAllCheckBox->setChecked(settings.value(clearLogOnStartSettingsKey).toBool());
+    ui->breakAllCheckBox->setChecked(settings.value(breakOnErrorSettingsKey).toBool());
 }
 
 // Called only in constructor!
