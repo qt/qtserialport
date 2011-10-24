@@ -81,7 +81,29 @@ public:
 public slots:
     virtual void start();
 
+private slots:
+    void procSignalBytesWritten(qint64 bw);
+    void procSignalReadyRead();
+    void procSingleShot();
+    void transaction();
+
 private:
+    enum {
+        TransactionLimit = 5,
+        TransactionMsecDelay = 1000,
+        MinBytesToWrite = 1,
+        StepBytesToWrite = 100
+
+    };
+
+    bool m_started;
+    int m_transactionNum;
+    qint64 m_bytesToWrite;
+    qint64 m_bytesReallyWrited;
+    int m_countSignalsBytesWritten;
+    int m_countSignalsReadyRead;
+
+
     bool open(DirPorts dir);
     bool configure(DirPorts dir);
     void close(DirPorts dir);
