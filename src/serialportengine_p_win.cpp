@@ -741,11 +741,14 @@ void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool use
 #if defined (Q_OS_WINCE)
     QMutex *mutex = 0;
     switch (type) {
-    case CanReadLocker: mutex = &m_readNotificationMutex;
+    case CanReadLocker:
+	    mutex = &m_readNotificationMutex;
         break;
-    case CanWriteLocker:  mutex = &m_writeNotificationMutex;
+    case CanWriteLocker:
+	    mutex = &m_writeNotificationMutex;
         break;
-    case CanErrorLocker:  mutex = &m_errorNotificationMutex;
+    case CanErrorLocker:
+	    mutex = &m_errorNotificationMutex;
         break;
     }
 
