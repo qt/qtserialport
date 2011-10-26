@@ -14,7 +14,42 @@ UnitTestSignals::UnitTestSignals(Logger *logger, QObject *parent)
     , m_countSignalsReadyRead(0)
 {
     m_name = QString(tr("Signals Test"));
-    m_description = QString(tr("Signals Test Description"));
+    m_description = QString(tr("\"Signals Test\" monitors and verifies the correctness of the\n"
+                               "emission signals bytesWritten() and readyRead().\n\n"
+                               "This test uses the source port and destination port.\n\n"
+                               "The source port is opened only as write-only, and this\n"
+                               "test from the port set control a signal bytesWritten().\n"
+                               "In this case, count the number of emit signals bytesWritten()\n"
+                               "and the number of bytes of data transmitted in the signal for\n"
+                               "a single emit.\n\n"
+                               "The destination port is opened as read-only, and this\n"
+                               "test from the port set control a signal readyRead().\n"
+                               "At the same time count the number of signals readyRead().\n\n"
+                               "By default ports are opened in the mode: 9600 8 N 1, no flow control.\n"
+                               "The testing process consists of several stages:\n\n"
+                               "  Stage1. Opened and initialized ports. If an error occurs, it is\n"
+                               "recorded in the log and testing is completed with failure. If\n"
+                               "everything goes well, then go to stage 2.\n\n"
+                               "  Stage2. Run single shot the timer interval to 1 second, and\n"
+                               "further, the source port sends a byte, at the same time are tracked\n"
+                               "and logged signals from the ports. Further, when the timer works,\n"
+                               "there is a processing of the results of the signals. Compares the\n"
+                               "number of bytes sent and received, and these results or an error is\n"
+                               "generated with the termination of the test, or go to stage 3.\n\n"
+                               "  Stage3. No different from stage 2 with the exception of the number\n"
+                               "of bytes transmitted. Now write not one but several bytes. The number\n"
+                               "of bytes transmitted is now increasing, according to the formula:\n"
+                               "NumCurr = NumPrev + K, where K - some constant. Further, the\n"
+                               "termination of a test or go to stage 4.\n\n"
+                               "  Stage4. Does not differ from step 3, except the number of bytes.\n\n"
+                               "  StageN. No different from the previous steps.\n\n"
+                               "By default, the number of transactions (steps) for the transfer of\n"
+                               "data is five, but this value can be changed by editing the source\n"
+                               "code of the test. In the source code you can change settings such as:\n"
+                               "- timeout of timer (by default 1 sec)\n"
+                               "- number of steps (by default 5)\n"
+                               "- initial number of bytes transmitted (by default 1 byte)\n"
+                               "- constant growth rate K of transmitted bytes (by default 100 byte)."));
 
     m_srcPort = new SerialPort(this);
     m_dstPort = new SerialPort(this);
