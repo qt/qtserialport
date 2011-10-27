@@ -31,6 +31,7 @@ public:
     enum UnitID {
         InfoUnitId,
         SignalsUnitId,
+        WaitForXUnitId,
 
     };
 
@@ -110,6 +111,15 @@ private:
 };
 
 
+class UnitTestWaitForX : public UnitTestBase
+{
+    Q_OBJECT
+public:
+    explicit UnitTestWaitForX(Logger *logger, QObject *parent = 0);
+
+public slots:
+    virtual void start();
+};
 
 
 class UnitTestFactory

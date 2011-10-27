@@ -23,7 +23,8 @@ SOURCES += \
     main.cpp \
     maindialog.cpp \
     unittestinfo.cpp \
-    unittestsignals.cpp
+    unittestsignals.cpp \
+    unittestwaitforx.cpp
 
 HEADERS += \
     maindialog.h \
@@ -31,6 +32,7 @@ HEADERS += \
 
 FORMS += \
     maindialog.ui
+
 
 
 
