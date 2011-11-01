@@ -221,11 +221,10 @@ bool SerialPortPrivate::setBreak(bool set)
 
 bool SerialPortPrivate::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
-    if (m_engine->setDataErrorPolicy(policy)) {
+    const bool ret = (policy == m_policy) || m_engine->setDataErrorPolicy(policy);
+    if (ret)
         m_policy = policy;
-        return true;
-    }
-    return false;
+    return ret;
 }
 
 SerialPort::DataErrorPolicy SerialPortPrivate::dataErrorPolicy() const
