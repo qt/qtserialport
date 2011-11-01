@@ -105,12 +105,13 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     if (saveOldsettings()) {
 
         prepareOtherOptions();
+
+        // In non-blocking mode (the methods of I/O must be
+        // returned immediately), so the read timeout should always be zero.
+        // Note: method prepareTimeouts() remained on just in case.
         prepareTimeouts(0);
 
         if (updateTermios()) {
-            // Disable autocalculate total read interval.
-            // isAutoCalcReadTimeoutConstant = false;
-
             detectDefaultSettings();
             return true;
         }
