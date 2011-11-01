@@ -140,6 +140,10 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
         prepareOtherOptions();
 
         if (updateDcb()) {
+            // In non-blocking mode (the methods of I/O must be
+            // returned immediately), so the read timeouts should always be
+            // MAXDWORD,0,0,0,0.
+            // Note: method prepareCommTimeouts() remained on just in case.
             prepareCommTimeouts(WinSerialPortEngine::ReadIntervalTimeout, MAXDWORD);
             prepareCommTimeouts(WinSerialPortEngine::ReadTotalTimeoutMultiplier, 0);
             prepareCommTimeouts(WinSerialPortEngine::ReadTotalTimeoutConstant, 0);
@@ -158,7 +162,8 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
             }
         }
     }
-    m_parent->setError(SerialPort::ConfiguringError);
+    else
+        m_parent->setError(SerialPort::ConfiguringError);
     return false;
 }
 
@@ -523,10 +528,7 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
         return false;
     }
     m_currDCB.BaudRate = DWORD(rate);
-    bool ret = updateDcb();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateDcb();
 }
 
 bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
@@ -538,10 +540,7 @@ bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
         return false;
     }
     m_currDCB.ByteSize = BYTE(dataBits);
-    bool ret = updateDcb();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateDcb();
 }
 
 bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -572,10 +571,7 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
     default:
         return false;
     }
-    bool ret = updateDcb();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateDcb();
 }
 
 bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -600,10 +596,7 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
     default:
         return false;
     }
-    bool ret = updateDcb();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateDcb();
 }
 
 bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -631,10 +624,7 @@ bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         break;
     default: return false;
     }
-    bool ret = updateDcb();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateDcb();
 }
 
 bool WinSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
@@ -1038,12 +1028,20 @@ inline bool WinSerialPortEngine::updateDcb()
     // Otherwise WaitCommEvent blocking any change!
     ::SetCommMask(m_descriptor, 0);
 #endif
-    return (::SetCommState(m_descriptor, &m_currDCB) != 0);
+    if (::SetCommState(m_descriptor, &m_currDCB) == 0) {
+        m_parent->setError(SerialPort::ConfiguringError);
+        return false;
+    }
+    return true;
 }
 
 inline bool WinSerialPortEngine::updateCommTimeouts()
 {
-    return (::SetCommTimeouts(m_descriptor, &m_currCommTimeouts) != 0);
+    if (::SetCommTimeouts(m_descriptor, &m_currCommTimeouts) == 0) {
+        m_parent->setError(SerialPort::ConfiguringError);
+        return false;
+    }
+    return true;
 }
 
 bool WinSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
