@@ -114,8 +114,8 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
             detectDefaultSettings();
             return true;
         }
-    }
-    m_parent->setError(SerialPort::ConfiguringError);
+    } else
+        m_parent->setError(SerialPort::ConfiguringError);
     return false;
 }
 
@@ -607,10 +607,7 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    bool ret = updateTermious();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateTermious();
 }
 
 bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -652,10 +649,7 @@ bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
         break;
     }
 
-    bool ret = updateTermious();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateTermious();
 }
 
 bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -678,10 +672,7 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    bool ret = updateTermious();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateTermious();
 }
 
 bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -708,10 +699,7 @@ bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    bool ret = updateTermious();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateTermious();
 }
 
 bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
@@ -1049,9 +1037,13 @@ void UnixSerialPortEngine::prepareTimeouts(int msecs)
     m_currTermios.c_cc[VTIME] = (msecs > 0) ? (msecs / 100) : 0;
 }
 
-inline bool UnixSerialPortEngine::updateTermious()
+bool UnixSerialPortEngine::updateTermious()
 {
-    return (::tcsetattr(m_descriptor, TCSANOW, &m_currTermios) != -1);
+    if (::tcsetattr(m_descriptor, TCSANOW, &m_currTermios) == -1) {
+        m_parent->setError(SerialPort::ConfiguringError);
+        return false;
+    }
+    return true;
 }
 
 bool UnixSerialPortEngine::setStandartRate(SerialPort::Directions dir, speed_t rate)
@@ -1129,7 +1121,8 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
         if (par ^ bool(m_currTermios.c_cflag & PARODD)) { // Need switch parity mode?
             m_currTermios.c_cflag ^= PARODD;
             Flush(); //??
-            updateTermious();
+            if (!updateTermious())
+                break;
         }
 
         int r = ::write(m_descriptor, data, 1);
