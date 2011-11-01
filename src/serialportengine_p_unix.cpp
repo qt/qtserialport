@@ -704,9 +704,33 @@ bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 
 bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
-    Q_UNUSED(policy)
-    // Impl me
-    return false;
+    tcflag_t parmrkMask = PARMRK;
+#ifndef CMSPAR
+    //in space/mark parity emulation also used PARMRK flag
+    if (m_parent->m_parity == SerialPort::SpaceParity || m_parent->m_parity == SerialPort::MarkParity)
+        parmrkMask = 0;
+#endif //CMSPAR
+    switch(policy) {
+    case SerialPort::SkipPolicy:
+        m_currTermios.c_iflag &= ~parmrkMask;
+        m_currTermios.c_iflag |= IGNPAR | INPCK;
+        break;
+    case SerialPort::PassZeroPolicy:
+        m_currTermios.c_iflag &= ~(IGNPAR | parmrkMask);
+        m_currTermios.c_iflag |= INPCK;
+        break;
+    case SerialPort::IgnorePolicy:
+        m_currTermios.c_iflag &= ~INPCK;
+        break;
+    case SerialPort::StopReceivingPolicy:
+        m_currTermios.c_iflag &= ~IGNPAR;
+        m_currTermios.c_iflag |= (parmrkMask | INPCK);
+        break;
+    default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        return false;
+    }
+    return updateTermios();
 }
 
 bool UnixSerialPortEngine::isReadNotificationEnabled() const
@@ -979,6 +1003,18 @@ void UnixSerialPortEngine::detectDefaultSettings()
         m_parent->m_flow = SerialPort::HardwareControl;
     else
         m_parent->m_flow = SerialPort::UnknownFlowControl;
+
+    //detect error policy
+    if (m_currTermios.c_iflag & INPCK) {
+        if (m_currTermios.c_iflag & IGNPAR)
+            m_parent->m_policy = SerialPort::SkipPolicy;
+        else if (m_currTermios.c_iflag & PARMRK)
+            m_parent->m_policy = SerialPort::StopReceivingPolicy;
+        else
+            m_parent->m_policy = SerialPort::PassZeroPolicy;
+    } else {
+        m_parent->m_policy = SerialPort::IgnorePolicy;
+    }
 }
 
 // Used only in method UnixSerialPortEngine::open().
