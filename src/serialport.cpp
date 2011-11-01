@@ -629,17 +629,23 @@ bool SerialPort::isSequential() const
 qint64 SerialPort::bytesAvailable() const
 {
     Q_D(const SerialPort);
+    qint64 ret;
     if (d->m_isBuffered)
-        return qint64(d->m_readBuffer.size());
-    return d->bytesAvailable();
+        ret = qint64(d->m_readBuffer.size());
+    else
+        ret = d->bytesAvailable();
+    return ret + QIODevice::bytesAvailable();
 }
 
 qint64 SerialPort::bytesToWrite() const
 {
     Q_D(const SerialPort);
+    qint64 ret;
     if (d->m_isBuffered)
-        return qint64(d->m_writeBuffer.size());
-    return d->bytesToWrite();
+        ret = qint64(d->m_writeBuffer.size());
+    else
+        ret = d->bytesToWrite();
+    return ret + QIODevice::bytesToWrite();
 }
 
 bool SerialPort::canReadLine() const
