@@ -18,7 +18,7 @@
 #  endif
 #endif
 
-#include <QtCore/qregexp.h>
+#include <QtCore/qdebug.h>
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qcoreevent.h>
 
@@ -294,7 +294,7 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 #if defined (CMSPAR)
     bytesRead = ::read(m_descriptor, data, len);
 #else
-    if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
+    if ((m_parent->m_parity != SerialPort::MarkParity) && (m_parent->m_parity != SerialPort::SpaceParity))
         bytesRead = ::read(m_descriptor, data, len);
     else // Perform parity emulation.
         bytesRead = readPerChar(data, len);
@@ -341,7 +341,7 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 #if defined (CMSPAR)
     bytesWritten = ::write(m_descriptor, data, len);
 #else
-    if ((m_parity != SerialPort::MarkParity) && (m_parity != SerialPort::SpaceParity))
+    if ((m_parent->m_parity != SerialPort::MarkParity) && (m_parent->m_parity != SerialPort::SpaceParity))
         bytesWritten = ::write(m_descriptor, data, len);
     else // Perform parity emulation.
         bytesWritten = writePerChar(data, len);
@@ -1147,17 +1147,18 @@ static inline bool evenParity(quint8 c)
 qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
 {
     qint64 ret = 0;
-    quint8 const charMask = (0xFF >> (8 - m_dataBits));
+    quint8 const charMask = (0xFF >> (8 - m_parent->m_dataBits));
 
     while (ret < maxSize) {
 
         bool par = evenParity(*data & charMask);
         // False if need EVEN, true if need ODD.
-        par ^= (m_parity == SerialPort::MarkParity);
+        par ^= (m_parent->m_parity == SerialPort::MarkParity);
         if (par ^ bool(m_currTermios.c_cflag & PARODD)) { // Need switch parity mode?
             m_currTermios.c_cflag ^= PARODD;
-            Flush(); //??
-            if (!updateTermious())
+            flush(); //force sending already buffered data, because updateTermios() cleares buffers
+            //todo: add receiving buffered data!!!
+            if (!updateTermios())
                 break;
         }
 
@@ -1175,7 +1176,7 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
 qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
 {
     qint64 ret = 0;
-    //quint8 const charMask = (0xFF >> (8 - m_dataBits));
+    quint8 const charMask = (0xFF >> (8 - m_parent->m_dataBits));
 
     // 0 - prefix not started,
     // 1 - received 0xFF,
@@ -1213,9 +1214,24 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
             break;
         }
         // Now: par contains parity ok or error, *data contains received character
-        // par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
-        // par ^= bool(tio.c_cflag & PARODD); //par contains parity bit value for current mode
-        // bool parity_error = (par ^ bool(parity == AbstractSerial::ParitySpace));
+        par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
+        par ^= bool(m_currTermios.c_cflag & PARODD); //par contains parity bit value for current mode
+        if (par ^ bool(m_parent->m_parity == SerialPort::SpaceParity)) { //if parity error
+            switch(m_parent->m_policy) {
+            case SerialPort::SkipPolicy:
+                continue;       //ignore received character
+            case SerialPort::StopReceivingPolicy:
+                return ++ret;   //abort receiving
+                break;
+            case SerialPort::UnknownPolicy:
+                qWarning() << "Unknown error policy is used! Falling back to PassZeroPolicy";
+            case SerialPort::PassZeroPolicy:
+                *data = '\0';   //replace received character by zero
+                break;
+            case SerialPort::IgnorePolicy:
+                break;          //ignore error and pass received character
+            }
+        }
         ++data;
         ++ret;
     }
