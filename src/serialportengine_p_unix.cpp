@@ -107,7 +107,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
         prepareOtherOptions();
         prepareTimeouts(0);
 
-        if (updateTermious()) {
+        if (updateTermios()) {
             // Disable autocalculate total read interval.
             // isAutoCalcReadTimeoutConstant = false;
 
@@ -607,7 +607,7 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    return updateTermious();
+    return updateTermios();
 }
 
 bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -649,7 +649,7 @@ bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
         break;
     }
 
-    return updateTermious();
+    return updateTermios();
 }
 
 bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -672,7 +672,7 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    return updateTermious();
+    return updateTermios();
 }
 
 bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -699,7 +699,7 @@ bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    return updateTermious();
+    return updateTermios();
 }
 
 bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
@@ -1037,7 +1037,7 @@ void UnixSerialPortEngine::prepareTimeouts(int msecs)
     m_currTermios.c_cc[VTIME] = (msecs > 0) ? (msecs / 100) : 0;
 }
 
-bool UnixSerialPortEngine::updateTermious()
+bool UnixSerialPortEngine::updateTermios()
 {
     if (::tcsetattr(m_descriptor, TCSANOW, &m_currTermios) == -1) {
         m_parent->setError(SerialPort::ConfiguringError);
@@ -1052,7 +1052,7 @@ bool UnixSerialPortEngine::setStandartRate(SerialPort::Directions dir, speed_t r
             || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currTermios, rate) == -1))) {
         return false;
     }
-    return updateTermious();
+    return updateTermios();
 }
 
 bool UnixSerialPortEngine::setCustomRate(qint32 rate)
