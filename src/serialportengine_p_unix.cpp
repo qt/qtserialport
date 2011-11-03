@@ -34,7 +34,6 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *parent)
 {
     Q_ASSERT(parent);
     m_parent = parent;
-    m_oldSettingsIsSaved = false;
     int size = sizeof(struct termios);
     ::memset(&m_currTermios, 0, size);
     ::memset(&m_oldTermios, 0, size);
@@ -102,27 +101,31 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     ::ioctl(m_descriptor, TIOCEXCL);
 #endif
 
-    if (saveOldsettings()) {
+    // Save current port settings.
+    if (::tcgetattr(m_descriptor, &m_oldTermios) == -1) {
+        m_parent->setError(SerialPort::UnknownPortError);
+        return false;
+    }
+    ::memcpy(&m_currTermios, &m_oldTermios, sizeof(struct termios));
 
-        prepareOtherOptions();
+    // Set other options.
+    ::cfmakeraw(&m_currTermios);
+    m_currTermios.c_cflag |= (CREAD | CLOCAL);
+    m_currTermios.c_cc[VTIME] = 0;
 
-        // In non-blocking mode (the methods of I/O must be
-        // returned immediately), so the read timeout should always be zero.
-        // Note: method prepareTimeouts() remained on just in case.
-        prepareTimeouts(0);
-
-        if (updateTermios()) {
-            detectDefaultSettings();
-            return true;
-        }
-    } else
-        m_parent->setError(SerialPort::ConfiguringError);
+    // Apply init settings.
+    if (updateTermios()) {
+        detectDefaultSettings();
+        return true;
+    }
     return false;
 }
 
 void UnixSerialPortEngine::close(const QString &location)
 {
-    restoreOldsettings();
+    // Restore saved port settings.
+    if (m_parent->m_restoreSettingsOnClose)
+        ::tcsetattr(m_descriptor, TCSANOW, &m_oldTermios);
 
     // Try clean exclusive mode.
 #if defined (TIOCNXCL)
@@ -1018,36 +1021,6 @@ void UnixSerialPortEngine::detectDefaultSettings()
     }
 }
 
-// Used only in method UnixSerialPortEngine::open().
-bool UnixSerialPortEngine::saveOldsettings()
-{
-    if (::tcgetattr(m_descriptor, &m_oldTermios) == -1)
-        return false;
-
-    ::memcpy(&m_currTermios, &m_oldTermios, sizeof(struct termios));
-    m_oldSettingsIsSaved = true;
-    return true;
-}
-
-// Used only in method UnixSerialPortEngine::close().
-bool UnixSerialPortEngine::restoreOldsettings()
-{
-    bool restoreResult = true;
-    if (m_oldSettingsIsSaved) {
-        m_oldSettingsIsSaved = false;
-        restoreResult = (::tcsetattr(m_descriptor, TCSANOW, &m_oldTermios) != -1);
-    }
-    return restoreResult;
-}
-
-// Prepares other parameters of the structures port configuration.
-// Used only in method UnixSerialPortEngine::open().
-void UnixSerialPortEngine::prepareOtherOptions()
-{
-    ::cfmakeraw(&m_currTermios);
-    m_currTermios.c_cflag |= (CREAD | CLOCAL);
-}
-
 bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 {
     if (e->type() == QEvent::SockAct) {
@@ -1068,11 +1041,6 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 }
 
 /* Private methods */
-
-void UnixSerialPortEngine::prepareTimeouts(int msecs)
-{
-    m_currTermios.c_cc[VTIME] = (msecs > 0) ? (msecs / 100) : 0;
-}
 
 bool UnixSerialPortEngine::updateTermios()
 {

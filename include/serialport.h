@@ -35,6 +35,7 @@ class SERIALPORT_EXPORT SerialPort : public QIODevice
     Q_PROPERTY(bool dtr READ dtr WRITE setDtr)
     Q_PROPERTY(bool rts READ rts WRITE setRts)
     Q_PROPERTY(PortError error READ error RESET unsetError)
+    Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose)
 
     Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError )
 
@@ -136,6 +137,9 @@ public:
 
     virtual bool open(OpenMode mode);
     virtual void close();
+
+    void setRestoreSettingsOnClose(bool restore);
+    bool restoreSettingsOnClose() const;
 
     bool setRate(qint32 rate, Directions dir = AllDirections);
     qint32 rate(Directions dir = AllDirections) const;

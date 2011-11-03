@@ -83,7 +83,6 @@ private:
     QSocketNotifier *m_writeNotifier;
     QSocketNotifier *m_exceptionNotifier;
 
-    void prepareTimeouts(int msecs);
     bool updateTermios();
     bool setStandartRate(SerialPort::Directions dir, speed_t rate);
     bool setCustomRate(qint32 rate);

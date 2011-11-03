@@ -101,6 +101,7 @@ public:
     SerialPort::FlowControl m_flow;
     SerialPort::DataErrorPolicy m_policy;
     SerialPort::PortError m_portError;
+    bool m_restoreSettingsOnClose;
 };
 
 QT_END_NAMESPACE

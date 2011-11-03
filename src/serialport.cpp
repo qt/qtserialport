@@ -39,6 +39,7 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     , m_flow(SerialPort::UnknownFlowControl)
     , m_policy(SerialPort::IgnorePolicy)
     , m_portError(SerialPort::NoError)
+    , m_restoreSettingsOnClose(true)
 {
     m_engine = SerialPortEngine::create(this);
     Q_ASSERT(m_engine);
@@ -503,6 +504,18 @@ void SerialPort::close()
     }
     else
         d->setError(SerialPort::DeviceIsNotOpenedError);
+}
+
+void SerialPort::setRestoreSettingsOnClose(bool restore)
+{
+    Q_D( SerialPort);
+    d->m_restoreSettingsOnClose = restore;
+}
+
+bool SerialPort::restoreSettingsOnClose() const
+{
+    Q_D(const SerialPort);
+    return d->m_restoreSettingsOnClose;
 }
 
 bool SerialPort::setRate(qint32 rate, Directions dir)

@@ -68,13 +68,9 @@ public:
     virtual void unlockNotification(NotificationLockerType type) = 0;
 
 protected:
-    bool m_oldSettingsIsSaved;
     SerialPortPrivate *m_parent;
 
     virtual void detectDefaultSettings() = 0;
-    virtual bool saveOldsettings() = 0;
-    virtual bool restoreOldsettings() = 0;
-    virtual void prepareOtherOptions() = 0;
 };
 
 QT_END_NAMESPACE
