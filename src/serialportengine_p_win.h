@@ -116,9 +116,6 @@ public:
 
 protected:
     virtual void detectDefaultSettings();
-    virtual bool saveOldsettings();
-    virtual bool restoreOldsettings();
-    virtual void prepareOtherOptions();
 
 #if defined (Q_OS_WINCE)
     virtual void run();
@@ -127,12 +124,6 @@ protected:
 #endif
 
 private:
-    enum CommTimeouts {
-        ReadIntervalTimeout, ReadTotalTimeoutMultiplier,
-        ReadTotalTimeoutConstant, WriteTotalTimeoutMultiplier,
-        WriteTotalTimeoutConstant
-    };
-
     DCB m_currDCB;
     DCB m_oldDCB;
     COMMTIMEOUTS m_currCommTimeouts;
@@ -160,7 +151,6 @@ private:
     void setMaskAndActivateEvent();
 #endif
 
-    void prepareCommTimeouts(CommTimeouts cto, DWORD msecs);
     bool updateDcb();
     bool updateCommTimeouts();
 
