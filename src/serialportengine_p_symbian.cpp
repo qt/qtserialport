@@ -446,6 +446,7 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     case SerialPort::Data8:
         m_currSettings().iDataBits = EData8;
         break;
+    default:;
     }
 
     return updateCommConfig();
@@ -474,6 +475,7 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
     case SerialPort::SpaceParity:
         m_currSettings().iParity = EParitySpace;
         break;
+    default:;
     }
 
     return updateCommConfig();
@@ -520,6 +522,7 @@ bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
     case SerialPort::SoftwareControl:
         m_currSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
         break;
+    default:;
     }
 
     return updateCommConfig();
