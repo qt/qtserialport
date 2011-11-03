@@ -113,12 +113,12 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     m_currTermios.c_cflag |= (CREAD | CLOCAL);
     m_currTermios.c_cc[VTIME] = 0;
 
-    // Apply init settings.
-    if (updateTermios()) {
-        detectDefaultSettings();
-        return true;
-    }
-    return false;
+    // Apply new init settings.
+    if (!updateTermios())
+        return false;
+
+    detectDefaultSettings();
+    return true;
 }
 
 void UnixSerialPortEngine::close(const QString &location)
