@@ -67,7 +67,6 @@ SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *parent)
     Q_ASSERT(parent);
     // Impl me
     m_parent = parent;
-    m_oldSettingsIsSaved = false;
 }
 
 SymbianSerialPortEngine::~SymbianSerialPortEngine()
@@ -122,18 +121,25 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
         return false;
     }
 
-    if (saveOldsettings()) {
-        detectDefaultSettings();
-        return true;
+    // Save current port settings.
+    r = m_descriptor.Config(m_oldSettings);
+    if (r != KErrNone) {
+        m_parent->setError(SerialPort::UnknownPortError);
+        return false;
     }
-    m_parent->setError(SerialPort::ConfiguringError);
-    return false;
+
+    detectDefaultSettings();
+    return true;
 }
 
 void SymbianSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
-    restoreOldsettings();
+
+    if (m_parent->m_restoreSettingsOnClose) {
+        m_descriptor.SetConfig(m_oldSettings);
+    }
+
     m_descriptor.Close();
 }
 
@@ -415,10 +421,7 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
         return false;
     }
 
-    bool ret = updateCommConfig();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateCommConfig();
 }
 
 bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
@@ -445,10 +448,7 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
         break;
     }
 
-    bool ret = updateCommConfig();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateCommConfig();
 }
 
 bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -476,10 +476,7 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
         break;
     }
 
-    bool ret = updateCommConfig();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateCommConfig();
 }
 
 bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -503,10 +500,7 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         return false;
     }
 
-    bool ret = updateCommConfig();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateCommConfig();
 }
 
 bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -528,10 +522,7 @@ bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         break;
     }
 
-    bool ret = updateCommConfig();
-    if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
-    return ret;
+    return updateCommConfig();
 }
 
 bool SymbianSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
@@ -735,41 +726,15 @@ void SymbianSerialPortEngine::detectDefaultSettings()
         m_parent->m_flow = SerialPort::UnknownFlowControl;
 }
 
-// Used only in method SymbianSerialPortEngine::open().
-bool SymbianSerialPortEngine::saveOldsettings()
-{
-    TInt r = m_descriptor.Config(m_oldSettings);
-    if (r != KErrNone)
-        return false;
-
-    m_currSettings = m_oldSettings;
-    m_oldSettingsIsSaved = true;
-    return true;
-}
-
-// Used only in method SymbianSerialPortEngine::close().
-bool SymbianSerialPortEngine::restoreOldsettings()
-{
-    TInt r = KErrNone;
-    if (m_oldSettingsIsSaved) {
-        m_oldSettingsIsSaved = false;
-        r = m_descriptor.SetConfig(m_oldSettings);
-    }
-    return (r == KErrNone);
-}
-
-// Prepares other parameters of the structures port configuration.
-// Used only in method SymbianSerialPortEngine::open().
-void SymbianSerialPortEngine::prepareOtherOptions()
-{
-    // Impl me
-}
-
 /* Private methods */
 
-inline bool SymbianSerialPortEngine::updateCommConfig()
+bool SymbianSerialPortEngine::updateCommConfig()
 {
-    return (m_descriptor.SetConfig(m_currSettings) == KErrNone);
+    if (m_descriptor.SetConfig(m_currSettings) != KErrNone) {
+        m_parent->setError(SerialPort::ConfiguringError);
+        return false;
+    }
+    return true;
 }
 
 bool SymbianSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
