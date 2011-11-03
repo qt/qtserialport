@@ -84,7 +84,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         r = server.GetPortInfo(KRS232ModuleName, nativeInfo);
         if (r == KErrNone) {
             //
-            for (int i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
                 SerialPortInfo info; // My (desired) info class.
 
@@ -107,7 +107,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         r = server.GetPortInfo(KBluetoothModuleName, nativeInfo);
         if (r == KErrNone) {
             //
-            for (int i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
                 SerialPortInfo info; // My (desired) info class.
 
@@ -130,7 +130,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         r = server.GetPortInfo(KInfraRedModuleName, nativeInfo);
         if (r == KErrNone) {
             //
-            for (int i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
                 SerialPortInfo info; // My (desired) info class.
 
@@ -153,7 +153,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         r = server.GetPortInfo(KACMModuleName, nativeInfo);
         if (r == KErrNone) {
             //
-            for (int i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
                 SerialPortInfo info; // My (desired) info class.
 
