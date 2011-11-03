@@ -68,10 +68,6 @@ public:
 
 protected:
     virtual void detectDefaultSettings();
-    virtual bool saveOldsettings();
-    virtual bool restoreOldsettings();
-    virtual void prepareOtherOptions();
-
     virtual bool eventFilter(QObject *obj, QEvent *e);
 
 private:
