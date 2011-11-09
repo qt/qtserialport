@@ -10,7 +10,7 @@
 #if QT_VERSION >= 0x040700
 #  include <QtCore/qelapsedtimer.h>
 #else
-#  include <QtCore/qtime.h>
+#  include <QtCore/qdatetime.h>
 #endif
 
 QT_USE_NAMESPACE
