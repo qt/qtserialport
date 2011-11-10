@@ -463,47 +463,47 @@ bool SerialPort::open(OpenMode mode)
 {
     Q_D(SerialPort);
 
+    if (isOpen()) {
+        d->setError(SerialPort::DeviceAlreadyOpenedError);
+        return false;
+    }
+
     // Define while not supported modes.
     static OpenMode unsupportedModes = (Append | Truncate | Text);
-
     if ((mode & unsupportedModes) || (mode == NotOpen)) {
         d->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
-    if (!isOpen()) {
-        if (d->open(mode)) {
-            QIODevice::open(mode);
-            d->clearBuffers();
+    unsetError();
+    if (d->open(mode)) {
+        QIODevice::open(mode);
+        d->clearBuffers();
 
-            if (mode & ReadOnly)
-                d->m_engine->setReadNotificationEnabled(true);
-            if (mode & WriteOnly)
-                d->m_engine->setWriteNotificationEnabled(true);
+        if (mode & ReadOnly)
+            d->m_engine->setReadNotificationEnabled(true);
+        if (mode & WriteOnly)
+            d->m_engine->setWriteNotificationEnabled(true);
 
-            d->m_isBuffered = !(mode & Unbuffered);
-            return QIODevice::open(mode);
-        }
+        d->m_isBuffered = !(mode & Unbuffered);
+        return true;
     }
-    else
-        d->setError(SerialPort::DeviceAlreadyOpenedError);
-
-    close();
     return false;
 }
 
 void SerialPort::close()
 {
     Q_D(SerialPort);
-    if (isOpen()) {
-        d->m_engine->setReadNotificationEnabled(false);
-        d->m_engine->setWriteNotificationEnabled(false);
-        d->clearBuffers();
-        d->close();
-        QIODevice::close();
-    }
-    else
+    if (!isOpen()) {
         d->setError(SerialPort::DeviceIsNotOpenedError);
+        return;
+    }
+
+    QIODevice::close();
+    d->m_engine->setReadNotificationEnabled(false);
+    d->m_engine->setWriteNotificationEnabled(false);
+    d->clearBuffers();
+    d->close();
 }
 
 void SerialPort::setRestoreSettingsOnClose(bool restore)
