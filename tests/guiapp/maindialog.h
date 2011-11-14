@@ -8,8 +8,6 @@ class MainDialog;
 }
 
 class SerialPort;
-class OptionsDialog;
-class TraceDialog;
 class QTimer;
 
 class MainDialog : public QDialog
@@ -36,8 +34,7 @@ private slots:
 
 private:
     Ui::MainDialog *ui;
-    OptionsDialog *m_optionsDialog;
-    TraceDialog *m_traceDialog;
+
     SerialPort *m_port;
     QTimer *m_timer;
 

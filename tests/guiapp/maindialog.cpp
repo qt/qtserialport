@@ -17,8 +17,6 @@
 MainDialog::MainDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::MainDialog)
-    , m_optionsDialog(0)
-    , m_traceDialog(0)
     , m_port(0)
     , m_timer(0)
     , m_rts(false)
@@ -50,10 +48,6 @@ MainDialog::~MainDialog()
 {
     if (m_port->isOpen())
         m_port->close();
-    if (m_optionsDialog)
-        delete m_optionsDialog;
-    if (m_traceDialog)
-        delete m_traceDialog;
     delete ui;
 }
 
@@ -127,16 +121,14 @@ void MainDialog::procControlButtonClick()
 
 void MainDialog::procOptionsButtonClick()
 {
-    if (!m_optionsDialog)
-        m_optionsDialog = new OptionsDialog(m_port);
-    m_optionsDialog->show();
+    OptionsDialog dlg(m_port);
+    dlg.exec();
 }
 
 void MainDialog::procIOButtonClick()
 {
-    if (!m_traceDialog)
-        m_traceDialog = new TraceDialog(m_port);
-    m_traceDialog->show();
+    TraceDialog dlg(m_port);
+    dlg.exec();
 }
 
 void MainDialog::procRtsButtonClick()
