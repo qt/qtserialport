@@ -16,15 +16,15 @@ HEADERS += \
 include(../../src/src.pri)
 
 SOURCES += main.cpp\
-    mainwidget.cpp \
-    optionswidget.cpp \
-    tracewidget.cpp
-HEADERS += mainwidget.h \
-    optionswidget.h \
-    tracewidget.h
-FORMS += mainwidget.ui \
-    optionswidget.ui \
-    tracewidget.ui
+    maindialog.cpp \
+    optionsdialog.cpp \
+    tracedialog.cpp
+HEADERS += maindialog.h \
+    optionsdialog.h \
+    tracedialog.h
+FORMS += maindialog.ui \
+    optionsdialog.ui \
+    tracedialog.ui
 
 CONFIG(debug, debug|release) {
     DESTDIR = debug
