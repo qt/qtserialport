@@ -64,6 +64,7 @@ void TraceDialog::procSendButtonClick()
     if (data.size() > 0) {
         m_port->write(data);
         printTrace(data, false);
+        ui->lbError->setText(QString::number(m_port->error()));
     }
 }
 
@@ -76,4 +77,5 @@ void TraceDialog::procReadyRead()
 {
     QByteArray data = m_port->readAll();
     printTrace(data, true);
+    ui->lbError->setText(QString::number(m_port->error()));
 }
