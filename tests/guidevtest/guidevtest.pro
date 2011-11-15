@@ -24,7 +24,8 @@ SOURCES += \
     maindialog.cpp \
     unittestinfo.cpp \
     unittestsignals.cpp \
-    unittestwaitforx.cpp
+    unittestwaitforx.cpp \
+    unittestio.cpp
 
 HEADERS += \
     maindialog.h \

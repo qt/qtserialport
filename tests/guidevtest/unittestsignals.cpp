@@ -62,38 +62,40 @@ UnitTestSignals::UnitTestSignals(Logger *logger, QObject *parent)
 
 /* Public slots */
 
-void UnitTestSignals::start()
+void UnitTestSignals::start(bool first)
 {
-    QString header(tr("\n[ Test: ID#%1, Name: %2 ]\n%3\n\n"));
-    header = header
-            .arg(m_id)
-            .arg(m_name)
-            .arg(QString("timestamp"));/*.arg(UnitTestManager::timestamp());*/
+    if (first) {
+        QString header(tr("\n[ Test: ID#%1, Name: %2 ]\n%3\n\n"));
+        header = header
+                .arg(m_id)
+                .arg(m_name)
+                .arg(QString("timestamp"));/*.arg(UnitTestManager::timestamp());*/
 
-    m_logger->addContent(header);
+        m_logger->addContent(header);
 
-    m_srcPort->setPort(m_srcPortName);
-    m_dstPort->setPort(m_dstPortName);
+        m_srcPort->setPort(m_srcPortName);
+        m_dstPort->setPort(m_dstPortName);
 
-    if (!(open(UnitTestBase::SrcPort) && open(UnitTestBase::DstPort)
-          && configure(UnitTestBase::SrcPort) && configure(UnitTestBase::DstPort))) {
+        if (!(open(UnitTestBase::SrcPort) && open(UnitTestBase::DstPort)
+              && configure(UnitTestBase::SrcPort) && configure(UnitTestBase::DstPort))) {
 
-        close(UnitTestBase::SrcPort);
-        close(UnitTestBase::DstPort);
-        emit error();
-        return;
-    } else {
-        QString content(tr("\nSource and destination ports\n"
-                           "opened as 9600 8 N 1 by default.\n"));
-        m_logger->addContent(content);
+            close(UnitTestBase::SrcPort);
+            close(UnitTestBase::DstPort);
+            emit error();
+            return;
+        } else {
+            QString content(tr("\nSource and destination ports\n"
+                               "opened as 9600 8 N 1 by default.\n"));
+            m_logger->addContent(content);
+        }
+
+        // Prepare transaction begin.
+        m_transactionNum = 0;
+        m_bytesToWrite = MinBytesToWrite;
+        m_bytesReallyWrited = 0;
+        m_countSignalsBytesWritten = 0;
+        m_countSignalsReadyRead = 0;
     }
-
-    // Prepare transaction begin.
-    m_transactionNum = 0;
-    m_bytesToWrite = MinBytesToWrite;
-    m_bytesReallyWrited = 0;
-    m_countSignalsBytesWritten = 0;
-    m_countSignalsReadyRead = 0;
 
     transaction();
 }
@@ -176,7 +178,7 @@ bool UnitTestSignals::open(DirPorts dir)
     QIODevice::OpenMode mode = (dir == UnitTestBase::SrcPort) ?
                 QIODevice::WriteOnly : QIODevice::ReadOnly;
 
-    QString error("\nERROR: Can\'t open port %1\n");
+    QString error("\nError: Can\'t open port %1\n");
     if (!port->open(mode)) {
         error = error.arg(port->portName());
         m_logger->addContent(error);

@@ -17,8 +17,10 @@ UnitTestInfo::UnitTestInfo(Logger *logger, QObject *parent)
 
 /* Public slots */
 
-void UnitTestInfo::start()
+void UnitTestInfo::start(bool first)
 {
+    Q_UNUSED (first);
+
     QString header(tr("\n[ Test: ID#%1, Name: %2 ]\n%3\n\n"));
     header = header
             .arg(m_id)

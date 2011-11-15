@@ -98,6 +98,8 @@ UnitTestBase *UnitTestFactory::create(UnitTestBase::UnitID id, Logger *logger)
         return new UnitTestSignals(logger);
     case UnitTestBase::WaitForXUnitId:
         return new UnitTestWaitForX(logger);
+    case UnitTestBase::IOUnitId:
+        return new UnitTestIO(logger);
     default:;
     }
 
@@ -350,6 +352,8 @@ void MainDialog::createAvailableTests()
     m_testsList.append(UnitTestFactory::create(UnitTestBase::SignalsUnitId, m_logger));
     // Create "WaitForX test"
     m_testsList.append(UnitTestFactory::create(UnitTestBase::WaitForXUnitId, m_logger));
+    // Create "IO test"
+    m_testsList.append(UnitTestFactory::create(UnitTestBase::IOUnitId, m_logger));
 
 
     foreach(UnitTestBase *test, m_testsList) {

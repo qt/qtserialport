@@ -32,6 +32,7 @@ public:
         InfoUnitId,
         SignalsUnitId,
         WaitForXUnitId,
+        IOUnitId,
 
     };
 
@@ -44,7 +45,7 @@ public:
     QString description() const;
 
 public slots:
-    virtual void start() = 0;
+    virtual void start(bool first = true) = 0;
 
 protected:
     enum DirPorts { SrcPort, DstPort };
@@ -67,11 +68,8 @@ public:
     explicit UnitTestInfo(Logger *logger, QObject *parent = 0);
 
 public slots:
-    virtual void start();
+    virtual void start(bool first);
 };
-
-
-class SerialPort;
 
 class UnitTestSignals : public UnitTestBase
 {
@@ -80,7 +78,7 @@ public:
     explicit UnitTestSignals(Logger *logger, QObject *parent = 0);
 
 public slots:
-    virtual void start();
+    virtual void start(bool first);
 
 private slots:
     void procSignalBytesWritten(qint64 bw);
@@ -94,7 +92,6 @@ private:
         TransactionMsecDelay = 1000,
         MinBytesToWrite = 1,
         StepBytesToWrite = 100
-
     };
 
     bool m_started;
@@ -110,7 +107,6 @@ private:
     void close(DirPorts dir);
 };
 
-
 class UnitTestWaitForX : public UnitTestBase
 {
     Q_OBJECT
@@ -118,8 +114,48 @@ public:
     explicit UnitTestWaitForX(Logger *logger, QObject *parent = 0);
 
 public slots:
-    virtual void start();
+    virtual void start(bool first);
 };
+
+class UnitTestIO : public UnitTestBase
+{
+    Q_OBJECT
+public:
+    explicit UnitTestIO(Logger *logger, QObject *parent = 0);
+
+public slots:
+    virtual void start(bool first);
+
+private slots:
+    void procSingleShot();
+    void transaction();
+
+private:
+    enum {
+        TransferBytesCount = 500,
+        TransactionMsecDelay = 100
+    };
+
+    int m_rateIterator;
+    int m_databitsIterator;
+    int m_parityIterator;
+    int m_stopbitsIterator;
+    int m_flowIterator;
+
+    qint64 m_bytesWrite;
+    qint64 m_bytesRead;
+
+    bool open(DirPorts dir);
+    bool configure(DirPorts dir);
+    void close(DirPorts dir);
+};
+
+
+
+
+
+
+
 
 
 class UnitTestFactory

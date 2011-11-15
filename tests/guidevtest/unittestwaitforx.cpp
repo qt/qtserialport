@@ -14,8 +14,10 @@ UnitTestWaitForX::UnitTestWaitForX(Logger *logger, QObject *parent)
 
 /* Public slots */
 
-void UnitTestWaitForX::start()
+void UnitTestWaitForX::start(bool first)
 {
+    Q_UNUSED(first);
+
     QString header(tr("\n[ Test: ID#%1, Name: %2 ]\n%3\n\n"));
     header = header
             .arg(m_id)
