@@ -1089,6 +1089,8 @@ bool UnixSerialPortEngine::setCustomRate(qint32 rate)
     result = ::ioctl(m_descriptor, IOSSIOSPEED, &rate);
 #  endif
 
+#else
+    Q_UNUSED(rate);
 #endif
     return (result != -1);
 }
