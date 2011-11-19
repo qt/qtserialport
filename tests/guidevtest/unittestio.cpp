@@ -78,6 +78,22 @@ static QString split_on_table(const QByteArray &data, int tablewidth)
     return result;
 }
 
+static QByteArray random_data_array(int arraysize)
+{
+    QByteArray result;
+    while (arraysize--) {
+        // Here, protection of control characters 11h, 13h
+        // with software flow control.
+        char c;
+        do {
+            c = qrand();
+        } while ((c == 0x11) || (c == 0x13));
+
+        result.append(c);
+    }
+    return result;
+}
+
 
 
 /* Public methods */
@@ -218,7 +234,7 @@ void UnitTestIO::transaction()
                        "\ndatabits: %2"
                        "\npatity  : %3"
                        "\nstopbits: %4"
-                       "\nflow    : %5\n"));
+                       "\nflow    : %5\n\n"));
 
     content = content
             .arg(QString(sratesarray[m_rateIterator]))
@@ -229,7 +245,7 @@ void UnitTestIO::transaction()
 
     m_logger->addContent(content);
 
-    QByteArray data(TransferBytesCount, qrand());
+    QByteArray data = random_data_array(TransferBytesCount);
     m_bytesWrite = m_srcPort->write(data);
 
     content = "w:\n%1\n";
