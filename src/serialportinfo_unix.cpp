@@ -17,7 +17,7 @@
 #  include <linux/serial.h>
 #endif
 
-#if defined (HAVE_UDEV)
+#if defined (HAVE_UDEV) && defined (Q_OS_LINUX)
 extern "C"
 {
 #  include <libudev.h>
@@ -42,6 +42,8 @@ static QStringList nameFilters()
          << "ttyACM*"  /* CDC_ACM converters (i.e. Mobile Phones). */
          << "ttyMI*"   /* MOXA pci/serial converters. */
          << "rfcomm*"; /* Bluetooth serial device. */
+#elif defined (Q_OS_FREEBSD)
+    list << "cu*";
 #else
     // Here for other *nix OS.
 #endif
