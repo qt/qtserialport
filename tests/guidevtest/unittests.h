@@ -133,7 +133,7 @@ private slots:
 private:
     enum {
         TransferBytesCount = 500,
-        TransactionMsecDelay = 100
+        TransactionMsecDelay = 700
     };
 
     int m_rateIterator;
