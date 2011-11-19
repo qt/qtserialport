@@ -18,15 +18,15 @@ static const SerialPort::Rate vratesarray[RATES_COUNT] = {
     SerialPort::Rate115200
 };
 static const char *sratesarray[] = {
-    {"9600\0"},
-    {"115200\0"}
+    "9600\0",
+    "115200\0"
 };
 
 static const SerialPort::DataBits vdatabitsarray[DATABITS_COUNT] = {
     SerialPort::Data8
 };
 static const char *sdatabitsarray[] = {
-    {"8\0"}
+    "8\0"
 };
 
 static const SerialPort::Parity vparitysarray[PARITY_COUNT] = {
@@ -37,11 +37,11 @@ static const SerialPort::Parity vparitysarray[PARITY_COUNT] = {
     SerialPort::MarkParity
 };
 static const char *sparitysarray[] = {
-    {"none\0"},
-    {"even\0"},
-    {"odd\0"},
-    {"space\0"},
-    {"mark\0"}
+    "none\0",
+    "even\0",
+    "odd\0",
+    "space\0",
+    "mark\0"
 };
 
 static const SerialPort::StopBits vstopbitsarray[STOPBITS_COUNT] = {
@@ -49,8 +49,8 @@ static const SerialPort::StopBits vstopbitsarray[STOPBITS_COUNT] = {
     SerialPort::TwoStop
 };
 static const char *sstopbitsarray[] = {
-    {"one\0"},
-    {"two\0"}
+    "one\0",
+    "two\0"
 };
 
 static const SerialPort::FlowControl vflowsarray[FLOW_COUNT] = {
@@ -59,9 +59,9 @@ static const SerialPort::FlowControl vflowsarray[FLOW_COUNT] = {
     SerialPort::SoftwareControl
 };
 static const char *sflowsarray[] = {
-    {"none\0"},
-    {"hardware\0"},
-    {"software\0"}
+    "none\0",
+    "hardware\0",
+    "software\0"
 };
 
 
@@ -79,15 +79,24 @@ UnitTestIO::UnitTestIO(Logger *logger, QObject *parent)
     , m_bytesRead(0)
 {
     m_name = QString(tr("IO Test"));
-    m_description = QString(tr("\"IO Test\" ...."));
+    m_description = QString(tr("\"IO Test\" designed to test the I/O between the two ports\n"
+                               "Source port sends a data packet to the destination port,\n"
+                               "that reads the packet.\n"
+                               "  The default packet size is 500 bytes, the size can be changed\n"
+                               "programmatically by changing the value of the\n"
+                               "variable TransferBytesCount. Also, before sending the package\n"
+                               "is filled with a random value.\n"
+                               "  Both ports after each transaction, change their parameters:\n"
+                               "speed, number of data bits, parity, number of stop bits,\n"
+                               "flow regime, until the end all enumerated parameters.\n"
+                               "After each transaction is recorded in a log the contents of the\n"
+                               "sent and received packet, and check their size. If the packet\n"
+                               "sizes are different, the test is aborted with an error which is\n"
+                               "recorded in the log.\n"
+                               ));
 
     m_srcPort = new SerialPort(this);
     m_dstPort = new SerialPort(this);
-
-    //connect(m_srcPort, SIGNAL(bytesWritten(qint64)),
-    //        this, SLOT(procSignalBytesWritten(qint64)));
-    //connect(m_dstPort, SIGNAL(readyRead()),
-    //        this, SLOT(procSignalReadyRead()));
 }
 
 /* Public slots */
