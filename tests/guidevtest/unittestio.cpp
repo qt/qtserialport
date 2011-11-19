@@ -64,6 +64,20 @@ static const char *sflowsarray[] = {
     "software\0"
 };
 
+static QString split_on_table(const QByteArray &data, int tablewidth)
+{
+    QString result;
+    int datacount = data.count();
+    int i = 0;
+
+    while (i < datacount) {
+        result.append(data.mid(i, tablewidth).toHex());
+        result.append('\n');
+        i += tablewidth;
+    }
+    return result;
+}
+
 
 
 /* Public methods */
@@ -138,9 +152,14 @@ void UnitTestIO::start(bool first)
 void UnitTestIO::procSingleShot()
 {
     QByteArray data = m_dstPort->readAll();
+
+    QString content("r:\n%1\n");
+    content = content.arg(split_on_table(data, 32));
+    m_logger->addContent(content);
+
     m_bytesRead = data.count();
 
-    QString content(tr("= write: %1 read: %2 =\n"));
+    content = QString(tr("= write: %1 read: %2 =\n"));
     content = content
             .arg(m_bytesWrite)
             .arg(m_bytesRead);
@@ -212,6 +231,10 @@ void UnitTestIO::transaction()
 
     QByteArray data(TransferBytesCount, qrand());
     m_bytesWrite = m_srcPort->write(data);
+
+    content = "w:\n%1\n";
+    content = content.arg(split_on_table(data, 32));
+    m_logger->addContent(content);
 
     QTimer::singleShot(TransactionMsecDelay, this, SLOT(procSingleShot()));
 }
