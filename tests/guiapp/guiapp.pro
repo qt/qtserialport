@@ -1,8 +1,8 @@
 QT += core gui
 TEMPLATE = app
 
-unix {
-    !macx:DEFINES += HAVE_UDEV
+linux* {
+    DEFINES += HAVE_UDEV
 }
 
 INCLUDEPATH += \

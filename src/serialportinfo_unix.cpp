@@ -17,7 +17,7 @@
 #  include <linux/serial.h>
 #endif
 
-#if defined (HAVE_UDEV) && defined (Q_OS_LINUX)
+#if defined (Q_OS_LINUX) && defined (HAVE_UDEV)
 extern "C"
 {
 #  include <libudev.h>
@@ -58,7 +58,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
 
-#if defined (HAVE_UDEV)
+#if defined (Q_OS_LINUX) && defined (HAVE_UDEV)
     // With udev scan.
     struct udev *udev = ::udev_new();
     if (udev) {
@@ -115,6 +115,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
     if (udev)
         ::udev_unref(udev);
+#elif defined (Q_OS_FREEBSD) && defined (HAVE_USB)
+    //
 #else
     // With directory /dev scan.
     QDir devDir("/dev");
