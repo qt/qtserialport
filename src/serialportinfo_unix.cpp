@@ -59,7 +59,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     QList<SerialPortInfo> ports;
 
 #if defined (Q_OS_LINUX) && defined (HAVE_UDEV)
-    // With udev scan.
+    // Detailed enumerate with use Udev scan.
     struct udev *udev = ::udev_new();
     if (udev) {
 
@@ -118,25 +118,32 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 #elif defined (Q_OS_FREEBSD) && defined (HAVE_USB)
     //
 #else
-    // With directory /dev scan.
+    // Simple enumerate with device directory /dev scan.
     QDir devDir("/dev");
     if (devDir.exists()) {
 
         devDir.setNameFilters(nameFilters());
         devDir.setFilter(QDir::Files | QDir::System);
 
+        QStringList foundDevices; //< Found devices hash.
+
         foreach(QFileInfo fi, devDir.entryInfoList()) {
             if (!fi.isDir()) {
 
-                SerialPortInfo info;
+                QString s = fi.absoluteFilePath().split('.').at(0);
+                if (!foundDevices.contains(s)) {
+                    foundDevices.append(s);
 
-                info.d_ptr->device = fi.absoluteFilePath();
-                info.d_ptr->portName = info.d_ptr->device;
-                info.d_ptr->portName.remove(QRegExp("/[\\w|\\d|\\s]+/"));
-                info.d_ptr->description = QString(QObject::tr("Unknown."));
-                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                    SerialPortInfo info;
 
-                ports.append(info);
+                    info.d_ptr->device = s;
+                    info.d_ptr->portName = s.remove(QRegExp("/[\\w|\\d|\\s]+/"));
+                    info.d_ptr->description = QString(QObject::tr("Unknown."));
+                    info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+
+                    ports.append(info);
+
+                }
             }
         }
     }
