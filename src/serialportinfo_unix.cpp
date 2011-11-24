@@ -17,7 +17,7 @@
 #  include <linux/serial.h>
 #endif
 
-#if defined (Q_OS_LINUX) && defined (HAVE_UDEV)
+#if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 extern "C"
 {
 #  include <libudev.h>
@@ -58,66 +58,82 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
 
-#if defined (Q_OS_LINUX) && defined (HAVE_UDEV)
-    // Detailed enumerate with use Udev scan.
+#if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
+
+    // Detailed enumerate with use libudev scan.
     struct udev *udev = ::udev_new();
     if (udev) {
 
-        struct udev_enumerate *enumerate = ::udev_enumerate_new(udev);
+        struct udev_enumerate *enumerate =
+                udev_enumerate_new(udev);
+
         if (enumerate) {
 
-            ::udev_enumerate_add_match_subsystem(enumerate, "tty");
-            ::udev_enumerate_scan_devices(enumerate);
+            udev_enumerate_add_match_subsystem(enumerate, "tty");
+            udev_enumerate_scan_devices(enumerate);
 
-            struct udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate);
+            struct udev_list_entry *devices =
+                    udev_enumerate_get_list_entry(enumerate);
 
             struct udev_list_entry *dev_list_entry;
             udev_list_entry_foreach(dev_list_entry, devices) {
 
-                const char *syspath = ::udev_list_entry_get_name(dev_list_entry);
-                struct udev_device *udev_device = ::udev_device_new_from_syspath(udev, syspath);
+                struct udev_device *dev =
+                        udev_device_new_from_syspath(udev,
+                                                     udev_list_entry_get_name(dev_list_entry));
 
-                if (udev_device) {
+                if (dev) {
 
                     SerialPortInfo info;
-                    QString s(::udev_device_get_devnode(udev_device));
 
-                    foreach (QString mask, nameFilters()) {
+                    info.d_ptr->device =
+                            QString(udev_device_get_devnode(dev));
+                    info.d_ptr->portName =
+                            QString(udev_device_get_sysname(dev));
 
-                        if (s.contains(mask.remove("*"))) {
-                            info.d_ptr->device = s;
-                            info.d_ptr->portName = s.remove(QRegExp("/[\\w|\\d|\\s]+/"));
+                    struct udev_device *parentdev = udev_device_get_parent(dev);
 
+                    if (parentdev) {
+
+                        QString subsys(udev_device_get_subsystem(parentdev));
+
+                        bool do_append = true;
+
+                        if (subsys.contains("usb")) {
                             info.d_ptr->description =
-                                    QString(::udev_device_get_property_value(udev_device,
-                                                                             "ID_MODEL_FROM_DATABASE"));
-                            if (info.d_ptr->description.isEmpty())
-                                info.d_ptr->description = QString(QObject::tr("Unknown."));
-
+                                    QString(udev_device_get_property_value(dev,
+                                                                           "ID_MODEL_FROM_DATABASE"));
                             info.d_ptr->manufacturer =
-                                    QString(::udev_device_get_property_value(udev_device,
-                                                                             "ID_VENDOR_FROM_DATABASE"));
-                            if (info.d_ptr->manufacturer.isEmpty())
-                                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
-
-                            ports.append(info);
-                            break;
+                                    QString(udev_device_get_property_value(dev,
+                                                                           "ID_VENDOR_FROM_DATABASE"));
+                        } else if (subsys == QString("pnp")) {
+                            info.d_ptr->description =
+                                    QString("Standard serial port.");
+                            info.d_ptr->manufacturer =
+                                    QString(udev_device_get_sysattr_value(parentdev, "id"));
+                        } else {
+                            do_append = false;
                         }
+
+                        if (do_append)
+                            ports.append(info);
                     }
-                    ::udev_device_unref(udev_device);
+
+                    udev_device_unref(dev);
                 }
+
             }
+
+            udev_enumerate_unref(enumerate);
         }
 
-        if (enumerate)
-            ::udev_enumerate_unref(enumerate);
+        udev_unref(udev);
     }
 
-    if (udev)
-        ::udev_unref(udev);
-#elif defined (Q_OS_FREEBSD) && defined (HAVE_USB)
+#elif defined (Q_OS_FREEBSD) && defined (HAVE_LIBUSB)
     //
 #else
+
     // Simple enumerate with device directory /dev scan.
     QDir devDir("/dev");
     if (devDir.exists()) {
@@ -147,6 +163,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             }
         }
     }
+
 #endif
 
     return ports;
