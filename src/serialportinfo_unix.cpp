@@ -110,7 +110,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                             info.d_ptr->description =
                                     QString("Standard serial port.");
                             info.d_ptr->manufacturer =
-                                    QString(udev_device_get_sysattr_value(parentdev, "id"));
+                                    QString("Standard serial ports.");
                         } else {
                             do_append = false;
                         }
