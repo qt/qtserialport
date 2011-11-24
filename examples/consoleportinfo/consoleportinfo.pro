@@ -4,9 +4,7 @@ QT -= gui
 OBJECTS_DIR = obj
 MOC_DIR = moc
 
-unix {
-    !macx:DEFINES += HAVE_UDEV
-}
+linux*:DEFINES += HAVE_LIBUDEV
 
 INCLUDEPATH += \
     ../../include

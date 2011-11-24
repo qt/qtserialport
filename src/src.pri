@@ -66,7 +66,7 @@ unix:!symbian {
         LIBS += -framework IOKit -framework CoreFoundation
     } else {
         SOURCES += $$PWD/serialportinfo_unix.cpp
-        contains( DEFINES, HAVE_UDEV ) {
+        contains( DEFINES, HAVE_LIBUDEV ) {
             LIBS += -ludev
         }
     }

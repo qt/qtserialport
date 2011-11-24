@@ -1,9 +1,7 @@
 QT += core gui
 TEMPLATE = app
 
-linux* {
-    DEFINES += HAVE_UDEV
-}
+linux*:DEFINES += HAVE_LIBUDEV
 
 INCLUDEPATH += \
     ../../include \
