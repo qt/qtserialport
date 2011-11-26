@@ -412,22 +412,35 @@ bool UnixSerialPortEngine::select(int timeout,
     return true;
 }
 
+#if defined (Q_OS_MAC)
+static const QString defaultPathPrefix = "/dev/cu.";
+static const QString notUsedPathPrefix = "/dev/tty.";
+#else
 static const QString defaultPathPrefix = "/dev/";
+#endif
 
 QString UnixSerialPortEngine::toSystemLocation(const QString &port) const
 {
-    QString ret;
-    if (!port.contains(defaultPathPrefix))
-        ret.append(defaultPathPrefix);
-    ret.append(port);
+    QString ret = port;
+
+#if defined (Q_OS_MAC)
+    ret.remove(notUsedPathPrefix);
+#endif
+
+    if (!ret.contains(defaultPathPrefix))
+        ret.prepend(defaultPathPrefix);
     return ret;
 }
 
 QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
 {
     QString ret = location;
-    if (ret.contains(defaultPathPrefix))
-        ret.remove(defaultPathPrefix);
+
+#if defined (Q_OS_MAC)
+    ret.remove(notUsedPathPrefix);
+#endif
+
+    ret.remove(defaultPathPrefix);
     return ret;
 }
 
