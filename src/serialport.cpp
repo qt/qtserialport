@@ -412,14 +412,196 @@ bool SerialPortPrivate::canErrorNotification()
 }
 
 //----------------------------------------------------------------
+//************* SerialPort
+
+/*!
+    \class SerialPort
+    \brief The SerialPort class provides an interface for ...
+
+    \reentrant
+    \ingroup network??
+    \inmodule QtNetwork??
+
+    SerialPort ... (full description)
+    ...
+    ...
+
+
+    \sa SerialPortInfo
+*/
+
+/*!
+    \enum SerialPort::Direction
+
+    This enum describes possibly direction of data transmission.
+    It is used to set the speed of the device separately for
+    each direction in some operating systems (POSIX).
+
+    \value Input Input direction.
+    \value Output Output direction
+    \value AllDirections Simultaneously in two directions.
+
+    \sa setRate(), rate()
+*/
+
+/*!
+    \enum SerialPort::Rate
+
+    This enum describes the baud rate at which the
+    communications device operates. In this enum is listed
+    only part the most common of the standard rates.
+
+    \value Rate1200 1200 baud.
+    \value Rate2400 2400 baud.
+    \value Rate4800 4800 baud.
+    \value Rate9600 9600 baud.
+    \value Rate19200 19200 baud.
+    \value Rate38400 38400 baud.
+    \value Rate57600 57600 baud.
+    \value Rate115200 115200 baud.
+    \value UnknownRate Unknown baud rate.
+
+    \sa setRate(), rate()
+*/
+
+/*!
+    \enum SerialPort::DataBits
+
+    This enum describes possibly the number of bits in the
+    bytes transmitted and received.
+
+    \value Data5 Five bits.
+    \value Data6 Six bits
+    \value Data7 Seven bits
+    \value Data8 Eight bits.
+    \value UnknownDataBits Unknown number of bits.
+
+    \sa setDataBits(), dataBits()
+*/
+
+/*!
+    \enum SerialPort::Parity
+
+    This enum describes possibly parity scheme to be used.
+
+    \value NoParity No parity.
+    \value EvenParity Even parity.
+    \value OddParity Odd parity.
+    \value SpaceParity Space parity.
+    \value MarkParity Mark parity.
+    \value UnknownParity Unknown parity.
+
+    \sa setParity(), parity()
+*/
+
+/*!
+    \enum SerialPort::StopBits
+
+    This enum describes possibly the number of
+    stop bits to be used.
+
+    \value OneStop 1 stop bit.
+    \value OneAndHalfStop 1.5 stop bits.
+    \value TwoStop 2 stop bits.
+    \value UnknownStopBits Unknown number of stop bit.
+
+    \sa setStopBits(), stopBits()
+*/
+
+/*!
+    \enum SerialPort::FlowControl
+
+    This enum describes possibly flow control to
+    be used.
+
+    \value NoFlowControl No flow control.
+    \value HardwareControl Hardware flow control (RTS/CTS).
+    \value SoftwareControl Software flow control (XON/XOFF).
+    \value UnknownFlowControl Unknown flow control.
+
+    \sa setFlowControl(), flowControl()
+*/
+
+/*!
+    \enum SerialPort::Line
+
+    This enum describes possibly RS-232 pinout signals.
+
+    \value Le DSR (data set ready/line enable).
+    \value Dtr DTR (data terminal ready).
+    \value Rts RTS (request to send).
+    \value St Secondary TXD (transmit).
+    \value Sr Secondary RXD (receive).
+    \value Cts CTS (clear to send).
+    \value Dcd DCD (data carrier detect).
+    \value Ri RNG (ring).
+    \value Dsr DSR (data set ready).
+
+    \sa lines(), setDtr(), setRts(), dtr(), rts()
+*/
+
+/*!
+    \enum SerialPort::DataErrorPolicy
+
+    This enum describes policies manipulate for received
+    symbols with detected parity errors.
+
+    \value SkipPolicy Skip the bad character.
+    \value PassZeroPolicy Replaces bad character to zero.
+    \value IgnorePolicy Ignore the error for a bad character.
+    \value StopReceivingPolicy Stopping data reception on error.
+    \value UnknownPolicy Unknown policy.
+
+    \sa setDataErrorPolicy(), dataErrorPolicy()
+*/
+
+/*!
+    \enum SerialPort::PortError
+
+    This enum describes the errors that may be returned by the error()
+    function.
+
+    \value NoError No error occurred.
+    \value NoSuchDeviceError An error occurred when it attempts to
+           open no existing device.
+    \value PermissionDeniedError An error occurred when it attempts to
+           open is already opened device by another process or user do
+           not have permission to open.
+    \value DeviceAlreadyOpenedError An error occurred when it attempts to
+           reused open already opened device in this object.
+    \value DeviceIsNotOpenedError An error occurred when it attempts to
+           control still closed device.
+    \value ParityError The hardware detected a parity error
+           when reading data.
+    \value FramingError The hardware detected a framing error
+           when reading data.
+    \value IoError I/O error occurred when read/write data.
+    \value ConfiguringError An error occurred with the configuring device.
+    \value UnsupportedPortOperationError The requested device operation is
+           not supported or prohibited by the local operating system.
+    \value UnknownPortError An unidentified error occurred.
+
+    \sa error(), unsetError()
+*/
+
+
 
 /* Public methods */
 
+/*!
+    Constructs a new serial port object with the given \a parent.
+*/
 SerialPort::SerialPort(QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate(this))
 {}
 
+/*!
+    Constructs a new serial port object with the given \a parent
+    to represent the serial port with the specified \a name.
+
+    ...
+*/
 SerialPort::SerialPort(const QString &name, QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate(this))
@@ -427,6 +609,12 @@ SerialPort::SerialPort(const QString &name, QObject *parent)
     setPort(name);
 }
 
+/*!
+    Constructs a new serial port object with the given \a parent
+    to represent the serial port with the specified class \a info.
+
+    ...
+*/
 SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
     : QIODevice(parent)
     , d_ptr(new SerialPortPrivate(this))
@@ -434,6 +622,8 @@ SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
     setPort(info);
 }
 
+/*!
+*/
 SerialPort::~SerialPort()
 {
     /**/
@@ -441,24 +631,32 @@ SerialPort::~SerialPort()
     delete d_ptr;
 }
 
+/*!
+*/
 void SerialPort::setPort(const QString &name)
 {
     Q_D(SerialPort);
     d->setPort(name);
 }
 
+/*!
+*/
 void SerialPort::setPort(const SerialPortInfo &info)
 {
     Q_D(SerialPort);
     d->setPort(info.systemLocation());
 }
 
+/*!
+*/
 QString SerialPort::portName() const
 {
     Q_D(const SerialPort);
     return d->port();
 }
 
+/*!
+*/
 bool SerialPort::open(OpenMode mode)
 {
     Q_D(SerialPort);
@@ -491,6 +689,8 @@ bool SerialPort::open(OpenMode mode)
     return false;
 }
 
+/*!
+*/
 void SerialPort::close()
 {
     Q_D(SerialPort);
@@ -506,102 +706,136 @@ void SerialPort::close()
     d->close();
 }
 
+/*!
+*/
 void SerialPort::setRestoreSettingsOnClose(bool restore)
 {
     Q_D( SerialPort);
     d->m_restoreSettingsOnClose = restore;
 }
 
+/*!
+*/
 bool SerialPort::restoreSettingsOnClose() const
 {
     Q_D(const SerialPort);
     return d->m_restoreSettingsOnClose;
 }
 
+/*!
+*/
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
     Q_D(SerialPort);
     return d->setRate(rate, dir);
 }
 
+/*!
+*/
 qint32 SerialPort::rate(Directions dir) const
 {
     Q_D(const SerialPort);
     return d->rate(dir);
 }
 
+/*!
+*/
 bool SerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(SerialPort);
     return d->setDataBits(dataBits);
 }
 
+/*!
+*/
 SerialPort::DataBits SerialPort::dataBits() const
 {
     Q_D(const SerialPort);
     return d->dataBits();
 }
 
+/*!
+*/
 bool SerialPort::setParity(Parity parity)
 {
     Q_D(SerialPort);
     return d->setParity(parity);
 }
 
+/*!
+*/
 SerialPort::Parity SerialPort::parity() const
 {
     Q_D(const SerialPort);
     return d->parity();
 }
 
+/*!
+*/
 bool SerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(SerialPort);
     return d->setStopBits(stopBits);
 }
 
+/*!
+*/
 SerialPort::StopBits SerialPort::stopBits() const
 {
     Q_D(const SerialPort);
     return d->stopBits();
 }
 
+/*!
+*/
 bool SerialPort::setFlowControl(FlowControl flow)
 {
     Q_D(SerialPort);
     return d->setFlowControl(flow);
 }
 
+/*!
+*/
 SerialPort::FlowControl SerialPort::flowControl() const
 {
     Q_D(const SerialPort);
     return d->flowControl();
 }
 
+/*!
+*/
 bool SerialPort::dtr() const
 {
     Q_D(const SerialPort);
     return d->dtr();
 }
 
+/*!
+*/
 bool SerialPort::rts() const
 {
     Q_D(const SerialPort);
     return d->rts();
 }
 
+/*!
+*/
 SerialPort::Lines SerialPort::lines() const
 {
     Q_D(const SerialPort);
     return d->lines();
 }
 
+/*!
+*/
 bool SerialPort::flush()
 {
     Q_D(SerialPort);
     return d->flush() || d->m_engine->flush();
 }
 
+/*!
+*/
 bool SerialPort::reset()
 {
     Q_D(SerialPort);
@@ -609,35 +843,47 @@ bool SerialPort::reset()
     return d->reset();
 }
 
+/*!
+*/
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(SerialPort);
     return d->setDataErrorPolicy(policy);
 }
 
+/*!
+*/
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 {
     Q_D(const SerialPort);
     return d->dataErrorPolicy();
 }
 
+/*!
+*/
 SerialPort::PortError SerialPort::error() const
 {
     Q_D(const SerialPort);
     return d->error();
 }
 
+/*!
+*/
 void SerialPort::unsetError()
 {
     Q_D(SerialPort);
     d->unsetError();
 }
 
+/*!
+*/
 bool SerialPort::isSequential() const
 {
     return true;
 }
 
+/*!
+*/
 qint64 SerialPort::bytesAvailable() const
 {
     Q_D(const SerialPort);
@@ -649,6 +895,8 @@ qint64 SerialPort::bytesAvailable() const
     return ret + QIODevice::bytesAvailable();
 }
 
+/*!
+*/
 qint64 SerialPort::bytesToWrite() const
 {
     Q_D(const SerialPort);
@@ -660,6 +908,8 @@ qint64 SerialPort::bytesToWrite() const
     return ret + QIODevice::bytesToWrite();
 }
 
+/*!
+*/
 bool SerialPort::canReadLine() const
 {
     Q_D(const SerialPort);
@@ -676,6 +926,8 @@ static int qt_timeout_value(int msecs, int elapsed)
     return (msecs < 0) ? 0 : msecs;
 }
 
+/*!
+*/
 bool SerialPort::waitForReadyRead(int msecs)
 {
     Q_D(SerialPort);
@@ -712,6 +964,8 @@ bool SerialPort::waitForReadyRead(int msecs)
     return false;
 }
 
+/*!
+*/
 bool SerialPort::waitForBytesWritten(int msecs)
 {
     Q_D(SerialPort);
