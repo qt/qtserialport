@@ -600,7 +600,7 @@ SerialPort::SerialPort(QObject *parent)
     Constructs a new serial port object with the given \a parent
     to represent the serial port with the specified \a name.
 
-    ...
+    The name should have a specific format, see setPort().
 */
 SerialPort::SerialPort(const QString &name, QObject *parent)
     : QIODevice(parent)
@@ -612,8 +612,6 @@ SerialPort::SerialPort(const QString &name, QObject *parent)
 /*!
     Constructs a new serial port object with the given \a parent
     to represent the serial port with the specified class \a info.
-
-    ...
 */
 SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
     : QIODevice(parent)
@@ -623,6 +621,7 @@ SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
 }
 
 /*!
+    Destroys the serial port object, closing it if necessary.
 */
 SerialPort::~SerialPort()
 {
@@ -632,6 +631,12 @@ SerialPort::~SerialPort()
 }
 
 /*!
+    Sets the \a name of the port. The name may be a any format:
+    or short, or also as system location (with all the prefixes and
+    postfixed). As a result, this name will automatically be written
+    and converted into an internal variable as system location.
+
+    \sa portName(), SerialPortInfo
 */
 void SerialPort::setPort(const QString &name)
 {
@@ -640,6 +645,9 @@ void SerialPort::setPort(const QString &name)
 }
 
 /*!
+    Sets the port that are stored in instance SerialPortInfo.
+
+    \sa portName(), SerialPortInfo
 */
 void SerialPort::setPort(const SerialPortInfo &info)
 {
@@ -648,6 +656,40 @@ void SerialPort::setPort(const SerialPortInfo &info)
 }
 
 /*!
+    Returns the name set by setPort() or to the SerialPort constructors.
+    This name is short, ie it extract and convert out from the internal
+    variable system location of the device. Conversion algorithm is
+    platform specific:
+    \table
+    \header
+        \o Platform
+        \o Brief Description
+    \row
+        \o \l {Windows}
+        \o Removes the prefix "\\\\.\\" from the system location
+           and returns the remainder of the string.
+    \row
+        \o \l {Windows CE}
+        \o Removes the postfix ":" from the system location
+           and returns the remainder of the string.
+    \row
+        \o \l {Symbian}
+        \o Returns the system location as it is,
+           as it is equivalent to the port name.
+    \row
+        \o \l {GNU/Linux}
+        \o Removes the prefix "/dev/" from the system location
+           and returns the remainder of the string.
+    \row
+        \o \l {MacOSX}
+        \o Removes the prefix "/dev/cu." and "/dev/tty." from the
+           system location and returns the remainder of the string.
+    \row
+        \o \l {Other *nix}
+        \o The same as for GNU/Linux.
+    \endtable
+
+    \sa setPort(), SerialPortInfo::portName()
 */
 QString SerialPort::portName() const
 {
@@ -655,7 +697,16 @@ QString SerialPort::portName() const
     return d->port();
 }
 
-/*!
+/*! \reimp
+    Opens the serial port using OpenMode \a mode, returning true if
+    successful; otherwise false with saved error code which can be
+    obtained by calling error().
+
+    \warning The \a mode must be QIODevice::ReadOnly, QIODevice::WriteOnly,
+    or QIODevice::ReadWrite. It may also have additional flags, such as
+    QIODevice::Unbuffered. Other modes unsupported.
+
+    \sa QIODevice::OpenMode, setPort()
 */
 bool SerialPort::open(OpenMode mode)
 {
@@ -689,7 +740,11 @@ bool SerialPort::open(OpenMode mode)
     return false;
 }
 
-/*!
+/*! \reimp
+    Calls SerialPort::flush() and closes the serial port.
+    Errors from flush are ignored.
+
+    \sa QIODevice::close()
 */
 void SerialPort::close()
 {
@@ -699,6 +754,7 @@ void SerialPort::close()
         return;
     }
 
+    flush();
     QIODevice::close();
     d->m_engine->setReadNotificationEnabled(false);
     d->m_engine->setWriteNotificationEnabled(false);
@@ -707,6 +763,12 @@ void SerialPort::close()
 }
 
 /*!
+    Sets or clear the flag \a restore, which allows to restore the
+    previous settings on closing the serial port. If it flag
+    is true that the settings will be restored; otherwise not.
+    The default SerialPort is configured to restore the settings.
+
+    \sa restoreSettingsOnClose()
 */
 void SerialPort::setRestoreSettingsOnClose(bool restore)
 {
@@ -715,6 +777,11 @@ void SerialPort::setRestoreSettingsOnClose(bool restore)
 }
 
 /*!
+    Returns the current status of the restore flag settings on
+    closing the port. The default SerialPort is configured to
+    restore the settings.
+
+    \sa setRestoreSettingsOnClose()
 */
 bool SerialPort::restoreSettingsOnClose() const
 {
@@ -723,6 +790,15 @@ bool SerialPort::restoreSettingsOnClose() const
 }
 
 /*!
+    Sets the desired data rate \a rate for a given direction \a dir.
+    If successful, returns true; otherwise false with saved error
+    code which can be obtained by calling error(). To set the speed
+    can use enumeration SerialPort::Rate or any positive qint32 value.
+
+    \warning For OS Windows, Windows CE, Symbian supported only
+    AllDirections flag.
+
+    \sa rate()
 */
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
@@ -731,6 +807,12 @@ bool SerialPort::setRate(qint32 rate, Directions dir)
 }
 
 /*!
+    Returns the current baud rate of the chosen direction \a dir.
+
+    \warning For OS Windows, Windows CE, Symbian return
+    equal rate in any direction.
+
+    \sa setRate()
 */
 qint32 SerialPort::rate(Directions dir) const
 {
@@ -739,6 +821,11 @@ qint32 SerialPort::rate(Directions dir) const
 }
 
 /*!
+    Sets the desired number of data bits \a dataBits in byte.
+    If successful, returns true; otherwise false with saved error
+    code which can be obtained by calling error().
+
+    \sa dataBits()
 */
 bool SerialPort::setDataBits(DataBits dataBits)
 {
@@ -747,6 +834,9 @@ bool SerialPort::setDataBits(DataBits dataBits)
 }
 
 /*!
+    Returns the current number of data bits in byte.
+
+    \sa setDataBits()
 */
 SerialPort::DataBits SerialPort::dataBits() const
 {
@@ -755,6 +845,11 @@ SerialPort::DataBits SerialPort::dataBits() const
 }
 
 /*!
+    Sets the desired parity \a parity checking mode.
+    If successful, returns true; otherwise false with saved error
+    code which can be obtained by calling error().
+
+    \sa parity()
 */
 bool SerialPort::setParity(Parity parity)
 {
@@ -763,6 +858,9 @@ bool SerialPort::setParity(Parity parity)
 }
 
 /*!
+    Returns the current parity checking mode.
+
+    \sa setParity()
 */
 SerialPort::Parity SerialPort::parity() const
 {
@@ -771,6 +869,11 @@ SerialPort::Parity SerialPort::parity() const
 }
 
 /*!
+    Sets the desired number of stop bits \a stopBits in frame.
+    If successful, returns true; otherwise false with saved error
+    code which can be obtained by calling error().
+
+    \sa stopBits()
 */
 bool SerialPort::setStopBits(StopBits stopBits)
 {
@@ -779,6 +882,9 @@ bool SerialPort::setStopBits(StopBits stopBits)
 }
 
 /*!
+    Returns the current number of stop bits.
+
+    \sa setStopBits()
 */
 SerialPort::StopBits SerialPort::stopBits() const
 {
@@ -787,6 +893,11 @@ SerialPort::StopBits SerialPort::stopBits() const
 }
 
 /*!
+    Sets the desired number flow control mode \a flow.
+    If successful, returns true; otherwise false with saved error
+    code which can be obtained by calling error().
+
+    \sa flowControl()
 */
 bool SerialPort::setFlowControl(FlowControl flow)
 {
@@ -795,6 +906,9 @@ bool SerialPort::setFlowControl(FlowControl flow)
 }
 
 /*!
+    Returns the current flow control mode.
+
+    \sa setFlowControl()
 */
 SerialPort::FlowControl SerialPort::flowControl() const
 {
@@ -803,6 +917,11 @@ SerialPort::FlowControl SerialPort::flowControl() const
 }
 
 /*!
+    Returns the current state of the line signal DTR.
+    If the signal state high, the return true;
+    otherwise false;
+
+    \sa lines()
 */
 bool SerialPort::dtr() const
 {
@@ -811,6 +930,11 @@ bool SerialPort::dtr() const
 }
 
 /*!
+    Returns the current state of the line signal RTS.
+    If the signal state high, the return true;
+    otherwise false;
+
+    \sa lines()
 */
 bool SerialPort::rts() const
 {
@@ -819,6 +943,12 @@ bool SerialPort::rts() const
 }
 
 /*!
+    Returns the bitmap states of line signals.
+    From this result it is possible to allocate the state of the
+    desired signal by applying a mask "AND", where the mask is
+    the desired enum from SerialPort::Lines.
+
+    \sa dtr(), rts(), setDtr(), setRts()
 */
 SerialPort::Lines SerialPort::lines() const
 {
@@ -827,6 +957,18 @@ SerialPort::Lines SerialPort::lines() const
 }
 
 /*!
+    This function writes as much as possible from the internal write
+    buffer to the underlying serial port, without blocking. If any data
+    was written, this function returns true; otherwise false is returned.
+
+    Call this function if you need SerialPort to start sending buffered
+    data immediately. The number of bytes successfully written depends on
+    the operating system. In most cases, you do not need to call this
+    function, because SerialPort will start sending data automatically
+    once control goes back to the event loop. In the absence of an event
+    loop, call waitForBytesWritten() instead.
+
+    \sa write(), waitForBytesWritten()
 */
 bool SerialPort::flush()
 {
@@ -834,7 +976,10 @@ bool SerialPort::flush()
     return d->flush() || d->m_engine->flush();
 }
 
-/*!
+/*! \reimp
+    Resets and clears all buffers of the serial port, including an
+    internal class buffer and the UART (driver) buffer. If successful,
+    returns true; otherwise false.
 */
 bool SerialPort::reset()
 {
@@ -844,6 +989,11 @@ bool SerialPort::reset()
 }
 
 /*!
+    Sets the error policy \a policy process received character in
+    the case of parity error detection. If successful, returns
+    true; otherwise false. By default is set policy IgnorePolicy.
+
+    \sa dataErrorPolicy()
 */
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
@@ -852,6 +1002,9 @@ bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 }
 
 /*!
+    Returns current error policy.
+
+    \sa setDataErrorPolicy()
 */
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 {
@@ -860,6 +1013,13 @@ SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 }
 
 /*!
+    Returns the serial port error status.
+
+    The I/O device status returns an error code. For example, if open()
+    returns false, or a read/write operation returns -1, this function can
+    be called to find out the reason why the operation failed.
+
+    \sa unsetError()
 */
 SerialPort::PortError SerialPort::error() const
 {
@@ -868,6 +1028,9 @@ SerialPort::PortError SerialPort::error() const
 }
 
 /*!
+    Sets the serial port's error to SerialPort::NoError.
+
+    \sa error()
 */
 void SerialPort::unsetError()
 {
@@ -875,14 +1038,18 @@ void SerialPort::unsetError()
     d->unsetError();
 }
 
-/*!
+/*! \reimp
+    Always returned true. Serial port is sequential device.
 */
 bool SerialPort::isSequential() const
 {
     return true;
 }
 
-/*!
+/*! \reimp
+    Returns the number of incoming bytes that are waiting to be read.
+
+    \sa bytesToWrite(), read()
 */
 qint64 SerialPort::bytesAvailable() const
 {
@@ -895,7 +1062,12 @@ qint64 SerialPort::bytesAvailable() const
     return ret + QIODevice::bytesAvailable();
 }
 
-/*!
+/*! \reimp
+    Returns the number of bytes that are waiting to be written. The
+    bytes are written when control goes back to the event loop or
+    when flush() is called.
+
+    \sa bytesAvailable(), flush()
 */
 qint64 SerialPort::bytesToWrite() const
 {
@@ -908,7 +1080,11 @@ qint64 SerialPort::bytesToWrite() const
     return ret + QIODevice::bytesToWrite();
 }
 
-/*!
+/*! \reimp
+    Returns true if a line of data can be read from the serial port;
+    otherwise returns false.
+
+    \sa readLine()
 */
 bool SerialPort::canReadLine() const
 {
@@ -926,7 +1102,16 @@ static int qt_timeout_value(int msecs, int elapsed)
     return (msecs < 0) ? 0 : msecs;
 }
 
-/*!
+/*! \reimp
+    This function blocks until new data is available for reading and the
+    \l{QIODevice::}{readyRead()} signal has been emitted. The function
+    will timeout after \a msecs milliseconds.
+
+    The function returns true if the readyRead() signal is emitted and
+    there is new data available for reading; otherwise it returns false
+    (if an error occurred or the operation timed out).
+
+    \sa waitForBytesWritten()
 */
 bool SerialPort::waitForReadyRead(int msecs)
 {
@@ -964,7 +1149,7 @@ bool SerialPort::waitForReadyRead(int msecs)
     return false;
 }
 
-/*!
+/*! \reimp
 */
 bool SerialPort::waitForBytesWritten(int msecs)
 {
@@ -1004,24 +1189,65 @@ bool SerialPort::waitForBytesWritten(int msecs)
 
 /* Public slots */
 
+/*!
+    Sets the desired state of the line signal DTR,
+    depending on the flag \a set. If successful, returns true;
+    otherwise false.
+
+    If the flag is true then DTR signal is established in the high;
+    otherwise low.
+
+    \sa lines(), dtr()
+*/
 bool SerialPort::setDtr(bool set)
 {
     Q_D(SerialPort);
     return d->setDtr(set);
 }
 
+/*!
+    Sets the desired state of the line signal RTS,
+    depending on the flag \a set. If successful, returns true;
+    otherwise false.
+
+    If the flag is true then RTS signal is established in the high;
+    otherwise low.
+
+    \sa lines(), rts()
+*/
 bool SerialPort::setRts(bool set)
 {
     Q_D(SerialPort);
     return d->setRts(set);
 }
 
+/*!
+    Sends a continuous stream of zero bits during a specified period
+    of time \a duration in msec if the terminal is using asynchronous
+    serial data. If successful, returns true; otherwise false.
+
+    If duration is zero then zero bits are transmitted by at least
+    0.25 seconds, but no more than 0.5 seconds.
+
+    If duration is non zero then zero bits are transmitted within a certain
+    period of time depending on implementation.
+
+    \sa setBreak()
+*/
 bool SerialPort::sendBreak(int duration)
 {
     Q_D(SerialPort);
     return d->sendBreak(duration);
 }
 
+/*!
+    Control the signal break, depending on the flag \a set.
+    If successful, returns true; otherwise false.
+
+    If set is false then enable break transmission; otherwise disable.
+
+    \sa sendBreak()
+*/
 bool SerialPort::setBreak(bool set)
 {
     Q_D(SerialPort);
@@ -1030,6 +1256,8 @@ bool SerialPort::setBreak(bool set)
 
 /* Protected methods */
 
+/*! \reimp
+*/
 qint64 SerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
@@ -1064,11 +1292,15 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
     return readSoFar;
 }
 
+/*! \reimp
+*/
 qint64 SerialPort::readLineData(char *data, qint64 maxSize)
 {
     return QIODevice::readLineData(data, maxSize);
 }
 
+/*! \reimp
+*/
 qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
