@@ -11,15 +11,20 @@ QT_USE_NAMESPACE
 
 /*!
     \class SerialPortInfo
-    \brief The SerialPortInfo class gives access to information about ...
+    \brief The SerialPortInfo class gives access to information about
+    existing serial ports.
 
     \ingroup network??
     \inmodule QtNetwork??
 
-    SerialPortInfo ... (full description)
-    ...
-    ...
+    Use the static functions to generate a list of SerialPortInfo objects.
+    Each SerialPortInfo object in the list represents a single serial port
+    and can be queried for port name, system location, description,
+    manufacturer.
 
+
+    ...
+    ...
 
     \sa SerialPort
 */
