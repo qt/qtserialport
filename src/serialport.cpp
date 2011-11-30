@@ -23,6 +23,10 @@ QT_USE_NAMESPACE
 
 /* Public methods */
 
+/*! \internal
+
+    Constructs a SerialPortPrivate. Initializes all members.
+*/
 SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     : m_readBufferMaxSize(0)
     , m_readBuffer(SERIALPORT_BUFFERSIZE)
@@ -49,32 +53,71 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     Q_ASSERT(m_engine);
 }
 
+/*! \internal
+
+    Destructs the SerialPort. Also if the native engine is
+    exists, then delete it.
+*/
 SerialPortPrivate::~SerialPortPrivate()
 {
     if (m_engine)
         delete m_engine;
 }
 
+/*! \internal
+
+    Sets the internal variable system location, by converting
+    the serial \a port name. Converting serial port name does
+    native engine, this conversion is platform-dependent.
+    That is, performed the converting inverse by
+    method SerialPortPrivate::port().
+*/
 void SerialPortPrivate::setPort(const QString &port)
 {
     m_systemLocation = m_engine->toSystemLocation(port);
 }
 
+/*! \internal
+
+    Returns the serial port name obtained by converting internal
+    the system location variable. Converting system location does
+    native engine, this conversion is platform-dependent. That is,
+    performed the converting inverse by method
+    SerialPortPrivate::setPort().
+*/
 QString SerialPortPrivate::port() const
 {
     return m_engine->fromSystemLocation(m_systemLocation);
 }
 
+/*! \internal
+
+    Opens the serial port with a given internal system location
+    vaeiable for the given open \a mode. This operation is
+    platform-dependent, and it provides native engine.
+*/
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     return m_engine->open(m_systemLocation, mode);
 }
 
+/*! \internal
+
+    Closes the serial port specified in the internal variable
+    as system location. This operation is platform-dependent,
+    and it provides native engine.
+*/
 void SerialPortPrivate::close()
 {
     m_engine->close(m_systemLocation);
 }
 
+/*! \internal
+
+    Sets the desired speed \a rate for a given direction \a dir
+    for the serial port. This operation is platform-dependent,
+    and it provides native engine.
+*/
 bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if (m_engine->setRate(rate, dir)) {
@@ -87,6 +130,11 @@ bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
     return false;
 }
 
+/*! \internal
+
+    Returns the current value of the speed of a given direction
+    \a dir from the corresponding internal variables.
+*/
 qint32 SerialPortPrivate::rate(SerialPort::Directions dir) const
 {
     if (dir == SerialPort::AllDirections)
@@ -94,6 +142,12 @@ qint32 SerialPortPrivate::rate(SerialPort::Directions dir) const
     return (dir & SerialPort::Input) ? (m_inRate) : (m_outRate);
 }
 
+/*! \internal
+
+    Sets the desired number of data bits \a dataBits in byte
+    for the serial port. This operation is platform-dependent,
+    and it provides native engine.
+*/
 bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
 {
     if (m_engine->setDataBits(dataBits)) {
@@ -103,11 +157,22 @@ bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
     return false;
 }
 
+/*! \internal
+
+    Returns the current number of data bits in byte from the
+    corresponding internal variable.
+*/
 SerialPort::DataBits SerialPortPrivate::dataBits() const
 {
     return m_dataBits;
 }
 
+/*! \internal
+
+    Sets the desired \a parity control mode for the serial port.
+    This operation is platform-dependent, and it provides
+    native engine.
+*/
 bool SerialPortPrivate::setParity(SerialPort::Parity parity)
 {
     if (m_engine->setParity(parity)) {
@@ -117,11 +182,22 @@ bool SerialPortPrivate::setParity(SerialPort::Parity parity)
     return false;
 }
 
+/*! \internal
+
+    Returns the current parity control mode from the
+    corresponding internal variable.
+*/
 SerialPort::Parity SerialPortPrivate::parity() const
 {
     return m_parity;
 }
 
+/*! \internal
+
+    Sets the desired number of stop bits \a stopBits in frame for
+    the serial port. This operation is platform-dependent, and
+    it provides native engine.
+*/
 bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
 {
     if (m_engine->setStopBits(stopBits)) {
@@ -131,11 +207,22 @@ bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
     return false;
 }
 
+/*! \internal
+
+    Returns the current number of stop bits in frame from the
+    corresponding internal variable.
+*/
 SerialPort::StopBits SerialPortPrivate::stopBits() const
 {
     return m_stopBits;
 }
 
+/*! \internal
+
+    Sets the desired \a flow control mode for the serial port.
+    This operation is platform-dependent, and it provides
+    native engine.
+*/
 bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
 {
     if (m_engine->setFlowControl(flow)) {
@@ -145,36 +232,76 @@ bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
     return false;
 }
 
+/*! \internal
+
+    Returns the current flow comtrol mode from the
+    corresponding internal variable.
+*/
 SerialPort::FlowControl SerialPortPrivate::flowControl() const
 {
     return m_flow;
 }
 
+/*! \internal
+
+    Returns DTR signal state. This operation is platform-dependent,
+    and it provides native engine.
+*/
 bool SerialPortPrivate::dtr() const
 {
     return m_engine->lines() & SerialPort::Dtr;
 }
 
+/*! \internal
+
+    Returns RTS signal state. This operation is platform-dependent,
+    and it provides native engine.
+*/
 bool SerialPortPrivate::rts() const
 {
     return m_engine->lines() & SerialPort::Rts;
 }
 
+/*! \internal
+
+    Set desired DTR signal state \a set. This operation is
+    platform-dependent, and it provides native engine.
+*/
 bool SerialPortPrivate::setDtr(bool set)
 {
     return m_engine->setDtr(set);
 }
 
+/*! \internal
+
+    Set desired DTR signal state \a set. This operation is
+    platform-dependent, and it provides native engine.
+*/
 bool SerialPortPrivate::setRts(bool set)
 {
     return m_engine->setRts(set);
 }
 
+/*! \internal
+
+    Returns the bitmap signals of RS-232 lines. This operation is
+    platform-dependent, and it provides native engine.
+*/
 SerialPort::Lines SerialPortPrivate::lines() const
 {
     return m_engine->lines();
 }
 
+/*! \internal
+
+    Writes pending data in the write buffers to the serial port.
+    The function writes as much as it can without blocking.
+
+    It is usually invoked by canWriteNotification after one or more
+    calls to write().
+
+    Emits bytesWritten().
+*/
 bool SerialPortPrivate::flush()
 {
     Q_Q(SerialPort);
@@ -209,21 +336,46 @@ bool SerialPortPrivate::flush()
     return true;
 }
 
+/*! \internal
+
+    Resets and clears the receiving and transmitting driver buffers
+    (UART). This operation is platform-dependent, and it set
+    provides native engine.
+*/
 bool SerialPortPrivate::reset()
 {
     return m_engine->reset();
 }
 
+/*! \internal
+
+    Sends a continuous stream of zero bits during a specified period
+    of time \a duration in msec. This operation is platform-dependent,
+    and it set provides native engine.
+*/
 bool SerialPortPrivate::sendBreak(int duration)
 {
     return m_engine->sendBreak(duration);
 }
 
+/*! \internal
+
+    Control the signal break, depending on the \a set. This operation
+    is platform-dependent, and it set provides native engine.
+*/
 bool SerialPortPrivate::setBreak(bool set)
 {
     return m_engine->setBreak(set);
 }
 
+/*! \internal
+
+    Sets the type of \a policy processing received symbol at parity
+    error is detected the corresponding internal variable. The value
+    of this variable is further taken into account when processing
+    received symbol in the implementation of native methods of reading
+    in native engine.
+*/
 bool SerialPortPrivate::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     const bool ret = (policy == m_policy) || m_engine->setDataErrorPolicy(policy);
@@ -232,46 +384,103 @@ bool SerialPortPrivate::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
     return ret;
 }
 
+/*! \internal
+
+    Returns the current value internal policy variable.
+*/
 SerialPort::DataErrorPolicy SerialPortPrivate::dataErrorPolicy() const
 {
     return m_policy;
 }
 
+/*! \internal
+
+    Returns the current error code.
+*/
 SerialPort::PortError SerialPortPrivate::error() const
 {
     return m_portError;
 }
 
+/*! \internal
+
+    Clears error code.
+*/
 void SerialPortPrivate::unsetError()
 {
     m_portError = SerialPort::NoError;
 }
 
+/*! \internal
+
+    Set \a error code in the corresponding internal variable.
+*/
 void SerialPortPrivate::setError(SerialPort::PortError error)
 {
     m_portError = error;
 }
 
+/*! \internal
+
+    Returns the number of bytes available for reading, which
+    are in the receive buffer driver (UART). This operation
+    is platform-dependent, and it set provides native engine.
+*/
 qint64 SerialPortPrivate::bytesAvailable() const
 {
     return m_engine->bytesAvailable();
 }
 
+/*! \internal
+
+    Returns the number of bytes ready to send to that are in
+    the transmit buffer driver (UART). This operation
+    is platform-dependent, and it set provides native engine.
+*/
 qint64 SerialPortPrivate::bytesToWrite() const
 {
     return m_engine->bytesToWrite();
 }
 
+/*! \internal
+
+    Reads data into the pointer \a data of length \a len,
+    which are located in the receive buffer driver (UART).
+    This operation is platform-dependent, and it set provides
+    native engine.
+*/
 qint64 SerialPortPrivate::read(char *data, qint64 len)
 {
     return m_engine->read(data, len);
 }
 
+/*! \internal
+
+    Write data from the pointer \a data of length \a len,
+    to the transmit buffer driver (UART).
+    This operation is platform-dependent, and it set provides
+    native engine.
+*/
 qint64 SerialPortPrivate::write(const char *data, qint64 len)
 {
     return m_engine->write(data, len);
 }
 
+/*! \internal
+
+    Implements a generic "wait" method, expected within the \a timeout
+    in millisecond occurrence of any of the two events:
+
+    - appearance in the reception buffer driver (UART) at least one
+    character, if the flag \a checkRead is set on true
+    - devastation of the transmit buffer driver (UART) with the transfer
+    of the last character, if the flag \a checkWrite is set on true
+
+    Also, all these events can happen simultaneously. The result of
+    catch of the corresponding event returns to the variables
+    \a selectForRead and \a selectForWrite. This operation is
+    platform-dependent, and it set provides native engine.
+*/
 bool SerialPortPrivate::waitForReadOrWrite(int timeout,
                                            bool checkRead, bool checkWrite,
                                            bool *selectForRead, bool *selectForWrite)
@@ -279,12 +488,23 @@ bool SerialPortPrivate::waitForReadOrWrite(int timeout,
     return m_engine->select(timeout, checkRead, checkWrite, selectForRead, selectForWrite);
 }
 
+/*! \internal
+
+    Clears internal read and write buffers of the class.
+*/
 void SerialPortPrivate::clearBuffers()
 {
     m_writeBuffer.clear();
     m_readBuffer.clear();
 }
 
+/*! \internal
+
+    Reads data from the serial port into the read buffer. Returns
+    true on success; otherwise false. This operation takes place
+    automatically when the driver (UART) in the input buffer have
+    of at least one byte, i.e. by event.
+*/
 bool SerialPortPrivate::readFromPort()
 {
     qint64 bytesToRead = (m_policy == SerialPort::IgnorePolicy) ?
@@ -310,6 +530,12 @@ bool SerialPortPrivate::readFromPort()
     return true;
 }
 
+/*! \internal
+
+    This method is called from native engine when new data is
+    available for reading, ie is the handler read notification.
+    Handles recursive calls.
+*/
 bool SerialPortPrivate::canReadNotification()
 {
     Q_Q(SerialPort);
@@ -383,6 +609,12 @@ bool SerialPortPrivate::canReadNotification()
     return true;
 }
 
+/*! \internal
+
+    This method is called from native engine when the serial
+    port ready for writing, ie is the handler write notification.
+    Handles recursive calls.
+*/
 bool SerialPortPrivate::canWriteNotification()
 {
 #if defined (Q_OS_WINCE)
@@ -407,6 +639,13 @@ bool SerialPortPrivate::canWriteNotification()
     return (m_writeBuffer.size() < tmp);
 }
 
+/*! \internal
+
+    This method is called from native engine when the serial
+    port hardware detect an I/O error. For example, the error
+    parity, frame, etc., ie is the handler error notification.
+    Handles recursive calls.
+*/
 bool SerialPortPrivate::canErrorNotification()
 {
 #if defined (Q_OS_WINCE)
