@@ -31,6 +31,7 @@ public:
     SerialPortInfo();
     SerialPortInfo(const SerialPortInfo &other);
     SerialPortInfo(const SerialPort &port);
+    SerialPortInfo(const QString &name);
     ~SerialPortInfo();
 
     SerialPortInfo& operator=(const SerialPortInfo &other);
@@ -49,7 +50,6 @@ public:
     static QList<SerialPortInfo> availablePorts();
 
 private:
-    SerialPortInfo(const QString &name);
     QScopedPointer<SerialPortInfoPrivate, SerialInfoPrivateDeleter> d_ptr;
 };
 

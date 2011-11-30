@@ -166,16 +166,6 @@ SerialPortInfo::SerialPortInfo()
 }
 
 /*!
-    Constructs a SerialPortInfo object from serial port \a name.
-
-    ...
-*/
-SerialPortInfo::SerialPortInfo(const QString &name)
-    : d_ptr(new SerialPortInfoPrivate(name))
-{
-}
-
-/*!
     Constructs a copy of \a other.
 */
 SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
@@ -191,6 +181,22 @@ SerialPortInfo::SerialPortInfo(const SerialPort &port)
 {
     foreach(const SerialPortInfo &info, availablePorts()) {
         if (port.portName() == info.portName()) {
+            *this = info;
+            break;
+        }
+    }
+}
+
+/*!
+    Constructs a SerialPortInfo object from serial port \a name.
+
+    ...
+*/
+SerialPortInfo::SerialPortInfo(const QString &name)
+    : d_ptr(new SerialPortInfoPrivate)
+{
+    foreach(const SerialPortInfo &info, availablePorts()) {
+        if (name == info.portName()) {
             *this = info;
             break;
         }

@@ -15,7 +15,6 @@ class SerialPortInfoPrivate
 {
 public:
     SerialPortInfoPrivate() {}
-    SerialPortInfoPrivate(const QString &name) : portName(name) {}
     ~SerialPortInfoPrivate() {}
 
     QString portName;
