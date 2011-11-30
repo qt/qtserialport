@@ -416,16 +416,141 @@ bool SerialPortPrivate::canErrorNotification()
 
 /*!
     \class SerialPort
-    \brief The SerialPort class provides an interface for ...
+    \brief The SerialPort class provides the base functionality
+    common to all serial ports types.
 
     \reentrant
     \ingroup network??
     \inmodule QtNetwork??
 
-    SerialPort ... (full description)
-    ...
-    ...
+    The basis of SerialPort was chosen class QAbstractSocket, so
+    their the functionality and behavior is similar in some cases.
+    For example, in terms of I/O operations, the implementation of
+    the wait methods, the internal architecture and etc. Especially,
+    the implementation of some methods of SerialPort take directly
+    from QAbstractSocket with minimal changes.
 
+    SerialPort only provides common functionality, which includes
+    configuring, sending/receiving data stream, obtaining the status
+    and control signals RS-232 lines. In this case, are not supported
+    by specific terminal features as echo, control CR/LF, etc., ie
+    serial port always works in binary mode. Also, do not support the
+    native ability to configure timeouts and delays in reading, that
+    is, reading functions always return immediately. Organization of
+    the delays can be implemented in software, for example:
+
+    <<!!! My
+    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    <<!!!
+
+    Also, the SerialPort implementation does not provide tracking and
+    notification when the signal lines of the RS-232 serial port is
+    change. This implementation is cumbersome and is not required in
+    usual use serial port.
+
+    So, getting started with the SerialPort should by creating an
+    object of that class. Object can be created on the stack or
+    the heap:
+
+    <<!!! My
+    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    <<!!!
+
+    Next, you must give the name of the object desired serial port,
+    which is really present in the system by calling setPort(). In
+    this case, the name must have a certain format which is platform
+    dependent. If you are unsure of the serial port name, for this
+    you can use the class SerialPortInfo to obtain the correct serial
+    port name. You can also use SerialPortInfo as an input parameter
+    to the method setPort(). To check the currently set name, use
+    the method portName().
+
+    <<!!! My
+    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    <<!!!
+
+    Now you can open the serial port using the method open(). In
+    this case, the serial port can be open in r/o, w/o or r/w mode,
+    by setting the appropriate values ??of the input mode variable of
+    this method. If nothing is specified, the default serial port
+    opens in r/w mode. Also, always at the opening of the serial port,
+    it opens with a internal flag of exclusive access, ie another
+    process or thread can not access to an already open serial port,
+    it is made for unification. If successful, the opening of the
+    SerialPort will try to determine the current port settings and
+    write them to internal parameters of the class.
+
+    To access the current parameters of the serial port used methods
+    rate(), dataBits(), parity(), stopBits(), flowControl(). If you
+    are satisfied with these settings, you can proceed to I/O
+    operation. Otherwise, you can reconfigure the port to the desired
+    setting using setRate(), setDataBits(), setParity(),
+    setStopBits(), setFlowControl().
+
+    Read or write data by calling read() or write(), or use the
+    convenience functions readLine() and readAll(). SerialPort also
+    inherits getChar(), putChar(), and ungetChar() from QIODevice,
+    which work on single bytes. The bytesWritten() signal is
+    emitted when data has been written to the serial port (i.e.,
+    when the connected to the port device has read the data). Note
+    that Qt does not limit the write buffer size. You can monitor
+    its size by listening to this signal.
+
+    The readyRead() signal is emitted every time a new chunk of data
+    has arrived. bytesAvailable() then returns the number of bytes
+    that are available for reading. Typically, you would connect the
+    readyRead() signal to a slot and read all available data there.
+
+    If you don't read all the data at once, the remaining data will
+    still be available later, and any new incoming data will be
+    appended to SerialPort's internal read buffer. To limit the size
+    of the read buffer, call setReadBufferSize().
+
+    To obtain status signals line ports, as well as control him signals
+    methods are used dtr(), rts(), lines(), setDtr(), setRts().
+
+    To close the serial port, call close(). After all pending data has
+    been written to the serial port, SerialPort actually closes the
+    descriptor.
+
+    SerialPort provides a set of functions that suspend the calling
+    thread until certain signals are emitted. These functions can be
+    used to implement blocking serial port:
+
+    \list
+    \o waitForReadyRead() blocks until new data is available for
+    reading.
+
+    \o waitForBytesWritten() blocks until one payload of data has been
+    written to the serial port.
+    \endlist
+
+    We show an example:
+
+    <<!!!
+    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    <<!!!
+
+    If \l{QIODevice::}{waitForReadyRead()} returns false, the
+    connection has been closed or an error has occurred. Programming
+    with a blocking serial port is radically different from
+    programming with a non-blocking serial port. A blocking serial port
+    doesn't require an event loop and typically leads to simpler code.
+    However, in a GUI application, blocking serial port should only be
+    used in non-GUI threads, to avoid freezing the user interface.
+
+    <<!!!
+    See the \l network/fortuneclient and \l network/blockingfortuneclient
+    examples for an overview of both approaches.
+    <<!!!
+
+    \note We discourage the use of the blocking functions together
+    with signals. One of the two possibilities should be used.
+
+    SerialPort can be used with QTextStream and QDataStream's stream
+    operators (operator<<() and operator>>()). There is one issue to
+    be aware of, though: You must make sure that enough data is
+    available before attempting to read it using operator>>().
 
     \sa SerialPortInfo
 */
