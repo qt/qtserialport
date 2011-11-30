@@ -170,6 +170,9 @@ public:
     PortError error() const;
     void unsetError();
 
+    qint64 readBufferSize() const;
+    void setReadBufferSize(qint64 size);
+
     virtual bool isSequential() const;
 
     virtual qint64 bytesAvailable() const;

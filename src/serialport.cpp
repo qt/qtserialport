@@ -13,6 +13,10 @@
 #  include <QtCore/qdatetime.h>
 #endif
 
+#ifndef SERIALPORT_BUFFERSIZE
+#  define SERIALPORT_BUFFERSIZE 16384
+#endif
+
 QT_USE_NAMESPACE
 
 //----------------------------------------------------------------
@@ -21,8 +25,8 @@ QT_USE_NAMESPACE
 
 SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
     : m_readBufferMaxSize(0)
-    , m_readBuffer(16384)
-    , m_writeBuffer(16384)
+    , m_readBuffer(SERIALPORT_BUFFERSIZE)
+    , m_writeBuffer(SERIALPORT_BUFFERSIZE)
     , m_isBuffered(false)
     , m_readSerialNotifierCalled(false)
     , m_readSerialNotifierState(false)
@@ -1161,6 +1165,55 @@ void SerialPort::unsetError()
 {
     Q_D(SerialPort);
     d->unsetError();
+}
+
+/*!
+    Returns the size of the internal read buffer. This limits the
+    amount of data that the client can receive before you call read()
+    or readAll().
+
+    A read buffer size of 0 (the default) means that the buffer has
+    no size limit, ensuring that no data is lost.
+
+    \sa setReadBufferSize(), read()
+*/
+qint64 SerialPort::readBufferSize() const
+{
+    Q_D(const SerialPort);
+    return d->m_readBufferMaxSize;
+}
+
+/*!
+    Sets the size of SerialPort's internal read buffer to be \a
+    size bytes.
+
+    If the buffer size is limited to a certain size, SerialPort
+    won't buffer more than this size of data. Exceptionally, a buffer
+    size of 0 means that the read buffer is unlimited and all
+    incoming data is buffered. This is the default.
+
+    This option is useful if you only read the data at certain points
+    in time (e.g., in a real-time streaming application) or if you
+    want to protect your serial port against receiving too much data,
+    which may eventually cause your application to run out of memory.
+
+    \sa readBufferSize(), read()
+*/
+void SerialPort::setReadBufferSize(qint64 size)
+{
+    Q_D(SerialPort);
+
+    if (d->m_readBufferMaxSize == size)
+        return;
+    d->m_readBufferMaxSize = size;
+    if (!d->m_readSerialNotifierCalled && d->m_engine) {
+        // Ensure that the read notification is enabled if we've now got
+        // room in the read buffer.
+        // But only if we're not inside canReadNotification --
+        // that will take care on its own.
+        if (size == 0 || d->m_readBuffer.size() < size)
+            d->m_engine->setReadNotificationEnabled(true);
+    }
 }
 
 /*! \reimp
