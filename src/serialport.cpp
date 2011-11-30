@@ -477,12 +477,12 @@ bool SerialPortPrivate::canErrorNotification()
     it opens with a internal flag of exclusive access, ie another
     process or thread can not access to an already open serial port,
     it is made for unification. If successful, the opening of the
-    SerialPort will try to determine the current port settings and
-    write them to internal parameters of the class.
+    SerialPort will try to determine the current serial port
+    settings and write them to internal parameters of the class.
 
     To access the current parameters of the serial port used methods
     rate(), dataBits(), parity(), stopBits(), flowControl(). If you
-    are satisfied with these settings, you can proceed to I/O
+    are satisfied with these settings, you can go to proceed to I/O
     operation. Otherwise, you can reconfigure the port to the desired
     setting using setRate(), setDataBits(), setParity(),
     setStopBits(), setFlowControl().
