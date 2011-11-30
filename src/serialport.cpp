@@ -462,8 +462,8 @@ bool SerialPortPrivate::canErrorNotification()
     dependent. If you are unsure of the serial port name, for this
     you can use the class SerialPortInfo to obtain the correct serial
     port name. You can also use SerialPortInfo as an input parameter
-    to the method setPort(). To check the currently set name, use
-    the method portName().
+    to the method setPort(). To retrieve current serial port name use
+    method portName()
 
     <<!!! My
     \snippet doc/src/snippets/network/tcpwait.cpp 0
