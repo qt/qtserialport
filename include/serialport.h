@@ -163,6 +163,7 @@ public:
 
     bool flush();
     virtual bool reset();
+    virtual bool atEnd() const;
 
     bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
     DataErrorPolicy dataErrorPolicy() const;

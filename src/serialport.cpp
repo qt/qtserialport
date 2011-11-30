@@ -714,7 +714,7 @@ bool SerialPortPrivate::canErrorNotification()
 
     Now you can open the serial port using the method open(). In
     this case, the serial port can be open in r/o, w/o or r/w mode,
-    by setting the appropriate values ??of the input mode variable of
+    by setting the appropriate values of the input mode variable of
     this method. If nothing is specified, the default serial port
     opens in r/w mode. Also, always at the opening of the serial port,
     it opens with a internal flag of exclusive access, ie another
@@ -1354,6 +1354,26 @@ bool SerialPort::reset()
     Q_D(SerialPort);
     d->clearBuffers();
     return d->reset();
+}
+
+/*! \reimp
+
+     Returns true if no more data is currently
+     available for reading; otherwise returns false.
+
+     This function is most commonly used when reading data from the
+     serial port in a loop. For example:
+
+     <<!!!
+     \snippet doc/src/snippets/code/src_network_socket_qabstractsocket.cpp 2
+     <<!!!
+
+     \sa bytesAvailable(), readyRead()
+ */
+bool SerialPort::atEnd() const
+{
+    Q_D(const SerialPort);
+    return QIODevice::atEnd() && (!isOpen() || d->m_readBuffer.isEmpty());
 }
 
 /*!
