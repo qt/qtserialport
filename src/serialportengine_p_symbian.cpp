@@ -243,11 +243,13 @@ SerialPort::Lines SymbianSerialPortEngine::lines() const
 */
 bool SymbianSerialPortEngine::setDtr(bool set)
 {
+    TInt r;
     if (set)
-        m_descriptor.SetSignalsToMark(KSignalDTR);
+        r = m_descriptor.SetSignalsToMark(KSignalDTR);
     else
-        m_descriptor.SetSignalsToSpace(KSignalDTR);
-    return true;
+        r = m_descriptor.SetSignalsToSpace(KSignalDTR);
+
+    return (r == KErrNone);
 }
 
 /*!
@@ -257,11 +259,13 @@ bool SymbianSerialPortEngine::setDtr(bool set)
 */
 bool SymbianSerialPortEngine::setRts(bool set)
 {
+    TInt r;
     if (set)
-        m_descriptor.SetSignalsToMark(KSignalRTS);
+        r = m_descriptor.SetSignalsToMark(KSignalRTS);
     else
-        m_descriptor.SetSignalsToSpace(KSignalRTS);
-    return true;
+        r = m_descriptor.SetSignalsToSpace(KSignalRTS);
+
+    return (r == KErrNone);
 }
 
 /*!
@@ -279,8 +283,8 @@ bool SymbianSerialPortEngine::flush()
 */
 bool SymbianSerialPortEngine::reset()
 {
-    m_descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
-    return true;
+    TInt r = m_descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
+    return (r == KErrNone);
 }
 
 /*!
