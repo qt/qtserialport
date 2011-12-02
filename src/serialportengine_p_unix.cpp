@@ -2,6 +2,38 @@
     License...
 */
 
+/*! \class UnixSerialPortEngine
+    \internal
+
+    \brief The UnixSerialPortEngine class provides *nix OS
+    platform-specific low level access to a serial port.
+
+    \reentrant
+    \ingroup network??
+    \inmodule QtNetwork??
+
+    Currently the class supports all POSIX-compatible OS (GNU/Linux, *BSD,
+    Mac OSX and etc).
+
+    UnixSerialPortEngine (as well as other platform-dependent engines)
+    is a class with multiple inheritance, which on the one hand,
+    derives from a general abstract class interface SerialPortEngine,
+    on the other hand of a class inherited from QObject.
+
+    From the abstract class SerialPortEngine, it inherits all virtual
+    interface methods that are common to all serial ports on any platform.
+    These methods, the class UnixSerialPortEngine implements use
+    POSIX ABI.
+
+    From QObject-like class, it inherits a specific system Qt features.
+    For example, to track of events from a serial port uses the virtual
+    QObject method eventFilter(), who the make analysis of the events
+    from the type classes QSocketNotifier.
+
+    That is, as seen from the above, the functional UnixSerialPortEngine
+    completely covers all the necessary tasks.
+*/
+
 #include "serialportengine_p_unix.h"
 #include "ttylocker_p_unix.h"
 
@@ -26,6 +58,13 @@ QT_USE_NAMESPACE
 
 /* Public methods */
 
+/*!
+    Constructs a UnixSerialPortEngine with \a parent and
+    initializes all the internal variables of the initial values.
+
+    A pointer \a parent to the object class SerialPortPrivate
+    is required for the recursive call some of its methods.
+*/
 UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *parent)
     : m_descriptor(-1)
     , m_readNotifier(0)
@@ -39,6 +78,10 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *parent)
     ::memset(&m_oldTermios, 0, size);
 }
 
+/*!
+    Stops the tracking events of the serial port and
+    destructs a UnixSerialPortEngine,
+*/
 UnixSerialPortEngine::~UnixSerialPortEngine()
 {
     if (m_readNotifier)
@@ -49,6 +92,35 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
         m_exceptionNotifier->setEnabled(false);
 }
 
+/*!
+    Tries to open the descriptor desired serial port by \a location
+    in the given open \a mode.
+
+    Before the opening of the port, checking for on exists the
+    appropriate lock the file and the information therein. If the
+    lock file is present, and the information contained in it is
+    relevant - it is concluded that the current serial port is
+    already occupied.
+
+    In the process of discovery, always set a port in non-blocking
+    mode (when the read operation returns immediately) and tries to
+    determine its current configuration and install them.
+
+    Since the port in the POSIX OS by default opens in shared mode,
+    then this method forcibly puts a port in exclusive mode access.
+    This is done simultaneously in two ways:
+    - set to the pre-open descriptor a flag TIOCEXCL
+    - creates a lock file, which writes the pid of the process, that
+    opened the port and other information
+
+    Need to use two methods due to the fact that on some platforms can
+    not be defined constant TIOCEXCL, in this case, try to use the
+    lock file. Creation and analysis of lock file, by using a special
+    helper class TTYLocker.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
 {
     // First, here need check locked device or not.
@@ -121,6 +193,11 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     return true;
 }
 
+/*!
+    Closes a serial port descriptor. Before closing - clears exclusive
+    access flag and removes the lock file, restore previous serial port
+    settings if necessary.
+*/
 void UnixSerialPortEngine::close(const QString &location)
 {
     // Restore saved port settings.
@@ -142,6 +219,14 @@ void UnixSerialPortEngine::close(const QString &location)
     m_descriptor = -1;
 }
 
+/*!
+    Returns a bitmap state of RS-232 line signals. On error,
+    bitmap will be empty (equal zero).
+
+    POSIX ABI allows you to receive all the state of signals:
+    LE, DTR, RTS, ST, SR, CTS, DCD, RING, DSR. Of course, if the
+    corresponding constants are defined in a particular platform.
+*/
 SerialPort::Lines UnixSerialPortEngine::lines() const
 {
     int arg = 0;
@@ -190,6 +275,7 @@ SerialPort::Lines UnixSerialPortEngine::lines() const
     return ret;
 }
 
+//
 static bool trigger_out_line(int fd, int bit, bool set)
 {
     int arg = 0;
@@ -212,6 +298,11 @@ static bool trigger_out_line(int fd, int bit, bool set)
     return ret;
 }
 
+/*!
+    Set DTR signal to state \a set.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::setDtr(bool set)
 {
     bool ret = trigger_out_line(m_descriptor, TIOCM_DTR, set);
@@ -222,6 +313,11 @@ bool UnixSerialPortEngine::setDtr(bool set)
     return ret;
 }
 
+/*!
+    Set RTS signal to state \a set.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::setRts(bool set)
 {
     bool ret = trigger_out_line(m_descriptor, TIOCM_RTS, set);
@@ -232,6 +328,12 @@ bool UnixSerialPortEngine::setRts(bool set)
     return ret;
 }
 
+/*!
+    The shall block until all data output written to the serial
+    port is transmitted.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::flush()
 {
     bool ret = (::tcdrain(m_descriptor) != -1);
@@ -242,6 +344,12 @@ bool UnixSerialPortEngine::flush()
     return ret;
 }
 
+/*!
+    Flushes both data received but not read and data written
+    but not transmitted.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::reset()
 {
     bool ret = (::tcflush(m_descriptor, TCIOFLUSH) != -1);
@@ -252,6 +360,11 @@ bool UnixSerialPortEngine::reset()
     return ret;
 }
 
+/*!
+    Send a break for a specific \a duration.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::sendBreak(int duration)
 {
     bool ret = (::tcsendbreak(m_descriptor, duration) != -1);
@@ -262,6 +375,12 @@ bool UnixSerialPortEngine::sendBreak(int duration)
     return ret;
 }
 
+/*!
+    Turn break on or off, that is, start or stop sending zero
+    bits, depending on the parameter \a set.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::setBreak(bool set)
 {
     bool ret = (::ioctl(m_descriptor, set ? TIOCSBRK : TIOCCBRK) != -1);
@@ -272,6 +391,10 @@ bool UnixSerialPortEngine::setBreak(bool set)
     return ret;
 }
 
+/*!
+    If successful, returns the number of bytes that are
+    immediately available for reading; otherwise -1.
+*/
 qint64 UnixSerialPortEngine::bytesAvailable() const
 {
     int cmd = 0;
@@ -286,12 +409,29 @@ qint64 UnixSerialPortEngine::bytesAvailable() const
     return nbytes;
 }
 
+/*!
+    Not supported on POSIX-compatible platform,
+    always returns 0.
+*/
 qint64 UnixSerialPortEngine::bytesToWrite() const
 {
     // FIXME: FIONWRITE (or analogy) is exists?
     return 0;
 }
 
+/*!
+    If successful, returns to the external buffer \a data the
+    real number of bytes read, which can be less than the
+    requested \a len; otherwise returned -1 with set error code.
+    In any case, reading function returns immediately.
+
+    Some platforms do not support the mark or space parity, so
+    running software emulation of these modes in the process of
+    reading.
+
+    Also, this method processed the policy of operating with the
+    received symbol, in which the parity or frame error is detected.
+*/
 qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 {
     qint64 bytesRead = 0;
@@ -339,6 +479,15 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
     return bytesRead;
 }
 
+/*!
+    Write \a data to serial port. If successful, returns the
+    real number of bytes write, which can be less than the
+    requested \a len; otherwise returned -1 with set error code.
+
+    Some platforms do not support the mark or space parity, so
+    running software emulation of these modes in the process of
+    writting.
+*/
 qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 {
     qint64 bytesWritten = 0;
@@ -374,6 +523,22 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
     return bytesWritten;
 }
 
+/*!
+    Implements a function blocking for waiting of events  on the
+    timeout in millisecond, those listed in fdread will be watched
+    to see if characters become available for reading (more precisely,
+    to see if a read will not block; in particular, a file descriptor
+    is also ready on end-of-file), those in fdwrite will be watched
+    to see if a write will not block.
+
+    Event fdread controlled, if the flag \a checkRead is set on true,
+    and fdwrite wehn flag \a checkWrite is set on true. The result
+    of catch in each of the events, save to the corresponding
+    variables \a selectForRead and \a selectForWrite.
+
+    Returns true if the occurrence of any event before the timeout;
+    otherwise returns false.
+*/
 bool UnixSerialPortEngine::select(int timeout,
                                   bool checkRead, bool checkWrite,
                                   bool *selectForRead, bool *selectForWrite)
@@ -419,6 +584,10 @@ static const QString notUsedPathPrefix = "/dev/tty.";
 static const QString defaultPathPrefix = "/dev/";
 #endif
 
+/*!
+    Converts a platform specific \a port name to system location
+    and return result.
+*/
 QString UnixSerialPortEngine::toSystemLocation(const QString &port) const
 {
     QString ret = port;
@@ -432,6 +601,10 @@ QString UnixSerialPortEngine::toSystemLocation(const QString &port) const
     return ret;
 }
 
+/*!
+    Converts a platform specific system \a location to port name
+    and return result.
+*/
 QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
 {
     QString ret = location;
@@ -578,6 +751,17 @@ static qint32 detect_standard_rate(qint32 rate)
     }
 }
 
+/*!
+    Set desired serial port \a rate by given direction \a dir,
+    where \a rate is expressed by any positive integer type qint32.
+    The method attempts to analyze the type of the desired speed:
+    standard or custom, and the results of the analysis trying to
+    install it using the corresponding internal function
+    setCustomRate() or setStandartRate().
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if (rate == SerialPort::UnknownRate) {
@@ -597,6 +781,13 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     return ret;
 }
 
+/*!
+    Set desired number of data bits \a dataBits in byte. POSIX
+    native supported all present number of data bits 5, 6, 7, 8.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
@@ -627,6 +818,16 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     return updateTermios();
 }
 
+/*!
+    Set desired \a parity control mode. POSIX native not supported
+    modes mark and space, so is their software emulation in the
+    methods read() and write(). But, in particular, some GNU/Linux
+    has hardware support for these modes, therefore, no need to
+    emulate.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
@@ -669,6 +870,13 @@ bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
     return updateTermios();
 }
 
+/*!
+    Set desired number of stop bits \a stopBits in frame. POSIX
+    native supported only 1, 2 number of stop bits.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
@@ -692,6 +900,14 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
     return updateTermios();
 }
 
+/*!
+    Set desired \a flow control mode. POSIX  native supported all
+    present flow control modes no control, hardware (RTS/CTS),
+    software (XON/XOFF).
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
@@ -719,6 +935,10 @@ bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
     return updateTermios();
 }
 
+/*!
+    Set desired char error \a policy when errors are detected
+    frame or parity.
+*/
 bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     tcflag_t parmrkMask = PARMRK;
@@ -750,11 +970,22 @@ bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy
     return updateTermios();
 }
 
+/*!
+    Returns the current status of the read notification subsystem.
+*/
 bool UnixSerialPortEngine::isReadNotificationEnabled() const
 {
     return (m_readNotifier && m_readNotifier->isEnabled());
 }
 
+/*!
+    Enables or disables read notification subsystem, depending on
+    the \a enable parameter. If the subsystem is enabled, it will
+    asynchronously track the occurrence of an event fdread.
+    Thanks to that, SerialPort can emit a signal readyRead() and
+    fill up the internal receive buffer with new data, that
+    automatically received from a serial port in the event loop.
+*/
 void UnixSerialPortEngine::setReadNotificationEnabled(bool enable)
 {
     if (m_readNotifier)
@@ -768,11 +999,21 @@ void UnixSerialPortEngine::setReadNotificationEnabled(bool enable)
     }
 }
 
+/*!
+    Returns the current status of the write notification subsystem.
+*/
 bool UnixSerialPortEngine::isWriteNotificationEnabled() const
 {
     return (m_writeNotifier && m_writeNotifier->isEnabled());
 }
 
+/*!
+    Enables or disables write notification subsystem, depending on
+    the \a enable parameter. If the subsystem is enabled, it will
+    asynchronously track the occurrence of an event fdwrite.
+    Thanks to that, SerialPort can write data from internal transfer
+    buffer, to serial port automatically in the event loop.
+*/
 void UnixSerialPortEngine::setWriteNotificationEnabled(bool enable)
 {
     if (m_writeNotifier)
@@ -786,12 +1027,21 @@ void UnixSerialPortEngine::setWriteNotificationEnabled(bool enable)
     }
 }
 
+/*!
+    Not used in POSIX implementation, error handling is carried
+    out in other ways.
+
+    Always returned false.
+*/
 bool UnixSerialPortEngine::processIOErrors()
 {
-    // Impl me
+    // No need impl.
     return false;
 }
 
+/*!
+    Stub, not used in POSIX implementation.
+*/
 void UnixSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
 {
     Q_UNUSED(type);
@@ -799,6 +1049,9 @@ void UnixSerialPortEngine::lockNotification(NotificationLockerType type, bool us
     // For *nix is not used! Used only for WinCE!
 }
 
+/*!
+    Stub, not used in POSIX implementation.
+*/
 void UnixSerialPortEngine::unlockNotification(NotificationLockerType type)
 {
     Q_UNUSED(type);
@@ -807,6 +1060,8 @@ void UnixSerialPortEngine::unlockNotification(NotificationLockerType type)
 
 /* Protected methods */
 
+// Convert unix rate as speed_t to
+// really value as qint32.
 static qint32 unixrate2valuerate(speed_t unixrate)
 {
     qint32 ret = SerialPort::UnknownRate;
@@ -967,6 +1222,10 @@ static qint32 unixrate2valuerate(speed_t unixrate)
     return ret;
 }
 
+/*!
+    Attempts to determine the current settings of the serial port,
+    wehn it opened. Used only in the method open().
+*/
 void UnixSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
@@ -1034,6 +1293,13 @@ void UnixSerialPortEngine::detectDefaultSettings()
     }
 }
 
+/*!
+    POSIX event loop for notification subsystem.
+    Asynchronously in event loop continuous mode tracking the
+    events from the serial port, as: fderror, fdread, fdwrite.
+    When is occur a relevant event, calls him handler from
+    a parent class SerialPortPrivate.
+*/
 bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 {
     if (e->type() == QEvent::SockAct) {
@@ -1055,6 +1321,12 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 
 /* Private methods */
 
+/*!
+    Updates the termios structure wehn changing of any the
+    parameters a serial port.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::updateTermios()
 {
     if (::tcsetattr(m_descriptor, TCSANOW, &m_currTermios) == -1) {
@@ -1064,6 +1336,12 @@ bool UnixSerialPortEngine::updateTermios()
     return true;
 }
 
+/*!
+    Set only standard serial port \a rate as speed_t by given
+    deirection \a dir.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::setStandartRate(SerialPort::Directions dir, speed_t rate)
 {
     if (((dir & SerialPort::Input) && (::cfsetispeed(&m_currTermios, rate) == -1))
@@ -1073,6 +1351,13 @@ bool UnixSerialPortEngine::setStandartRate(SerialPort::Directions dir, speed_t r
     return updateTermios();
 }
 
+/*!
+    Attempts to set desired the custom \a rate as qint32. Not all
+    POSIX-compatible platforms support this feature, at least for
+    GNU/Linux and MacOSX is possible.
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::setCustomRate(qint32 rate)
 {
     int result = -1;
@@ -1108,6 +1393,12 @@ bool UnixSerialPortEngine::setCustomRate(qint32 rate)
     return (result != -1);
 }
 
+/*!
+    Analyzes the forbidden combinations a data bits \a dataBits with
+    a top bits \a stopBits. Used in the methods setDataBits(), setStopBits().
+
+    If successful, returns true; otherwise false.
+*/
 bool UnixSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                                     SerialPort::StopBits stopBits) const
 {
@@ -1128,6 +1419,11 @@ static inline bool evenParity(quint8 c)
     return (c ^ (c >> 4)) & 1;
 }
 
+/*!
+    For platforms that do not have the support of parities mark and space
+    performed character by character emulation data transmitted, that
+    one by one character is written to the port.
+*/
 qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
 {
     qint64 ret = 0;
@@ -1157,6 +1453,11 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
     return ret;
 }
 
+/*!
+    For platforms that do not have the support of parities mark and space
+    performed character by character emulation data received, that
+    one by one character is read from the port.
+*/
 qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
 {
     qint64 ret = 0;
