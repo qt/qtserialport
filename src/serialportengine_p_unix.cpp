@@ -102,9 +102,9 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
     relevant - it is concluded that the current serial port is
     already occupied.
 
-    In the process of discovery, always set a port in non-blocking
-    mode (when the read operation returns immediately) and tries to
-    determine its current configuration and install them.
+    In the process of discovery, always set a serial port in
+    non-blocking mode (when the read operation returns immediately)
+    and tries to determine its current configuration and install them.
 
     Since the port in the POSIX OS by default opens in shared mode,
     then this method forcibly puts a port in exclusive mode access.
@@ -524,7 +524,7 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 }
 
 /*!
-    Implements a function blocking for waiting of events  on the
+    Implements a function blocking for waiting of events on the
     timeout in millisecond, those listed in fdread will be watched
     to see if characters become available for reading (more precisely,
     to see if a read will not block; in particular, a file descriptor
@@ -752,7 +752,7 @@ static qint32 detect_standard_rate(qint32 rate)
 }
 
 /*!
-    Set desired serial port \a rate by given direction \a dir,
+    Set desired \a rate by given direction \a dir,
     where \a rate is expressed by any positive integer type qint32.
     The method attempts to analyze the type of the desired speed:
     standard or custom, and the results of the analysis trying to
