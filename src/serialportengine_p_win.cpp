@@ -732,7 +732,7 @@ QString WinSerialPortEngine::fromSystemLocation(const QString &location) const
 }
 
 /*!
-    Set desired serial port \a rate by given direction \a dir.
+    Set desired \a rate by given direction \a dir.
     However, windows does not support separate directions, so the
     method will return an error.
 
