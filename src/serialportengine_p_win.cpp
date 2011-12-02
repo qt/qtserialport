@@ -92,7 +92,7 @@ QT_USE_NAMESPACE
 
 /*!
     Constructs a WinSerialPortEngine with \a parent and
-    initializes all the internal variables of the initial values??.
+    initializes all the internal variables of the initial values.
 
     A pointer \a parent to the object class SerialPortPrivate
     is required for the recursive call some of its methods.
@@ -141,10 +141,15 @@ WinSerialPortEngine::~WinSerialPortEngine()
 }
 
 /*!
-    Tries to open the handle desired port by \a location in the
-    given \a mode. In the process of discovery, always puts a port
-    in asynchronous mode (when the read operation returns immediately)
+    Tries to open the handle desired serial port by \a location in the
+    given open \a mode. In the process of discovery, always set a port
+    in non-blocking mode (when the read operation returns immediately)
     and tries to determine its current configuration and install them.
+
+    It should be noted the following features that Windows performs
+    when using the serial port:
+    - support only binary transfers mode
+    - always open in exclusive mode
 
     For Windows NT-based platforms, the serial port is opened in the
     overlapped mode, with flag FILE_FLAG_OVERLAPPED.
@@ -245,7 +250,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
 
 /*!
     Closes a serial port handle. Before closing - restore previous
-    port settings if necessary.
+    serial port settings if necessary.
 */
 void WinSerialPortEngine::close(const QString &location)
 {
@@ -581,7 +586,7 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
     Implements a function blocking for waiting of events EV_RXCHAR or
     EV_TXEMPTY, on the \a timeout in millisecond. Event EV_RXCHAR
     controlled, if the flag \a checkRead is set on true, and
-    EV_TXEMPTY wehn flag \a checkWrite is set on true.The result
+    EV_TXEMPTY wehn flag \a checkWrite is set on true. The result
     of catch in each of the events, save to the corresponding
     variables \a selectForRead and \a selectForWrite.
 
@@ -745,9 +750,8 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 }
 
 /*!
-    Set desired number of data bits \a dataBits in byte.
-    Windows native supported all present number of data bits, as:
-    5, 6, 7, 8.
+    Set desired number of data bits \a dataBits in byte. Windows
+    native supported all present number of data bits 5, 6, 7, 8.
 
     If successful, returns true; otherwise false, with the setup a
     error code.
@@ -765,9 +769,8 @@ bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 }
 
 /*!
-    Set desired \a parity control mode.
-    Windows native supported all present parity types, as:
-    no parity, space, mark, even, odd.
+    Set desired \a parity control mode. Windows native supported
+    all present parity types no parity, space, mark, even, odd.
 
     If successful, returns true; otherwise false, with the setup a
     error code.
@@ -805,7 +808,7 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
 
 /*!
     Set desired number of stop bits \a stopBits in frame.
-    Windows native supported all present number of stop bits, as:
+    Windows native supported all present number of stop bits
     1, 1.5, 2.
 
     If successful, returns true; otherwise false, with the setup a
@@ -837,9 +840,9 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 }
 
 /*!
-    Set desired \a flow control mode.
-    Windows native supported all present flow control modes, as:
-    no control, hardware (RTS/CTS), software (XON/XOFF).
+    Set desired \a flow control mode. Windows native supported all
+    present flow control modes no control, hardware (RTS/CTS),
+    software (XON/XOFF).
 
     If successful, returns true; otherwise false, with the setup a
     error code.
@@ -929,7 +932,7 @@ void WinSerialPortEngine::setReadNotificationEnabled(bool enable)
 }
 
 /*!
-    Returns the current status of the read notification subsystem.
+    Returns the current status of the write notification subsystem.
 */
 bool WinSerialPortEngine::isWriteNotificationEnabled() const
 {
