@@ -2,6 +2,37 @@
     License...
 */
 
+/*! \class SymbianSerialPortEngine
+    \internal
+
+    \brief The SymbianSerialPortEngine class provides *nix OS
+    platform-specific low level access to a serial port.
+
+    \reentrant
+    \ingroup network??
+    \inmodule QtNetwork??
+
+    Currently the class supports all?? version of Symbian OS.
+
+    SymbianSerialPortEngine (as well as other platform-dependent engines)
+    is a class with multiple inheritance, which on the one hand,
+    derives from a general abstract class interface SerialPortEngine,
+    on the other hand of a class inherited from QObject.
+
+    From the abstract class SerialPortEngine, it inherits all virtual
+    interface methods that are common to all serial ports on any platform.
+    These methods, the class SymbianSerialPortEngine implements use
+    Symbian API.
+
+    From QObject-like class ...
+    ...
+    ...
+    ...
+
+    That is, as seen from the above, the functional SymbianSerialPortEngine
+    completely covers all the necessary tasks.
+*/
+
 #include "serialportengine_p_symbian.h"
 
 #include <e32base.h>
@@ -62,6 +93,13 @@ QT_USE_NAMESPACE
 
 /* Public methods */
 
+/*!
+    Constructs a SymbianSerialPortEngine with \a parent and
+    initializes all the internal variables of the initial values.
+
+    A pointer \a parent to the object class SerialPortPrivate
+    is required for the recursive call some of its methods.
+*/
 SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *parent)
 {
     Q_ASSERT(parent);
@@ -69,13 +107,32 @@ SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *parent)
     m_parent = parent;
 }
 
+/*!
+    Destructs a SymbianSerialPortEngine,
+*/
 SymbianSerialPortEngine::~SymbianSerialPortEngine()
 {
 
 }
 
+/*!
+    Tries to open the object desired serial port by \a location
+    in the given open \a mode. In the API of Symbian there is no flag
+    to open the port in r/o, w/o or r/w, most likely he always opens
+    as r/w.
+
+    Since the port in the Symbian OS can be open in any access mode,
+    then this method forcibly puts a port in exclusive mode access.
+    In the process of discovery, always set a port in non-blocking
+    mode (when the read operation returns immediately) and tries to
+    determine its current configuration and install them.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
 {
+    // Maybe need added check an ReadWrite open mode?
     Q_UNUSED(mode)
 
     if (!loadDevices()) {
@@ -132,6 +189,10 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
     return true;
 }
 
+/*!
+    Closes a serial port object. Before closing restore previous
+    serial port settings if necessary.
+*/
 void SymbianSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
@@ -143,6 +204,13 @@ void SymbianSerialPortEngine::close(const QString &location)
     m_descriptor.Close();
 }
 
+/*!
+    Returns a bitmap state of RS-232 line signals. On error,
+    bitmap will be empty (equal zero).
+
+    Symbian API allows you to receive only the state of signals:
+    CTS, DSR, DCD, RING, RTS, DTR. Other signals are not available.
+*/
 SerialPort::Lines SymbianSerialPortEngine::lines() const
 {
     SerialPort::Lines ret = 0;
@@ -168,6 +236,11 @@ SerialPort::Lines SymbianSerialPortEngine::lines() const
     return ret;
 }
 
+/*!
+    Set DTR signal to state \a set.
+
+
+*/
 bool SymbianSerialPortEngine::setDtr(bool set)
 {
     if (set)
@@ -177,6 +250,11 @@ bool SymbianSerialPortEngine::setDtr(bool set)
     return true;
 }
 
+/*!
+    Set RTS signal to state \a set.
+
+
+*/
 bool SymbianSerialPortEngine::setRts(bool set)
 {
     if (set)
@@ -186,18 +264,40 @@ bool SymbianSerialPortEngine::setRts(bool set)
     return true;
 }
 
+/*!
+
+*/
 bool SymbianSerialPortEngine::flush()
 {
     // Impl me
     return false;
 }
 
+/*!
+    Resets the transmit and receive serial port buffers
+    independently.
+*/
 bool SymbianSerialPortEngine::reset()
 {
     m_descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
     return true;
 }
 
+/*!
+    Sets a break condition for a specified time \a duration
+    in milliseconds.
+
+    A break condition on a line is when a data line is held
+    permanently high for an indeterminate period which must be
+    greater than the time normally taken to transmit two characters.
+    It is sometimes used as an error signal between computers and
+    other devices attached to them over RS232 lines.
+
+    \note Setting breaks is not supported on the integral ARM
+    serial hardware. EPOC has no support for detecting received
+    breaks. There is no way to detects whether setting a break is
+    supported using Caps().
+*/
 bool SymbianSerialPortEngine::sendBreak(int duration)
 {
     TRequestStatus status;
@@ -205,22 +305,75 @@ bool SymbianSerialPortEngine::sendBreak(int duration)
     return false;
 }
 
+/*!
+
+*/
 bool SymbianSerialPortEngine::setBreak(bool set)
 {
     // Impl me
     return false;
 }
 
+/*!
+    Gets the number of bytes currently waiting in the
+    driver's input buffer. A return value of zero means
+    the buffer is empty.
+*/
 qint64 SymbianSerialPortEngine::bytesAvailable() const
 {
     return qint64(m_descriptor.QueryReceiveBuffer());
 }
 
+/*!
+
+    It is not possible to find out exactly how many bytes are
+    currently in the driver's output buffer waiting to be
+    transmitted. However, this is not an issue since it is easy
+    to ensure that the output buffer is empty. If the
+    KConfigWriteBufferedComplete bit (set via the TCommConfigV01
+    structure's iHandshake field) is clear, then all write
+    requests will delay completion until the data has completely
+    cleared the driver's output buffer.
+    If the KConfigWriteBufferedComplete bit is set, a write of zero
+    bytes to a port which has data in the output buffer is guaranteed
+    to delay completion until the buffer has been fully drained.
+
+*/
 qint64 SymbianSerialPortEngine::bytesToWrite() const
 {
+    // Impl me
     return 0;
 }
 
+/*!
+
+    Reads data from a serial port only if it arrives before a
+    specified time-out (zero). All reads from the serial device
+    use 8-bit descriptors as data buffers, even on a Unicode system.
+
+    The length of the TDes8 is set to zero on entry, which means that
+    buffers can be reused without having to be zeroed first.
+
+    The number of bytes to read is set to the maximum length of the
+    descriptor.
+
+    If a read is issued with a data length of zero the Read() completes
+    immediately but with the side effect that the serial hardware is
+    powered up.
+
+    When a Read() terminates with KErrTimedOut, different protocol
+    modules can show different behaviours. Some may write any data
+    received into the aDes buffer, while others may return just an
+    empty descriptor. In the case of a returned empty descriptor use
+    ReadOneOrMore() to read any data left in the buffer.
+
+    The behaviour of this API after a call to NotifyDataAvailable() is
+    not prescribed and so different CSY's behave differently. IrComm
+    will allow a successful completion of this API after a call to
+    NotifyDataAvailable(), while ECUART and ECACM will complete the
+    request with KErrInUse.
+
+*/
 qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
 {
     TPtr8 buffer((TUint8 *)data, (int)len);
@@ -235,6 +388,24 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
     return qint64(buffer.Length());
 }
 
+/*!
+
+    Writes data to a serial port. All writes to the serial device
+    use 8-bit descriptors as data buffers, even on a Unicode system.
+
+    The number of bytes to write is set to the maximum length of
+    the descriptor.
+
+    When a Write() is issued with a data length of zero it cannot
+    complete until the current handshaking configuration and the
+    state of input control lines indicate that it is possible for
+    data to be immediately written to the serial line, even though no
+    data is to be written. This functionality is useful when
+    determining when serial devices come on line, and checking that
+    the output buffer is empty (if the KConfigWriteBufferedComplete
+    bit is set).
+
+*/
 qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
 {
     TPtrC8 buffer((TUint8*)data, (int)len);
@@ -251,12 +422,17 @@ qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
     return qint64(len);
 }
 
-// FIXME: I'm not sure in implementation this method.
-// Someone needs to check and correct.
+/*!
+
+*/
 bool SymbianSerialPortEngine::select(int timeout,
                                      bool checkRead, bool checkWrite,
                                      bool *selectForRead, bool *selectForWrite)
 {
+
+    // FIXME: I'm not sure in implementation this method.
+    // Someone needs to check and correct.
+
     TRequestStatus timerStatus;
     TRequestStatus readStatus;
     TRequestStatus writeStatus;
@@ -318,20 +494,41 @@ bool SymbianSerialPortEngine::select(int timeout,
     return result;
 }
 
-static const QString defaultPathPostfix = ":";
+//static const QString defaultPathPostfix = ":";
 
+/*!
+    Converts a platform specific \a port name to system location
+    and return result.
+
+    Does not do anything because These concepts are equivalent.
+*/
 QString SymbianSerialPortEngine::toSystemLocation(const QString &port) const
 {
     // Port name is equval to port location.
     return port;
 }
 
+/*!
+    Converts a platform specific system \a location to port name
+    and return result.
+
+    Does not do anything because These concepts are equivalent.
+*/
 QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) const
 {
     // Port name is equval to port location.
     return location;
 }
 
+/*!
+    Set desired \a rate by given direction \a dir.
+    However, Symbian does not support separate directions, so the
+    method will return an error. Also it supports only the standard
+    set of speed.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
@@ -424,6 +621,13 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     return updateCommConfig();
 }
 
+/*!
+    Set desired number of data bits \a dataBits in byte. Symbian
+    native supported all present number of data bits 5, 6, 7, 8.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
     if ((dataBits == SerialPort::UnknownDataBits)
@@ -452,6 +656,13 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     return updateCommConfig();
 }
 
+/*!
+    Set desired \a parity control mode. Symbian native supported
+    all present parity types no parity, space, mark, even, odd.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 {
     if (parity == SerialPort::UnknownParity) {
@@ -481,6 +692,13 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
     return updateCommConfig();
 }
 
+/*!
+    Set desired number of stop bits \a stopBits in frame. Symbian
+    native supported only 1, 2 number of stop bits.
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     if ((stopBits == SerialPort::UnknownStopBits)
@@ -505,6 +723,14 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
     return updateCommConfig();
 }
 
+/*!
+    Set desired \a flow control mode. Symbian native supported all
+    present flow control modes no control, hardware (RTS/CTS),
+    software (XON/XOFF).
+
+    If successful, returns true; otherwise false, with the setup a
+    error code.
+*/
 bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     if (flow == SerialPort::UnknownFlowControl) {
@@ -528,6 +754,9 @@ bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
     return updateCommConfig();
 }
 
+/*!
+
+*/
 bool SymbianSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 {
     Q_UNUSED(policy)
@@ -535,36 +764,54 @@ bool SymbianSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy pol
     return true;
 }
 
+/*!
+
+*/
 bool SymbianSerialPortEngine::isReadNotificationEnabled() const
 {
     // Impl me
     return false;
 }
 
+/*!
+
+*/
 void SymbianSerialPortEngine::setReadNotificationEnabled(bool enable)
 {
     Q_UNUSED(enable)
     // Impl me
 }
 
+/*!
+
+*/
 bool SymbianSerialPortEngine::isWriteNotificationEnabled() const
 {
     // Impl me
     return false;
 }
 
+/*!
+
+*/
 void SymbianSerialPortEngine::setWriteNotificationEnabled(bool enable)
 {
     Q_UNUSED(enable)
     // Impl me
 }
 
+/*!
+
+*/
 bool SymbianSerialPortEngine::processIOErrors()
 {
     // Impl me
     return false;
 }
 
+/*!
+
+*/
 void SymbianSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
 {
     Q_UNUSED(type);
@@ -572,6 +819,9 @@ void SymbianSerialPortEngine::lockNotification(NotificationLockerType type, bool
     // For Symbian is not used! Used only for WinCE!
 }
 
+/*!
+
+*/
 void SymbianSerialPortEngine::unlockNotification(NotificationLockerType type)
 {
     Q_UNUSED(type);
@@ -580,6 +830,10 @@ void SymbianSerialPortEngine::unlockNotification(NotificationLockerType type)
 
 /* Protected methods */
 
+/*!
+    Attempts to determine the current settings of the serial port,
+    wehn it opened. Used only in the method open().
+*/
 void SymbianSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
@@ -731,6 +985,12 @@ void SymbianSerialPortEngine::detectDefaultSettings()
 
 /* Private methods */
 
+/*!
+    Updates the TCommConfig structure wehn changing of any the
+    parameters a serial port.
+
+    If successful, returns true; otherwise false.
+*/
 bool SymbianSerialPortEngine::updateCommConfig()
 {
     if (m_descriptor.SetConfig(m_currSettings) != KErrNone) {
@@ -740,6 +1000,12 @@ bool SymbianSerialPortEngine::updateCommConfig()
     return true;
 }
 
+/*!
+    Analyzes the forbidden combinations a data bits \a dataBits with
+    a top bits \a stopBits. Used in the methods setDataBits(), setStopBits().
+
+    If successful, returns true; otherwise false.
+*/
 bool SymbianSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
                                                        SerialPort::StopBits stopBits) const
 {
