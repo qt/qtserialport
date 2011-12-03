@@ -126,7 +126,7 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *parent)
 
 /*!
     Stops the tracking events of the serial port and
-    destructs a WinSerialPortEngine,
+    destructs a WinSerialPortEngine.
 */
 WinSerialPortEngine::~WinSerialPortEngine()
 {
@@ -142,9 +142,10 @@ WinSerialPortEngine::~WinSerialPortEngine()
 
 /*!
     Tries to open the handle desired serial port by \a location in the
-    given open \a mode. In the process of discovery, always set a port
-    in non-blocking mode (when the read operation returns immediately)
-    and tries to determine its current configuration and install them.
+    given open \a mode. In the process of discovery, always set a
+    serial port in non-blocking mode (when the read operation returns
+    immediately) and tries to determine its current configuration and
+    install them.
 
     It should be noted the following features that Windows performs
     when using the serial port:
@@ -1307,7 +1308,7 @@ bool WinSerialPortEngine::updateDcb()
 }
 
 /*!
-    Updates the COMMTINEUTS structure wehn changing of any timeout the
+    Updates the COMMTIMEUTS structure wehn changing of any timeout the
     parameters a serial port.
 
     If successful, returns true; otherwise false.
