@@ -2,15 +2,16 @@
     License...
 */
 
-/*! \class UnixSerialPortEngine
+/*!
+    \class UnixSerialPortEngine
     \internal
 
     \brief The UnixSerialPortEngine class provides *nix OS
     platform-specific low level access to a serial port.
 
     \reentrant
-    \ingroup network??
-    \inmodule QtNetwork??
+    \ingroup serial
+    \inmodule QSerialDevice
 
     Currently the class supports all POSIX-compatible OS (GNU/Linux, *BSD,
     Mac OSX and etc).

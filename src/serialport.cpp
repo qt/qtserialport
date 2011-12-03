@@ -663,8 +663,8 @@ bool SerialPortPrivate::canErrorNotification()
     common to all serial ports types.
 
     \reentrant
-    \ingroup network??
-    \inmodule QtNetwork??
+    \ingroup serial
+    \inmodule QSerialDevice
 
     The basis of SerialPort was chosen class QAbstractSocket, so
     their the functionality and behavior is similar in some cases.
@@ -683,7 +683,7 @@ bool SerialPortPrivate::canErrorNotification()
     the delays can be implemented in software, for example:
 
     <<!!! My
-    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    \*snippet doc/src/snippets/network/tcpwait.cpp 0
     <<!!!
 
     Also, the SerialPort implementation does not provide tracking and
@@ -696,7 +696,7 @@ bool SerialPortPrivate::canErrorNotification()
     the heap:
 
     <<!!! My
-    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    \*snippet doc/src/snippets/network/tcpwait.cpp 0
     <<!!!
 
     Next, you must give the name of the object desired serial port,
@@ -709,7 +709,7 @@ bool SerialPortPrivate::canErrorNotification()
     method portName()
 
     <<!!! My
-    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    \*snippet doc/src/snippets/network/tcpwait.cpp 0
     <<!!!
 
     Now you can open the serial port using the method open(). In
@@ -771,7 +771,7 @@ bool SerialPortPrivate::canErrorNotification()
     We show an example:
 
     <<!!!
-    \snippet doc/src/snippets/network/tcpwait.cpp 0
+    \*snippet doc/src/snippets/network/tcpwait.cpp 0
     <<!!!
 
     If \l{QIODevice::}{waitForReadyRead()} returns false, the
@@ -783,11 +783,11 @@ bool SerialPortPrivate::canErrorNotification()
     used in non-GUI threads, to avoid freezing the user interface.
 
     <<!!!
-    See the \l network/fortuneclient and \l network/blockingfortuneclient
+    See the \*l network/fortuneclient and \*l network/blockingfortuneclient
     examples for an overview of both approaches.
     <<!!!
 
-    \note We discourage the use of the blocking functions together
+    We discourage the use of the blocking functions together
     with signals. One of the two possibilities should be used.
 
     SerialPort can be used with QTextStream and QDataStream's stream
@@ -1013,7 +1013,7 @@ void SerialPort::setPort(const QString &name)
 }
 
 /*!
-    Sets the port that are stored in instance SerialPortInfo.
+    Sets the port that are stored in instance \a info.
 
     \sa portName(), SerialPortInfo
 */
@@ -1033,27 +1033,27 @@ void SerialPort::setPort(const SerialPortInfo &info)
         \o Platform
         \o Brief Description
     \row
-        \o \l {Windows}
+        \o Windows
         \o Removes the prefix "\\\\.\\" from the system location
            and returns the remainder of the string.
     \row
-        \o \l {Windows CE}
+        \o Windows CE
         \o Removes the postfix ":" from the system location
            and returns the remainder of the string.
     \row
-        \o \l {Symbian}
+        \o Symbian
         \o Returns the system location as it is,
            as it is equivalent to the port name.
     \row
-        \o \l {GNU/Linux}
+        \o GNU/Linux
         \o Removes the prefix "/dev/" from the system location
            and returns the remainder of the string.
     \row
-        \o \l {MacOSX}
+        \o MacOSX
         \o Removes the prefix "/dev/cu." and "/dev/tty." from the
            system location and returns the remainder of the string.
     \row
-        \o \l {Other *nix}
+        \o Other *nix
         \o The same as for GNU/Linux.
     \endtable
 
@@ -1365,7 +1365,7 @@ bool SerialPort::reset()
      serial port in a loop. For example:
 
      <<!!!
-     \snippet doc/src/snippets/code/src_network_socket_qabstractsocket.cpp 2
+     \*snippet doc/src/snippets/code/src_network_socket_qabstractsocket.cpp 2
      <<!!!
 
      \sa bytesAvailable(), readyRead()
@@ -1669,7 +1669,7 @@ bool SerialPort::setRts(bool set)
     If duration is non zero then zero bits are transmitted within a certain
     period of time depending on implementation.
 
-    \sa setBreak()
+    \sa setBreak(), clearBreak()
 */
 bool SerialPort::sendBreak(int duration)
 {
@@ -1681,9 +1681,9 @@ bool SerialPort::sendBreak(int duration)
     Control the signal break, depending on the flag \a set.
     If successful, returns true; otherwise false.
 
-    If set is false then enable break transmission; otherwise disable.
+    If set is true then enable break transmission; otherwise disable.
 
-    \sa sendBreak()
+    \sa clearBreak(), sendBreak()
 */
 bool SerialPort::setBreak(bool set)
 {
@@ -1767,3 +1767,14 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 
     return maxSize;
 }
+
+/*!
+    \fn bool SerialPort::clearBreak(bool clear)
+
+    Control the signal break, depending on the flag \a clear.
+    If successful, returns true; otherwise false.
+
+    If clear is false then enable break transmission; otherwise disable.
+
+    \sa setBreak(), sendBreak()
+*/

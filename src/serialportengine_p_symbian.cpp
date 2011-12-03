@@ -2,15 +2,16 @@
     License...
 */
 
-/*! \class SymbianSerialPortEngine
+/*!
+    \class SymbianSerialPortEngine
     \internal
 
     \brief The SymbianSerialPortEngine class provides *nix OS
     platform-specific low level access to a serial port.
 
     \reentrant
-    \ingroup network??
-    \inmodule QtNetwork??
+    \ingroup serial
+    \inmodule QSerialDevice
 
     Currently the class supports all?? version of Symbian OS.
 
@@ -297,7 +298,7 @@ bool SymbianSerialPortEngine::reset()
     It is sometimes used as an error signal between computers and
     other devices attached to them over RS232 lines.
 
-    \note Setting breaks is not supported on the integral ARM
+    Setting breaks is not supported on the integral ARM
     serial hardware. EPOC has no support for detecting received
     breaks. There is no way to detects whether setting a break is
     supported using Caps().

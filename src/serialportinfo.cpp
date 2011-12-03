@@ -14,8 +14,8 @@ QT_USE_NAMESPACE
     \brief The SerialPortInfo class gives access to information about
     existing serial ports.
 
-    \ingroup network??
-    \inmodule QtNetwork??
+    \ingroup serial
+    \inmodule QSerialDevice
 
     Use the static functions to generate a list of SerialPortInfo objects.
     Each SerialPortInfo object in the list represents a single serial port
@@ -38,117 +38,6 @@ QT_USE_NAMESPACE
 
     Is the name of the device in a shorter form, which is usually represented
     in the interface of the OS for human beings.
-
-    \table
-    \header
-        \o Platform
-        \o Possible variants of the name
-        \o Source of information
-    \row
-        \o \l {Windows}
-        \o ...
-        \o ...
-    \row
-        \o \l {Windows CE}
-        \o ...
-        \o ...
-    \row
-        \o \l {Symbian}
-        \o ...
-        \o ...
-    \row
-        \o \l {GNU/Linux}
-        \o ...
-        \o ...
-    \row
-        \o \l {MacOSX}
-        \o ...
-        \o ...
-    \row
-        \o \l {Other *nix}
-        \o ...
-        \o ...
-    \endtable
-
-    \section1 System location
-
-    \table
-    \header
-        \o Platform
-        \o Brief Description
-    \row
-        \o \l {Windows}
-        \o ...
-    \row
-        \o \l {Windows CE}
-        \o ...
-    \row
-        \o \l {Symbian}
-        \o ...
-    \row
-        \o \l {GNU/Linux}
-        \o ...
-    \row
-        \o \l {MacOSX}
-        \o ...
-    \row
-        \o \l {Other *nix}
-        \o ...
-    \endtable
-
-    \section1 Description
-
-    \table
-    \header
-        \o Platform
-        \o Brief Description
-    \row
-        \o \l {Windows}
-        \o ...
-    \row
-        \o \l {Windows CE}
-        \o ...
-    \row
-        \o \l {Symbian}
-        \o ...
-    \row
-        \o \l {GNU/Linux}
-        \o ...
-    \row
-        \o \l {MacOSX}
-        \o ...
-    \row
-        \o \l {Other *nix}
-        \o ...
-    \endtable
-
-    \section1 Manufacturer
-
-    \table
-    \header
-        \o Platform
-        \o Brief Description
-    \row
-        \o \l {Windows}
-        \o ...
-    \row
-        \o \l {Windows CE}
-        \o ...
-    \row
-        \o \l {Symbian}
-        \o ...
-    \row
-        \o \l {GNU/Linux}
-        \o ...
-    \row
-        \o \l {MacOSX}
-        \o ...
-    \row
-        \o \l {Other *nix}
-        \o ...
-    \endtable
-
-
 
     \sa SerialPort
 */
@@ -211,11 +100,17 @@ SerialPortInfo::~SerialPortInfo()
 {
 }
 
+/*!
+    Bla bla \a other
+*/
 void SerialPortInfo::swap(SerialPortInfo &other)
 {
     d_ptr.swap(other.d_ptr);
 }
 
+/*!
+    Bla bla \a other
+*/
 SerialPortInfo& SerialPortInfo::operator=(const SerialPortInfo &other)
 {
     SerialPortInfo(other).swap(*this);
@@ -282,14 +177,14 @@ QString SerialPortInfo::manufacturer() const
 */
 
 /*!
-    \fn QList<qint32> SerialPortInfo::standardRates()
+    \fn QList<qint32> SerialPortInfo::standardRates() const
 
     Returns a list of available standard baud rates supported by
     the current serial port.
 */
 
 /*!
-    \fn QList<SerialPortInfo> QPrinterInfo::availablePorts()
+    \fn QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
     Returns a list of available serial ports on the system.
 */

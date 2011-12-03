@@ -1,4 +1,8 @@
- #include(compat.qdocconf)
+#include(compat.qdocconf)
+#include(macros.qdocconf)
+#include(qt-cpp-ignore.qdocconf)
+#include(qt-html-templates.qdocconf)
+#include(qt-defines.qdocconf)
 
 project                 = QSerialDevice
 versionsym              =
@@ -8,17 +12,17 @@ url                     = https://gitorious.org/qserialdevice
 
 ######
 
-qhp.projects               = QSerialDevice
+#qhp.projects               = QSerialDevice
 
-qhp.QSerialDevice.file                = qserialdevice.qhp
-qhp.QSerialDevice.namespace           = com.gitorious.org.qserialdevice.20
-qhp.QSerialDevice.virtualFolder       = qdoc
-qhp.QSerialDevice.indexTitle          = QSerialDevice Reference Documentation
-qhp.QSerialDevice.indexRoot           =
+#qhp.QSerialDevice.file                = qserialdevice.qhp
+#qhp.QSerialDevice.namespace           = com.gitorious.org.qserialdevice.20
+#qhp.QSerialDevice.virtualFolder       = qdoc
+#qhp.QSerialDevice.indexTitle          = QSerialDevice Reference Documentation
+#qhp.QSerialDevice.indexRoot           =
 
 # Files not referenced in any qdoc file (last four are needed by qtdemo)
 # See also extraimages.HTML
-qhp.QSerialDevice.extraFiles          = classic.css
+#qhp.QSerialDevice.extraFiles          = classic.css
 
 #qhp.QSerialDevice.filterAttributes    = qt 4.7.4 qtrefdoc
 #qhp.QSerialDevice.customFilters.Qt.name = Qt 4.7.4
@@ -37,26 +41,29 @@ qhp.QSerialDevice.extraFiles          = classic.css
 
 language                = Cpp
 
-headerdirs              = $LIBDIR/src \
-                          $LIBDIR/include
+Cpp.ignoretokens = SERIALPORT_EXPORT 
 
-sourcedirs              = $LIBDIR/src \
-                          $LIBDIR/doc/src
-
+headers.fileextensions  = "*.h"
 sources.fileextensions  = "*.cpp *.qdoc *.mm"
 examples.fileextensions = "*.cpp *.h *.js *.xq *.svg *.xml *.ui *.qhp *.qhcp"
 
-exampledirs             = $LIBDIR/doc/src \
-                          $LIBDIR/examples
+headerdirs              = $SERIALDEVICE_DIR/include \
+                          $SERIALDEVICE_DIR/src 
 
-imagedirs               = $LIBDIR/doc/src/images \
-                          $LIBDIR/examples
+sourcedirs              = $SERIALDEVICE_DIR/src \
+                          $SERIALDEVICE_DIR/doc/src
 
-outputdir               = $LIBDIR/doc/html
+exampledirs             = $SERIALDEVICE_DIR/doc/src \
+                          $SERIALDEVICE_DIR/examples
 
-tagfile                 = $LIBDIR/doc/html/qt.tags
+imagedirs               = $SERIALDEVICE_DIR/doc/src/images \
+                          $SERIALDEVICE_DIR/examples
 
-base                    = file:$LIBDIR/doc/html
+outputdir               = $SERIALDEVICE_DIR/doc/html
+
+tagfile                 = $SERIALDEVICE_DIR/doc/html/qt.tags
+
+base                    = file:$SERIALDEVICE_DIR/doc/html
 
 
 

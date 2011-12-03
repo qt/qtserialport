@@ -2,15 +2,16 @@
     License...
 */
 
-/*! \class WinSerialPortEngine
+/*!
+    \class WinSerialPortEngine
     \internal
 
     \brief The WinSerialPortEngine class provides windows OS
     platform-specific low level access to a serial port.
 
     \reentrant
-    \ingroup network??
-    \inmodule QtNetwork??
+    \ingroup serial
+    \inmodule QSerialDevice
 
     Currently the class supports as NT-based OS (Win 2K/XP/Vista/7),
     and as various embedded WinCE.
