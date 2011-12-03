@@ -1,33 +1,65 @@
- # QDoc is a tool that constantly evolves to suit our needs,
- # and there are some compatibility issues between old and new
- # practices. For that reason, any QDoc configuration file needs to
- # include compat.qdocconf.
-
  #include(compat.qdocconf)
 
- # The outputdir variable specifies the directory
- # where QDoc will put the generated documentation.
+project                 = QSerialDevice
+versionsym              =
+version                 = 2.0
+description             = QSerialDevice Reference Documentation
+url                     = https://gitorious.org/qserialdevice
 
- outputdir   = html
+######
 
- # The headerdirs variable specifies the directories
- # containing the header files associated
- # with the .cpp source files used in the documentation.
+qhp.projects               = QSerialDevice
 
- headerdirs  = .
+qhp.QSerialDevice.file                = qserialdevice.qhp
+qhp.QSerialDevice.namespace           = com.gitorious.org.qserialdevice.20
+qhp.QSerialDevice.virtualFolder       = qdoc
+qhp.QSerialDevice.indexTitle          = QSerialDevice Reference Documentation
+qhp.QSerialDevice.indexRoot           =
 
- # The sourcedirs variable specifies the
- # directories containing the .cpp or .qdoc
- # files used in the documentation.
+# Files not referenced in any qdoc file (last four are needed by qtdemo)
+# See also extraimages.HTML
+qhp.QSerialDevice.extraFiles          = classic.css
 
- #sourcedirs  = .
+#qhp.QSerialDevice.filterAttributes    = qt 4.7.4 qtrefdoc
+#qhp.QSerialDevice.customFilters.Qt.name = Qt 4.7.4
+#qhp.QSerialDevice.customFilters.Qt.filterAttributes = qt 4.7.4
+#qhp.QSerialDevice.subprojects         = classes overviews examples
+#qhp.QSerialDevice.subprojects.classes.title = Classes
+#qhp.QSerialDevice.subprojects.classes.indexTitle = Qt's Classes
+#qhp.QSerialDevice.subprojects.classes.selectors = class fake:headerfile
+#qhp.QSerialDevice.subprojects.classes.sortPages = true
+#qhp.QSerialDevice.subprojects.overviews.title = Overviews
+#qhp.QSerialDevice.subprojects.overviews.indexTitle = All Overviews and HOWTOs
+#qhp.QSerialDevice.subprojects.overviews.selectors = fake:page,group,module
+#qhp.QSerialDevice.subprojects.examples.title = Tutorials and Examples
+#qhp.QSerialDevice.subprojects.examples.indexTitle = Qt Examples
+#qhp.QSerialDevice.subprojects.examples.selectors = fake:example
 
- # The exampledirs variable specifies the directories containing
- # the source code of the example files.
+language                = Cpp
 
- exampledirs = .
+headerdirs              = $LIBDIR/src \
+                          $LIBDIR/include
 
- # The imagedirs variable specifies the
- # directories containing the images used in the documentation.
+sourcedirs              = $LIBDIR/src \
+                          $LIBDIR/doc/src
 
- imagedirs   = ./images
+sources.fileextensions  = "*.cpp *.qdoc *.mm"
+examples.fileextensions = "*.cpp *.h *.js *.xq *.svg *.xml *.ui *.qhp *.qhcp"
+
+exampledirs             = $LIBDIR/doc/src \
+                          $LIBDIR/examples
+
+imagedirs               = $LIBDIR/doc/src/images \
+                          $LIBDIR/examples
+
+outputdir               = $LIBDIR/doc/html
+
+tagfile                 = $LIBDIR/doc/html/qt.tags
+
+base                    = file:$LIBDIR/doc/html
+
+
+
+
+
+
