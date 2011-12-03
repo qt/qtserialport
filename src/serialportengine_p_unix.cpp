@@ -80,7 +80,7 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *parent)
 
 /*!
     Stops the tracking events of the serial port and
-    destructs a UnixSerialPortEngine,
+    destructs a UnixSerialPortEngine.
 */
 UnixSerialPortEngine::~UnixSerialPortEngine()
 {
@@ -96,7 +96,7 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
     Tries to open the descriptor desired serial port by \a location
     in the given open \a mode.
 
-    Before the opening of the port, checking for on exists the
+    Before the opening of the serial port, checking for on exists the
     appropriate lock the file and the information therein. If the
     lock file is present, and the information contained in it is
     relevant - it is concluded that the current serial port is
@@ -525,7 +525,7 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 
 /*!
     Implements a function blocking for waiting of events on the
-    timeout in millisecond, those listed in fdread will be watched
+    \a timeout in millisecond, those listed in fdread will be watched
     to see if characters become available for reading (more precisely,
     to see if a read will not block; in particular, a file descriptor
     is also ready on end-of-file), those in fdwrite will be watched
