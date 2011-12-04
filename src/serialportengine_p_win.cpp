@@ -1004,6 +1004,8 @@ bool WinSerialPortEngine::processIOErrors()
             m_parent->setError(SerialPort::FramingError);
         else if (err & CE_RXPARITY)
             m_parent->setError(SerialPort::ParityError);
+        else if (err & CE_BREAK)
+            m_parent->setError(SerialPort::BreakConditionError);
         else
             m_parent->setError(SerialPort::UnknownPortError);
 
