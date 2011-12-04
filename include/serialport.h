@@ -121,6 +121,7 @@ public:
         ParityError,
         FramingError,
         IoError,
+        BreakConditionError,
         ConfiguringError,
         UnsupportedPortOperationError,
         UnknownPortError
