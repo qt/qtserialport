@@ -87,8 +87,8 @@ private:
                                   SerialPort::StopBits stopBits) const;
 #if !defined (CMSPAR)
     qint64 writePerChar(const char *data, qint64 maxSize);
-    qint64 readPerChar(char *data, qint64 maxSize);
 #endif
+    qint64 readPerChar(char *data, qint64 maxSize);
 };
 
 QT_END_NAMESPACE

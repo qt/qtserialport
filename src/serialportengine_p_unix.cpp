@@ -437,13 +437,13 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 {
     qint64 bytesRead = 0;
 #if defined (CMSPAR)
-    bytesRead = ::read(m_descriptor, data, len);
+    if ((m_parent->m_parity == SerialPort::NoParity) || (m_parent->m_policy != SerialPort::StopReceivingPolicy))
 #else
     if ((m_parent->m_parity != SerialPort::MarkParity) && (m_parent->m_parity != SerialPort::SpaceParity))
+#endif
         bytesRead = ::read(m_descriptor, data, len);
     else // Perform parity emulation.
         bytesRead = readPerChar(data, len);
-#endif
 
     // FIXME: Here 'errno' codes for sockets.
     // You need to replace the codes for the serial port.
@@ -1409,16 +1409,15 @@ bool UnixSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBit
             || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
 }
 
-#if !defined (CMSPAR)
 static inline bool evenParity(quint8 c)
 {
-    // Result:
-    // bit4 = bit4^bit5^bit6^bit7
-    // bit0 = bit0^bit1^bit2^bit3
-    c ^= (c >> 1) ^ (c >> 2) ^ (c >> 3);
-    // Result: bit4 ^ bit0
-    return (c ^ (c >> 4)) & 1;
+    c ^= c >> 4;        //(c7 ^ c3)(c6 ^ c2)(c5 ^ c1)(c4 ^ c0)
+    c ^= c >> 2;        //[(c7 ^ c3)(c5 ^ c1)][(c6 ^ c2)(c4 ^ c0)]
+    c ^= c >> 1;
+    return c & 1;       //(c7 ^ c3)(c5 ^ c1)(c6 ^ c2)(c4 ^ c0)
 }
+
+#if !defined (CMSPAR)
 
 /*!
     For platforms that do not have the support of parities mark and space
@@ -1454,10 +1453,11 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
     return ret;
 }
 
+#endif //CMSPAR
+
 /*!
-    For platforms that do not have the support of parities mark and space
-    performed character by character emulation data received, that
-    one by one character is read from the port.
+    Platforms which does not have the support for mark and space parity checking
+    requires emulation using character by character data receiving.
 */
 qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
 {
@@ -1507,6 +1507,10 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
             case SerialPort::SkipPolicy:
                 continue;       //ignore received character
             case SerialPort::StopReceivingPolicy:
+                if (m_parent->m_parity != SerialPort::NoParity)
+                    m_parent->m_portError = SerialPort::ParityError;
+                else
+                    m_parent->m_portError = (*data == '\0') ? SerialPort::BreakConditionError : SerialPort::FramingError;
                 return ++ret;   //abort receiving
                 break;
             case SerialPort::UnknownPolicy:
@@ -1523,8 +1527,6 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
     }
     return ret;
 }
-
-#endif //CMSPAR
 
 // From <serialportengine_p.h>
 SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
