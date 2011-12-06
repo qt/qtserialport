@@ -796,6 +796,7 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
         m_currDCB.Parity = ODDPARITY;
         break;
     default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateDcb();
@@ -827,6 +828,7 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         m_currDCB.StopBits = TWOSTOPBITS;
         break;
     default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateDcb();
@@ -858,7 +860,9 @@ bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         m_currDCB.fRtsControl = RTS_CONTROL_HANDSHAKE;
         m_currDCB.fInX = m_currDCB.fOutX = false;
         break;
-    default: return false;
+    default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        return false;
     }
     return updateDcb();
 }
