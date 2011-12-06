@@ -635,11 +635,6 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    if (isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (dataBits) {
     case SerialPort::Data5:
         m_currSettings().iDataBits = EData5;
@@ -703,11 +698,6 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 */
 bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
-    if (isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (stopBits) {
     case SerialPort::OneStop:
         m_currSettings().iStopBits = EStop1;
@@ -997,21 +987,6 @@ bool SymbianSerialPortEngine::updateCommConfig()
     return true;
 }
 
-/*!
-    Analyzes the forbidden combinations a data bits \a dataBits with
-    a top bits \a stopBits. Used in the methods setDataBits(), setStopBits().
-
-    If successful, returns true; otherwise false.
-*/
-bool SymbianSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                                       SerialPort::StopBits stopBits) const
-{
-    // Impl me
-    return (((dataBits == SerialPort::Data5) && (stopBits == SerialPort::TwoStop))
-            || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
-            || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
-            || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
-}
 // From <serialportengine_p.h>
 SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
 {

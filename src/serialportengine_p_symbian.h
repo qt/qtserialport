@@ -74,9 +74,6 @@ private:
     mutable RTimer m_selectTimer;
 
     bool updateCommConfig();
-
-    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                  SerialPort::StopBits stopBits) const;
 };
 
 QT_END_NAMESPACE

@@ -760,10 +760,6 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    if (isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
     m_currDCB.ByteSize = BYTE(dataBits);
     return updateDcb();
 }
@@ -812,11 +808,6 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
 */
 bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
-    if (isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (stopBits) {
     case SerialPort::OneStop:
         m_currDCB.StopBits = ONESTOPBIT;
@@ -1313,21 +1304,6 @@ bool WinSerialPortEngine::updateCommTimeouts()
         return false;
     }
     return true;
-}
-
-/*!
-    Analyzes the forbidden combinations a data bits \a dataBits with
-    a top bits \a stopBits. Used in the methods setDataBits(), setStopBits().
-
-    If successful, returns true; otherwise false.
-*/
-bool WinSerialPortEngine::isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                                   SerialPort::StopBits stopBits) const
-{
-    return (((dataBits == SerialPort::Data5) && (stopBits == SerialPort::TwoStop))
-            || ((dataBits == SerialPort::Data6) && (stopBits == SerialPort::OneAndHalfStop))
-            || ((dataBits == SerialPort::Data7) && (stopBits == SerialPort::OneAndHalfStop))
-            || ((dataBits == SerialPort::Data8) && (stopBits == SerialPort::OneAndHalfStop)));
 }
 
 // From <serialportengine_p.h>

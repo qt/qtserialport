@@ -83,8 +83,6 @@ private:
     bool setStandartRate(SerialPort::Directions dir, speed_t rate);
     bool setCustomRate(qint32 rate);
 
-    bool isRestrictedAreaSettings(SerialPort::DataBits dataBits,
-                                  SerialPort::StopBits stopBits) const;
 #if !defined (CMSPAR)
     qint64 writePerChar(const char *data, qint64 maxSize);
 #endif
