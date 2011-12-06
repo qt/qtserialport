@@ -263,7 +263,7 @@ void WinSerialPortEngine::close(const QString &location)
 #endif
 
     if (m_parent->m_restoreSettingsOnClose) {
-        ::GetCommState(m_descriptor, &m_oldDCB);
+        ::SetCommState(m_descriptor, &m_oldDCB);
         ::SetCommTimeouts(m_descriptor, &m_oldCommTimeouts);
     }
 
