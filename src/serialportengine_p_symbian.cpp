@@ -536,7 +536,7 @@ QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) con
 */
 bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
-    if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
+    if (dir != SerialPort::AllDirections) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -635,9 +635,7 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    if ((dataBits == SerialPort::UnknownDataBits)
-            || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
-
+    if (isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -655,7 +653,9 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     case SerialPort::Data8:
         m_currSettings().iDataBits = EData8;
         break;
-    default:;
+    default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        return false;
     }
 
     return updateCommConfig();
@@ -670,11 +670,6 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 */
 bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 {
-    if (parity == SerialPort::UnknownParity) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (parity) {
     case SerialPort::NoParity:
         m_currSettings().iParity = EParityNone;
@@ -691,7 +686,9 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
     case SerialPort::SpaceParity:
         m_currSettings().iParity = EParitySpace;
         break;
-    default:;
+    default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        return false;
     }
 
     return updateCommConfig();
@@ -706,9 +703,7 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 */
 bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
-    if ((stopBits == SerialPort::UnknownStopBits)
-            || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
-
+    if (isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -738,11 +733,6 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 */
 bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
-    if (flow == SerialPort::UnknownFlowControl) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (flow) {
     case SerialPort::NoFlowControl:
         m_currSettings().iHandshake = KConfigFailDSR;
@@ -753,7 +743,9 @@ bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
     case SerialPort::SoftwareControl:
         m_currSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
         break;
-    default:;
+    default:
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        return false;
     }
 
     return updateCommConfig();
@@ -999,7 +991,7 @@ void SymbianSerialPortEngine::detectDefaultSettings()
 bool SymbianSerialPortEngine::updateCommConfig()
 {
     if (m_descriptor.SetConfig(m_currSettings) != KErrNone) {
-        m_parent->setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;

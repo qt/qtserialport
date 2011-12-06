@@ -943,10 +943,9 @@ bool SerialPortPrivate::canErrorNotification()
            when reading data.
     \value FramingError The hardware detected a framing error
            when reading data.
-    \value IoError I/O error occurred when read/write data.
     \value BreakConditionError The hardware detected a break condition on
            the input line.
-    \value ConfiguringError An error occurred with the configuring device.
+    \value IoError I/O error occurred when read/write data.
     \value UnsupportedPortOperationError The requested device operation is
            not supported or prohibited by the local operating system.
     \value UnknownPortError An unidentified error occurred.

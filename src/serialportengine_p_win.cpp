@@ -743,7 +743,7 @@ QString WinSerialPortEngine::fromSystemLocation(const QString &location) const
 */
 bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
-    if ((rate == SerialPort::UnknownRate) || (dir != SerialPort::AllDirections)) {
+    if (dir != SerialPort::AllDirections) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -760,9 +760,7 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    if ((dataBits == SerialPort::UnknownDataBits)
-            || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
-
+    if (isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -779,11 +777,6 @@ bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 */
 bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
 {
-    if (parity == SerialPort::UnknownParity) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     m_currDCB.fParity = true;
     switch (parity) {
     case SerialPort::NoParity:
@@ -818,9 +811,7 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
 */
 bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
-    if ((stopBits == SerialPort::UnknownStopBits)
-            || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
-
+    if (isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -851,11 +842,6 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 */
 bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
-    if (flow == SerialPort::UnknownFlowControl) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (flow) {
     case SerialPort::NoFlowControl:
         m_currDCB.fOutxCtsFlow = false;
@@ -1304,7 +1290,7 @@ bool WinSerialPortEngine::updateDcb()
     ::SetCommMask(m_descriptor, 0);
 #endif
     if (::SetCommState(m_descriptor, &m_currDCB) == 0) {
-        m_parent->setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;
@@ -1319,7 +1305,7 @@ bool WinSerialPortEngine::updateDcb()
 bool WinSerialPortEngine::updateCommTimeouts()
 {
     if (::SetCommTimeouts(m_descriptor, &m_currCommTimeouts) == 0) {
-        m_parent->setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;

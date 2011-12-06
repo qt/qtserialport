@@ -120,9 +120,8 @@ public:
         DeviceIsNotOpenedError,
         ParityError,
         FramingError,
-        IoError,
         BreakConditionError,
-        ConfiguringError,
+        IoError,
         UnsupportedPortOperationError,
         UnknownPortError
     };

@@ -765,11 +765,6 @@ static qint32 detect_standard_rate(qint32 rate)
 */
 bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
-    if (rate == SerialPort::UnknownRate) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     qint32 detectedRate = detect_standard_rate(rate);
     bool ret = false;
     if (detectedRate == -1)
@@ -778,7 +773,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
         ret = setStandartRate(dir, detectedRate);
 
     if (!ret)
-        m_parent->setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
     return ret;
 }
 
@@ -791,9 +786,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    if ((dataBits == SerialPort::UnknownDataBits)
-            || isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
-
+    if (isRestrictedAreaSettings(dataBits, m_parent->m_stopBits)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -831,11 +824,6 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 */
 bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
 {
-    if (parity == SerialPort::UnknownParity) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     m_currTermios.c_iflag &= ~(PARMRK | INPCK);
     m_currTermios.c_iflag |= IGNPAR;
 
@@ -880,9 +868,7 @@ bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
 */
 bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
-    if ((stopBits == SerialPort::UnknownStopBits)
-            || isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
-
+    if (isRestrictedAreaSettings(m_parent->m_dataBits, stopBits)) {
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -911,11 +897,6 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 */
 bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
-    if (flow == SerialPort::UnknownFlowControl) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
-    }
-
     switch (flow) {
     case SerialPort::NoFlowControl:
         m_currTermios.c_cflag &= (~CRTSCTS);
@@ -1331,7 +1312,7 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 bool UnixSerialPortEngine::updateTermios()
 {
     if (::tcsetattr(m_descriptor, TCSANOW, &m_currTermios) == -1) {
-        m_parent->setError(SerialPort::ConfiguringError);
+        m_parent->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;
