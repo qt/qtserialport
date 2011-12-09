@@ -21,6 +21,8 @@ public:
         CanErrorLocker
     };
 
+    virtual ~SerialPortEngine() {}
+
     static SerialPortEngine *create(SerialPortPrivate *parent);
 
     virtual bool open(const QString &location, QIODevice::OpenMode mode) = 0;
