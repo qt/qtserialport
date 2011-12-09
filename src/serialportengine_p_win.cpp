@@ -995,12 +995,10 @@ bool WinSerialPortEngine::processIOErrors()
     return ret;
 }
 
-/*!
-    Has meaning only for WinCE.
-*/
+#if defined (Q_OS_WINCE)
+
 void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
 {
-#if defined (Q_OS_WINCE)
     QMutex *mutex = 0;
     switch (type) {
     case CanReadLocker:
@@ -1018,19 +1016,10 @@ void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool use
         QMutexLocker locker(mutex);
     else
         mutex->lock();
-#else
-    Q_UNUSED(type);
-    Q_UNUSED(uselocker);
-    // For win32 is not used! Used only for WinCE!
-#endif
 }
 
-/*!
-    Has meaning only for WinCE.
-*/
 void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
 {
-#if defined (Q_OS_WINCE)
     switch (type) {
     case CanReadLocker: m_readNotificationMutex.unlock();
         break;
@@ -1039,11 +1028,9 @@ void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
     case CanErrorLocker: m_errorNotificationMutex.unlock();
         break;
     }
-#else
-    Q_UNUSED(type);
-    // For win32 is not used! Used only for WinCE!
-#endif
 }
+
+#endif
 
 /* Protected methods */
 

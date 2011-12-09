@@ -796,24 +796,7 @@ bool SymbianSerialPortEngine::processIOErrors()
     return false;
 }
 
-/*!
-
-*/
-void SymbianSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
-{
-    Q_UNUSED(type);
-    Q_UNUSED(uselocker);
-    // For Symbian is not used! Used only for WinCE!
-}
-
-/*!
-
-*/
-void SymbianSerialPortEngine::unlockNotification(NotificationLockerType type)
-{
-    Q_UNUSED(type);
-    // For Symbian is not used! Used only for WinCE!
-}
+///
 
 /* Protected methods */
 

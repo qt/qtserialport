@@ -1011,24 +1011,7 @@ bool UnixSerialPortEngine::processIOErrors()
     return false;
 }
 
-/*!
-    Stub, not used in POSIX implementation.
-*/
-void UnixSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
-{
-    Q_UNUSED(type);
-    Q_UNUSED(uselocker);
-    // For *nix is not used! Used only for WinCE!
-}
-
-/*!
-    Stub, not used in POSIX implementation.
-*/
-void UnixSerialPortEngine::unlockNotification(NotificationLockerType type)
-{
-    Q_UNUSED(type);
-    // For *nix is not used! Used only for WinCE!
-}
+///
 
 /* Protected methods */
 

@@ -111,8 +111,10 @@ public:
 
     virtual bool processIOErrors();
 
+#if defined (Q_OS_WINCE)
     virtual void lockNotification(NotificationLockerType type, bool uselocker);
     virtual void unlockNotification(NotificationLockerType type);
+#endif
 
 protected:
     virtual void detectDefaultSettings();

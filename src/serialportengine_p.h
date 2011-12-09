@@ -14,12 +14,14 @@ class SerialPortEngine
 {
 public:
 
+#if defined (Q_OS_WINCE)
     // Only for WinCE.
     enum NotificationLockerType {
         CanReadLocker,
         CanWriteLocker,
         CanErrorLocker
     };
+#endif
 
     virtual ~SerialPortEngine() {}
 
@@ -66,8 +68,10 @@ public:
 
     virtual bool processIOErrors() = 0;
 
+#if defined (Q_OS_WINCE)
     virtual void lockNotification(NotificationLockerType type, bool uselocker) = 0;
     virtual void unlockNotification(NotificationLockerType type) = 0;
+#endif
 
 protected:
     SerialPortPrivate *m_parent;
