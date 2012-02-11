@@ -31,24 +31,48 @@ extern "C"
 #include <QtCore/qregexp.h>
 #include <QtCore/qfile.h>
 
-QT_USE_NAMESPACE
 
+
+#if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
+//
+#else
+// This name filters used only for a simple enumeration of all available
+// devices on the mask in /dev, ie if there is no other way to enumerate
+// the devices, used in the following cases:
+// - for Gnu/Linux with no libudev
+// - for any other *nix, bsd (exception mac OSX)
 static QStringList nameFilters()
 {
     static QStringList list;
-#if defined (Q_OS_LINUX)
-    list << "ttyS*"    /* Standart UART 8250 and etc. */
-         << "ttyUSB*"  /* Usb/serial converters PL2303 and etc. */
-         << "ttyACM*"  /* CDC_ACM converters (i.e. Mobile Phones). */
-         << "ttyMI*"   /* MOXA pci/serial converters. */
-         << "rfcomm*"; /* Bluetooth serial device. */
-#elif defined (Q_OS_FREEBSD)
-    list << "cu*";
-#else
+#  if defined (Q_OS_LINUX)
+    list << QLatin1String("ttyS*")    /* Standart UART 8250 and etc. */
+         << QLatin1String("ttyUSB*")  /* Usb/serial converters PL2303 and etc. */
+         << QLatin1String("ttyACM*")  /* CDC_ACM converters (i.e. Mobile Phones). */
+         << QLatin1String("ttyMI*")   /* MOXA pci/serial converters. */
+         << QLatin1String("rfcomm*"); /* Bluetooth serial device. */
+#  elif defined (Q_OS_FREEBSD)
+    list << QLatin1String("cu*");
+#  else
     // Here for other *nix OS.
-#endif
+#  endif
     return list;
 }
+#endif
+
+static
+const qint32 standardRates_begin[] =
+{
+    50, 75, 110, 134, 150,
+    200, 300, 600, 1200, 1800,
+    2400, 4800, 9600, 19200, 38400,
+    57600, 115200, 230400, 460800,
+    500000, 576000, 921600, 1000000,
+    1152000, 1500000, 2000000, 2500000,
+    3000000, 3500000, 4000000
+}, *standardRates_end = standardRates_begin + sizeof(::standardRates_begin)/sizeof(*::standardRates_begin);
+
+
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 
 /* Public methods */
@@ -87,30 +111,30 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                     SerialPortInfo info;
 
                     info.d_ptr->device =
-                            QString(udev_device_get_devnode(dev));
+                            QLatin1String(udev_device_get_devnode(dev));
                     info.d_ptr->portName =
-                            QString(udev_device_get_sysname(dev));
+                            QLatin1String(udev_device_get_sysname(dev));
 
                     struct udev_device *parentdev = udev_device_get_parent(dev);
 
                     if (parentdev) {
 
-                        QString subsys(udev_device_get_subsystem(parentdev));
+                        QString subsys(QLatin1String(udev_device_get_subsystem(parentdev)));
 
                         bool do_append = true;
 
-                        if (subsys.contains("usb")) {
+                        if (subsys.contains(QLatin1String("usb"))) {
                             info.d_ptr->description =
-                                    QString(udev_device_get_property_value(dev,
+                                    QLatin1String(udev_device_get_property_value(dev,
                                                                            "ID_MODEL_FROM_DATABASE"));
                             info.d_ptr->manufacturer =
-                                    QString(udev_device_get_property_value(dev,
+                                    QLatin1String(udev_device_get_property_value(dev,
                                                                            "ID_VENDOR_FROM_DATABASE"));
-                        } else if (subsys == QString("pnp")) {
+                        } else if (subsys.contains(QLatin1String("pnp"))) {
                             info.d_ptr->description =
-                                    QString("Standard serial port.");
+                                    QLatin1String("Standard serial port.");
                             info.d_ptr->manufacturer =
-                                    QString("Standard serial ports.");
+                                    QLatin1String("Standard serial ports.");
                         } else {
                             do_append = false;
                         }
@@ -135,7 +159,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 #else
 
     // Simple enumerate with device directory /dev scan.
-    QDir devDir("/dev");
+    QDir devDir(QLatin1String("/dev"));
     if (devDir.exists()) {
 
         devDir.setNameFilters(nameFilters());
@@ -153,7 +177,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                     SerialPortInfo info;
 
                     info.d_ptr->device = s;
-                    info.d_ptr->portName = s.remove(QRegExp("/[\\w|\\d|\\s]+/"));
+                    info.d_ptr->portName = s.remove(QRegExp(QLatin1String("/[\\w|\\d|\\s]+/")));
                     info.d_ptr->description = QString(QObject::tr("Unknown."));
                     info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
 
@@ -168,18 +192,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
     return ports;
 }
-
-static
-const qint32 standardRates_begin[] =
-{
-    50, 75, 110, 134, 150,
-    200, 300, 600, 1200, 1800,
-    2400, 4800, 9600, 19200, 38400,
-    57600, 115200, 230400, 460800,
-    500000, 576000, 921600, 1000000,
-    1152000, 1500000, 2000000, 2500000,
-    3000000, 3500000, 4000000
-}, *standardRates_end = standardRates_begin + sizeof(::standardRates_begin)/sizeof(*::standardRates_begin);
 
 QList<qint32> SerialPortInfo::standardRates() const
 {
@@ -229,3 +241,5 @@ bool SerialPortInfo::isValid() const
     QFile f(systemLocation());
     return f.exists();
 }
+
+QT_END_NAMESPACE_SERIALPORT

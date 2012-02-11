@@ -23,7 +23,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qfile.h>
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 /* Public methods */
 
@@ -217,3 +217,5 @@ bool SerialPortInfo::isValid() const
     QFile f(systemLocation());
     return f.exists();
 }
+
+QT_END_NAMESPACE_SERIALPORT

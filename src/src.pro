@@ -1,87 +1,18 @@
 TEMPLATE = lib
-CONFIG += dll
-#CONFIG += staticlib
-QT -= gui
-TARGET = SerialPort
+TARGET   = $$QT.serialport.name
+MODULE   = serialport
 
-win32 {
-    DEFINES += SERIALPORT_BUILD SERIALPORT_SHARED
-}
+load(qt_module)
+load(qt_module_config)
 
-INCLUDEPATH += ../include
-HEADERS += \
-    ../include/serialport.h \
-    ../include/serialportinfo.h
+DESTDIR = $$QT.serialport.libs
+VERSION = $$QT.serialport.VERSION
+DEFINES += QT_ADDON_SERIALPORT_LIB
 
-HEADERS += \
-    serialport_p.h \
-    ringbuffer_p.h \
-    serialportengine_p.h \
-    serialportinfo_p.h
+CONFIG += module create_prl
+MODULE_PRI = ../modules/qt_serialport.pri
 
-SOURCES += \
-    serialport.cpp \
-    serialportinfo.cpp
+include($$PWD/src-lib.pri)
 
-win32 {
-    HEADERS += \
-        serialportengine_p_win.h
-    SOURCES += \
-        serialportengine_p_win.cpp \
-        serialportinfo_win.cpp
-
-    !wince*: LIBS += -lsetupapi -luuid -ladvapi32
-}
-
-
-symbian {
-    MMP_RULES += EXPORTUNFROZEN
-    #MMP_RULES += DEBUGGABLE_UDEBONLY
-    TARGET.UID3 = 0xE7E62DFD
-    TARGET.CAPABILITY =
-    TARGET.EPOCALLOWDLLDATA = 1
-    addFiles.sources = SerialPort.dll
-    addFiles.path = !:/sys/bin
-    DEPLOYMENT += addFiles
-    
-    # FIXME !!!
-    #INCLUDEPATH += c:/Nokia/devices/Nokia_Symbian3_SDK_v1.0/epoc32/include/platform
-    INCLUDEPATH += c:/QtSDK/Symbian/SDKs/Symbian3Qt473/epoc32/include/platform
-
-    HEADERS += \
-        serialportengine_p_symbian.h
-    SOURCES += \
-        serialportengine_p_symbian.cpp \
-        serialportinfo_symbian.cpp
-    LIBS += -leuser -lefsrv -lc32
-}
-
-unix:!symbian {
-    maemo5 {
-        target.path = /opt/usr/lib
-    } else {
-        target.path = /usr/lib
-    }
-    INSTALLS += target
-    
-    HEADERS += \
-        ttylocker_p_unix.h \
-        serialportengine_p_unix.h
-    SOURCES += \
-        ttylocker_p_unix.cpp \
-        serialportengine_p_unix.cpp
-
-    macx {
-        SOURCES += serialportinfo_mac.cpp
-        LIBS += -framework IOKit -framework CoreFoundation
-    } else {
-        SOURCES += serialportinfo_unix.cpp
-        linux*:contains( DEFINES, HAVE_LIBUDEV ) {
-            LIBS += -ludev
-        }
-    }
-}
-
-
-
+mac:QMAKE_FRAMEWORK_BUNDLE_NAME = $$QT.serialport.name
 

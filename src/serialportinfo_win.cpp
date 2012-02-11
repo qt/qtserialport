@@ -15,7 +15,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 static const GUID guidArray[] =
 {
@@ -142,7 +142,7 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
                 QString itemName = QString::fromUtf16(reinterpret_cast<ushort *>(bufKeyName.data()), lenKeyName);
                 QString itemValue = QString::fromUtf16(((const ushort *)bufKeyVal.constData()));
 
-                if (itemName.contains("PortName")) {
+                if (itemName.contains(QLatin1String("PortName"))) {
                     result = itemValue;
                     break;
                 }
@@ -240,10 +240,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             QVariant v = getNativeName(deviceInfoSet, &deviceInfoData);
             QString s = v.toString();
 
-            if (!(s.isEmpty() || s.contains("LPT"))) {
+            if (!(s.isEmpty() || s.contains(QLatin1String("LPT")))) {
 
                 info.d_ptr->portName = s;
-                info.d_ptr->device = "\\\\.\\" + s;
+                info.d_ptr->device = QLatin1String("\\\\.\\") + s;
 
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
                 info.d_ptr->description = v.toString();
@@ -374,3 +374,5 @@ bool SerialPortInfo::isValid() const
         ::CloseHandle(descriptor);
     return true;
 }
+
+QT_END_NAMESPACE_SERIALPORT

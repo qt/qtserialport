@@ -1,5 +1,4 @@
 TEMPLATE = subdirs
-SUBDIRS = src 
-#examples
-
-
+SUBDIRS = src #tests
+CONFIG += ordered
+#include(doc/doc.pri)

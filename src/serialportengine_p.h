@@ -8,7 +8,7 @@
 #include "serialport.h"
 #include "serialport_p.h"
 
-QT_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 class SerialPortEngine
 {
@@ -79,6 +79,6 @@ protected:
     virtual void detectDefaultSettings() = 0;
 };
 
-QT_END_NAMESPACE
+QT_END_NAMESPACE_SERIALPORT
 
 #endif // SERIALPORTENGINE_P_H

@@ -58,7 +58,7 @@ static bool loadDevices()
     return true;
 }
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 /* Public methods */
 
@@ -226,3 +226,5 @@ bool SerialPortInfo::isValid() const
         port.Close();
     return (r == KErrNone ) || (r == KErrLocked);
 }
+
+QT_END_NAMESPACE_SERIALPORT

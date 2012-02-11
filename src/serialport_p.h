@@ -8,7 +8,7 @@
 #include "serialport.h"
 #include "ringbuffer_p.h"
 
-QT_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 class SerialPortEngine;
 
@@ -70,7 +70,6 @@ public:
                             bool checkRead, bool checkWrite,
                             bool *selectForRead, bool *selectForWrite);
 
-
     void clearBuffers();
     bool readFromPort();
 
@@ -104,6 +103,6 @@ public:
     bool m_restoreSettingsOnClose;
 };
 
-QT_END_NAMESPACE
+QT_END_NAMESPACE_SERIALPORT
 
 #endif // SERIALPORT_P_H

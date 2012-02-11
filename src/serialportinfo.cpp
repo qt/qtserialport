@@ -6,7 +6,7 @@
 #include "serialportinfo_p.h"
 #include "serialport.h"
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 
 /*!
@@ -188,3 +188,5 @@ QString SerialPortInfo::manufacturer() const
 
     Returns a list of available serial ports on the system.
 */
+
+QT_END_NAMESPACE_SERIALPORT

@@ -17,7 +17,7 @@
 #  define SERIALPORT_BUFFERSIZE 16384
 #endif
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 //----------------------------------------------------------------
 
@@ -1779,3 +1779,7 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 
     \sa setBreak(), sendBreak()
 */
+
+#include "moc_serialport.cpp"
+
+QT_END_NAMESPACE_SERIALPORT
