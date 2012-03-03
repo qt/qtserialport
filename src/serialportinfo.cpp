@@ -14,8 +14,8 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     \brief The SerialPortInfo class gives access to information about
     existing serial ports.
 
-    \ingroup serial
-    \inmodule QSerialDevice
+    \ingroup serialport-main
+    \inmodule QtSerialPort
 
     Use the static functions to generate a list of SerialPortInfo objects.
     Each SerialPortInfo object in the list represents a single serial port

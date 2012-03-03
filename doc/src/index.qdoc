@@ -1,0 +1,24 @@
+/*
+    License...
+*/
+
+/*!
+\title SerialPort Reference
+\page index.html
+
+Bla-bla-bla
+
+Table of contents:
+
+\list
+\o \l {Introduction}
+\o \l {Get source}
+\o \l {Building}
+\o \l {Usage}
+\endlist
+
+
+\section1 C++ Classes
+
+\generatelist annotatedclasses
+*/

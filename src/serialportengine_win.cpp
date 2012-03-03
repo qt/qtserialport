@@ -10,8 +10,8 @@
     platform-specific low level access to a serial port.
 
     \reentrant
-    \ingroup serial
-    \inmodule QSerialDevice
+    \ingroup serialport-main
+    \inmodule QtSerialPort
 
     Currently the class supports as NT-based OS (Win 2K/XP/Vista/7),
     and as various embedded WinCE.

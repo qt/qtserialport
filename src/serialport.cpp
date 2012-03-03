@@ -663,8 +663,8 @@ bool SerialPortPrivate::canErrorNotification()
     common to all serial ports types.
 
     \reentrant
-    \ingroup serial
-    \inmodule QSerialDevice
+    \ingroup serialport-main
+    \inmodule QtSerialPort
 
     The basis of SerialPort was chosen class QAbstractSocket, so
     their the functionality and behavior is similar in some cases.

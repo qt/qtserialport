@@ -18,16 +18,16 @@ class Q_ADDON_SERIALPORT_EXPORT SerialPort : public QIODevice
 {
     Q_OBJECT
 
-    Q_PROPERTY(qint32 rate READ rate WRITE setRate)
-    Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits)
-    Q_PROPERTY(Parity parity READ parity WRITE setParity)
-    Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits)
-    Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl)
-    Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy)
-    Q_PROPERTY(bool dtr READ dtr WRITE setDtr)
-    Q_PROPERTY(bool rts READ rts WRITE setRts)
-    Q_PROPERTY(PortError error READ error RESET unsetError)
-    Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose)
+    //Q_PROPERTY(qint32 rate READ rate WRITE setRate)
+    //Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits)
+    //Q_PROPERTY(Parity parity READ parity WRITE setParity)
+    //Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits)
+    //Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl)
+    //Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy)
+    //Q_PROPERTY(bool dtr READ dtr WRITE setDtr)
+    //Q_PROPERTY(bool rts READ rts WRITE setRts)
+    //Q_PROPERTY(PortError error READ error RESET unsetError)
+    //Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose)
 
     Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError )
 
@@ -101,7 +101,7 @@ public:
         PassZeroPolicy,
         IgnorePolicy,
         StopReceivingPolicy,
-        UnknownPolicy
+        UnknownPolicy = -1
     };
 
     enum PortError {

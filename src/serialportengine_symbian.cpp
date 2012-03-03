@@ -10,8 +10,8 @@
     platform-specific low level access to a serial port.
 
     \reentrant
-    \ingroup serial
-    \inmodule QSerialDevice
+    \ingroup serialport-main
+    \inmodule QtSerialPort
 
     Currently the class supports all?? version of Symbian OS.
 
