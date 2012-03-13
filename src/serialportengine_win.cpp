@@ -48,44 +48,38 @@
 #if !defined (Q_OS_WINCE)
 #  include <QtCore/qcoreevent.h>
 #endif
-//#include <QtCore/QDebug>
 
-#ifndef Q_CC_MSVC
-#  include <ddk/ntddser.h>
-#else
-
-#  ifndef CTL_CODE
-#    define CTL_CODE(DeviceType, Function, Method, Access) ( \
+#ifndef CTL_CODE
+#  define CTL_CODE(DeviceType, Function, Method, Access) ( \
     ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
     )
-#  endif
-
-#  ifndef FILE_DEVICE_SERIAL_PORT
-#    define FILE_DEVICE_SERIAL_PORT	27
-#  endif
-
-#  ifndef METHOD_BUFFERED
-#    define METHOD_BUFFERED  0
-#  endif
-
-#  ifndef FILE_ANY_ACCESS
-#    define FILE_ANY_ACCESS  0x00000000
-#  endif
-
-#  ifndef IOCTL_SERIAL_GET_DTRRTS
-#    define IOCTL_SERIAL_GET_DTRRTS \
-    CTL_CODE (FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#  endif
-
-#  ifndef SERIAL_DTR_STATE
-#    define SERIAL_DTR_STATE  0x00000001
-#  endif
-
-#  ifndef SERIAL_RTS_STATE
-#    define SERIAL_RTS_STATE  0x00000002
-#  endif
-
 #endif
+
+#ifndef FILE_DEVICE_SERIAL_PORT
+#  define FILE_DEVICE_SERIAL_PORT  27
+#endif
+
+#ifndef METHOD_BUFFERED
+#  define METHOD_BUFFERED  0
+#endif
+
+#ifndef FILE_ANY_ACCESS
+#  define FILE_ANY_ACCESS  0x00000000
+#endif
+
+#ifndef IOCTL_SERIAL_GET_DTRRTS
+#  define IOCTL_SERIAL_GET_DTRRTS \
+    CTL_CODE(FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
+#ifndef SERIAL_DTR_STATE
+#  define SERIAL_DTR_STATE  0x00000001
+#endif
+
+#ifndef SERIAL_RTS_STATE
+#  define SERIAL_RTS_STATE  0x00000002
+#endif
+
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
