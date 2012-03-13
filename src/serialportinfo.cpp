@@ -11,33 +11,19 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 /*!
     \class SerialPortInfo
+
     \brief The SerialPortInfo class gives access to information about
     existing serial ports.
 
     \ingroup serialport-main
-    \inmodule QtSerialPort
+    \inmodule QtAddOnSerialPort
+    \since 5.0
 
-    Use the static functions to generate a list of SerialPortInfo objects.
-    Each SerialPortInfo object in the list represents a single serial port
-    and can be queried for port name, system location, description,
-    manufacturer. SerialPortInfo also be used as an input parameter to
-    the method setPort() a class SerialPort.
-
-    Algorithm for obtaining information on the serial ports is platform
-    specific and very different for individual platforms. The more so that
-    the information about same device (serial port) obtained on the current
-    platform may not correspond to the information received on a different
-    platform. For example, names of ports and their systemic location, of
-    course, different for different platforms. Also such parameters as a
-    string description and manufacturer may vary.
-
-    So, the details of the semantics of information and its sources
-    for a variety of platforms is presented below.
-
-    \section1 Port name
-
-    Is the name of the device in a shorter form, which is usually represented
-    in the interface of the OS for human beings.
+    Use the static functions to generate a list of SerialPortInfo
+    objects. Each SerialPortInfo object in the list represents a single
+    serial port and can be queried for port name, system location,
+    description, manufacturer. SerialPortInfo also can be used as an
+    input parameter to the method setPort() a class SerialPort.
 
     \sa SerialPort
 */

@@ -659,74 +659,66 @@ bool SerialPortPrivate::canErrorNotification()
 
 /*!
     \class SerialPort
+
     \brief The SerialPort class provides the base functionality
     common to all serial ports types.
 
     \reentrant
     \ingroup serialport-main
-    \inmodule QtSerialPort
+    \inmodule QtAddOnSerialPort
+    \since 5.0
 
     The basis of SerialPort was chosen class QAbstractSocket, so
     their the functionality and behavior is similar in some cases.
-    For example, in terms of I/O operations, the implementation of
-    the wait methods, the internal architecture and etc. Especially,
-    the implementation of some methods of SerialPort take directly
-    from QAbstractSocket with minimal changes.
+    For example, in terms of I/O operations, the implementation
+    of the wait methods, the internal architecture and etc.
+    Especially, the implementation of some methods of SerialPort
+    take directly from QAbstractSocket with minimal changes.
 
-    SerialPort only provides common functionality, which includes
-    configuring, sending/receiving data stream, obtaining the status
-    and control signals RS-232 lines. In this case, are not supported
-    by specific terminal features as echo, control CR/LF, etc., ie
-    serial port always works in binary mode. Also, do not support the
-    native ability to configure timeouts and delays in reading, that
-    is, reading functions always return immediately. Organization of
-    the delays can be implemented in software, for example:
+    Features of the implementation and conduct of the class are
+    listed below:
 
-    <<!!! My
-    \*snippet doc/src/snippets/network/tcpwait.cpp 0
-    <<!!!
+    \list
+    \o Provides only common functionality which includes
+    configuring, I/O data stream, get and set control signals
+    RS-232 lines.
+    \o Not supported terminal features as echo, control CR/LF,
+    etc.
+    \o Always works in binary mode.
+    \o Do not support the native ability for configuring timeouts
+    and delays during the reading.
+    \o Does not provide tracking and notification when the state
+    of RS-232 lines was change.
+    \endlist
 
-    Also, the SerialPort implementation does not provide tracking and
-    notification when the signal lines of the RS-232 serial port is
-    change. This implementation is cumbersome and is not required in
-    usual use serial port.
+    Getting started with the SerialPort should by creating an
+    object of that class.
 
-    So, getting started with the SerialPort should by creating an
-    object of that class. Object can be created on the stack or
-    the heap:
+    Next, you must by calling a method setPort() assign to the
+    object the name desired serial port (which is really present
+    in the system). In this case, the name must have a certain
+    format which is platform dependent. If you are unsure of the
+    serial port name, for this you can use the helper class
+    SerialPortInfo and obtain the correct serial port name. You
+    can also use SerialPortInfo as an input parameter to the
+    method setPort() (to retrieve current designated of name need
+    use portName()).
 
-    <<!!! My
-    \*snippet doc/src/snippets/network/tcpwait.cpp 0
-    <<!!!
+    Now you can open the serial port using the method open() and
+    can be open in r/o, w/o or r/w mode.
 
-    Next, you must give the name of the object desired serial port,
-    which is really present in the system by calling setPort(). In
-    this case, the name must have a certain format which is platform
-    dependent. If you are unsure of the serial port name, for this
-    you can use the class SerialPortInfo to obtain the correct serial
-    port name. You can also use SerialPortInfo as an input parameter
-    to the method setPort(). To retrieve current serial port name use
-    method portName()
+    Note: The serial port always opens with exclusive access (ie
+    another process or thread can't get access to an already open
+    serial port).
 
-    <<!!! My
-    \*snippet doc/src/snippets/network/tcpwait.cpp 0
-    <<!!!
+    With the successful opening of the SerialPort tries to determine
+    its current configuration, and initializes itself to this
+    configuration.
 
-    Now you can open the serial port using the method open(). In
-    this case, the serial port can be open in r/o, w/o or r/w mode,
-    by setting the appropriate values of the input mode variable of
-    this method. If nothing is specified, the default serial port
-    opens in r/w mode. Also, always at the opening of the serial port,
-    it opens with a internal flag of exclusive access, ie another
-    process or thread can not access to an already open serial port,
-    it is made for unification. If successful, the opening of the
-    SerialPort will try to determine the current serial port
-    settings and write them to internal parameters of the class.
-
-    To access the current parameters of the serial port used methods
-    rate(), dataBits(), parity(), stopBits(), flowControl(). If you
-    are satisfied with these settings, you can go to proceed to I/O
-    operation. Otherwise, you can reconfigure the port to the desired
+    To access the current configuration used methods rate(),
+    dataBits(), parity(), stopBits(), flowControl(). If you are
+    satisfied with these settings, you can go to proceed to I/O
+    operation. Otherwise you can reconfigure the port to the desired
     setting using setRate(), setDataBits(), setParity(),
     setStopBits(), setFlowControl().
 
@@ -734,13 +726,12 @@ bool SerialPortPrivate::canErrorNotification()
     convenience functions readLine() and readAll(). SerialPort also
     inherits getChar(), putChar(), and ungetChar() from QIODevice,
     which work on single bytes. The bytesWritten() signal is
-    emitted when data has been written to the serial port (i.e.,
-    when the connected to the port device has read the data). Note
+    emitted when data has been written to the serial port. Note
     that Qt does not limit the write buffer size. You can monitor
     its size by listening to this signal.
 
     The readyRead() signal is emitted every time a new chunk of data
-    has arrived. bytesAvailable() then returns the number of bytes
+    has arrived, then bytesAvailable() returns the number of bytes
     that are available for reading. Typically, you would connect the
     readyRead() signal to a slot and read all available data there.
 
@@ -749,12 +740,12 @@ bool SerialPortPrivate::canErrorNotification()
     appended to SerialPort's internal read buffer. To limit the size
     of the read buffer, call setReadBufferSize().
 
-    To obtain status signals line ports, as well as control him signals
-    methods are used dtr(), rts(), lines(), setDtr(), setRts().
+    To obtain status of line ports, as well as control him are used
+    methods dtr(), rts(), lines(), setDtr(), setRts().
 
-    To close the serial port, call close(). After all pending data has
-    been written to the serial port, SerialPort actually closes the
-    descriptor.
+    To close the serial port call close() methhod. After all pending
+    data has been written to the serial port, SerialPort actually
+    closes the descriptor.
 
     SerialPort provides a set of functions that suspend the calling
     thread until certain signals are emitted. These functions can be
@@ -770,9 +761,20 @@ bool SerialPortPrivate::canErrorNotification()
 
     We show an example:
 
-    <<!!!
-    \*snippet doc/src/snippets/network/tcpwait.cpp 0
-    <<!!!
+    \code
+     int numRead = 0, numReadTotal = 0;
+     char buffer[50];
+
+     forever {
+         numRead  = serial.read(buffer, 50);
+
+         // do whatever with array
+
+         numReadTotal += numRead;
+         if (numRead == 0 && !serial.waitForReadyRead())
+             break;
+     }
+    \endcode
 
     If \l{QIODevice::}{waitForReadyRead()} returns false, the
     connection has been closed or an error has occurred. Programming
@@ -801,9 +803,9 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::Direction
 
-    This enum describes possibly direction of data transmission.
-    It is used to set the speed of the device separately for
-    each direction in some operating systems (POSIX).
+    This enum describes a possibly direction of data transmission.
+    Note: It is used to set the speed of the device separately for
+    each direction in some operating systems (eg. POSIX-like).
 
     \value Input Input direction.
     \value Output Output direction
@@ -815,9 +817,9 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::Rate
 
-    This enum describes the baud rate at which the
-    communications device operates. In this enum is listed
-    only part the most common of the standard rates.
+    This enum describes the baud rate at which the communications
+    device operates. Note: In this enum is listed only part the
+    most common of the standard rates.
 
     \value Rate1200 1200 baud.
     \value Rate2400 2400 baud.
@@ -835,8 +837,8 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::DataBits
 
-    This enum describes possibly the number of bits in the
-    bytes transmitted and received.
+    This enum describes possibly the number of bits in the bytes
+    transmitted and received.
 
     \value Data5 Five bits.
     \value Data6 Six bits
@@ -865,8 +867,8 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::StopBits
 
-    This enum describes possibly the number of
-    stop bits to be used.
+    This enum describes possibly the number of stop bits to
+    be used.
 
     \value OneStop 1 stop bit.
     \value OneAndHalfStop 1.5 stop bits.
@@ -879,8 +881,7 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::FlowControl
 
-    This enum describes possibly flow control to
-    be used.
+    This enum describes possibly flow control to be used.
 
     \value NoFlowControl No flow control.
     \value HardwareControl Hardware flow control (RTS/CTS).
@@ -911,8 +912,8 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::DataErrorPolicy
 
-    This enum describes policies manipulate for received
-    symbols with detected parity errors.
+    This enum describes policies manipulate for received symbols
+    with detected parity errors.
 
     \value SkipPolicy Skip the bad character.
     \value PassZeroPolicy Replaces bad character to zero.
@@ -980,7 +981,8 @@ SerialPort::SerialPort(const QString &name, QObject *parent)
 
 /*!
     Constructs a new serial port object with the given \a parent
-    to represent the serial port with the specified class \a info.
+    to represent the serial port with the specified a helper
+    class \a info.
 */
 SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
     : QIODevice(parent)
