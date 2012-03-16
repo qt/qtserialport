@@ -77,8 +77,6 @@ private:
     QSocketNotifier *m_exceptionNotifier;
 
     bool updateTermios();
-    bool setStandartRate(SerialPort::Directions dir, speed_t rate);
-    bool setCustomRate(qint32 rate);
 
 #if !defined (CMSPAR)
     qint64 writePerChar(const char *data, qint64 maxSize);

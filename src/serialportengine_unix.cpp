@@ -618,159 +618,195 @@ QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
     return ret;
 }
 
-// Returned -1 if rate it is custom baud
-// otherwise returned unix speed as speed_t.
-static qint32 detect_standard_rate(qint32 rate)
+static QHash<qint32, qint32> generateStandardRatesMachTable()
 {
-    switch (rate) {
+   QHash<qint32, qint32> h;
 #if defined (B0)
-    case 0:
-        return B0;
+    h[0] = B0;
 #endif
 #if defined (B50)
-    case 50:
-        return B50;
+    h[50] = B50;
 #endif
 #if defined (B75)
-    case 75:
-        return B75;
+    h[75] = B75;
 #endif
 #if defined (B110)
-    case 110:
-        return B110;
+    h[110] = B110;
 #endif
 #if defined (B134)
-    case 134:
-        return B134;
+    h[134] = B134;
 #endif
 #if defined (B150)
-    case 150:
-        return B150;
+    h[150] = B150;
 #endif
 #if defined (B200)
-    case 200:
-        return B200;
+    h[2000] = B200;
 #endif
 #if defined (B300)
-    case 300:
-        return B300;
+    h[300] = B300;
 #endif
 #if defined (B600)
-    case 600:
-        return B600;
+    h[600] = B600;
 #endif
 #if defined (B1200)
-    case 1200:
-        return B1200;
+    h[1200] = B1200;
 #endif
 #if defined (B1800)
-    case 1800:
-        return B1800;
+    h[1800] = B1800;
 #endif
 #if defined (B2400)
-    case 2400:
-        return B2400;
+    h[2400] = B2400;
 #endif
 #if defined (B4800)
-    case 4800:
-        return B4800;
+    h[4800] = B4800;
 #endif
 #if defined (B9600)
-    case 9600:
-        return B9600;
+    h[9600] = B9600;
 #endif
 #if defined (B19200)
-    case 19200:
-        return B19200;
+    h[19200] = B19200;
 #endif
 #if defined (B38400)
-    case 38400:
-        return B38400;
+    h[38400] = B38400;
 #endif
 #if defined (B57600)
-    case 57600:
-        return B57600;
+    h[57600] = B57600;
 #endif
 #if defined (B115200)
-    case 115200:
-        return B115200;
+    h[115200] = B115200;
 #endif
 #if defined (B230400)
-    case 230400:
-        return B230400;
+    h[230400] = B230400;
 #endif
 #if defined (B460800)
-    case 460800:
-        return B460800;
+    h[460800] = B460800;
 #endif
 #if defined (B500000)
-    case 500000:
-        return B500000;
+    h[500000] = B500000;
 #endif
 #if defined (B576000)
-    case 576000:
-        return B576000;
+    h[576000] = B576000;
 #endif
 #if defined (B921600)
-    case 921600:
-        return B921600;
+    h[921600] = B921600;
 #endif
 #if defined (B1000000)
-    case 1000000:
-        return B1000000;
+    h[1000000] = B1000000;
 #endif
 #if defined (B1152000)
-    case 1152000:
-        return B1152000;
+    h[1152000] = B1152000;
 #endif
 #if defined (B1500000)
-    case 1500000:
-        return B1500000;
+    h[1500000] = B1500000;
 #endif
 #if defined (B2000000)
-    case 2000000:
-        return B2000000;
+    h[2000000] = B2000000;
 #endif
 #if defined (B2500000)
-    case 2500000:
-        return B2500000;
+    h[2500000] = B2500000;
 #endif
 #if defined (B3000000)
-    case 3000000:
-        return B3000000;
+    h[3000000] = B3000000;
 #endif
 #if defined (B3500000)
-    case 3500000:
-        return B3500000;
+    h[3500000] = B3500000;
 #endif
 #if defined (B4000000)
-    case 4000000:
-        return B4000000;
+    h[4000000] = B4000000;
 #endif
-    default:
-        return -1;
-    }
+    return h;
+}
+
+// Standard baud rates match table, where:
+// - key - is the numerical value of baud rate (eg. 9600, 115200 ...)
+// - value - is the value of POSIX baud rate macros (eg. B9600, B115200 ...)
+inline QHash<qint32, qint32>& standardRatesMachTable()
+{
+    static QHash<qint32, qint32> h = generateStandardRatesMachTable();
+    return h;
 }
 
 /*!
     Set desired \a rate by given direction \a dir,
     where \a rate is expressed by any positive integer type qint32.
-    The method attempts to analyze the type of the desired speed:
-    standard or custom, and the results of the analysis trying to
-    install it using the corresponding internal function
-    setCustomRate() or setStandartRate().
+    Also the method make attempts to analyze the type of the desired
+    standard or custom speed and trying to set it.
 
     If successful, returns true; otherwise false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
-    qint32 detectedRate = detect_standard_rate(rate);
-    bool ret = false;
-    if (detectedRate == -1)
-        ret = setCustomRate(rate);
-    else
-        ret = setStandartRate(dir, detectedRate);
+    bool ret = (rate > 0);
+
+    // prepare section
+
+#if defined (Q_OS_LINUX)
+    struct serial_struct ser_info;
+    if (ret)
+        ret = (::ioctl(m_descriptor, TIOCGSERIAL, &ser_info) != -1);
+#endif
+
+    if (ret) {
+        const qint32 unixRate = standardRatesMachTable().value(rate);
+        if (unixRate > 0) {
+            // try prepate to set standard baud rate
+
+#if defined (Q_OS_LINUX)
+            // prepare to forcefully reset the custom mode
+            ser_info.flags |= ASYNC_SPD_MASK;
+            ser_info.flags &= ~(ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+            ser_info.custom_divisor = 0;
+#endif
+            // prepare to set standard rate
+            ret = !(((dir & SerialPort::Input) && (::cfsetispeed(&m_currTermios, unixRate) < 0))
+                    || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currTermios, unixRate) < 0)));
+        } else {
+            // try prepate to set custom baud rate
+
+#if defined (Q_OS_LINUX)
+            // prepare to forcefully set the custom mode
+            ser_info.flags &= ~ASYNC_SPD_MASK;
+            ser_info.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+            ser_info.custom_divisor = ser_info.baud_base / rate;
+            if (ser_info.custom_divisor == 0)
+                ser_info.custom_divisor = 1;
+
+            // for custom mode needed prepare to set B38400 rate
+            ret = (::cfsetspeed(&m_currTermios, B38400) != -1);
+#elif defined (Q_OS_MAC)
+
+#  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+            // Starting with Tiger, the IOSSIOSPEED ioctl can be used to set arbitrary baud rates
+            // other than those specified by POSIX. The driver for the underlying serial hardware
+            // ultimately determines which baud rates can be used. This ioctl sets both the input
+            // and output speed.
+            ret = (::ioctl(m_descriptor, IOSSIOSPEED, &rate) != -1);
+#  else
+            // others MacOSX version, can't prepare to set custom rate
+            ret = false;
+#  endif
+
+#else
+            // others *nix OS, can't prepare to set custom rate
+            ret = false;
+#endif
+        }
+    }
+
+    // finally section
+
+#if defined (Q_OS_LINUX)
+    if (ret) {
+        // finally, set or reset the custom mode
+        ret = (::ioctl(m_descriptor, TIOCSSERIAL, &ser_info) != -1);
+    }
+#endif
+
+    if (ret) {
+        // finally, set rate
+        ret = updateTermios();
+    }
 
     if (!ret)
         m_parent->setError(SerialPort::UnsupportedPortOperationError);
@@ -1011,171 +1047,7 @@ bool UnixSerialPortEngine::processIOErrors()
     return false;
 }
 
-///
-
 /* Protected methods */
-
-// Convert unix rate as speed_t to
-// really value as qint32.
-static qint32 unixrate2valuerate(speed_t unixrate)
-{
-    qint32 ret = SerialPort::UnknownRate;
-
-    switch (unixrate) {
-#if defined (B50)
-    case B50:
-        ret = 50;
-        break;
-#endif
-#if defined (B75)
-    case B75:
-        ret = 75;
-        break;
-#endif
-#if defined (B110)
-    case B110:
-        ret = 110;
-        break;
-#endif
-#if defined (B134)
-    case B134:
-        ret = 134;
-        break;
-#endif
-#if defined (B150)
-    case B150:
-        ret = 150;
-        break;
-#endif
-#if defined (B200)
-    case B200:
-        ret = 200;
-        break;
-#endif
-#if defined (B300)
-    case B300:
-        ret = 300;
-        break;
-#endif
-#if defined (B600)
-    case B600:
-        ret = 600;
-        break;
-#endif
-#if defined (B1200)
-    case B1200:
-        ret = 1200;
-        break;
-#endif
-#if defined (B1800)
-    case B1800:
-        ret = 1800;
-        break;
-#endif
-#if defined (B2400)
-    case B2400:
-        ret = 2400;
-        break;
-#endif
-#if defined (B4800)
-    case B4800:
-        ret = 4800;
-        break;
-#endif
-#if defined (B9600)
-    case B9600:
-        ret = 9600;
-        break;
-#endif
-#if defined (B19200)
-    case B19200:
-        ret = 19200;
-        break;
-#endif
-#if defined (B38400)
-    case B38400:
-        ret = 38400;
-        break;
-#endif
-#if defined (B57600)
-    case B57600:
-        ret = 57600;
-        break;
-#endif
-#if defined (B115200)
-    case B115200:
-        ret = 115200;
-        break;
-#endif
-#if defined (B230400)
-    case B230400:
-        ret = 230400;
-        break;
-#endif
-#if defined (B460800)
-    case B460800:
-        ret = 460800;
-        break;
-#endif
-#if defined (B500000)
-    case B500000:
-        ret = 500000;
-        break;
-#endif
-#if defined (B576000)
-    case B576000:
-        ret = 576000;
-        break;
-#endif
-#if defined (B921600)
-    case B921600:
-        ret = 921600;
-        break;
-#endif
-#if defined (B1000000)
-    case B1000000:
-        ret = 1000000;
-        break;
-#endif
-#if defined (B1152000)
-    case B1152000:
-        ret = 1152000;
-        break;
-#endif
-#if defined (B1500000)
-    case B1500000:
-        ret = 1500000;
-        break;
-#endif
-#if defined (B2000000)
-    case B2000000:
-        ret = 2000000;
-        break;
-#endif
-#if defined (B2500000)
-    case B2500000:
-        ret = 2500000;
-        break;
-#endif
-#if defined (B3000000)
-    case B3000000:
-        ret = 3000000;
-        break;
-#endif
-#if defined (B3500000)
-    case B3500000:
-        ret = 3500000;
-        break;
-#endif
-#if defined (B4000000)
-    case B4000000:
-        ret = 4000000;
-        break;
-#endif
-    default:;
-    }
-    return ret;
-}
 
 /*!
     Attempts to determine the current settings of the serial port,
@@ -1184,8 +1056,37 @@ static qint32 unixrate2valuerate(speed_t unixrate)
 void UnixSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
-    m_parent->m_inRate = unixrate2valuerate(::cfgetispeed(&m_currTermios));
-    m_parent->m_outRate = unixrate2valuerate(::cfgetospeed(&m_currTermios));
+    bool isCustomRate = false;
+#if defined (Q_OS_LINUX)
+    // first assume that the baud rate of custom
+    isCustomRate = ((::cfgetispeed(&m_currTermios) == B38400)
+                    && (::cfgetospeed(&m_currTermios) == B38400));
+
+    if (isCustomRate) {
+        struct serial_struct ser_info;
+        if (::ioctl(m_descriptor, TIOCGSERIAL, &ser_info) != -1) {
+            if ((ser_info.flags & ASYNC_SPD_CUST)
+                    && (ser_info.custom_divisor > 0)) {
+
+                // yes, speed is really custom
+                m_parent->m_inRate = ser_info.baud_base / ser_info.custom_divisor;
+            } else {
+                // no, we were wrong and the speed of a standard 38400 baud
+                m_parent->m_inRate = 38400;
+            }
+        } else {
+            // error get ioctl()
+            m_parent->m_inRate = SerialPort::UnknownRate;
+        }
+        m_parent->m_outRate = m_parent->m_inRate;
+    }
+#else
+    // other *nix
+#endif
+    if (!isCustomRate) {
+        m_parent->m_inRate = standardRatesMachTable().key(::cfgetispeed(&m_currTermios));
+        m_parent->m_outRate = standardRatesMachTable().key(::cfgetospeed(&m_currTermios));
+    }
 
     // Detect databits.
     switch (m_currTermios.c_cflag & CSIZE) {
@@ -1291,63 +1192,7 @@ bool UnixSerialPortEngine::updateTermios()
     return true;
 }
 
-/*!
-    Set only standard serial port \a rate as speed_t by given
-    deirection \a dir.
-
-    If successful, returns true; otherwise false.
-*/
-bool UnixSerialPortEngine::setStandartRate(SerialPort::Directions dir, speed_t rate)
-{
-    if (((dir & SerialPort::Input) && (::cfsetispeed(&m_currTermios, rate) == -1))
-            || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currTermios, rate) == -1))) {
-        return false;
-    }
-    return updateTermios();
-}
-
-/*!
-    Attempts to set desired the custom \a rate as qint32. Not all
-    POSIX-compatible platforms support this feature, at least for
-    GNU/Linux and MacOSX is possible.
-
-    If successful, returns true; otherwise false.
-*/
-bool UnixSerialPortEngine::setCustomRate(qint32 rate)
-{
-    int result = -1;
-#if defined (Q_OS_LINUX)
-
-#  if defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
-    if (rate > 0) {
-        struct serial_struct ser_info;
-        result = ::ioctl(m_descriptor, TIOCGSERIAL, &ser_info);
-        if (result != -1) {
-            ser_info.flags &= ~ASYNC_SPD_MASK;
-            ser_info.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-            ser_info.custom_divisor = ser_info.baud_base / rate;
-            if (ser_info.custom_divisor)
-                result = ::ioctl(m_descriptor, TIOCSSERIAL, &ser_info);
-        }
-    }
-#  endif
-
-#elif defined (Q_OS_MAC)
-
-#  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-    // Starting with Tiger, the IOSSIOSPEED ioctl can be used to set arbitrary baud rates
-    // other than those specified by POSIX. The driver for the underlying serial hardware
-    // ultimately determines which baud rates can be used. This ioctl sets both the input
-    // and output speed.
-    result = ::ioctl(m_descriptor, IOSSIOSPEED, &rate);
-#  endif
-
-#else
-    Q_UNUSED(rate);
-#endif
-    return (result != -1);
-}
-
+/* */
 static inline bool evenParity(quint8 c)
 {
     c ^= c >> 4;        //(c7 ^ c3)(c6 ^ c2)(c5 ^ c1)(c4 ^ c0)
