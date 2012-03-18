@@ -4,7 +4,7 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
-#include "ttylocker_p_unix.h"
+#include "ttylocker_unix_p.h"
 
 #include <sys/types.h>
 #include <signal.h>

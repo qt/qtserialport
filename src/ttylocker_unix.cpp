@@ -2,7 +2,7 @@
     License...
 */
 
-#include "ttylocker_p_unix.h"
+#include "ttylocker_unix_p.h"
 
 #if defined (HAVE_BAUDBOY_H)
 #  include <baudboy.h>
