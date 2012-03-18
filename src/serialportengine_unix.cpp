@@ -66,17 +66,17 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     A pointer \a parent to the object class SerialPortPrivate
     is required for the recursive call some of its methods.
 */
-UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *parent)
+UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *d)
     : m_descriptor(-1)
     , m_readNotifier(0)
     , m_writeNotifier(0)
     , m_exceptionNotifier(0)
 {
-    Q_ASSERT(parent);
-    m_parent = parent;
+    Q_ASSERT(d);
+    dptr = d;
     int size = sizeof(struct termios);
-    ::memset(&m_currTermios, 0, size);
-    ::memset(&m_oldTermios, 0, size);
+    ::memset(&m_currentTermios, 0, size);
+    ::memset(&m_restoredTermios, 0, size);
 }
 
 /*!
@@ -94,7 +94,7 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
 }
 
 /*!
-    Tries to open the descriptor desired serial port by \a location
+    Tries to open the m_descriptor desired serial port by \a location
     in the given open \a mode.
 
     Before the opening of the serial port, checking for on exists the
@@ -110,7 +110,7 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
     Since the port in the POSIX OS by default opens in shared mode,
     then this method forcibly puts a port in exclusive mode access.
     This is done simultaneously in two ways:
-    - set to the pre-open descriptor a flag TIOCEXCL
+    - set to the pre-open m_descriptor a flag TIOCEXCL
     - creates a lock file, which writes the pid of the process, that
     opened the port and other information
 
@@ -127,7 +127,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     // First, here need check locked device or not.
     bool byCurrPid = false;
     if (TTYLocker::isLocked(location, &byCurrPid)) {
-        m_parent->setError(SerialPort::PermissionDeniedError);
+        dptr->setError(SerialPort::PermissionDeniedError);
         return false;
     }
 
@@ -151,13 +151,13 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     if (m_descriptor == -1) {
         switch (errno) {
         case ENODEV:
-            m_parent->setError(SerialPort::NoSuchDeviceError);
+            dptr->setError(SerialPort::NoSuchDeviceError);
             break;
         case EACCES:
-            m_parent->setError(SerialPort::PermissionDeniedError);
+            dptr->setError(SerialPort::PermissionDeniedError);
             break;
         default:
-            m_parent->setError(SerialPort::UnknownPortError);
+            dptr->setError(SerialPort::UnknownPortError);
         }
         return false;
     }
@@ -165,7 +165,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     // Try lock device by location and check it state is locked.
     TTYLocker::lock(location);
     if (!TTYLocker::isLocked(location, &byCurrPid)) {
-        m_parent->setError(SerialPort::PermissionDeniedError);
+        dptr->setError(SerialPort::PermissionDeniedError);
         return false;
     }
 
@@ -175,16 +175,16 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
 #endif
 
     // Save current port settings.
-    if (::tcgetattr(m_descriptor, &m_oldTermios) == -1) {
-        m_parent->setError(SerialPort::UnknownPortError);
+    if (::tcgetattr(m_descriptor, &m_restoredTermios) == -1) {
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
-    ::memcpy(&m_currTermios, &m_oldTermios, sizeof(struct termios));
+    ::memcpy(&m_currentTermios, &m_restoredTermios, sizeof(struct termios));
 
     // Set other options.
-    ::cfmakeraw(&m_currTermios);
-    m_currTermios.c_cflag |= (CREAD | CLOCAL);
-    m_currTermios.c_cc[VTIME] = 0;
+    ::cfmakeraw(&m_currentTermios);
+    m_currentTermios.c_cflag |= (CREAD | CLOCAL);
+    m_currentTermios.c_cc[VTIME] = 0;
 
     // Apply new init settings.
     if (!updateTermios())
@@ -195,15 +195,15 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
 }
 
 /*!
-    Closes a serial port descriptor. Before closing - clears exclusive
+    Closes a serial port m_descriptor. Before closing - clears exclusive
     access flag and removes the lock file, restore previous serial port
     settings if necessary.
 */
 void UnixSerialPortEngine::close(const QString &location)
 {
     // Restore saved port settings.
-    if (m_parent->m_restoreSettingsOnClose)
-        ::tcsetattr(m_descriptor, TCSANOW, &m_oldTermios);
+    if (dptr->options.restoreSettingsOnClose)
+        ::tcsetattr(m_descriptor, TCSANOW, &m_restoredTermios);
 
     // Try clean exclusive mode.
 #if defined (TIOCNXCL)
@@ -238,39 +238,39 @@ SerialPort::Lines UnixSerialPortEngine::lines() const
         return ret;
     }
 
-#if defined (TIOCM_LE)
-    if (arg & TIOCM_LE) ret |= SerialPort::Le;
+#if defined (TIOCLE)
+    if (arg & TIOCLE) ret |= SerialPort::Le;
 #endif
-#if defined (TIOCM_DTR)
-    if (arg & TIOCM_DTR) ret |= SerialPort::Dtr;
+#if defined (TIOCDTR)
+    if (arg & TIOCDTR) ret |= SerialPort::Dtr;
 #endif
-#if defined (TIOCM_RTS)
-    if (arg & TIOCM_RTS) ret |= SerialPort::Rts;
+#if defined (TIOCRTS)
+    if (arg & TIOCRTS) ret |= SerialPort::Rts;
 #endif
-#if defined (TIOCM_ST)
-    if (arg & TIOCM_ST) ret |= SerialPort::St;
+#if defined (TIOCST)
+    if (arg & TIOCST) ret |= SerialPort::St;
 #endif
-#if defined (TIOCM_SR)
-    if (arg & TIOCM_SR) ret |= SerialPort::Sr;
+#if defined (TIOCSR)
+    if (arg & TIOCSR) ret |= SerialPort::Sr;
 #endif
-#if defined (TIOCM_CTS)
-    if (arg & TIOCM_CTS) ret |= SerialPort::Cts;
-#endif
-
-#if defined (TIOCM_CAR)
-    if (arg & TIOCM_CAR) ret |= SerialPort::Dcd;
-#elif defined (TIOCM_CD)
-    if (arg & TIOCM_CD) ret |= SerialPort::Dcd;
+#if defined (TIOCCTS)
+    if (arg & TIOCCTS) ret |= SerialPort::Cts;
 #endif
 
-#if defined (TIOCM_RNG)
-    if (arg & TIOCM_RNG) ret |= SerialPort::Ri;
-#elif defined (TIOCM_RI)
-    if (arg & TIOCM_RI) ret |= SerialPort::Ri;
+#if defined (TIOCCAR)
+    if (arg & TIOCCAR) ret |= SerialPort::Dcd;
+#elif defined (TIOCCD)
+    if (arg & TIOCCD) ret |= SerialPort::Dcd;
 #endif
 
-#if defined (TIOCM_DSR)
-    if (arg & TIOCM_DSR) ret |= SerialPort::Dsr;
+#if defined (TIOCRNG)
+    if (arg & TIOCRNG) ret |= SerialPort::Ri;
+#elif defined (TIOCRI)
+    if (arg & TIOCRI) ret |= SerialPort::Ri;
+#endif
+
+#if defined (TIOCDSR)
+    if (arg & TIOCDSR) ret |= SerialPort::Dsr;
 #endif
 
     return ret;
@@ -437,9 +437,11 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 {
     qint64 bytesRead = 0;
 #if defined (CMSPAR)
-    if ((m_parent->m_parity == SerialPort::NoParity) || (m_parent->m_policy != SerialPort::StopReceivingPolicy))
+    if ((dptr->options.parity == SerialPort::NoParity)
+            || (dptr->options.policy != SerialPort::StopReceivingPolicy))
 #else
-    if ((m_parent->m_parity != SerialPort::MarkParity) && (m_parent->m_parity != SerialPort::SpaceParity))
+    if ((dptr->options.parity != SerialPort::MarkParity)
+            && (dptr->options.parity != SerialPort::SpaceParity))
 #endif
         bytesRead = ::read(m_descriptor, data, len);
     else // Perform parity emulation.
@@ -475,7 +477,7 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
         // FIXME: Here need call errno
         // and set error type?
         if (bytesRead == -1)
-            m_parent->setError(SerialPort::IoError);
+            dptr->setError(SerialPort::IoError);
     }
     return bytesRead;
 }
@@ -495,7 +497,7 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 #if defined (CMSPAR)
     bytesWritten = ::write(m_descriptor, data, len);
 #else
-    if ((m_parent->m_parity != SerialPort::MarkParity) && (m_parent->m_parity != SerialPort::SpaceParity))
+    if ((dptr->options.parity != SerialPort::MarkParity) && (dptr->options.parity != SerialPort::SpaceParity))
         bytesWritten = ::write(m_descriptor, data, len);
     else // Perform parity emulation.
         bytesWritten = writePerChar(data, len);
@@ -519,7 +521,7 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
         // FIXME: Here need call errno
         // and set error type?
         if (bytesWritten == -1)
-            m_parent->setError(SerialPort::IoError);
+            dptr->setError(SerialPort::IoError);
     }
     return bytesWritten;
 }
@@ -528,7 +530,7 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
     Implements a function blocking for waiting of events on the
     \a timeout in millisecond, those listed in fdread will be watched
     to see if characters become available for reading (more precisely,
-    to see if a read will not block; in particular, a file descriptor
+    to see if a read will not block; in particular, a file m_descriptor
     is also ready on end-of-file), those in fdwrite will be watched
     to see if a write will not block.
 
@@ -620,7 +622,8 @@ QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
 
 static QHash<qint32, qint32> generateStandardRatesMachTable()
 {
-   QHash<qint32, qint32> h;
+    QHash<qint32, qint32> h;
+
 #if defined (B0)
     h[0] = B0;
 #endif
@@ -640,7 +643,7 @@ static QHash<qint32, qint32> generateStandardRatesMachTable()
     h[150] = B150;
 #endif
 #if defined (B200)
-    h[2000] = B200;
+    h[200] = B200;
 #endif
 #if defined (B300)
     h[300] = B300;
@@ -714,6 +717,7 @@ static QHash<qint32, qint32> generateStandardRatesMachTable()
 #if defined (B4000000)
     h[4000000] = B4000000;
 #endif
+
     return h;
 }
 
@@ -759,8 +763,8 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
             ser_info.custom_divisor = 0;
 #endif
             // prepare to set standard rate
-            ret = !(((dir & SerialPort::Input) && (::cfsetispeed(&m_currTermios, unixRate) < 0))
-                    || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currTermios, unixRate) < 0)));
+            ret = !(((dir & SerialPort::Input) && (::cfsetispeed(&m_currentTermios, unixRate) < 0))
+                    || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currentTermios, unixRate) < 0)));
         } else {
             // try prepate to set custom baud rate
 
@@ -773,7 +777,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
                 ser_info.custom_divisor = 1;
 
             // for custom mode needed prepare to set B38400 rate
-            ret = (::cfsetspeed(&m_currTermios, B38400) != -1);
+            ret = (::cfsetspeed(&m_currentTermios, B38400) != -1);
 #elif defined (Q_OS_MAC)
 
 #  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
@@ -809,7 +813,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     }
 
     if (!ret)
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
     return ret;
 }
 
@@ -822,22 +826,22 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    m_currTermios.c_cflag &= (~CSIZE);
+    m_currentTermios.c_cflag &= (~CSIZE);
     switch (dataBits) {
     case SerialPort::Data5:
-        m_currTermios.c_cflag |= CS5;
+        m_currentTermios.c_cflag |= CS5;
         break;
     case SerialPort::Data6:
-        m_currTermios.c_cflag |= CS6;
+        m_currentTermios.c_cflag |= CS6;
         break;
     case SerialPort::Data7:
-        m_currTermios.c_cflag |= CS7;
+        m_currentTermios.c_cflag |= CS7;
         break;
     case SerialPort::Data8:
-        m_currTermios.c_cflag |= CS8;
+        m_currentTermios.c_cflag |= CS8;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateTermios();
@@ -855,35 +859,35 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 */
 bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
 {
-    m_currTermios.c_iflag &= ~(PARMRK | INPCK);
-    m_currTermios.c_iflag |= IGNPAR;
+    m_currentTermios.c_iflag &= ~(PARMRK | INPCK);
+    m_currentTermios.c_iflag |= IGNPAR;
 
     switch (parity) {
 
 #if defined (CMSPAR)
     // Here Installation parity only for GNU/Linux where the macro CMSPAR.
     case SerialPort::SpaceParity:
-        m_currTermios.c_cflag &= (~PARODD);
-        m_currTermios.c_cflag |= (PARENB | CMSPAR);
+        m_currentTermios.c_cflag &= (~PARODD);
+        m_currentTermios.c_cflag |= (PARENB | CMSPAR);
         break;
     case SerialPort::MarkParity:
-        m_currTermios.c_cflag |= (PARENB | CMSPAR | PARODD);
+        m_currentTermios.c_cflag |= (PARENB | CMSPAR | PARODD);
         break;
 #endif
     case SerialPort::NoParity:
-        m_currTermios.c_cflag &= (~PARENB);
+        m_currentTermios.c_cflag &= (~PARENB);
         break;
     case SerialPort::EvenParity:
-        m_currTermios.c_cflag &= (~PARODD);
-        m_currTermios.c_cflag |= PARENB;
+        m_currentTermios.c_cflag &= (~PARODD);
+        m_currentTermios.c_cflag |= PARENB;
         break;
     case SerialPort::OddParity:
-        m_currTermios.c_cflag |= (PARENB | PARODD);
+        m_currentTermios.c_cflag |= (PARENB | PARODD);
         break;
     default:
-        m_currTermios.c_cflag |= PARENB;
-        m_currTermios.c_iflag |= (PARMRK | INPCK);
-        m_currTermios.c_iflag &= ~IGNPAR;
+        m_currentTermios.c_cflag |= PARENB;
+        m_currentTermios.c_iflag |= (PARMRK | INPCK);
+        m_currentTermios.c_iflag &= ~IGNPAR;
         break;
     }
 
@@ -901,13 +905,13 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     switch (stopBits) {
     case SerialPort::OneStop:
-        m_currTermios.c_cflag &= (~CSTOPB);
+        m_currentTermios.c_cflag &= (~CSTOPB);
         break;
     case SerialPort::TwoStop:
-        m_currTermios.c_cflag |= CSTOPB;
+        m_currentTermios.c_cflag |= CSTOPB;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateTermios();
@@ -925,19 +929,19 @@ bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     switch (flow) {
     case SerialPort::NoFlowControl:
-        m_currTermios.c_cflag &= (~CRTSCTS);
-        m_currTermios.c_iflag &= (~(IXON | IXOFF | IXANY));
+        m_currentTermios.c_cflag &= (~CRTSCTS);
+        m_currentTermios.c_iflag &= (~(IXON | IXOFF | IXANY));
         break;
     case SerialPort::HardwareControl:
-        m_currTermios.c_cflag |= CRTSCTS;
-        m_currTermios.c_iflag &= (~(IXON | IXOFF | IXANY));
+        m_currentTermios.c_cflag |= CRTSCTS;
+        m_currentTermios.c_iflag &= (~(IXON | IXOFF | IXANY));
         break;
     case SerialPort::SoftwareControl:
-        m_currTermios.c_cflag &= (~CRTSCTS);
-        m_currTermios.c_iflag |= (IXON | IXOFF | IXANY);
+        m_currentTermios.c_cflag &= (~CRTSCTS);
+        m_currentTermios.c_iflag |= (IXON | IXOFF | IXANY);
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateTermios();
@@ -952,27 +956,27 @@ bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy
     tcflag_t parmrkMask = PARMRK;
 #ifndef CMSPAR
     //in space/mark parity emulation also used PARMRK flag
-    if (m_parent->m_parity == SerialPort::SpaceParity || m_parent->m_parity == SerialPort::MarkParity)
+    if (dptr->options.parity == SerialPort::SpaceParity || dptr->options.parity == SerialPort::MarkParity)
         parmrkMask = 0;
 #endif //CMSPAR
     switch(policy) {
     case SerialPort::SkipPolicy:
-        m_currTermios.c_iflag &= ~parmrkMask;
-        m_currTermios.c_iflag |= IGNPAR | INPCK;
+        m_currentTermios.c_iflag &= ~parmrkMask;
+        m_currentTermios.c_iflag |= IGNPAR | INPCK;
         break;
     case SerialPort::PassZeroPolicy:
-        m_currTermios.c_iflag &= ~(IGNPAR | parmrkMask);
-        m_currTermios.c_iflag |= INPCK;
+        m_currentTermios.c_iflag &= ~(IGNPAR | parmrkMask);
+        m_currentTermios.c_iflag |= INPCK;
         break;
     case SerialPort::IgnorePolicy:
-        m_currTermios.c_iflag &= ~INPCK;
+        m_currentTermios.c_iflag &= ~INPCK;
         break;
     case SerialPort::StopReceivingPolicy:
-        m_currTermios.c_iflag &= ~IGNPAR;
-        m_currTermios.c_iflag |= (parmrkMask | INPCK);
+        m_currentTermios.c_iflag &= ~IGNPAR;
+        m_currentTermios.c_iflag |= (parmrkMask | INPCK);
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateTermios();
@@ -1059,8 +1063,8 @@ void UnixSerialPortEngine::detectDefaultSettings()
     bool isCustomRate = false;
 #if defined (Q_OS_LINUX)
     // first assume that the baud rate of custom
-    isCustomRate = ((::cfgetispeed(&m_currTermios) == B38400)
-                    && (::cfgetospeed(&m_currTermios) == B38400));
+    isCustomRate = ((::cfgetispeed(&m_currentTermios) == B38400)
+                    && (::cfgetospeed(&m_currentTermios) == B38400));
 
     if (isCustomRate) {
         struct serial_struct ser_info;
@@ -1069,83 +1073,83 @@ void UnixSerialPortEngine::detectDefaultSettings()
                     && (ser_info.custom_divisor > 0)) {
 
                 // yes, speed is really custom
-                m_parent->m_inRate = ser_info.baud_base / ser_info.custom_divisor;
+                dptr->options.inputRate = ser_info.baud_base / ser_info.custom_divisor;
             } else {
                 // no, we were wrong and the speed of a standard 38400 baud
-                m_parent->m_inRate = 38400;
+                dptr->options.inputRate = 38400;
             }
         } else {
             // error get ioctl()
-            m_parent->m_inRate = SerialPort::UnknownRate;
+            dptr->options.inputRate = SerialPort::UnknownRate;
         }
-        m_parent->m_outRate = m_parent->m_inRate;
+        dptr->options.outputRate = dptr->options.inputRate;
     }
 #else
     // other *nix
 #endif
     if (!isCustomRate) {
-        m_parent->m_inRate = standardRatesMachTable().key(::cfgetispeed(&m_currTermios));
-        m_parent->m_outRate = standardRatesMachTable().key(::cfgetospeed(&m_currTermios));
+        dptr->options.inputRate = standardRatesMachTable().key(::cfgetispeed(&m_currentTermios));
+        dptr->options.outputRate = standardRatesMachTable().key(::cfgetospeed(&m_currentTermios));
     }
 
     // Detect databits.
-    switch (m_currTermios.c_cflag & CSIZE) {
+    switch (m_currentTermios.c_cflag & CSIZE) {
     case CS5:
-        m_parent->m_dataBits = SerialPort::Data5;
+        dptr->options.dataBits = SerialPort::Data5;
         break;
     case CS6:
-        m_parent->m_dataBits = SerialPort::Data6;
+        dptr->options.dataBits = SerialPort::Data6;
         break;
     case CS7:
-        m_parent->m_dataBits = SerialPort::Data7;
+        dptr->options.dataBits = SerialPort::Data7;
         break;
     case CS8:
-        m_parent->m_dataBits = SerialPort::Data8;
+        dptr->options.dataBits = SerialPort::Data8;
         break;
     default:
-        m_parent->m_dataBits = SerialPort::UnknownDataBits;
+        dptr->options.dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
 #if defined (CMSPAR)
-    if (m_currTermios.c_cflag & CMSPAR) {
-        m_parent->m_parity = (m_currTermios.c_cflag & PARODD) ?
+    if (m_currentTermios.c_cflag & CMSPAR) {
+        dptr->options.parity = (m_currentTermios.c_cflag & PARODD) ?
                     SerialPort::MarkParity : SerialPort::SpaceParity;
     } else {
 #endif
-        if (m_currTermios.c_cflag & PARENB) {
-            m_parent->m_parity = (m_currTermios.c_cflag & PARODD) ?
+        if (m_currentTermios.c_cflag & PARENB) {
+            dptr->options.parity = (m_currentTermios.c_cflag & PARODD) ?
                         SerialPort::OddParity : SerialPort::EvenParity;
         } else
-            m_parent->m_parity = SerialPort::NoParity;
+            dptr->options.parity = SerialPort::NoParity;
 #if defined (CMSPAR)
     }
 #endif
 
     // Detect stopbits.
-    m_parent->m_stopBits = (m_currTermios.c_cflag & CSTOPB) ?
+    dptr->options.stopBits = (m_currentTermios.c_cflag & CSTOPB) ?
                 SerialPort::TwoStop : SerialPort::OneStop;
 
     // Detect flow control.
-    if ((!(m_currTermios.c_cflag & CRTSCTS)) && (!(m_currTermios.c_iflag & (IXON | IXOFF | IXANY))))
-        m_parent->m_flow = SerialPort::NoFlowControl;
-    else if ((!(m_currTermios.c_cflag & CRTSCTS)) && (m_currTermios.c_iflag & (IXON | IXOFF | IXANY)))
-        m_parent->m_flow = SerialPort::SoftwareControl;
-    else if ((m_currTermios.c_cflag & CRTSCTS) && (!(m_currTermios.c_iflag & (IXON | IXOFF | IXANY))))
-        m_parent->m_flow = SerialPort::HardwareControl;
+    if ((!(m_currentTermios.c_cflag & CRTSCTS)) && (!(m_currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
+        dptr->options.flow = SerialPort::NoFlowControl;
+    else if ((!(m_currentTermios.c_cflag & CRTSCTS)) && (m_currentTermios.c_iflag & (IXON | IXOFF | IXANY)))
+        dptr->options.flow = SerialPort::SoftwareControl;
+    else if ((m_currentTermios.c_cflag & CRTSCTS) && (!(m_currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
+        dptr->options.flow = SerialPort::HardwareControl;
     else
-        m_parent->m_flow = SerialPort::UnknownFlowControl;
+        dptr->options.flow = SerialPort::UnknownFlowControl;
 
     //detect error policy
-    if (m_currTermios.c_iflag & INPCK) {
-        if (m_currTermios.c_iflag & IGNPAR)
-            m_parent->m_policy = SerialPort::SkipPolicy;
-        else if (m_currTermios.c_iflag & PARMRK)
-            m_parent->m_policy = SerialPort::StopReceivingPolicy;
+    if (m_currentTermios.c_iflag & INPCK) {
+        if (m_currentTermios.c_iflag & IGNPAR)
+            dptr->options.policy = SerialPort::SkipPolicy;
+        else if (m_currentTermios.c_iflag & PARMRK)
+            dptr->options.policy = SerialPort::StopReceivingPolicy;
         else
-            m_parent->m_policy = SerialPort::PassZeroPolicy;
+            dptr->options.policy = SerialPort::PassZeroPolicy;
     } else {
-        m_parent->m_policy = SerialPort::IgnorePolicy;
+        dptr->options.policy = SerialPort::IgnorePolicy;
     }
 }
 
@@ -1160,15 +1164,15 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 {
     if (e->type() == QEvent::SockAct) {
         if (obj == m_readNotifier) {
-            m_parent->canReadNotification();
+            dptr->canReadNotification();
             return true;
         }
         if (obj == m_writeNotifier) {
-            m_parent->canWriteNotification();
+            dptr->canWriteNotification();
             return true;
         }
         if (obj == m_exceptionNotifier) {
-            m_parent->canErrorNotification();
+            dptr->canErrorNotification();
             return true;
         }
     }
@@ -1185,8 +1189,8 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 */
 bool UnixSerialPortEngine::updateTermios()
 {
-    if (::tcsetattr(m_descriptor, TCSANOW, &m_currTermios) == -1) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+    if (::tcsetattr(m_descriptor, TCSANOW, &m_currentTermios) == -1) {
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;
@@ -1211,15 +1215,15 @@ static inline bool evenParity(quint8 c)
 qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
 {
     qint64 ret = 0;
-    quint8 const charMask = (0xFF >> (8 - m_parent->m_dataBits));
+    quint8 const charMask = (0xFF >> (8 - dptr->options.dataBits));
 
     while (ret < maxSize) {
 
         bool par = evenParity(*data & charMask);
         // False if need EVEN, true if need ODD.
-        par ^= (m_parent->m_parity == SerialPort::MarkParity);
-        if (par ^ bool(m_currTermios.c_cflag & PARODD)) { // Need switch parity mode?
-            m_currTermios.c_cflag ^= PARODD;
+        par ^= (dptr->options.parity == SerialPort::MarkParity);
+        if (par ^ bool(m_currentTermios.c_cflag & PARODD)) { // Need switch parity mode?
+            m_currentTermios.c_cflag ^= PARODD;
             flush(); //force sending already buffered data, because updateTermios() cleares buffers
             //todo: add receiving buffered data!!!
             if (!updateTermios())
@@ -1246,7 +1250,7 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
 qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
 {
     qint64 ret = 0;
-    quint8 const charMask = (0xFF >> (8 - m_parent->m_dataBits));
+    quint8 const charMask = (0xFF >> (8 - dptr->options.dataBits));
 
     // 0 - prefix not started,
     // 1 - received 0xFF,
@@ -1285,16 +1289,16 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
         }
         // Now: par contains parity ok or error, *data contains received character
         par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
-        par ^= bool(m_currTermios.c_cflag & PARODD); //par contains parity bit value for current mode
-        if (par ^ bool(m_parent->m_parity == SerialPort::SpaceParity)) { //if parity error
-            switch(m_parent->m_policy) {
+        par ^= bool(m_currentTermios.c_cflag & PARODD); //par contains parity bit value for current mode
+        if (par ^ bool(dptr->options.parity == SerialPort::SpaceParity)) { //if parity error
+            switch (dptr->options.policy) {
             case SerialPort::SkipPolicy:
                 continue;       //ignore received character
             case SerialPort::StopReceivingPolicy:
-                if (m_parent->m_parity != SerialPort::NoParity)
-                    m_parent->m_portError = SerialPort::ParityError;
+                if (dptr->options.parity != SerialPort::NoParity)
+                    dptr->portError = SerialPort::ParityError;
                 else
-                    m_parent->m_portError = (*data == '\0') ? SerialPort::BreakConditionError : SerialPort::FramingError;
+                    dptr->portError = (*data == '\0') ? SerialPort::BreakConditionError : SerialPort::FramingError;
                 return ++ret;   //abort receiving
                 break;
             case SerialPort::UnknownPolicy:
@@ -1313,9 +1317,9 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
 }
 
 // From <serialportengine_p.h>
-SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
+SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 {
-    return new UnixSerialPortEngine(parent);
+    return new UnixSerialPortEngine(d);
 }
 
 #include "moc_serialportengine_unix_p.cpp"

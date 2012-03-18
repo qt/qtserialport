@@ -26,8 +26,10 @@ class WinCeWaitCommEventBreaker : public QThread
     Q_OBJECT
 public:
     WinCeWaitCommEventBreaker(HANDLE descriptor, int timeout, QObject *parent = 0)
-        : QThread(parent), m_descriptor(descriptor),
-          m_timeout(timeout), m_worked(false) {
+        : QThread(parent)
+        , m_descriptor(descriptor)
+        , m_timeout(timeout)
+        , m_worked(false) {
         start();
     }
     virtual ~WinCeWaitCommEventBreaker() {
@@ -61,13 +63,13 @@ private:
 
 #if defined (Q_OS_WINCE)
 class WinSerialPortEngine : public QThread, public SerialPortEngine
-        #else
+#else
 class WinSerialPortEngine : public QWinEventNotifier, public SerialPortEngine
-        #endif
+#endif
 {
     Q_OBJECT
 public:
-    WinSerialPortEngine(SerialPortPrivate *parent);
+    WinSerialPortEngine(SerialPortPrivate *d);
     virtual ~WinSerialPortEngine();
 
     virtual bool open(const QString &location, QIODevice::OpenMode mode);
@@ -112,6 +114,7 @@ public:
     virtual bool processIOErrors();
 
 #if defined (Q_OS_WINCE)
+    // FIXME
     virtual void lockNotification(NotificationLockerType type, bool uselocker);
     virtual void unlockNotification(NotificationLockerType type);
 #endif
@@ -126,14 +129,25 @@ protected:
 #endif
 
 private:
-    DCB m_currDCB;
-    DCB m_oldDCB;
-    COMMTIMEOUTS m_currCommTimeouts;
-    COMMTIMEOUTS m_oldCommTimeouts;
+
+#if !defined (Q_OS_WINCE)
+    bool createEvents(bool rx, bool tx);
+    void closeEvents();
+    void setMaskAndActivateEvent();
+#endif
+
+    bool updateDcb();
+    bool updateCommTimeouts();
+
+private:
+    DCB m_currentDcb;
+    DCB m_restoredDcb;
+    COMMTIMEOUTS m_currentCommTimeouts;
+    COMMTIMEOUTS m_restoredCommTimeouts;
     HANDLE m_descriptor;
     bool m_flagErrorFromCommEvent;
     DWORD m_currentMask;
-    DWORD m_setMask;
+    DWORD m_desiredMask;
 
 #if defined (Q_OS_WINCE)
     QMutex m_readNotificationMutex;
@@ -146,15 +160,8 @@ private:
     OVERLAPPED m_ovRead;
     OVERLAPPED m_ovWrite;
     OVERLAPPED m_ovSelect;
-    OVERLAPPED m_ov;
-
-    bool createEvents(bool rx, bool tx);
-    void closeEvents();
-    void setMaskAndActivateEvent();
+    OVERLAPPED m_ovNotify;
 #endif
-
-    bool updateDcb();
-    bool updateCommTimeouts();
 };
 
 QT_END_NAMESPACE_SERIALPORT

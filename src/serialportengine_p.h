@@ -15,6 +15,7 @@ class SerialPortEngine
 public:
 
 #if defined (Q_OS_WINCE)
+    // FIXME
     // Only for WinCE.
     enum NotificationLockerType {
         CanReadLocker,
@@ -25,7 +26,7 @@ public:
 
     virtual ~SerialPortEngine() {}
 
-    static SerialPortEngine *create(SerialPortPrivate *parent);
+    static SerialPortEngine *create(SerialPortPrivate *d);
 
     virtual bool open(const QString &location, QIODevice::OpenMode mode) = 0;
     virtual void close(const QString &location) = 0;
@@ -69,14 +70,16 @@ public:
     virtual bool processIOErrors() = 0;
 
 #if defined (Q_OS_WINCE)
+    // FIXME
     virtual void lockNotification(NotificationLockerType type, bool uselocker) = 0;
     virtual void unlockNotification(NotificationLockerType type) = 0;
 #endif
 
 protected:
-    SerialPortPrivate *m_parent;
-
     virtual void detectDefaultSettings() = 0;
+
+protected:
+    SerialPortPrivate *dptr;
 };
 
 QT_END_NAMESPACE_SERIALPORT

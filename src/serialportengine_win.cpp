@@ -92,30 +92,30 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     A pointer \a parent to the object class SerialPortPrivate
     is required for the recursive call some of its methods.
 */
-WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *parent)
+WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
     : m_descriptor(INVALID_HANDLE_VALUE)
     , m_flagErrorFromCommEvent(false)
     , m_currentMask(0)
-    , m_setMask(EV_ERR)
-    #if defined (Q_OS_WINCE)
+    , m_desiredMask(EV_ERR)
+#if defined (Q_OS_WINCE)
     , m_running(true)
-    #endif
+#endif
 {
-    Q_ASSERT(parent);
-    m_parent = parent;
+    Q_ASSERT(d);
+    dptr = d;
     size_t size = sizeof(DCB);
-    ::memset(&m_currDCB, 0, size);
-    ::memset(&m_oldDCB, 0, size);
+    ::memset(&m_currentDcb, 0, size);
+    ::memset(&m_restoredDcb, 0, size);
     size = sizeof(COMMTIMEOUTS);
-    ::memset(&m_currCommTimeouts, 0, size);
-    ::memset(&m_oldCommTimeouts, 0, size);
+    ::memset(&m_currentCommTimeouts, 0, size);
+    ::memset(&m_restoredCommTimeouts, 0, size);
 
 #if !defined (Q_OS_WINCE)
     size = sizeof(OVERLAPPED);
     ::memset(&m_ovRead, 0, size);
     ::memset(&m_ovWrite, 0, size);
     ::memset(&m_ovSelect, 0, size);
-    ::memset(&m_ov, 0, size);
+    ::memset(&m_ovNotify, 0, size);
 #endif
 }
 
@@ -186,32 +186,32 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
     if (m_descriptor == INVALID_HANDLE_VALUE) {
         switch (::GetLastError()) {
         case ERROR_FILE_NOT_FOUND:
-            m_parent->setError(SerialPort::NoSuchDeviceError);
+            dptr->setError(SerialPort::NoSuchDeviceError);
             break;
         case ERROR_ACCESS_DENIED:
-            m_parent->setError(SerialPort::PermissionDeniedError);
+            dptr->setError(SerialPort::PermissionDeniedError);
             break;
         default:
-            m_parent->setError(SerialPort::UnknownPortError);
+            dptr->setError(SerialPort::UnknownPortError);
         }
         return false;
     }
 
     // Save current DCB port settings.
     DWORD confSize = sizeof(DCB);
-    if (::GetCommState(m_descriptor, &m_oldDCB) == 0) {
-        m_parent->setError(SerialPort::UnknownPortError);
+    if (::GetCommState(m_descriptor, &m_restoredDcb) == 0) {
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
-    ::memcpy(&m_currDCB, &m_oldDCB, confSize);
+    ::memcpy(&m_currentDcb, &m_restoredDcb, confSize);
 
     // Set other DCB port options.
-    m_currDCB.fBinary = true;
-    m_currDCB.fInX = false;
-    m_currDCB.fOutX = false;
-    m_currDCB.fAbortOnError = false;
-    m_currDCB.fNull = false;
-    m_currDCB.fErrorChar = false;
+    m_currentDcb.fBinary = true;
+    m_currentDcb.fInX = false;
+    m_currentDcb.fOutX = false;
+    m_currentDcb.fAbortOnError = false;
+    m_currentDcb.fNull = false;
+    m_currentDcb.fErrorChar = false;
 
     // Apply new DCB init settings.
     if (!updateDcb())
@@ -219,15 +219,15 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
 
     // Save current port timeouts.
     confSize = sizeof(COMMTIMEOUTS);
-    if (::GetCommTimeouts(m_descriptor, &m_oldCommTimeouts) == 0) {
-        m_parent->setError(SerialPort::UnknownPortError);
+    if (::GetCommTimeouts(m_descriptor, &m_restoredCommTimeouts) == 0) {
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
-    ::memcpy(&m_currCommTimeouts, &m_oldCommTimeouts, confSize);
+    ::memcpy(&m_currentCommTimeouts, &m_restoredCommTimeouts, confSize);
 
     // Set new port timeouts.
-    ::memset(&m_currCommTimeouts, 0, confSize);
-    m_currCommTimeouts.ReadIntervalTimeout = MAXDWORD;
+    ::memset(&m_currentCommTimeouts, 0, confSize);
+    m_currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
     // Apply new port timeouts.
     if (!updateCommTimeouts())
@@ -235,7 +235,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
 
 #if !defined (Q_OS_WINCE)
     if (!createEvents(rxflag, txflag)) {
-        m_parent->setError(SerialPort::UnknownPortError);
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
 #endif
@@ -256,9 +256,9 @@ void WinSerialPortEngine::close(const QString &location)
     ::CancelIo(m_descriptor);
 #endif
 
-    if (m_parent->m_restoreSettingsOnClose) {
-        ::SetCommState(m_descriptor, &m_oldDCB);
-        ::SetCommTimeouts(m_descriptor, &m_oldCommTimeouts);
+    if (dptr->options.restoreSettingsOnClose) {
+        ::SetCommState(m_descriptor, &m_restoredDcb);
+        ::SetCommTimeouts(m_descriptor, &m_restoredCommTimeouts);
     }
 
     ::CloseHandle(m_descriptor);
@@ -409,11 +409,11 @@ bool WinSerialPortEngine::setBreak(bool set)
 }
 
 enum CommStatQue { CS_IN_QUE, CS_OUT_QUE };
-static qint64 get_commstat_que(HANDLE descriptor, enum CommStatQue que)
+static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
 {
     DWORD err;
     COMSTAT cs;
-    if (::ClearCommError(descriptor, &err, &cs) == 0)
+    if (::ClearCommError(m_descriptor, &err, &cs) == 0)
         return -1;
     return qint64((que == CS_IN_QUE) ? (cs.cbInQue) : (cs.cbOutQue));
 }
@@ -487,7 +487,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
     bool sucessResult = false;
 
     // FIXME:
-    if (m_parent->m_policy != SerialPort::IgnorePolicy)
+    if (dptr->options.policy != SerialPort::IgnorePolicy)
         len = 1;
 
 #if defined (Q_OS_WINCE)
@@ -511,7 +511,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 #endif
 
     if(!sucessResult) {
-        m_parent->setError(SerialPort::IoError);
+        dptr->setError(SerialPort::IoError);
         return -1;
     }
 
@@ -519,7 +519,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
     if (m_flagErrorFromCommEvent) {
         m_flagErrorFromCommEvent = false;
 
-        switch (m_parent->m_policy) {
+        switch (dptr->options.policy) {
         case SerialPort::SkipPolicy:
             return 0;
         case SerialPort::PassZeroPolicy:
@@ -572,7 +572,7 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 #endif
 
     if(!sucessResult) {
-        m_parent->setError(SerialPort::IoError);
+        dptr->setError(SerialPort::IoError);
         return -1;
     }
     return quint64(writeBytes);
@@ -738,10 +738,10 @@ QString WinSerialPortEngine::fromSystemLocation(const QString &location) const
 bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if (dir != SerialPort::AllDirections) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    m_currDCB.BaudRate = DWORD(rate);
+    m_currentDcb.BaudRate = DWORD(rate);
     return updateDcb();
 }
 
@@ -754,7 +754,7 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    m_currDCB.ByteSize = BYTE(dataBits);
+    m_currentDcb.ByteSize = BYTE(dataBits);
     return updateDcb();
 }
 
@@ -767,26 +767,26 @@ bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 */
 bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
 {
-    m_currDCB.fParity = true;
+    m_currentDcb.fParity = true;
     switch (parity) {
     case SerialPort::NoParity:
-        m_currDCB.Parity = NOPARITY;
-        m_currDCB.fParity = false;
+        m_currentDcb.Parity = NOPARITY;
+        m_currentDcb.fParity = false;
         break;
     case SerialPort::SpaceParity:
-        m_currDCB.Parity = SPACEPARITY;
+        m_currentDcb.Parity = SPACEPARITY;
         break;
     case SerialPort::MarkParity:
-        m_currDCB.Parity = MARKPARITY;
+        m_currentDcb.Parity = MARKPARITY;
         break;
     case SerialPort::EvenParity:
-        m_currDCB.Parity = EVENPARITY;
+        m_currentDcb.Parity = EVENPARITY;
         break;
     case SerialPort::OddParity:
-        m_currDCB.Parity = ODDPARITY;
+        m_currentDcb.Parity = ODDPARITY;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateDcb();
@@ -804,16 +804,16 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     switch (stopBits) {
     case SerialPort::OneStop:
-        m_currDCB.StopBits = ONESTOPBIT;
+        m_currentDcb.StopBits = ONESTOPBIT;
         break;
     case SerialPort::OneAndHalfStop:
-        m_currDCB.StopBits = ONE5STOPBITS;
+        m_currentDcb.StopBits = ONE5STOPBITS;
         break;
     case SerialPort::TwoStop:
-        m_currDCB.StopBits = TWOSTOPBITS;
+        m_currentDcb.StopBits = TWOSTOPBITS;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateDcb();
@@ -831,22 +831,22 @@ bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     switch (flow) {
     case SerialPort::NoFlowControl:
-        m_currDCB.fOutxCtsFlow = false;
-        m_currDCB.fRtsControl = RTS_CONTROL_DISABLE;
-        m_currDCB.fInX = m_currDCB.fOutX = false;
+        m_currentDcb.fOutxCtsFlow = false;
+        m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
+        m_currentDcb.fInX = m_currentDcb.fOutX = false;
         break;
     case SerialPort::SoftwareControl:
-        m_currDCB.fOutxCtsFlow = false;
-        m_currDCB.fRtsControl = RTS_CONTROL_DISABLE;
-        m_currDCB.fInX = m_currDCB.fOutX = true;
+        m_currentDcb.fOutxCtsFlow = false;
+        m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
+        m_currentDcb.fInX = m_currentDcb.fOutX = true;
         break;
     case SerialPort::HardwareControl:
-        m_currDCB.fOutxCtsFlow = true;
-        m_currDCB.fRtsControl = RTS_CONTROL_HANDSHAKE;
-        m_currDCB.fInX = m_currDCB.fOutX = false;
+        m_currentDcb.fOutxCtsFlow = true;
+        m_currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
+        m_currentDcb.fInX = m_currentDcb.fOutX = false;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return updateDcb();
@@ -872,7 +872,7 @@ bool WinSerialPortEngine::isReadNotificationEnabled() const
 #else
     bool flag = isEnabled();
 #endif
-    return (flag && (m_setMask & EV_RXCHAR));
+    return (flag && (m_desiredMask & EV_RXCHAR));
 }
 
 /*!
@@ -891,13 +891,13 @@ void WinSerialPortEngine::setReadNotificationEnabled(bool enable)
 #endif
 
     if (enable)
-        m_setMask |= EV_RXCHAR;
+        m_desiredMask |= EV_RXCHAR;
     else
-        m_setMask &= ~EV_RXCHAR;
+        m_desiredMask &= ~EV_RXCHAR;
 
 #if defined (Q_OS_WINCE)
-    if (m_setMask != m_currentMask)
-        ::SetCommMask(m_descriptor, m_setMask);
+    if (m_desiredMask != m_currentMask)
+        ::SetCommMask(m_descriptor, m_desiredMask);
 
     m_setCommMaskMutex.unlock();
 
@@ -918,7 +918,7 @@ bool WinSerialPortEngine::isWriteNotificationEnabled() const
 #else
     bool flag = isEnabled();
 #endif
-    return (flag && (m_setMask & EV_TXEMPTY));
+    return (flag && (m_desiredMask & EV_TXEMPTY));
 }
 
 /*!
@@ -936,13 +936,13 @@ void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
 #endif
 
     if (enable)
-        m_setMask |= EV_TXEMPTY;
+        m_desiredMask |= EV_TXEMPTY;
     else
-        m_setMask &= ~EV_TXEMPTY;
+        m_desiredMask &= ~EV_TXEMPTY;
 
 #if defined (Q_OS_WINCE)
-    if (m_setMask != m_currentMask)
-        ::SetCommMask(m_descriptor, m_setMask);
+    if (m_desiredMask != m_currentMask)
+        ::SetCommMask(m_descriptor, m_desiredMask);
 
     m_setCommMaskMutex.unlock();
 
@@ -955,7 +955,7 @@ void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
     // after the last byte of data.
     // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
     if (enable)
-        m_parent->canWriteNotification();
+        dptr->canWriteNotification();
 }
 
 /*!
@@ -976,13 +976,13 @@ bool WinSerialPortEngine::processIOErrors()
     bool ret = (::ClearCommError(m_descriptor, &err, &cs) != 0);
     if (ret && err) {
         if (err & CE_FRAME)
-            m_parent->setError(SerialPort::FramingError);
+            dptr->setError(SerialPort::FramingError);
         else if (err & CE_RXPARITY)
-            m_parent->setError(SerialPort::ParityError);
+            dptr->setError(SerialPort::ParityError);
         else if (err & CE_BREAK)
-            m_parent->setError(SerialPort::BreakConditionError);
+            dptr->setError(SerialPort::BreakConditionError);
         else
-            m_parent->setError(SerialPort::UnknownPortError);
+            dptr->setError(SerialPort::UnknownPortError);
 
         m_flagErrorFromCommEvent = true;
     }
@@ -1015,11 +1015,14 @@ void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool use
 void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
 {
     switch (type) {
-    case CanReadLocker: m_readNotificationMutex.unlock();
+    case CanReadLocker:
+        m_readNotificationMutex.unlock();
         break;
-    case CanWriteLocker: m_writeNotificationMutex.unlock();
+    case CanWriteLocker:
+        m_writeNotificationMutex.unlock();
         break;
-    case CanErrorLocker: m_errorNotificationMutex.unlock();
+    case CanErrorLocker:
+        m_errorNotificationMutex.unlock();
         break;
     }
 }
@@ -1035,68 +1038,68 @@ void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
 void WinSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
-    m_parent->m_inRate = quint32(m_currDCB.BaudRate);
-    m_parent->m_outRate = m_parent->m_inRate;
+    dptr->options.inputRate = quint32(m_currentDcb.BaudRate);
+    dptr->options.outputRate = dptr->options.inputRate;
 
     // Detect databits.
-    switch (m_currDCB.ByteSize) {
+    switch (m_currentDcb.ByteSize) {
     case 5:
-        m_parent->m_dataBits = SerialPort::Data5;
+        dptr->options.dataBits = SerialPort::Data5;
         break;
     case 6:
-        m_parent->m_dataBits = SerialPort::Data6;
+        dptr->options.dataBits = SerialPort::Data6;
         break;
     case 7:
-        m_parent->m_dataBits = SerialPort::Data7;
+        dptr->options.dataBits = SerialPort::Data7;
         break;
     case 8:
-        m_parent->m_dataBits = SerialPort::Data8;
+        dptr->options.dataBits = SerialPort::Data8;
         break;
     default:
-        m_parent->m_dataBits = SerialPort::UnknownDataBits;
+        dptr->options.dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
-    if ((m_currDCB.Parity == NOPARITY) && !m_currDCB.fParity)
-        m_parent->m_parity = SerialPort::NoParity;
-    else if ((m_currDCB.Parity == SPACEPARITY) && m_currDCB.fParity)
-        m_parent->m_parity = SerialPort::SpaceParity;
-    else if ((m_currDCB.Parity == MARKPARITY) && m_currDCB.fParity)
-        m_parent->m_parity = SerialPort::MarkParity;
-    else if ((m_currDCB.Parity == EVENPARITY) && m_currDCB.fParity)
-        m_parent->m_parity = SerialPort::EvenParity;
-    else if ((m_currDCB.Parity == ODDPARITY) && m_currDCB.fParity)
-        m_parent->m_parity = SerialPort::OddParity;
+    if ((m_currentDcb.Parity == NOPARITY) && !m_currentDcb.fParity)
+        dptr->options.parity = SerialPort::NoParity;
+    else if ((m_currentDcb.Parity == SPACEPARITY) && m_currentDcb.fParity)
+        dptr->options.parity = SerialPort::SpaceParity;
+    else if ((m_currentDcb.Parity == MARKPARITY) && m_currentDcb.fParity)
+        dptr->options.parity = SerialPort::MarkParity;
+    else if ((m_currentDcb.Parity == EVENPARITY) && m_currentDcb.fParity)
+        dptr->options.parity = SerialPort::EvenParity;
+    else if ((m_currentDcb.Parity == ODDPARITY) && m_currentDcb.fParity)
+        dptr->options.parity = SerialPort::OddParity;
     else
-        m_parent->m_parity = SerialPort::UnknownParity;
+        dptr->options.parity = SerialPort::UnknownParity;
 
     // Detect stopbits.
-    switch (m_currDCB.StopBits) {
+    switch (m_currentDcb.StopBits) {
     case ONESTOPBIT:
-        m_parent->m_stopBits = SerialPort::OneStop;
+        dptr->options.stopBits = SerialPort::OneStop;
         break;
     case ONE5STOPBITS:
-        m_parent->m_stopBits = SerialPort::OneAndHalfStop;
+        dptr->options.stopBits = SerialPort::OneAndHalfStop;
         break;
     case TWOSTOPBITS:
-        m_parent->m_stopBits = SerialPort::TwoStop;
+        dptr->options.stopBits = SerialPort::TwoStop;
         break;
     default:
-        m_parent->m_stopBits = SerialPort::UnknownStopBits;
+        dptr->options.stopBits = SerialPort::UnknownStopBits;
     }
 
     // Detect flow control.
-    if (!m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
-            && !m_currDCB.fInX && !m_currDCB.fOutX) {
-        m_parent->m_flow = SerialPort::NoFlowControl;
-    } else if (!m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_DISABLE)
-               && m_currDCB.fInX && m_currDCB.fOutX) {
-        m_parent->m_flow = SerialPort::SoftwareControl;
-    } else if (m_currDCB.fOutxCtsFlow && (m_currDCB.fRtsControl == RTS_CONTROL_HANDSHAKE)
-               && !m_currDCB.fInX && !m_currDCB.fOutX) {
-        m_parent->m_flow = SerialPort::HardwareControl;
+    if (!m_currentDcb.fOutxCtsFlow && (m_currentDcb.fRtsControl == RTS_CONTROL_DISABLE)
+            && !m_currentDcb.fInX && !m_currentDcb.fOutX) {
+        dptr->options.flow = SerialPort::NoFlowControl;
+    } else if (!m_currentDcb.fOutxCtsFlow && (m_currentDcb.fRtsControl == RTS_CONTROL_DISABLE)
+               && m_currentDcb.fInX && m_currentDcb.fOutX) {
+        dptr->options.flow = SerialPort::SoftwareControl;
+    } else if (m_currentDcb.fOutxCtsFlow && (m_currentDcb.fRtsControl == RTS_CONTROL_HANDSHAKE)
+               && !m_currentDcb.fInX && !m_currentDcb.fOutX) {
+        dptr->options.flow = SerialPort::HardwareControl;
     } else
-        m_parent->m_flow = SerialPort::UnknownFlowControl;
+        dptr->options.flow = SerialPort::UnknownFlowControl;
 }
 
 #if defined (Q_OS_WINCE)
@@ -1114,7 +1117,7 @@ void WinSerialPortEngine::run()
     while (m_running) {
 
         m_setCommMaskMutex.lock();
-        ::SetCommMask(m_descriptor, m_setMask);
+        ::SetCommMask(m_descriptor, m_desiredMask);
         m_setCommMaskMutex.unlock();
 
         if (::WaitCommEvent(m_descriptor, &m_currentMask, 0) != 0) {
@@ -1124,15 +1127,15 @@ void WinSerialPortEngine::run()
             m_settingsChangeMutex.lock();
             m_settingsChangeMutex.unlock();
 
-            if (EV_ERR & m_currentMask & m_setMask) {
-                m_parent->canErrorNotification();
+            if (EV_ERR & m_currentMask & m_desiredMask) {
+                dptr->canErrorNotification();
             }
-            if (EV_RXCHAR & m_currentMask & m_setMask) {
-                m_parent->canReadNotification();
+            if (EV_RXCHAR & m_currentMask & m_desiredMask) {
+                dptr->canReadNotification();
             }
             //FIXME: This is why it does not work?
-            if (EV_TXEMPTY & m_currentMask & m_setMask) {
-                m_parent->canWriteNotification();
+            if (EV_TXEMPTY & m_currentMask & m_desiredMask) {
+                dptr->canWriteNotification();
             }
         }
     }
@@ -1151,24 +1154,24 @@ bool WinSerialPortEngine::event(QEvent *e)
 {
     bool ret = false;
     if (e->type() == QEvent::WinEventAct) {
-        if (EV_ERR & m_currentMask & m_setMask) {
-            m_parent->canErrorNotification();
+        if (EV_ERR & m_currentMask & m_desiredMask) {
+            dptr->canErrorNotification();
             ret = true;
         }
-        if (EV_RXCHAR & m_currentMask & m_setMask) {
-            m_parent->canReadNotification();
+        if (EV_RXCHAR & m_currentMask & m_desiredMask) {
+            dptr->canReadNotification();
             ret = true;
         }
         //FIXME: This is why it does not work?
-        if (EV_TXEMPTY & m_currentMask & m_setMask) {
-            m_parent->canWriteNotification();
+        if (EV_TXEMPTY & m_currentMask & m_desiredMask) {
+            dptr->canWriteNotification();
             ret = true;
         }
     }
     else
         ret = QWinEventNotifier::event(e);
 
-    ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ov);
+    ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ovNotify);
     return ret;
 }
 
@@ -1198,10 +1201,10 @@ bool WinSerialPortEngine::createEvents(bool rx, bool tx)
     }
     m_ovSelect.hEvent = ::CreateEvent(0, false, false, 0);
     Q_ASSERT(m_ovSelect.hEvent);
-    m_ov.hEvent = ::CreateEvent(0, false, false, 0);
-    Q_ASSERT(m_ov.hEvent);
+    m_ovNotify.hEvent = ::CreateEvent(0, false, false, 0);
+    Q_ASSERT(m_ovNotify.hEvent);
 
-    setHandle(m_ov.hEvent);
+    setHandle(m_ovNotify.hEvent);
     return true;
 }
 
@@ -1217,14 +1220,14 @@ void WinSerialPortEngine::closeEvents()
         ::CloseHandle(m_ovWrite.hEvent);
     if (m_ovSelect.hEvent)
         ::CloseHandle(m_ovSelect.hEvent);
-    if (m_ov.hEvent)
-        ::CloseHandle(m_ov.hEvent);
+    if (m_ovNotify.hEvent)
+        ::CloseHandle(m_ovNotify.hEvent);
 
     size_t size = sizeof(OVERLAPPED);
     ::memset(&m_ovRead, 0, size);
     ::memset(&m_ovWrite, 0, size);
     ::memset(&m_ovSelect, 0, size);
-    ::memset(&m_ov, 0, size);
+    ::memset(&m_ovNotify, 0, size);
 }
 
 /*!
@@ -1232,10 +1235,10 @@ void WinSerialPortEngine::closeEvents()
 */
 void WinSerialPortEngine::setMaskAndActivateEvent()
 {
-    ::SetCommMask(m_descriptor, m_setMask);
-    if (m_setMask)
-        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ov);
-    switch (m_setMask) {
+    ::SetCommMask(m_descriptor, m_desiredMask);
+    if (m_desiredMask)
+        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ovNotify);
+    switch (m_desiredMask) {
     case 0:
         if (isEnabled())
             setEnabled(false);
@@ -1265,8 +1268,8 @@ bool WinSerialPortEngine::updateDcb()
     // Otherwise WaitCommEvent blocking any change!
     ::SetCommMask(m_descriptor, 0);
 #endif
-    if (::SetCommState(m_descriptor, &m_currDCB) == 0) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+    if (::SetCommState(m_descriptor, &m_currentDcb) == 0) {
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;
@@ -1280,17 +1283,17 @@ bool WinSerialPortEngine::updateDcb()
 */
 bool WinSerialPortEngine::updateCommTimeouts()
 {
-    if (::SetCommTimeouts(m_descriptor, &m_currCommTimeouts) == 0) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+    if (::SetCommTimeouts(m_descriptor, &m_currentCommTimeouts) == 0) {
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;
 }
 
 // From <serialportengine_p.h>
-SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
+SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 {
-    return new WinSerialPortEngine(parent);
+    return new WinSerialPortEngine(d);
 }
 
 #include "moc_serialportengine_win_p.cpp"

@@ -12,6 +12,32 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 class SerialPortEngine;
 
+// General port parameters (for any OS).
+class SerialPortOptions
+{
+public:
+    SerialPortOptions()
+        : inputRate(SerialPort::UnknownRate)
+        , outputRate(SerialPort::UnknownRate)
+        , dataBits(SerialPort::UnknownDataBits)
+        , parity(SerialPort::UnknownParity)
+        , stopBits(SerialPort::UnknownStopBits)
+        , flow(SerialPort::UnknownFlowControl)
+        , policy(SerialPort::IgnorePolicy)
+        , restoreSettingsOnClose(true)
+    {}
+
+    QString systemLocation;
+    qint32 inputRate;
+    qint32 outputRate;
+    SerialPort::DataBits dataBits;
+    SerialPort::Parity parity;
+    SerialPort::StopBits stopBits;
+    SerialPort::FlowControl flow;
+    SerialPort::DataErrorPolicy policy;
+    bool restoreSettingsOnClose;
+};
+
 class SerialPortPrivate
 {
     Q_DECLARE_PUBLIC(SerialPort)
@@ -77,30 +103,26 @@ public:
     bool canWriteNotification();
     bool canErrorNotification();
 
-    qint64 m_readBufferMaxSize;
-    RingBuffer m_readBuffer;
-    RingBuffer m_writeBuffer;
-    bool m_isBuffered;
-    bool m_readSerialNotifierCalled;
-    bool m_readSerialNotifierState;
-    bool m_readSerialNotifierStateSet;
-    bool m_emittedReadyRead;
-    bool m_emittedBytesWritten;
+public:
+    qint64 readBufferMaxSize;
+    RingBuffer readBuffer;
+    RingBuffer writeBuffer;
+    bool isBuffered;
 
-    SerialPortEngine *m_engine;
+    bool readSerialNotifierCalled;
+    bool readSerialNotifierState;
+    bool readSerialNotifierStateSet;
+    bool emittedReadyRead;
+    bool emittedBytesWritten;
 
-    // General port parameters (for any OS).
-    SerialPort *q_ptr;
-    QString m_systemLocation;
-    qint32 m_inRate;
-    qint32 m_outRate;
-    SerialPort::DataBits m_dataBits;
-    SerialPort::Parity m_parity;
-    SerialPort::StopBits m_stopBits;
-    SerialPort::FlowControl m_flow;
-    SerialPort::DataErrorPolicy m_policy;
-    SerialPort::PortError m_portError;
-    bool m_restoreSettingsOnClose;
+    SerialPort::PortError portError;
+
+    SerialPortEngine *engine;
+
+    SerialPortOptions options;
+
+private:
+    SerialPort * const q_ptr;
 };
 
 QT_END_NAMESPACE_SERIALPORT

@@ -19,7 +19,7 @@ class UnixSerialPortEngine : public QObject, public SerialPortEngine
 {
     Q_OBJECT
 public:
-    UnixSerialPortEngine(SerialPortPrivate *parent);
+    UnixSerialPortEngine(SerialPortPrivate *d);
     virtual ~UnixSerialPortEngine();
 
     virtual bool open(const QString &location, QIODevice::OpenMode mode);
@@ -68,20 +68,21 @@ protected:
     virtual bool eventFilter(QObject *obj, QEvent *e);
 
 private:
-    struct termios m_currTermios;
-    struct termios m_oldTermios;
-    int m_descriptor;
-
-    QSocketNotifier *m_readNotifier;
-    QSocketNotifier *m_writeNotifier;
-    QSocketNotifier *m_exceptionNotifier;
-
     bool updateTermios();
 
 #if !defined (CMSPAR)
     qint64 writePerChar(const char *data, qint64 maxSize);
 #endif
     qint64 readPerChar(char *data, qint64 maxSize);
+
+private:
+    struct termios m_currentTermios;
+    struct termios m_restoredTermios;
+    int m_descriptor;
+
+    QSocketNotifier *m_readNotifier;
+    QSocketNotifier *m_writeNotifier;
+    QSocketNotifier *m_exceptionNotifier;
 };
 
 QT_END_NAMESPACE_SERIALPORT

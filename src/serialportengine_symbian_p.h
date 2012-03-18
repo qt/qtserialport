@@ -16,7 +16,7 @@ class SymbianSerialPortEngine : public QObject, public SerialPortEngine
 {
     Q_OBJECT
 public:
-    SymbianSerialPortEngine(SerialPortPrivate *parent);
+    SymbianSerialPortEngine(SerialPortPrivate *d);
     virtual ~SymbianSerialPortEngine();
 
     virtual bool open(const QString &location, QIODevice::OpenMode mode);
@@ -65,12 +65,13 @@ protected:
     //virtual bool eventFilter(QObject *obj, QEvent *e);
 
 private:
-    TCommConfig m_currSettings;
-    TCommConfig m_oldSettings;
+    bool updateCommConfig();
+
+private:
+    TCommConfig m_currentSettings;
+    TCommConfig m_restoredSettings;
     RComm m_descriptor;
     mutable RTimer m_selectTimer;
-
-    bool updateCommConfig();
 };
 
 QT_END_NAMESPACE_SERIALPORT

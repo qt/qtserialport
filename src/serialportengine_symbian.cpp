@@ -101,11 +101,11 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     A pointer \a parent to the object class SerialPortPrivate
     is required for the recursive call some of its methods.
 */
-SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *parent)
+SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *d)
 {
-    Q_ASSERT(parent);
+    Q_ASSERT(d);
     // Impl me
-    m_parent = parent;
+    dptr = d;
 }
 
 /*!
@@ -137,14 +137,14 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
     Q_UNUSED(mode)
 
     if (!loadDevices()) {
-        m_parent->setError(SerialPort::UnknownPortError);
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
 
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone) {
-        m_parent->setError(SerialPort::UnknownPortError);
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
 
@@ -158,7 +158,7 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
         r = server.LoadCommModule(KRS232ModuleName);
 
     if (r != KErrNone) {
-        m_parent->setError(SerialPort::UnknownPortError);
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
 
@@ -169,20 +169,20 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
     if (r != KErrNone) {
         switch (r) {
         case KErrPermissionDenied:
-            m_parent->setError(SerialPort::NoSuchDeviceError); break;
+            dptr->setError(SerialPort::NoSuchDeviceError); break;
         case KErrLocked:
         case KErrAccessDenied:
-            m_parent->setError(SerialPort::PermissionDeniedError); break;
+            dptr->setError(SerialPort::PermissionDeniedError); break;
         default:
-            m_parent->setError(SerialPort::UnknownPortError);
+            dptr->setError(SerialPort::UnknownPortError);
         }
         return false;
     }
 
     // Save current port settings.
-    r = m_descriptor.Config(m_oldSettings);
+    r = m_descriptor.Config(m_restoredSettings);
     if (r != KErrNone) {
-        m_parent->setError(SerialPort::UnknownPortError);
+        dptr->setError(SerialPort::UnknownPortError);
         return false;
     }
 
@@ -198,8 +198,8 @@ void SymbianSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
 
-    if (m_parent->m_restoreSettingsOnClose) {
-        m_descriptor.SetConfig(m_oldSettings);
+    if (dptr->options.restoreSettingsOnClose) {
+        m_descriptor.SetConfig(m_restoredSettings);
     }
 
     m_descriptor.Close();
@@ -354,13 +354,13 @@ qint64 SymbianSerialPortEngine::bytesToWrite() const
 
     Reads data from a serial port only if it arrives before a
     specified time-out (zero). All reads from the serial device
-    use 8-bit descriptors as data buffers, even on a Unicode system.
+    use 8-bit m_descriptors as data buffers, even on a Unicode system.
 
     The length of the TDes8 is set to zero on entry, which means that
     buffers can be reused without having to be zeroed first.
 
     The number of bytes to read is set to the maximum length of the
-    descriptor.
+    m_descriptor.
 
     If a read is issued with a data length of zero the Read() completes
     immediately but with the side effect that the serial hardware is
@@ -369,7 +369,7 @@ qint64 SymbianSerialPortEngine::bytesToWrite() const
     When a Read() terminates with KErrTimedOut, different protocol
     modules can show different behaviours. Some may write any data
     received into the aDes buffer, while others may return just an
-    empty descriptor. In the case of a returned empty descriptor use
+    empty m_descriptor. In the case of a returned empty m_descriptor use
     ReadOneOrMore() to read any data left in the buffer.
 
     The behaviour of this API after a call to NotifyDataAvailable() is
@@ -387,7 +387,7 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
     User::WaitForRequest(status);
     TInt err = status.Int();
     if (err != KErrNone) {
-        m_parent->setError(SerialPort::IoError);
+        dptr->setError(SerialPort::IoError);
         return qint64(-1);
     }
     return qint64(buffer.Length());
@@ -396,10 +396,10 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
 /*!
 
     Writes data to a serial port. All writes to the serial device
-    use 8-bit descriptors as data buffers, even on a Unicode system.
+    use 8-bit m_descriptors as data buffers, even on a Unicode system.
 
     The number of bytes to write is set to the maximum length of
-    the descriptor.
+    the m_descriptor.
 
     When a Write() is issued with a data length of zero it cannot
     complete until the current handshaking configuration and the
@@ -420,7 +420,7 @@ qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
     TInt err = status.Int();
 
     if (err != KErrNone) {
-        m_parent->setError(SerialPort::IoError);
+        dptr->setError(SerialPort::IoError);
         len = -1;
     }
     // FIXME: How to get the actual number of bytes written?
@@ -537,89 +537,89 @@ QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) con
 bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 {
     if (dir != SerialPort::AllDirections) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
     switch (rate) {
     case 50:
-        m_currSettings().iRate = EBps50;
+        m_currentSettings().iRate = EBps50;
         break;
     case 75:
-        m_currSettings().iRate = EBps75;
+        m_currentSettings().iRate = EBps75;
         break;
     case 110:
-        m_currSettings().iRate = EBps110;
+        m_currentSettings().iRate = EBps110;
         break;
     case 134:
-        m_currSettings().iRate = EBps134;
+        m_currentSettings().iRate = EBps134;
         break;
     case 150:
-        m_currSettings().iRate = EBps150;
+        m_currentSettings().iRate = EBps150;
         break;
     case 300:
-        m_currSettings().iRate = EBps300;
+        m_currentSettings().iRate = EBps300;
         break;
     case 600:
-        m_currSettings().iRate = EBps600;
+        m_currentSettings().iRate = EBps600;
         break;
     case 1200:
-        m_currSettings().iRate = EBps1200;
+        m_currentSettings().iRate = EBps1200;
         break;
     case 1800:
-        m_currSettings().iRate = EBps1800;
+        m_currentSettings().iRate = EBps1800;
         break;
     case 2000:
-        m_currSettings().iRate = EBps2000;
+        m_currentSettings().iRate = EBps2000;
         break;
     case 2400:
-        m_currSettings().iRate = EBps2400;
+        m_currentSettings().iRate = EBps2400;
         break;
     case 3600:
-        m_currSettings().iRate = EBps3600;
+        m_currentSettings().iRate = EBps3600;
         break;
     case 4800:
-        m_currSettings().iRate = EBps4800;
+        m_currentSettings().iRate = EBps4800;
         break;
     case 7200:
-        m_currSettings().iRate = EBps7200;
+        m_currentSettings().iRate = EBps7200;
         break;
     case 9600:
-        m_currSettings().iRate = EBps9600;
+        m_currentSettings().iRate = EBps9600;
         break;
     case 19200:
-        m_currSettings().iRate = EBps19200;
+        m_currentSettings().iRate = EBps19200;
         break;
     case 38400:
-        m_currSettings().iRate = EBps38400;
+        m_currentSettings().iRate = EBps38400;
         break;
     case 57600:
-        m_currSettings().iRate = EBps57600;
+        m_currentSettings().iRate = EBps57600;
         break;
     case 115200:
-        m_currSettings().iRate = EBps115200;
+        m_currentSettings().iRate = EBps115200;
         break;
     case 230400:
-        m_currSettings().iRate = EBps230400;
+        m_currentSettings().iRate = EBps230400;
         break;
     case 460800:
-        m_currSettings().iRate = EBps460800;
+        m_currentSettings().iRate = EBps460800;
         break;
     case 576000:
-        m_currSettings().iRate = EBps576000;
+        m_currentSettings().iRate = EBps576000;
         break;
     case 1152000:
-        m_currSettings().iRate = EBps1152000;
+        m_currentSettings().iRate = EBps1152000;
         break;
     case 4000000:
-        m_currSettings().iRate = EBps4000000;
+        m_currentSettings().iRate = EBps4000000;
         break;
     case 921600:
-        m_currSettings().iRate = EBps921600;
+        m_currentSettings().iRate = EBps921600;
         break;
         //case 1843200:; // Only for  Symbian SR1
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -637,19 +637,19 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
     switch (dataBits) {
     case SerialPort::Data5:
-        m_currSettings().iDataBits = EData5;
+        m_currentSettings().iDataBits = EData5;
         break;
     case SerialPort::Data6:
-        m_currSettings().iDataBits = EData6;
+        m_currentSettings().iDataBits = EData6;
         break;
     case SerialPort::Data7:
-        m_currSettings().iDataBits = EData7;
+        m_currentSettings().iDataBits = EData7;
         break;
     case SerialPort::Data8:
-        m_currSettings().iDataBits = EData8;
+        m_currentSettings().iDataBits = EData8;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -667,22 +667,22 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 {
     switch (parity) {
     case SerialPort::NoParity:
-        m_currSettings().iParity = EParityNone;
+        m_currentSettings().iParity = EParityNone;
         break;
     case SerialPort::EvenParity:
-        m_currSettings().iParity = EParityEven;
+        m_currentSettings().iParity = EParityEven;
         break;
     case SerialPort::OddParity:
-        m_currSettings().iParity = EParityOdd;
+        m_currentSettings().iParity = EParityOdd;
         break;
     case SerialPort::MarkParity:
-        m_currSettings().iParity = EParityMark;
+        m_currentSettings().iParity = EParityMark;
         break;
     case SerialPort::SpaceParity:
-        m_currSettings().iParity = EParitySpace;
+        m_currentSettings().iParity = EParitySpace;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -700,13 +700,13 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 {
     switch (stopBits) {
     case SerialPort::OneStop:
-        m_currSettings().iStopBits = EStop1;
+        m_currentSettings().iStopBits = EStop1;
         break;
     case SerialPort::TwoStop:
-        m_currSettings().iStopBits = EStop2;
+        m_currentSettings().iStopBits = EStop2;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -725,16 +725,16 @@ bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
     switch (flow) {
     case SerialPort::NoFlowControl:
-        m_currSettings().iHandshake = KConfigFailDSR;
+        m_currentSettings().iHandshake = KConfigFailDSR;
         break;
     case SerialPort::HardwareControl:
-        m_currSettings().iHandshake = KConfigObeyCTS | KConfigFreeRTS;
+        m_currentSettings().iHandshake = KConfigObeyCTS | KConfigFreeRTS;
         break;
     case SerialPort::SoftwareControl:
-        m_currSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
+        m_currentSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
         break;
     default:
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -807,150 +807,150 @@ bool SymbianSerialPortEngine::processIOErrors()
 void SymbianSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
-    switch (m_currSettings().iRate) {
+    switch (m_currentSettings().iRate) {
     case EBps50:
-        m_parent->m_inRate = 50;
+        dptr->options.inputRate = 50;
         break;
     case EBps75:
-        m_parent->m_inRate = 75;
+        dptr->options.inputRate = 75;
         break;
     case EBps110:
-        m_parent->m_inRate = 110;
+        dptr->options.inputRate = 110;
         break;
     case EBps134:
-        m_parent->m_inRate = 134;
+        dptr->options.inputRate = 134;
         break;
     case EBps150:
-        m_parent->m_inRate = 150;
+        dptr->options.inputRate = 150;
         break;
     case EBps300:
-        m_parent->m_inRate = 300;
+        dptr->options.inputRate = 300;
         break;
     case EBps600:
-        m_parent->m_inRate = 600;
+        dptr->options.inputRate = 600;
         break;
     case EBps1200:
-        m_parent->m_inRate = 1200;
+        dptr->options.inputRate = 1200;
         break;
     case EBps1800:
-        m_parent->m_inRate = 1800;
+        dptr->options.inputRate = 1800;
         break;
     case EBps2000:
-        m_parent->m_inRate = 2000;
+        dptr->options.inputRate = 2000;
         break;
     case EBps2400:
-        m_parent->m_inRate = 2400;
+        dptr->options.inputRate = 2400;
         break;
     case EBps3600:
-        m_parent->m_inRate = 3600;
+        dptr->options.inputRate = 3600;
         break;
     case EBps4800:
-        m_parent->m_inRate = 4800;
+        dptr->options.inputRate = 4800;
         break;
     case EBps7200:
-        m_parent->m_inRate = 7200;
+        dptr->options.inputRate = 7200;
         break;
     case EBps9600:
-        m_parent->m_inRate = 9600;
+        dptr->options.inputRate = 9600;
         break;
     case EBps19200:
-        m_parent->m_inRate = 19200;
+        dptr->options.inputRate = 19200;
         break;
     case EBps38400:
-        m_parent->m_inRate = 38400;
+        dptr->options.inputRate = 38400;
         break;
     case EBps57600:
-        m_parent->m_inRate = 57600;
+        dptr->options.inputRate = 57600;
         break;
     case EBps115200:
-        m_parent->m_inRate = 115200;
+        dptr->options.inputRate = 115200;
         break;
     case EBps230400:
-        m_parent->m_inRate = 230400;
+        dptr->options.inputRate = 230400;
         break;
     case EBps460800:
-        m_parent->m_inRate = 460800;
+        dptr->options.inputRate = 460800;
         break;
     case EBps576000:
-        m_parent->m_inRate = 576000;
+        dptr->options.inputRate = 576000;
         break;
     case EBps1152000:
-        m_parent->m_inRate = 1152000;
+        dptr->options.inputRate = 1152000;
         break;
     case EBps4000000:
-        m_parent->m_inRate = 4000000;
+        dptr->options.inputRate = 4000000;
         break;
     case EBps921600:
-        m_parent->m_inRate = 921600;
+        dptr->options.inputRate = 921600;
         break;
-        //case EBps1843200: m_inRate = 1843200; break;
+        //case EBps1843200: inRate = 1843200; break;
     default:
-        m_parent->m_inRate = SerialPort::UnknownRate;
+        dptr->options.inputRate = SerialPort::UnknownRate;
     }
-    m_parent->m_outRate = m_parent->m_inRate;
+    dptr->options.outputRate = dptr->options.inputRate;
 
     // Detect databits.
-    switch (m_currSettings().iDataBits) {
+    switch (m_currentSettings().iDataBits) {
     case EData5:
-        m_parent->m_dataBits = SerialPort::Data5;
+        dptr->options.dataBits = SerialPort::Data5;
         break;
     case EData6:
-        m_parent->m_dataBits = SerialPort::Data6;
+        dptr->options.dataBits = SerialPort::Data6;
         break;
     case EData7:
-        m_parent->m_dataBits = SerialPort::Data7;
+        dptr->options.dataBits = SerialPort::Data7;
         break;
     case EData8:
-        m_parent->m_dataBits = SerialPort::Data8;
+        dptr->options.dataBits = SerialPort::Data8;
         break;
     default:
-        m_parent->m_dataBits = SerialPort::UnknownDataBits;
+        dptr->options.dataBits = SerialPort::UnknownDataBits;
     }
 
     // Detect parity.
-    switch (m_currSettings().iParity) {
+    switch (m_currentSettings().iParity) {
     case EParityNone:
-        m_parent->m_parity = SerialPort::NoParity;
+        dptr->options.parity = SerialPort::NoParity;
         break;
     case EParityEven:
-        m_parent->m_parity = SerialPort::EvenParity;
+        dptr->options.parity = SerialPort::EvenParity;
         break;
     case EParityOdd:
-        m_parent->m_parity = SerialPort::OddParity;
+        dptr->options.parity = SerialPort::OddParity;
         break;
     case EParityMark:
-        m_parent->m_parity = SerialPort::MarkParity;
+        dptr->options.parity = SerialPort::MarkParity;
         break;
     case EParitySpace:
-        m_parent->m_parity = SerialPort::SpaceParity;
+        dptr->options.parity = SerialPort::SpaceParity;
         break;
     default:
-        m_parent->m_parity = SerialPort::UnknownParity;
+        dptr->options.parity = SerialPort::UnknownParity;
     }
 
     // Detect stopbits.
-    switch (m_currSettings().iStopBits) {
+    switch (m_currentSettings().iStopBits) {
     case EStop1:
-        m_parent->m_stopBits = SerialPort::OneStop;
+        dptr->options.stopBits = SerialPort::OneStop;
         break;
     case EStop2:
-        m_parent->m_stopBits = SerialPort::TwoStop;
+        dptr->options.stopBits = SerialPort::TwoStop;
         break;
     default:
-        m_parent->m_stopBits = SerialPort::UnknownStopBits;
+        dptr->options.stopBits = SerialPort::UnknownStopBits;
     }
 
     // Detect flow control.
-    if ((m_currSettings().iHandshake & (KConfigObeyXoff | KConfigSendXoff))
+    if ((m_currentSettings().iHandshake & (KConfigObeyXoff | KConfigSendXoff))
             == (KConfigObeyXoff | KConfigSendXoff))
-        m_parent->m_flow = SerialPort::SoftwareControl;
-    else if ((m_currSettings().iHandshake & (KConfigObeyCTS | KConfigFreeRTS))
+        dptr->options.flow = SerialPort::SoftwareControl;
+    else if ((m_currentSettings().iHandshake & (KConfigObeyCTS | KConfigFreeRTS))
              == (KConfigObeyCTS | KConfigFreeRTS))
-        m_parent->m_flow = SerialPort::HardwareControl;
-    else if (m_currSettings().iHandshake & KConfigFailDSR)
-        m_parent->m_flow = SerialPort::NoFlowControl;
+        dptr->options.flow = SerialPort::HardwareControl;
+    else if (m_currentSettings().iHandshake & KConfigFailDSR)
+        dptr->options.flow = SerialPort::NoFlowControl;
     else
-        m_parent->m_flow = SerialPort::UnknownFlowControl;
+        dptr->options.flow = SerialPort::UnknownFlowControl;
 }
 
 /* Private methods */
@@ -963,17 +963,17 @@ void SymbianSerialPortEngine::detectDefaultSettings()
 */
 bool SymbianSerialPortEngine::updateCommConfig()
 {
-    if (m_descriptor.SetConfig(m_currSettings) != KErrNone) {
-        m_parent->setError(SerialPort::UnsupportedPortOperationError);
+    if (m_descriptor.SetConfig(m_currentSettings) != KErrNone) {
+        dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;
 }
 
 // From <serialportengine_p.h>
-SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *parent)
+SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 {
-    return new SymbianSerialPortEngine(parent);
+    return new SymbianSerialPortEngine(d);
 }
 
 #include "moc_serialportengine_symbian_p.cpp"
