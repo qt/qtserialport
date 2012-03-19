@@ -26,7 +26,6 @@ extern "C"
 #  include <QtCore/qdir.h>
 #endif
 
-#include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qregexp.h>
 #include <QtCore/qfile.h>
@@ -34,29 +33,43 @@ extern "C"
 
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
-//
+
+// For detail enumerate - skipping, filters is not used.
+// Instead of filters used libudev.
+
 #else
-// This name filters used only for a simple enumeration of all available
-// devices on the mask in /dev, ie if there is no other way to enumerate
-// the devices, used in the following cases:
-// - for Gnu/Linux with no libudev
-// - for any other *nix, bsd (exception mac OSX)
-static QStringList nameFilters()
+
+// For simple enumerate.
+
+static QStringList generateFiltersOfDevices()
 {
-    static QStringList list;
+    QStringList l;
+
 #  if defined (Q_OS_LINUX)
-    list << QLatin1String("ttyS*")    /* Standart UART 8250 and etc. */
-         << QLatin1String("ttyUSB*")  /* Usb/serial converters PL2303 and etc. */
-         << QLatin1String("ttyACM*")  /* CDC_ACM converters (i.e. Mobile Phones). */
-         << QLatin1String("ttyMI*")   /* MOXA pci/serial converters. */
-         << QLatin1String("rfcomm*"); /* Bluetooth serial device. */
+    l << QLatin1String("ttyS*")    // Standart UART 8250 and etc.
+      << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
+      << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
+      << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
+      << QLatin1String("rfcomm*"); // Bluetooth serial device.
 #  elif defined (Q_OS_FREEBSD)
-    list << QLatin1String("cu*");
+    l << QLatin1String("cu*");
 #  else
     // Here for other *nix OS.
 #  endif
-    return list;
+
+    return l;
 }
+
+// Only for a simple enumeration by the mask of all available
+// devices in /dev directory. Used in the following cases:
+// - for Gnu/Linux without libudev
+// - for any other *nix, bsd (exception Mac OSX)
+inline QStringList& filtersOfDevices()
+{
+    static QStringList l = generateFiltersOfDevices();
+    return l;
+}
+
 #endif
 
 static
@@ -84,58 +97,66 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 
-    // Detailed enumerate with use libudev scan.
-    struct udev *udev = ::udev_new();
+    // Detailed enumerate devices for Gnu/Linux with use libudev.
+
+    struct ::udev *udev = ::udev_new();
     if (udev) {
 
-        struct udev_enumerate *enumerate =
-                udev_enumerate_new(udev);
+        struct ::udev_enumerate *enumerate =
+                ::udev_enumerate_new(udev);
 
         if (enumerate) {
 
-            udev_enumerate_add_match_subsystem(enumerate, "tty");
-            udev_enumerate_scan_devices(enumerate);
+            ::udev_enumerate_add_match_subsystem(enumerate, "tty");
+            ::udev_enumerate_scan_devices(enumerate);
 
-            struct udev_list_entry *devices =
-                    udev_enumerate_get_list_entry(enumerate);
+            struct ::udev_list_entry *devices =
+                    ::udev_enumerate_get_list_entry(enumerate);
 
-            struct udev_list_entry *dev_list_entry;
+            struct ::udev_list_entry *dev_list_entry;
             udev_list_entry_foreach(dev_list_entry, devices) {
 
-                struct udev_device *dev =
-                        udev_device_new_from_syspath(udev,
-                                                     udev_list_entry_get_name(dev_list_entry));
+                struct ::udev_device *dev =
+                        ::udev_device_new_from_syspath(udev,
+                                                       ::udev_list_entry_get_name(dev_list_entry));
 
                 if (dev) {
 
                     SerialPortInfo info;
 
                     info.d_ptr->device =
-                            QLatin1String(udev_device_get_devnode(dev));
+                            QString::fromLatin1(::udev_device_get_devnode(dev));
                     info.d_ptr->portName =
-                            QLatin1String(udev_device_get_sysname(dev));
+                            QString::fromLatin1(::udev_device_get_sysname(dev));
 
-                    struct udev_device *parentdev = udev_device_get_parent(dev);
+                    struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
                     if (parentdev) {
 
-                        QString subsys(QLatin1String(udev_device_get_subsystem(parentdev)));
+                        QString subsys(QLatin1String(::udev_device_get_subsystem(parentdev)));
 
                         bool do_append = true;
 
                         if (subsys.contains(QLatin1String("usb"))) {
                             info.d_ptr->description =
-                                    QLatin1String(udev_device_get_property_value(dev,
-                                                                           "ID_MODEL_FROM_DATABASE"));
+                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                         "ID_MODEL_FROM_DATABASE"));
                             info.d_ptr->manufacturer =
-                                    QLatin1String(udev_device_get_property_value(dev,
-                                                                           "ID_VENDOR_FROM_DATABASE"));
+                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                         "ID_VENDOR_FROM_DATABASE"));
+                            info.d_ptr->vid =
+                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                         "ID_VENDOR_ID"));
+                            info.d_ptr->pid =
+                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                         "ID_MODEL_ID"));
+
                         } else if (subsys.contains(QLatin1String("pnp"))) {
-                            info.d_ptr->description =
-                                    QLatin1String("Standard serial port.");
-                            info.d_ptr->manufacturer =
-                                    QLatin1String("Standard serial ports.");
+                            // FIXME: How can I get a additional info about standard serial devices?
+
                         } else {
+                            // Others subsystems.
+                            // Skip, while don't use.
                             do_append = false;
                         }
 
@@ -143,31 +164,35 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                             ports.append(info);
                     }
 
-                    udev_device_unref(dev);
+                    ::udev_device_unref(dev);
                 }
 
             }
 
-            udev_enumerate_unref(enumerate);
+            ::udev_enumerate_unref(enumerate);
         }
 
-        udev_unref(udev);
+        ::udev_unref(udev);
     }
 
 #elif defined (Q_OS_FREEBSD) && defined (HAVE_LIBUSB)
+
+    // TODO: Implement me.
     //
+
 #else
 
-    // Simple enumerate with device directory /dev scan.
+    // Simple enumerate devices for other *nix OS in device directory /dev.
+
     QDir devDir(QLatin1String("/dev"));
     if (devDir.exists()) {
 
-        devDir.setNameFilters(nameFilters());
+        devDir.setNameFilters(filtersOfDevices());
         devDir.setFilter(QDir::Files | QDir::System);
 
-        QStringList foundDevices; //< Found devices hash.
+        QStringList foundDevices; // Found devices list.
 
-        foreach(QFileInfo fi, devDir.entryInfoList()) {
+        foreach (const QFileInfo &fi, devDir.entryInfoList()) {
             if (!fi.isDir()) {
 
                 QString s = fi.absoluteFilePath().split('.').at(0);
@@ -178,8 +203,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                     info.d_ptr->device = s;
                     info.d_ptr->portName = s.remove(QRegExp(QLatin1String("/[\\w|\\d|\\s]+/")));
-                    info.d_ptr->description = QString(QObject::tr("Unknown."));
-                    info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+
+                    // Get description, manufacturer, vid, pid is not supported.
 
                     ports.append(info);
 
@@ -199,6 +224,7 @@ QList<qint32> SerialPortInfo::standardRates() const
     rates.reserve(standardRates_end - standardRates_begin);
 
 #if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
+
     int descriptor = ::open(systemLocation().toLocal8Bit().constData(),
                             O_NOCTTY | O_NDELAY | O_RDWR);
     if (descriptor != -1) {
@@ -215,24 +241,29 @@ QList<qint32> SerialPortInfo::standardRates() const
                 result = ser_info.baud_base / i;
 
                 //append to list only rates presented in array standardRates_begin
-                if ((qBinaryFind(standardRates_begin, standardRates_end, result) != standardRates_end) &&
-                        !rates.contains(result))
+                if ((qBinaryFind(standardRates_begin, standardRates_end, result) != standardRates_end)
+                        && !rates.contains(result)) {
                     rates.append(result);
+                }
             }
         }
     }
+
 #else
+
     for (const qint32 *i = standardRates_begin; i != standardRates_end; ++i)
         rates.append(*i);
+
 #endif
+
     qSort(rates);
     return rates;
 }
 
 bool SerialPortInfo::isBusy() const
 {
-    bool currPid = false;
-    bool ret = TTYLocker::isLocked(systemLocation(), &currPid);
+    bool currentPid = false;
+    bool ret = TTYLocker::isLocked(systemLocation(), &currentPid);
     return ret;
 }
 

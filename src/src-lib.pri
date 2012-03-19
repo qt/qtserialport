@@ -1,5 +1,7 @@
 INCLUDEPATH += $$PWD
 
+linux*:DEFINES += HAVE_LIBUDEV
+
 HEADERS += qtaddonserialportversion.h
 
 PUBLIC_HEADERS += \
