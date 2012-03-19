@@ -122,8 +122,8 @@ QString SerialPortInfo::systemLocation() const
 }
 
 /*!
-    Returns the description of the serial port,
-    if available.
+    Returns the description string of the serial port,
+    if available; otherwise return empty string.
 */
 QString SerialPortInfo::description() const
 {
@@ -132,13 +132,35 @@ QString SerialPortInfo::description() const
 }
 
 /*!
-    Returns the manufacturer of the serial port,
-    if available.
+    Returns the manufacturer string of the serial port,
+    if available; otherwise return empty string.
 */
 QString SerialPortInfo::manufacturer() const
 {
     Q_D(const SerialPortInfo);
     return !d ? QString() : d->manufacturer;
+}
+
+/*!
+    Returns the vendor identifier string of the serial
+    port in hexadecimal format, if available; otherwise
+    return empty string.
+*/
+QString SerialPortInfo::vid() const
+{
+    Q_D(const SerialPortInfo);
+    return !d ? QString() : d->vid;
+}
+
+/*!
+    Returns the vendor identifier string of the serial
+    port in hexadecimal format, if available; otherwise
+    return empty string.
+*/
+QString SerialPortInfo::pid() const
+{
+    Q_D(const SerialPortInfo);
+    return !d ? QString() : d->pid;
 }
 
 /*!

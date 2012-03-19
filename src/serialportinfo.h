@@ -33,6 +33,8 @@ public:
     QString systemLocation() const;
     QString description() const;
     QString manufacturer() const;
+    QString vid() const;
+    QString pid() const;
 
     bool isNull() const;
     bool isBusy() const;

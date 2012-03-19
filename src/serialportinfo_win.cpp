@@ -15,9 +15,8 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 
-QT_BEGIN_NAMESPACE_SERIALPORT
 
-static const GUID guidArray[] =
+static const GUID guidsArray[] =
 {
 #if !defined (Q_OS_WINCE)
     /* Windows Ports Class GUID */
@@ -157,9 +156,24 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
     return result;
 }
 
+// Regular expression pattern for extraction a VID/PID from Hardware ID
+const static QLatin1String hardwareIdPattern("vid_(\\w+)&pid_(\\w+)");
+
+// Command for extraction desired VID/PID from Hardware ID.
+enum ExtractCommand { CMD_EXTRACT_VID = 1, CMD_EXTRACT_PID = 2 };
+
+// Extract desired part Id type from Hardware ID.
+static QString parceHardwareId(ExtractCommand cmd, const QStringList &hardwareId)
+{
+    QRegExp rx(hardwareIdPattern);
+    rx.setCaseSensitivity(Qt::CaseInsensitive);
+    rx.indexIn(hardwareId.at(0));
+    return rx.cap(cmd);
+}
+
 #else
 
-const static QString valueName = "FriendlyName";
+const static QLatin1String valueName("FriendlyName");
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 {
     QString result;
@@ -212,18 +226,20 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 
 #endif
 
+QT_BEGIN_NAMESPACE_SERIALPORT
+
 /* Public methods */
 
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
-    static int guidCount = sizeof(guidArray)/sizeof(GUID);
+    static int guidCount = sizeof(guidsArray)/sizeof(GUID);
 
 #if !defined (Q_OS_WINCE)
     for (int i = 0; i < guidCount; ++i) {
 
-        HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidArray[i], 0, 0, DIGCF_PRESENT);
+        HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], 0, 0, DIGCF_PRESENT);
 
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return ports;
@@ -251,6 +267,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
                 info.d_ptr->manufacturer = v.toString();
 
+                v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID);
+                info.d_ptr->vid = parceHardwareId(CMD_EXTRACT_VID, v.toStringList());
+                info.d_ptr->pid = parceHardwareId(CMD_EXTRACT_PID, v.toStringList());
+
                 ports.append(info);
             }
         }
@@ -261,7 +281,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     //for (int i = 0; i < guidCount; ++i) {
     DEVMGR_DEVICE_INFORMATION di;
     di.dwSize = sizeof(DEVMGR_DEVICE_INFORMATION);
-    HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/, L"COM*"/*&guidArray[i]*/, &di);
+    HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/, L"COM*"/*&guidsArray[i]*/, &di);
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
             SerialPortInfo info;
@@ -270,9 +290,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             info.d_ptr->portName.remove(':');
             info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
                                                       QString::fromWCharArray(((const wchar_t *)di.szDeviceKey)));
-            if (info.d_ptr->description.isEmpty())
-                info.d_ptr->description = QString(QObject::tr("Unknown."));
-            info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+
+            // Get manufacturer, vid, pid is not possible.
 
             ports.append(info);
 
