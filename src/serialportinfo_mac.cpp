@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 /* Public methods */
 
 //
-enum { MATCHING_PROPERTIES_COUNT = 4 };
+enum { MATCHING_PROPERTIES_COUNT = 6 };
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
@@ -37,28 +37,30 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     int matchingPropertiesCounter = 0;
 
 
-    CFMutableDictionaryRef matching = IOServiceMatching(kIOSerialBSDServiceValue);
+    ::CFMutableDictionaryRef matching = ::IOServiceMatching(kIOSerialBSDServiceValue);
 
-    CFDictionaryAddValue(matching,
-                         CFSTR(kIOSerialBSDTypeKey),
-                         CFSTR(kIOSerialBSDAllTypes));
+    ::CFDictionaryAddValue(matching,
+                           CFSTR(kIOSerialBSDTypeKey),
+                           CFSTR(kIOSerialBSDAllTypes));
 
     io_iterator_t iter = 0;
-    kern_return_t kr = IOServiceGetMatchingServices(kIOMasterPortDefault,
-                                                    matching,
-                                                    &iter);
+    kern_return_t kr = ::IOServiceGetMatchingServices(kIOMasterPortDefault,
+                                                      matching,
+                                                      &iter);
 
     if (kr != kIOReturnSuccess)
         return ports;
 
     io_registry_entry_t service;
 
-    while ((service = IOIteratorNext(iter))) {
+    while ((service = ::IOIteratorNext(iter))) {
 
-        CFTypeRef device = 0;
-        CFTypeRef portName = 0;
-        CFTypeRef description = 0;
-        CFTypeRef manufacturer = 0;
+        ::CFTypeRef device = 0;
+        ::CFTypeRef portName = 0;
+        ::CFTypeRef description = 0;
+        ::CFTypeRef manufacturer = 0;
+        ::CFTypeRef vid = 0;
+        ::CFTypeRef pid = 0;
 
         io_registry_entry_t entry = service;
 
@@ -67,52 +69,76 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
             if (!device) {
                 device =
-                        IORegistryEntrySearchCFProperty(entry,
-                                                        kIOServicePlane,
-                                                        CFSTR(kIOCalloutDeviceKey),
-                                                        kCFAllocatorDefault,
-                                                        0);
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kIOCalloutDeviceKey),
+                                                          kCFAllocatorDefault,
+                                                          0);
                 if (device)
                     ++matchingPropertiesCounter;
             }
 
             if (!portName) {
                 portName =
-                        IORegistryEntrySearchCFProperty(entry,
-                                                        kIOServicePlane,
-                                                        CFSTR(kIOTTYDeviceKey),
-                                                        kCFAllocatorDefault,
-                                                        0);
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kIOTTYDeviceKey),
+                                                          kCFAllocatorDefault,
+                                                          0);
                 if (portName)
                     ++matchingPropertiesCounter;
             }
 
             if (!description) {
                 description =
-                        IORegistryEntrySearchCFProperty(entry,
-                                                        kIOServicePlane,
-                                                        CFSTR(kIOPropertyProductNameKey),
-                                                        kCFAllocatorDefault,
-                                                        0);
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kIOPropertyProductNameKey),
+                                                          kCFAllocatorDefault,
+                                                          0);
                 if (!description)
                     description =
-                            IORegistryEntrySearchCFProperty(entry,
-                                                            kIOServicePlane,
-                                                            CFSTR(kUSBProductString),
-                                                            kCFAllocatorDefault,
-                                                            0);
+                            ::IORegistryEntrySearchCFProperty(entry,
+                                                              kIOServicePlane,
+                                                              CFSTR(kUSBProductString),
+                                                              kCFAllocatorDefault,
+                                                              0);
                 if (description)
                     ++matchingPropertiesCounter;
             }
 
             if (!manufacturer) {
                 manufacturer =
-                        IORegistryEntrySearchCFProperty(entry,
-                                                        kIOServicePlane,
-                                                        CFSTR(kUSBVendorString),
-                                                        kCFAllocatorDefault,
-                                                        0);
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kUSBVendorString),
+                                                          kCFAllocatorDefault,
+                                                          0);
                 if (manufacturer)
+                    ++matchingPropertiesCounter;
+
+            }
+
+            if (!vid) {
+                vid =
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kUSBVendorID),
+                                                          kCFAllocatorDefault,
+                                                          0);
+                if (vid)
+                    ++matchingPropertiesCounter;
+
+            }
+
+            if (!pid) {
+                pid =
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kUSBProductID),
+                                                          kCFAllocatorDefault,
+                                                          0);
+                if (pid)
                     ++matchingPropertiesCounter;
 
             }
@@ -121,11 +147,11 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             if (matchingPropertiesCounter == MATCHING_PROPERTIES_COUNT)
                 break;
 
-            kr = IORegistryEntryGetParentEntry(entry, kIOServicePlane, &entry);
+            kr = ::IORegistryEntryGetParentEntry(entry, kIOServicePlane, &entry);
 
         } while (kr == kIOReturnSuccess);
 
-        (void) IOObjectRelease(entry);
+        (void) ::IOObjectRelease(entry);
 
         // Convert from MacOSX-specific properties to Qt4-specific.
         if (matchingPropertiesCounter > 0) {
@@ -134,56 +160,77 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             QByteArray buffer(MAXPATHLEN, 0);
 
             if (device) {
-                if (CFStringGetCString(CFStringRef(device),
-                                       buffer.data(),
-                                       buffer.size(),
-                                       kCFStringEncodingUTF8)) {
+                if (::CFStringGetCString(CFStringRef(device),
+                                         buffer.data(),
+                                         buffer.size(),
+                                         kCFStringEncodingUTF8)) {
 
                     info.d_ptr->device = QString(buffer);
                 }
 
-                CFRelease(device);
+                ::CFRelease(device);
             }
 
             if (portName) {
-                if (CFStringGetCString(CFStringRef(portName),
-                                       buffer.data(),
-                                       buffer.size(),
-                                       kCFStringEncodingUTF8)) {
+                if (::CFStringGetCString(CFStringRef(portName),
+                                         buffer.data(),
+                                         buffer.size(),
+                                         kCFStringEncodingUTF8)) {
 
                     info.d_ptr->portName = QString(buffer);
                 }
 
-                CFRelease(portName);
+                ::CFRelease(portName);
             }
 
             if (description) {
-                CFStringGetCString(CFStringRef(description),
-                                   buffer.data(),
-                                   buffer.size(),
-                                   kCFStringEncodingUTF8);
+                ::CFStringGetCString(CFStringRef(description),
+                                     buffer.data(),
+                                     buffer.size(),
+                                     kCFStringEncodingUTF8);
 
                 info.d_ptr->description = QString(buffer);
-                CFRelease(description);
+                ::CFRelease(description);
             }
 
             if (manufacturer) {
-                CFStringGetCString(CFStringRef(manufacturer),
-                                   buffer.data(),
-                                   buffer.size(),
-                                   kCFStringEncodingUTF8);
+                ::CFStringGetCString(CFStringRef(manufacturer),
+                                     buffer.data(),
+                                     buffer.size(),
+                                     kCFStringEncodingUTF8);
 
                 info.d_ptr->manufacturer = QString(buffer);
-                CFRelease(manufacturer);
+                ::CFRelease(manufacturer);
+            }
+
+
+            int value = 0;
+
+            if (vid) {
+                ::CFNumberGetValue(CFNumberRef(vid),
+                                   kCFNumberIntType,
+                                   &value);
+
+                info.d_ptr->vid = QString::number(value, 16);
+                ::CFRelease(vid);
+            }
+
+            if (pid) {
+                ::CFNumberGetValue(CFNumberRef(pid),
+                                   kCFNumberIntType,
+                                   &value);
+
+                info.d_ptr->pid = QString::number(value, 16);
+                ::CFRelease(pid);
             }
 
             ports.append(info);
         }
 
-        (void) IOObjectRelease(service);
+        (void) ::IOObjectRelease(service);
     }
 
-    (void) IOObjectRelease(iter);
+    (void) ::IOObjectRelease(iter);
 
     return ports;
 }
