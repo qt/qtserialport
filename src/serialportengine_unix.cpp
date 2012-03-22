@@ -620,116 +620,6 @@ QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
     return ret;
 }
 
-static QHash<qint32, qint32> generateStandardRatesMachTable()
-{
-    QHash<qint32, qint32> h;
-
-#if defined (B0)
-    h[0] = B0;
-#endif
-#if defined (B50)
-    h[50] = B50;
-#endif
-#if defined (B75)
-    h[75] = B75;
-#endif
-#if defined (B110)
-    h[110] = B110;
-#endif
-#if defined (B134)
-    h[134] = B134;
-#endif
-#if defined (B150)
-    h[150] = B150;
-#endif
-#if defined (B200)
-    h[200] = B200;
-#endif
-#if defined (B300)
-    h[300] = B300;
-#endif
-#if defined (B600)
-    h[600] = B600;
-#endif
-#if defined (B1200)
-    h[1200] = B1200;
-#endif
-#if defined (B1800)
-    h[1800] = B1800;
-#endif
-#if defined (B2400)
-    h[2400] = B2400;
-#endif
-#if defined (B4800)
-    h[4800] = B4800;
-#endif
-#if defined (B9600)
-    h[9600] = B9600;
-#endif
-#if defined (B19200)
-    h[19200] = B19200;
-#endif
-#if defined (B38400)
-    h[38400] = B38400;
-#endif
-#if defined (B57600)
-    h[57600] = B57600;
-#endif
-#if defined (B115200)
-    h[115200] = B115200;
-#endif
-#if defined (B230400)
-    h[230400] = B230400;
-#endif
-#if defined (B460800)
-    h[460800] = B460800;
-#endif
-#if defined (B500000)
-    h[500000] = B500000;
-#endif
-#if defined (B576000)
-    h[576000] = B576000;
-#endif
-#if defined (B921600)
-    h[921600] = B921600;
-#endif
-#if defined (B1000000)
-    h[1000000] = B1000000;
-#endif
-#if defined (B1152000)
-    h[1152000] = B1152000;
-#endif
-#if defined (B1500000)
-    h[1500000] = B1500000;
-#endif
-#if defined (B2000000)
-    h[2000000] = B2000000;
-#endif
-#if defined (B2500000)
-    h[2500000] = B2500000;
-#endif
-#if defined (B3000000)
-    h[3000000] = B3000000;
-#endif
-#if defined (B3500000)
-    h[3500000] = B3500000;
-#endif
-#if defined (B4000000)
-    h[4000000] = B4000000;
-#endif
-
-    return h;
-}
-
-// Standard baud rates match table, where:
-// - key - is the numerical value of baud rate (eg. 9600, 115200 ...)
-// - value - is the value of POSIX baud rate macros (eg. B9600, B115200 ...)
-inline QHash<qint32, qint32>& standardRatesMachTable()
-{
-    static QHash<qint32, qint32> h = generateStandardRatesMachTable();
-    return h;
-}
-
 /*!
     Set desired \a rate by given direction \a dir,
     where \a rate is expressed by any positive integer type qint32.
@@ -752,7 +642,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 #endif
 
     if (ret) {
-        const qint32 unixRate = standardRatesMachTable().value(rate);
+        const qint32 unixRate = settingFromRate(rate);
         if (unixRate > 0) {
             // try prepate to set standard baud rate
 
@@ -1051,6 +941,150 @@ bool UnixSerialPortEngine::processIOErrors()
     return false;
 }
 
+/* Public static methods */
+
+struct RatePair
+{
+   qint32 rate;    // The numerical value of baud rate.
+   qint32 setting; // The OS-specific code of baud rate.
+   bool operator<(const RatePair &other) const { return rate < other.rate; }
+   bool operator==(const RatePair &other) const { return setting == other.setting; }
+};
+
+// This table contains correspondences standard pairs values of
+// baud rates that are defined in file termios.h
+static
+const RatePair standardRatesTable[] =
+{
+    #if defined (B50)
+    { 50, B50},
+    #endif
+    #if defined (B75)
+    { 75, B75},
+    #endif
+    #if defined (B110)
+    { 110, B110},
+    #endif
+    #if defined (B134)
+    { 134, B134},
+    #endif
+    #if defined (B150)
+    { 150, B150},
+    #endif
+    #if defined (B200)
+    { 200, B200},
+    #endif
+    #if defined (B300)
+    { 300, B300},
+    #endif
+    #if defined (B600)
+    { 600, B600},
+    #endif
+    #if defined (B1200)
+    { 1200, B1200},
+    #endif
+    #if defined (B1800)
+    { 1800, B1800},
+    #endif
+    #if defined (B2400)
+    { 2400, B2400},
+    #endif
+    #if defined (B4800)
+    { 4800, B4800},
+    #endif
+    #if defined (B9600)
+    { 9600, B9600},
+    #endif
+    #if defined (B19200)
+    { 19200, B19200},
+    #endif
+    #if defined (B38400)
+    { 38400, B38400},
+    #endif
+    #if defined (B57600)
+    { 57600, B57600},
+    #endif
+    #if defined (B115200)
+    { 115200, B115200},
+    #endif
+    #if defined (B230400)
+    { 230400, B230400},
+    #endif
+    #if defined (B460800)
+    { 460800, B460800},
+    #endif
+    #if defined (B500000)
+    { 500000, B500000},
+    #endif
+    #if defined (B576000)
+    { 576000, B576000},
+    #endif
+    #if defined (B921600)
+    { 921600, B921600},
+    #endif
+    #if defined (B1000000)
+    { 1000000, B1000000},
+    #endif
+    #if defined (B1152000)
+    { 1152000, B1152000},
+    #endif
+    #if defined (B1500000)
+    { 1500000, B1500000},
+    #endif
+    #if defined (B2000000)
+    { 2000000, B2000000},
+    #endif
+    #if defined (B2500000)
+    { 2500000, B2500000},
+    #endif
+    #if defined (B3000000)
+    { 3000000, B3000000},
+    #endif
+    #if defined (B3500000)
+    { 3500000, B3500000},
+    #endif
+    #if defined (B4000000)
+    { 4000000, B4000000}
+    #endif
+};
+
+static const RatePair *standardRatesTable_end =
+        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+
+/*!
+    Convert *nix-specific code of baud rate to a numeric value.
+    If the desired item is not found then returns 0.
+*/
+qint32 UnixSerialPortEngine::rateFromSetting(qint32 setting)
+{
+    const RatePair rp = {0, setting};
+    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
+    return (ret != standardRatesTable_end) ? ret->rate : 0;
+}
+
+/*!
+    Convert a numeric value of baud rate to *nix-specific code.
+    If the desired item is not found then returns 0.
+*/
+qint32 UnixSerialPortEngine::settingFromRate(qint32 rate)
+{
+    const RatePair rp = {rate, 0};
+    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
+    return (ret != standardRatesTable_end) ? ret->setting : 0;
+}
+
+/*!
+    Returns a list standard values of baud rates,
+    codes are defined in termios.h
+*/
+QList<qint32> UnixSerialPortEngine::standardRates()
+{
+    QList<qint32> ret;
+    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
+       ret.append(it->rate);
+    return ret;
+}
+
 /* Protected methods */
 
 /*!
@@ -1088,8 +1122,8 @@ void UnixSerialPortEngine::detectDefaultSettings()
     // other *nix
 #endif
     if (!isCustomRate) {
-        dptr->options.inputRate = standardRatesMachTable().key(::cfgetispeed(&m_currentTermios));
-        dptr->options.outputRate = standardRatesMachTable().key(::cfgetospeed(&m_currentTermios));
+        dptr->options.inputRate = rateFromSetting(::cfgetispeed(&m_currentTermios));
+        dptr->options.outputRate = rateFromSetting(::cfgetospeed(&m_currentTermios));
     }
 
     // Detect databits.

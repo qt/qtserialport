@@ -5,6 +5,7 @@
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
 #include "ttylocker_unix_p.h"
+#include "serialportengine_unix_p.h"
 
 #include <sys/types.h>
 #include <signal.h>
@@ -71,19 +72,6 @@ inline QStringList& filtersOfDevices()
 }
 
 #endif
-
-static
-const qint32 standardRates_begin[] =
-{
-    50, 75, 110, 134, 150,
-    200, 300, 600, 1200, 1800,
-    2400, 4800, 9600, 19200, 38400,
-    57600, 115200, 230400, 460800,
-    500000, 576000, 921600, 1000000,
-    1152000, 1500000, 2000000, 2500000,
-    3000000, 3500000, 4000000
-}, *standardRates_end = standardRates_begin + sizeof(::standardRates_begin)/sizeof(*::standardRates_begin);
-
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
@@ -220,44 +208,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 QList<qint32> SerialPortInfo::standardRates() const
 {
-    QList<qint32> rates;
-    rates.reserve(standardRates_end - standardRates_begin);
-
-#if defined (Q_OS_LINUX) && defined (TIOCGSERIAL) && defined (TIOCSSERIAL)
-
-    int descriptor = ::open(systemLocation().toLocal8Bit().constData(),
-                            O_NOCTTY | O_NDELAY | O_RDWR);
-    if (descriptor != -1) {
-
-        struct serial_struct ser_info;
-
-        // This call with may TIOCGSERIAL be not supported on some
-        // USB/Serial converters (for example, PL2303).
-        int result = ::ioctl(descriptor, TIOCGSERIAL, &ser_info);
-        ::close(descriptor);
-        if ((result != -1) && (ser_info.baud_base > 0)) {
-
-            for (int i = 1, max = ser_info.baud_base / 50; i <= max; ++i) {
-                result = ser_info.baud_base / i;
-
-                //append to list only rates presented in array standardRates_begin
-                if ((qBinaryFind(standardRates_begin, standardRates_end, result) != standardRates_end)
-                        && !rates.contains(result)) {
-                    rates.append(result);
-                }
-            }
-        }
-    }
-
-#else
-
-    for (const qint32 *i = standardRates_begin; i != standardRates_end; ++i)
-        rates.append(*i);
-
-#endif
-
-    qSort(rates);
-    return rates;
+    return UnixSerialPortEngine::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

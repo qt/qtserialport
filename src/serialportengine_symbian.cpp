@@ -541,84 +541,10 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
         return false;
     }
 
-    switch (rate) {
-    case 50:
-        m_currentSettings().iRate = EBps50;
-        break;
-    case 75:
-        m_currentSettings().iRate = EBps75;
-        break;
-    case 110:
-        m_currentSettings().iRate = EBps110;
-        break;
-    case 134:
-        m_currentSettings().iRate = EBps134;
-        break;
-    case 150:
-        m_currentSettings().iRate = EBps150;
-        break;
-    case 300:
-        m_currentSettings().iRate = EBps300;
-        break;
-    case 600:
-        m_currentSettings().iRate = EBps600;
-        break;
-    case 1200:
-        m_currentSettings().iRate = EBps1200;
-        break;
-    case 1800:
-        m_currentSettings().iRate = EBps1800;
-        break;
-    case 2000:
-        m_currentSettings().iRate = EBps2000;
-        break;
-    case 2400:
-        m_currentSettings().iRate = EBps2400;
-        break;
-    case 3600:
-        m_currentSettings().iRate = EBps3600;
-        break;
-    case 4800:
-        m_currentSettings().iRate = EBps4800;
-        break;
-    case 7200:
-        m_currentSettings().iRate = EBps7200;
-        break;
-    case 9600:
-        m_currentSettings().iRate = EBps9600;
-        break;
-    case 19200:
-        m_currentSettings().iRate = EBps19200;
-        break;
-    case 38400:
-        m_currentSettings().iRate = EBps38400;
-        break;
-    case 57600:
-        m_currentSettings().iRate = EBps57600;
-        break;
-    case 115200:
-        m_currentSettings().iRate = EBps115200;
-        break;
-    case 230400:
-        m_currentSettings().iRate = EBps230400;
-        break;
-    case 460800:
-        m_currentSettings().iRate = EBps460800;
-        break;
-    case 576000:
-        m_currentSettings().iRate = EBps576000;
-        break;
-    case 1152000:
-        m_currentSettings().iRate = EBps1152000;
-        break;
-    case 4000000:
-        m_currentSettings().iRate = EBps4000000;
-        break;
-    case 921600:
-        m_currentSettings().iRate = EBps921600;
-        break;
-        //case 1843200:; // Only for  Symbian SR1
-    default:
+    rate = settingFromRate(rate);
+    if (rate)
+        m_currentSettings().iRate = static_cast<TBps>(rate);
+    else {
         dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
@@ -796,7 +722,89 @@ bool SymbianSerialPortEngine::processIOErrors()
     return false;
 }
 
-///
+/* Public static methods */
+
+struct RatePair
+{
+   qint32 rate;    // The numerical value of baud rate.
+   qint32 setting; // The OS-specific code of baud rate.
+   bool operator<(const RatePair &other) const { return rate < other.rate; }
+   bool operator==(const RatePair &other) const { return setting == other.setting; }
+};
+
+// This table contains correspondences standard pairs values of
+// baud rates that are defined in files
+// - d32comm.h for Symbian^3
+// - d32public.h for Symbian SR1
+static
+const RatePair standardRatesTable[] =
+{
+    { 50, EBps50 },
+    { 75, EBps75 },
+    { 110, EBps110},
+    { 134, EBps134 },
+    { 150, EBps150 },
+    { 300, EBps300 },
+    { 600, EBps600 },
+    { 1200, EBps1200 },
+    { 1800, EBps1800 },
+    { 2000, EBps2000 },
+    { 2400, EBps2400 },
+    { 3600, EBps3600 },
+    { 4800, EBps4800 },
+    { 7200, EBps7200 },
+    { 9600, EBps9600 },
+    { 19200, EBps19200 },
+    { 38400, EBps38400 },
+    { 57600, EBps57600 },
+    { 115200, EBps115200 },
+    { 230400, EBps230400 },
+    { 460800, EBps460800 },
+    { 576000, EBps576000 },
+    { 921600, EBps921600 },
+    { 1152000, EBps1152000 },
+    //{ 1843200, EBps1843200 }, only for Symbian SR1
+    { 4000000, EBps4000000 }
+};
+
+static const RatePair *standardRatesTable_end =
+        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+
+/*!
+    Convert symbian-specific enum of baud rate to a numeric value.
+    If the desired item is not found then returns 0.
+*/
+qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
+{
+    const RatePair rp = {0, setting};
+    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
+    return (ret != standardRatesTable_end) ? ret->rate : 0;
+}
+
+/*!
+    Convert a numeric value of baud rate to symbian-specific enum.
+    If the desired item is not found then returns 0.
+*/
+EBps SymbianSerialPortEngine::settingFromRate(qint32 rate)
+{
+    const RatePair rp = {rate, 0};
+    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
+    return (ret != standardRatesTable_end) ? ret->setting : 0;
+}
+
+/*!
+    Returns a list standard values of baud rates,
+    enums are defined in
+   - d32comm.h for Symbian^3
+   - d32public.h for Symbian SR1.
+*/
+QList<qint32> SymbianSerialPortEngine::standardRates()
+{
+    QList<qint32> ret;
+    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
+       ret.append(it->rate);
+    return ret;
+}
 
 /* Protected methods */
 
@@ -807,86 +815,7 @@ bool SymbianSerialPortEngine::processIOErrors()
 void SymbianSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
-    switch (m_currentSettings().iRate) {
-    case EBps50:
-        dptr->options.inputRate = 50;
-        break;
-    case EBps75:
-        dptr->options.inputRate = 75;
-        break;
-    case EBps110:
-        dptr->options.inputRate = 110;
-        break;
-    case EBps134:
-        dptr->options.inputRate = 134;
-        break;
-    case EBps150:
-        dptr->options.inputRate = 150;
-        break;
-    case EBps300:
-        dptr->options.inputRate = 300;
-        break;
-    case EBps600:
-        dptr->options.inputRate = 600;
-        break;
-    case EBps1200:
-        dptr->options.inputRate = 1200;
-        break;
-    case EBps1800:
-        dptr->options.inputRate = 1800;
-        break;
-    case EBps2000:
-        dptr->options.inputRate = 2000;
-        break;
-    case EBps2400:
-        dptr->options.inputRate = 2400;
-        break;
-    case EBps3600:
-        dptr->options.inputRate = 3600;
-        break;
-    case EBps4800:
-        dptr->options.inputRate = 4800;
-        break;
-    case EBps7200:
-        dptr->options.inputRate = 7200;
-        break;
-    case EBps9600:
-        dptr->options.inputRate = 9600;
-        break;
-    case EBps19200:
-        dptr->options.inputRate = 19200;
-        break;
-    case EBps38400:
-        dptr->options.inputRate = 38400;
-        break;
-    case EBps57600:
-        dptr->options.inputRate = 57600;
-        break;
-    case EBps115200:
-        dptr->options.inputRate = 115200;
-        break;
-    case EBps230400:
-        dptr->options.inputRate = 230400;
-        break;
-    case EBps460800:
-        dptr->options.inputRate = 460800;
-        break;
-    case EBps576000:
-        dptr->options.inputRate = 576000;
-        break;
-    case EBps1152000:
-        dptr->options.inputRate = 1152000;
-        break;
-    case EBps4000000:
-        dptr->options.inputRate = 4000000;
-        break;
-    case EBps921600:
-        dptr->options.inputRate = 921600;
-        break;
-        //case EBps1843200: inRate = 1843200; break;
-    default:
-        dptr->options.inputRate = SerialPort::UnknownRate;
-    }
+    dptr->options.inputRate = rateFromSetting(m_currentSettings().iRate);
     dptr->options.outputRate = dptr->options.inputRate;
 
     // Detect databits.

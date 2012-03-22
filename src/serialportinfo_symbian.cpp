@@ -4,6 +4,7 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
+#include "serialportengine_symbian_p.h"
 
 #include <e32base.h>
 //#include <e32test.h>
@@ -29,7 +30,7 @@ _LIT(KBluetoothModuleName , "BTCOMM");
 _LIT(KInfraRedModuleName , "IRCOMM");
 _LIT(KACMModuleName, "ECACM");
 
-// Return false on error load. 
+// Return false on error load.
 static bool loadDevices()
 {
     TInt r = KErrNone;
@@ -54,7 +55,7 @@ static bool loadDevices()
     if ((r != KErrNone) && (r != KErrAlreadyExists))
         return false; //User::Leave(r);
 #endif
-    
+
     return true;
 }
 
@@ -68,7 +69,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
     if (!loadDevices())
         return ports;
-    
+
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone)
@@ -122,7 +123,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             }
         }
     }
-    
+
     // FIXME: Get info about InfraRed ports.
     r = server.LoadCommModule(KInfraRedModuleName);
     //User::LeaveIfError(r);
@@ -172,23 +173,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
-static QList<qint32> emptyList()
-{
-    QList<qint32> list;
-    return list;
-}
-
 QList<qint32> SerialPortInfo::standardRates() const
 {
-    // See enum TBps in SDK:
-    // - epoc32/include/platform/d32comm.h for Symbian^3
-    // - epoc32/include/platform/d32public.h for Symbian SR1
-    static QList<qint32> rates = emptyList()
-    << 50 << 75 << 110 << 134 << 150 << 300 << 600 << 1200 << 1800 << 2000
-    << 2400 << 3600 << 4800 << 7200 << 9600 << 19200 << 38400 << 57600
-    << 115200 << 230400 << 460800 << 576000 << 1152000 << 4000000 << 921600
-    << 1843200; // 1843200 only for  Symbian SR1!
-    return rates;
+    return SymbianSerialPortEngine::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

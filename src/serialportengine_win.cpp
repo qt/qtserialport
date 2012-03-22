@@ -1029,6 +1029,75 @@ void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
 
 #endif
 
+/* Public static methods */
+
+// This table contains standard values of baud rates that
+// are defined in MSDN and/or in Win SDK file winbase.h
+static
+const qint32 standardRatesTable[] =
+{
+    #if defined (CBR_110)
+    CBR_110,
+    #endif
+    #if defined (CBR_300)
+    CBR_300,
+    #endif
+    #if defined (CBR_600)
+    CBR_600,
+    #endif
+    #if defined (CBR_1200)
+    CBR_1200,
+    #endif
+    #if defined (CBR_2400)
+    CBR_2400,
+    #endif
+    #if defined (CBR_4800)
+    CBR_4800,
+    #endif
+    #if defined (CBR_9600)
+    CBR_9600,
+    #endif
+    #if defined (CBR_14400)
+    CBR_14400,
+    #endif
+    #if defined (CBR_19200)
+    CBR_19200,
+    #endif
+    #if defined (CBR_38400)
+    CBR_38400,
+    #endif
+    #if defined (CBR_56000)
+    CBR_56000,
+    #endif
+    #if defined (CBR_57600)
+    CBR_57600,
+    #endif
+    #if defined (CBR_115200)
+    CBR_115200,
+    #endif
+    #if defined (CBR_128000)
+    CBR_128000,
+    #endif
+    #if defined (CBR_256000)
+    CBR_256000
+    #endif
+};
+
+static const qint32 *standardRatesTable_end =
+        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+
+/*!
+   Returns a list standard values of baud rate that
+   are defined in MSDN and/or in Win SDK file winbase.h.
+*/
+QList<qint32> WinSerialPortEngine::standardRates()
+{
+   QList<qint32> l;
+   for (const qint32 *it = standardRatesTable; it != standardRatesTable_end; ++it)
+      l.append(*it);
+   return l;
+}
+
 /* Protected methods */
 
 /*!

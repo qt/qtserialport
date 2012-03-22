@@ -4,6 +4,7 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
+#include "serialportengine_win_p.h"
 
 #include <qt_windows.h>
 #include <objbase.h>
@@ -306,58 +307,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 QList<qint32> SerialPortInfo::standardRates() const
 {
-    QList<qint32> rates;
-
-    QString location = systemLocation();
-    QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
-
-    HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
-                                     GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-
-    if (descriptor != INVALID_HANDLE_VALUE) {
-        COMMPROP prop;
-        if ((::GetCommProperties(descriptor, &prop) != 0) && prop.dwSettableBaud) {
-            if (prop.dwSettableBaud & BAUD_075)
-                rates.append(75);
-            if (prop.dwSettableBaud & BAUD_110)
-                rates.append(110);
-            if (prop.dwSettableBaud & BAUD_150)
-                rates.append(150);
-            if (prop.dwSettableBaud & BAUD_300)
-                rates.append(300);
-            if (prop.dwSettableBaud & BAUD_600)
-                rates.append(600);
-            if (prop.dwSettableBaud & BAUD_1200)
-                rates.append(1200);
-            if (prop.dwSettableBaud & BAUD_1800)
-                rates.append(1800);
-            if (prop.dwSettableBaud & BAUD_2400)
-                rates.append(2400);
-            if (prop.dwSettableBaud & BAUD_4800)
-                rates.append(4800);
-            if (prop.dwSettableBaud & BAUD_7200)
-                rates.append(7200);
-            if (prop.dwSettableBaud & BAUD_9600)
-                rates.append(9600);
-            if (prop.dwSettableBaud & BAUD_14400)
-                rates.append(14400);
-            if (prop.dwSettableBaud & BAUD_19200)
-                rates.append(19200);
-            if (prop.dwSettableBaud & BAUD_38400)
-                rates.append(38400);
-            if (prop.dwSettableBaud & BAUD_56K)
-                rates.append(56000);
-            if (prop.dwSettableBaud & BAUD_57600)
-                rates.append(57600);
-            if (prop.dwSettableBaud & BAUD_115200)
-                rates.append(115200);
-            if (prop.dwSettableBaud & BAUD_128K)
-                rates.append(128000);
-        }
-        ::CloseHandle(descriptor);
-    }
-
-    return rates;
+    return WinSerialPortEngine::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

@@ -119,6 +119,9 @@ public:
     virtual void unlockNotification(NotificationLockerType type);
 #endif
 
+public:
+    static QList<qint32> standardRates();
+
 protected:
     virtual void detectDefaultSettings();
 

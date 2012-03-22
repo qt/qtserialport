@@ -60,6 +60,11 @@ public:
 
     virtual bool processIOErrors();
 
+public:
+    static qint32 rateFromSetting(EBps setting);
+    static EBps settingFromRate(qint32 rate);
+    static QList<qint32> standardRates();
+
 protected:
     virtual void detectDefaultSettings();
     //virtual bool eventFilter(QObject *obj, QEvent *e);

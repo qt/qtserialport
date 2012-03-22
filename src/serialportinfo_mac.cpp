@@ -5,6 +5,7 @@
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
 #include "ttylocker_unix_p.h"
+#include "serialportengine_unix_p.h"
 
 #include <sys/param.h>
 
@@ -243,13 +244,7 @@ static QList<qint32> emptyList()
 
 QList<qint32> SerialPortInfo::standardRates() const
 {
-    static QList<qint32> rates = emptyList()
-            << 50 << 75 << 110 << 134 << 150 << 200 << 300 << 600 << 1200 << 1800
-            << 2400 << 4800 << 9600 << 19200 << 38400 << 57600
-            << 115200 << 230400 << 460800 << 500000 << 576000 << 921600
-            << 1000000 << 1152000 << 1500000 << 2000000 << 2500000
-            << 3000000 << 3500000 << 4000000;
-    return rates;
+    return UnixSerialPortEngine::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const
