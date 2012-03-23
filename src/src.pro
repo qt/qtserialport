@@ -9,6 +9,8 @@ DESTDIR = $$QT.serialport.libs
 VERSION = $$QT.serialport.VERSION
 DEFINES += QT_ADDON_SERIALPORT_LIB
 
+QT += core-private
+
 CONFIG += module create_prl
 MODULE_PRI = ../modules/qt_serialport.pri
 

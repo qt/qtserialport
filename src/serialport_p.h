@@ -6,7 +6,7 @@
 #define SERIALPORT_P_H
 
 #include "serialport.h"
-#include "ringbuffer_p.h"
+#include <QtCore/private/qringbuffer_p.h>
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
@@ -105,8 +105,8 @@ public:
 
 public:
     qint64 readBufferMaxSize;
-    RingBuffer readBuffer;
-    RingBuffer writeBuffer;
+    QRingBuffer readBuffer;
+    QRingBuffer writeBuffer;
     bool isBuffered;
 
     bool readSerialNotifierCalled;

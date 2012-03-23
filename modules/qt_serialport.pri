@@ -11,6 +11,6 @@ QT.serialport.sources = $$QT_MODULE_BASE/src
 QT.serialport.libs = $$QT_MODULE_LIB_BASE
 QT.serialport.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.serialport.imports = $$QT_MODULE_IMPORT_BASE
-QT.serialport.depends = core
+QT.serialport.depends = core core-private
 
 QT_CONFIG += serialport

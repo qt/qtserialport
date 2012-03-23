@@ -11,7 +11,6 @@ PUBLIC_HEADERS += \
 
 PRIVATE_HEADERS += \
     $$PWD/serialport_p.h \
-    $$PWD/ringbuffer_p.h \
     $$PWD/serialportengine_p.h \
     $$PWD/serialportinfo_p.h
 
