@@ -110,6 +110,8 @@ public:
     virtual void setReadNotificationEnabled(bool enable);
     virtual bool isWriteNotificationEnabled() const;
     virtual void setWriteNotificationEnabled(bool enable);
+    virtual bool isErrorNotificationEnabled() const;
+    virtual void setErrorNotificationEnabled(bool enable);
 
     virtual bool processIOErrors();
 
@@ -136,8 +138,10 @@ private:
 #if !defined (Q_OS_WINCE)
     bool createEvents(bool rx, bool tx);
     void closeEvents();
-    void setMaskAndActivateEvent();
 #endif
+
+    bool isNotificationEnabled(DWORD mask) const;
+    void setNotificationEnabled(bool enable, DWORD mask);
 
     bool updateDcb();
     bool updateCommTimeouts();

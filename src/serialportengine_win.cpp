@@ -96,7 +96,7 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
     : m_descriptor(INVALID_HANDLE_VALUE)
     , m_flagErrorFromCommEvent(false)
     , m_currentMask(0)
-    , m_desiredMask(EV_ERR)
+    , m_desiredMask(0)
 #if defined (Q_OS_WINCE)
     , m_running(true)
 #endif
@@ -495,22 +495,16 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 #else
     if (::ReadFile(m_descriptor, data, len, &readBytes, &m_ovRead))
         sucessResult = true;
-    else {
-        if (::GetLastError() == ERROR_IO_PENDING) {
-            // FIXME: Instead of an infinite wait I/O (not looped), we expect, for example 5 seconds.
-            // Although, maybe there is a better solution.
-            switch (::WaitForSingleObject(m_ovRead.hEvent, 5000)) {
-            case WAIT_OBJECT_0:
-                if (::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, false))
-                    sucessResult = true;
-                break;
-            default: ;
-            }
-        }
+    else if ((::GetLastError() == ERROR_IO_PENDING)
+             // Here have to wait for completion of pending transactions
+             // to get the number of actually readed bytes.
+             && ::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, true)) {
+
+        sucessResult = true;
     }
 #endif
 
-    if(!sucessResult) {
+    if (!sucessResult) {
         dptr->setError(SerialPort::IoError);
         return -1;
     }
@@ -556,22 +550,18 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 #else
     if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_ovWrite))
         sucessResult = true;
-    else {
-        if (::GetLastError() == ERROR_IO_PENDING) {
-            // Instead of an infinite wait I/O (not looped), we expect, for example 5 seconds.
-            // Although, maybe there is a better solution.
-            switch (::WaitForSingleObject(m_ovWrite.hEvent, 5000)) {
-            case WAIT_OBJECT_0:
-                if (::GetOverlappedResult(m_descriptor, &m_ovWrite, &writeBytes, false))
-                    sucessResult = true;
-                break;
-            default: ;
-            }
-        }
+    else if (::GetLastError() == ERROR_IO_PENDING) {
+        // This is not an error. In this case, the number of bytes actually
+        // transmitted can be received only after the completion of pending
+        // transactions, but it will freeze the event loop. The solution is
+        // to fake return results without waiting. Such a maneuver is possible
+        // due to the peculiarities of the serial port driver for Windows.
+        sucessResult = true;
+        writeBytes = len;
     }
 #endif
 
-    if(!sucessResult) {
+    if (!sucessResult) {
         dptr->setError(SerialPort::IoError);
         return -1;
     }
@@ -603,7 +593,10 @@ bool WinSerialPortEngine::select(int timeout,
                                  bool checkRead, bool checkWrite,
                                  bool *selectForRead, bool *selectForWrite)
 {
-    // Forward checking data for read.
+    // FIXME: Forward checking available data for read.
+    // This is a bad decision, because call bytesAvailable() automatically
+    // clears the error parity, frame, etc. That is, then in the future,
+    // it is impossible to identify them in the process of reading the data.
     if (checkRead && (bytesAvailable() > 0)) {
         Q_ASSERT(selectForRead);
         *selectForRead = true;
@@ -644,16 +637,14 @@ bool WinSerialPortEngine::select(int timeout,
 #if !defined (Q_OS_WINCE)
     if (::WaitCommEvent(m_descriptor, &currEventMask, &m_ovSelect))
         sucessResult = true;
-    else {
-        if (::GetLastError() == ERROR_IO_PENDING) {
-            DWORD bytesTransferred = 0;
-            switch (::WaitForSingleObject(m_ovSelect.hEvent, (timeout < 0) ? 0 : timeout)) {
-            case WAIT_OBJECT_0:
-                if (::GetOverlappedResult(m_descriptor, &m_ovSelect, &bytesTransferred, false))
-                    sucessResult = true;
-                break;
-            default: ;
-            }
+    else if (::GetLastError() == ERROR_IO_PENDING) {
+        DWORD bytesTransferred = 0;
+        if ((::WaitForSingleObject(m_ovSelect.hEvent, (timeout < 0) ? 0 : timeout) == WAIT_OBJECT_0)
+                && ::GetOverlappedResult(m_descriptor, &m_ovSelect, &bytesTransferred, false)) {
+
+            sucessResult = true;
+        } else {
+            // Here there was a timeout or other error.
         }
     }
 #else
@@ -667,9 +658,9 @@ bool WinSerialPortEngine::select(int timeout,
 #endif
 
     if (sucessResult) {
-        // Here call the bytesAvailable() to protect against false positives WaitForSingleObject(),
-        // for example, when manually pulling USB/Serial converter from system,
-        // ie when devices are in fact not.
+        // FIXME: Here call the bytesAvailable() to protect against false positives
+        // WaitForSingleObject(), for example, when manually pulling USB/Serial
+        // converter from system, ie when devices are in fact not.
         // While it may be possible to make additional checks - to catch an event EV_ERR,
         // adding (in the code above) extra bits in the mask currEventMask.
         if (checkRead) {
@@ -867,12 +858,7 @@ bool WinSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
 */
 bool WinSerialPortEngine::isReadNotificationEnabled() const
 {
-#if defined (Q_OS_WINCE)
-    bool flag = isRunning();
-#else
-    bool flag = isEnabled();
-#endif
-    return (flag && (m_desiredMask & EV_RXCHAR));
+    return isNotificationEnabled(EV_RXCHAR);
 }
 
 /*!
@@ -885,27 +871,7 @@ bool WinSerialPortEngine::isReadNotificationEnabled() const
 */
 void WinSerialPortEngine::setReadNotificationEnabled(bool enable)
 {
-#if defined (Q_OS_WINCE)
-    m_setCommMaskMutex.lock();
-    ::GetCommMask(m_descriptor, &m_currentMask);
-#endif
-
-    if (enable)
-        m_desiredMask |= EV_RXCHAR;
-    else
-        m_desiredMask &= ~EV_RXCHAR;
-
-#if defined (Q_OS_WINCE)
-    if (m_desiredMask != m_currentMask)
-        ::SetCommMask(m_descriptor, m_desiredMask);
-
-    m_setCommMaskMutex.unlock();
-
-    if (enable && !isRunning())
-        start();
-#else
-    setMaskAndActivateEvent();
-#endif
+    setNotificationEnabled(enable, EV_RXCHAR);
 }
 
 /*!
@@ -913,12 +879,7 @@ void WinSerialPortEngine::setReadNotificationEnabled(bool enable)
 */
 bool WinSerialPortEngine::isWriteNotificationEnabled() const
 {
-#if defined (Q_OS_WINCE)
-    bool flag = isRunning();
-#else
-    bool flag = isEnabled();
-#endif
-    return (flag && (m_desiredMask & EV_TXEMPTY));
+    return isNotificationEnabled(EV_TXEMPTY);
 }
 
 /*!
@@ -930,32 +891,31 @@ bool WinSerialPortEngine::isWriteNotificationEnabled() const
 */
 void WinSerialPortEngine::setWriteNotificationEnabled(bool enable)
 {
-#if defined (Q_OS_WINCE)
-    m_setCommMaskMutex.lock();
-    ::GetCommMask(m_descriptor, &m_currentMask);
-#endif
+    setNotificationEnabled(enable, EV_TXEMPTY);
 
-    if (enable)
-        m_desiredMask |= EV_TXEMPTY;
-    else
-        m_desiredMask &= ~EV_TXEMPTY;
-
-#if defined (Q_OS_WINCE)
-    if (m_desiredMask != m_currentMask)
-        ::SetCommMask(m_descriptor, m_desiredMask);
-
-    m_setCommMaskMutex.unlock();
-
-    if (enable && !isRunning())
-        start();
-#else
-    setMaskAndActivateEvent();
-#endif
     // This only for OS Windows, as EV_TXEMPTY event is triggered only
     // after the last byte of data.
     // Therefore, we are forced to run writeNotification(), as EV_TXEMPTY does not work.
     if (enable)
         dptr->canWriteNotification();
+}
+
+/*!
+    Returns the current status of the errors notification subsystem.
+*/
+bool WinSerialPortEngine::isErrorNotificationEnabled() const
+{
+    return isNotificationEnabled(EV_ERR);
+}
+
+/*!
+    Enables or disables errors notification subsystem, depending on
+    the \a enable parameter. If the subsystem is enabled, it will
+    asynchronously track the occurrence of an event EV_ERR.
+*/
+void WinSerialPortEngine::setErrorNotificationEnabled(bool enable)
+{
+    setNotificationEnabled(enable, EV_ERR);
 }
 
 /*!
@@ -1299,26 +1259,60 @@ void WinSerialPortEngine::closeEvents()
     ::memset(&m_ovNotify, 0, size);
 }
 
+#endif
+
 /*!
-    For Windows NT-based, sets the mask of tracking events.
 */
-void WinSerialPortEngine::setMaskAndActivateEvent()
+bool WinSerialPortEngine::isNotificationEnabled(DWORD mask) const
 {
-    ::SetCommMask(m_descriptor, m_desiredMask);
-    if (m_desiredMask)
-        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ovNotify);
-    switch (m_desiredMask) {
-    case 0:
-        if (isEnabled())
-            setEnabled(false);
-        break;
-    default:
-        if (!isEnabled())
-            setEnabled(true);
-    }
+    bool enabled;
+#if defined (Q_OS_WINCE)
+    enabled = isRunning();
+#else
+    enabled = isEnabled();
+#endif
+    return (enabled && (m_desiredMask & mask));
 }
 
+/*!
+*/
+void WinSerialPortEngine::setNotificationEnabled(bool enable, DWORD mask)
+{
+
+#if defined (Q_OS_WINCE)
+    m_setCommMaskMutex.lock();
+    ::GetCommMask(m_descriptor, &m_currentMask);
 #endif
+
+    // Mask only the desired bits without affecting others.
+    if (enable)
+        m_desiredMask |= mask;
+    else
+        m_desiredMask &= ~mask;
+
+    ::SetCommMask(m_descriptor, m_desiredMask);
+
+#if defined (Q_OS_WINCE)
+    m_setCommMaskMutex.unlock();
+
+    if (enable && !isRunning())
+        start();
+#else
+    enable = isEnabled();
+
+    // If the desired mask is zero then no needed to restart
+    // the monitoring events and needed disable notification;
+    // otherwise needed start the notification if it was stopped.
+    if (m_desiredMask) {
+        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ovNotify);
+        if (!enable)
+            setEnabled(true);
+    } else if (enable) {
+        setEnabled(false);
+    }
+#endif
+
+}
 
 /*!
     Updates the DCB structure wehn changing of any the parameters

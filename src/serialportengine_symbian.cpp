@@ -716,6 +716,24 @@ void SymbianSerialPortEngine::setWriteNotificationEnabled(bool enable)
 /*!
 
 */
+bool SymbianSerialPortEngine::isErrorNotificationEnabled() const
+{
+    // Impl me
+    return false;
+}
+
+/*!
+
+*/
+void SymbianSerialPortEngine::setErrorNotificationEnabled(bool enable)
+{
+    Q_UNUSED(enable)
+    // Impl me
+}
+
+/*!
+
+*/
 bool SymbianSerialPortEngine::processIOErrors()
 {
     // Impl me

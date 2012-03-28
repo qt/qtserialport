@@ -1098,6 +1098,8 @@ bool SerialPort::open(OpenMode mode)
         if (mode & WriteOnly)
             d->engine->setWriteNotificationEnabled(true);
 
+        d->engine->setErrorNotificationEnabled(true);
+
         d->isBuffered = !(mode & Unbuffered);
         return true;
     }
@@ -1122,6 +1124,7 @@ void SerialPort::close()
     QIODevice::close();
     d->engine->setReadNotificationEnabled(false);
     d->engine->setWriteNotificationEnabled(false);
+    d->engine->setErrorNotificationEnabled(false);
     d->clearBuffers();
     d->close();
 }

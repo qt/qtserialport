@@ -930,6 +930,32 @@ void UnixSerialPortEngine::setWriteNotificationEnabled(bool enable)
 }
 
 /*!
+    Returns the current status of the errors notification subsystem.
+*/
+bool UnixSerialPortEngine::isErrorNotificationEnabled() const
+{
+    return (m_exceptionNotifier && m_exceptionNotifier->isEnabled());
+}
+
+/*!
+    Enables or disables errors notification subsystem, depending on
+    the \a enable parameter. If the subsystem is enabled, it will
+    asynchronously track the occurrence of an event fderror.
+*/
+void UnixSerialPortEngine::setErrorNotificationEnabled(bool enable)
+{
+    if (m_exceptionNotifier)
+        m_exceptionNotifier->setEnabled(enable);
+    else if (enable) {
+        m_exceptionNotifier =
+                new QSocketNotifier(m_descriptor, QSocketNotifier::Exception, this);
+
+        m_exceptionNotifier->installEventFilter(this);
+        m_exceptionNotifier->setEnabled(true);
+    }
+}
+
+/*!
     Not used in POSIX implementation, error handling is carried
     out in other ways.
 

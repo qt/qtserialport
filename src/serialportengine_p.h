@@ -66,6 +66,8 @@ public:
     virtual void setReadNotificationEnabled(bool enable) = 0;
     virtual bool isWriteNotificationEnabled() const = 0;
     virtual void setWriteNotificationEnabled(bool enable) = 0;
+    virtual bool isErrorNotificationEnabled() const = 0;
+    virtual void setErrorNotificationEnabled(bool enable) = 0;
 
     virtual bool processIOErrors() = 0;
 
