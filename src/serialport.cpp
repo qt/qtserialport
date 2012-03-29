@@ -86,7 +86,7 @@ QString SerialPortPrivate::port() const
 /*! \internal
 
     Opens the serial port with a given internal system location
-    vaeiable for the given open \a mode. This operation is
+    variable for the given open \a mode. This operation is
     platform-dependent, and it provides native engine.
 */
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
@@ -227,7 +227,7 @@ bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
 
 /*! \internal
 
-    Returns the current flow comtrol mode from the
+    Returns the current flow control mode from the
     corresponding internal variable.
 */
 SerialPort::FlowControl SerialPortPrivate::flowControl() const
@@ -526,7 +526,7 @@ bool SerialPortPrivate::readFromPort()
 /*! \internal
 
     This method is called from native engine when new data is
-    available for reading, ie is the handler read notification.
+    available for reading, i.e. is the handler read notification.
     Handles recursive calls.
 */
 bool SerialPortPrivate::canReadNotification()
@@ -605,7 +605,7 @@ bool SerialPortPrivate::canReadNotification()
 /*! \internal
 
     This method is called from native engine when the serial
-    port ready for writing, ie is the handler write notification.
+    port ready for writing, i.e. is the handler write notification.
     Handles recursive calls.
 */
 bool SerialPortPrivate::canWriteNotification()
@@ -636,7 +636,7 @@ bool SerialPortPrivate::canWriteNotification()
 
     This method is called from native engine when the serial
     port hardware detect an I/O error. For example, the error
-    parity, frame, etc., ie is the handler error notification.
+    parity, frame, etc., i.e. is the handler error notification.
     Handles recursive calls.
 */
 bool SerialPortPrivate::canErrorNotification()
@@ -700,7 +700,7 @@ bool SerialPortPrivate::canErrorNotification()
     Now you can open the serial port using the method open() and
     can be open in r/o, w/o or r/w mode.
 
-    Note: The serial port always opens with exclusive access (ie
+    Note: The serial port always opens with exclusive access (i.e.
     another process or thread can't get access to an already open
     serial port).
 
@@ -736,7 +736,7 @@ bool SerialPortPrivate::canErrorNotification()
     To obtain status of line ports, as well as control him are used
     methods dtr(), rts(), lines(), setDtr(), setRts().
 
-    To close the serial port call close() methhod. After all pending
+    To close the serial port call close() method. After all pending
     data has been written to the serial port, SerialPort actually
     closes the descriptor.
 
@@ -995,8 +995,8 @@ SerialPort::~SerialPort()
 }
 
 /*!
-    Sets the \a name of the port. The name may be a any format:
-    or short, or also as system location (with all the prefixes and
+    Sets the \a name of the port. The name may be in any format:
+    either short, or also as system location (with all the prefixes and
     postfixed). As a result, this name will automatically be written
     and converted into an internal variable as system location.
 
@@ -1021,7 +1021,7 @@ void SerialPort::setPort(const SerialPortInfo &info)
 
 /*!
     Returns the name set by setPort() or to the SerialPort constructors.
-    This name is short, ie it extract and convert out from the internal
+    This name is short, i.e. it extract and convert out from the internal
     variable system location of the device. Conversion algorithm is
     platform specific:
     \table

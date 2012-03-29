@@ -153,7 +153,7 @@ QString SerialPortInfo::vid() const
 }
 
 /*!
-    Returns the vendor identifier string of the serial
+    Returns the product identifier string of the serial
     port in hexadecimal format, if available; otherwise
     return empty string.
 */
