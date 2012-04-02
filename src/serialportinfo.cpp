@@ -86,8 +86,11 @@ SerialPortInfo::~SerialPortInfo()
 {
 }
 
-/*!
-    Bla bla \a other
+/*! \fn void SerialPortInfo::swap(SerialPortInfo &other)
+    \since 5.0
+
+    Swaps SerialPortInfo \a other with this SerialPortInfo. This operation is
+    very fast and never fails.
 */
 void SerialPortInfo::swap(SerialPortInfo &other)
 {
@@ -95,7 +98,7 @@ void SerialPortInfo::swap(SerialPortInfo &other)
 }
 
 /*!
-    Bla bla \a other
+    Sets the SerialPortInfo object to be equal to \a other.
 */
 SerialPortInfo& SerialPortInfo::operator=(const SerialPortInfo &other)
 {

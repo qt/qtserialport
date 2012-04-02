@@ -267,7 +267,7 @@ bool SerialPortPrivate::setDtr(bool set)
 
 /*! \internal
 
-    Set desired DTR signal state \a set. This operation is
+    Set desired RTS signal state \a set. This operation is
     platform-dependent, and it provides native engine.
 */
 bool SerialPortPrivate::setRts(bool set)
