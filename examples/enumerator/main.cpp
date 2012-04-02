@@ -19,13 +19,13 @@ int main(int argc, char *argv[])
                               "Location: %2\n"
                               "Description: %3\n"
                               "Manufacturer: %4\n"
-                              "Vid: %5\n"
-                              "Pid: %6\n"
+                              "Vendor ID: %5\n"
+                              "Product ID: %6\n"
                               "Busy: %7\n"));
 
         s = s.arg(info.portName()).arg(info.systemLocation())
                 .arg(info.description()).arg(info.manufacturer())
-                .arg(info.vid()).arg(info.pid())
+                .arg(info.vendorIdentifier()).arg(info.productIdentifier())
                 .arg(info.isBusy() ? QObject::tr("Yes") : QObject::tr("No"));
 
         QLabel *label = new QLabel(s);
