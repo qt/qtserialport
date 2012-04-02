@@ -1,0 +1,16 @@
+/*
+    License...
+*/
+
+/*!
+    \module QtAddonSerialPort
+    \title Examples
+    \page examples.html
+    \previouspage Building and usage
+    \contentspage {Examples} {Contents}
+
+    \list
+    \o \l examples/enumerator
+    \o \l examples/terminal
+    \endlist
+*/

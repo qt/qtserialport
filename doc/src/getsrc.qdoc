@@ -3,18 +3,18 @@
 */
 
 /*!
+    \module QtAddonSerialPort
+    \title Get source
+    \page getsrc.html
+    \previouspage Introduction
+    \contentspage {Get source} {Contents}
+    \nextpage Building and usage
 
-\page getsrc.html
-\previouspage Introduction
-\contentspage {Get source} {Contents}
-\nextpage Building
+    \section1 For users
 
-\title Get source
+    Bla-Bla-Bla
 
-Bla-Bla-Bla
+    \section1 For developers
 
-\section1 Bla-Bla
-
-Bla-Bla-Bla
-
+    Bla-Bla-Bla
 */

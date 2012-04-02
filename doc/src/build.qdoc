@@ -3,18 +3,18 @@
 */
 
 /*!
+    \module QtAddonSerialPort
+    \title Building and usage
+    \page build.html
+    \previouspage Get source
+    \contentspage {Building and usage} {Contents}
+    \nextpage Examples
 
-\page build.html
-\previouspage Get source
-\contentspage {Building} {Contents}
-\nextpage Usage
+    \section1 Bla-Bla1
 
-\title Building
+    Bla-Bla-Bla
 
-Bla-Bla-Bla
+    \section1 Bla-Bla2
 
-\section1 Bla-Bla
-
-Bla-Bla-Bla
-
+    Bla-Bla-Bla
 */

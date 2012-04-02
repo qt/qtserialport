@@ -1,7 +1,7 @@
 project     = SerialPort
 description = SerialPort Documentation
 
-exampledirs = ../examples
+exampledirs = ../examples ..
 headerdirs  = ./src ../src
 imagedirs   = images
 sourcedirs  = ./src ../src

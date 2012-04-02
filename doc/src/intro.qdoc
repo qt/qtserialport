@@ -3,18 +3,21 @@
 */
 
 /*!
+    \module QtAddonSerialPort
+    \title Introduction
+    \page intro.html
+    \contentspage {Introduction} {Contents}
+    \nextpage Get source
 
-\page intro.html
-\contentspage {Introduction} {Contents}
-\nextpage Get source
+    \section1 History
 
+    QtSerialPort originated from the third-party library QSerialDevice (branch 2.0).
 
-\title Introduction
+    \section1 Overviews
 
-Bla-Bla-Bla
+    Bla-bla
 
-\section1 Bla-Bla
+    \section1 Supported platforms
 
-Bla-Bla-Bla
-
+    Bla-bla
 */

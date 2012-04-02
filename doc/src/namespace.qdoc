@@ -2,8 +2,8 @@
     License...
 */
 
-\*!
-\namespace SerialPort
-\brief The SerialPort namespace contains miscellaneous identifiers
- used throughout the SerialPort library.
+/*!
+    \namespace SerialPort
+    \brief The SerialPort namespace contains miscellaneous identifiers
+    used throughout the SerialPort library.
 */
