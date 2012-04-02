@@ -494,7 +494,7 @@ void SerialPortPrivate::clearBuffers()
 /*! \internal
 
     Reads data from the serial port into the read buffer. Returns
-    true on success; otherwise false. This operation takes place
+    true on success; otherwise returns false. This operation takes place
     automatically when the driver (UART) in the input buffer have
     of at least one byte, i.e. by event.
 */
@@ -1063,7 +1063,7 @@ QString SerialPort::portName() const
 
 /*! \reimp
     Opens the serial port using OpenMode \a mode, returning true if
-    successful; otherwise false with saved error code which can be
+    successful; otherwise returns false with saved error code which can be
     obtained by calling error().
 
     \warning The \a mode must be QIODevice::ReadOnly, QIODevice::WriteOnly,
@@ -1158,7 +1158,7 @@ bool SerialPort::restoreSettingsOnClose() const
 
 /*!
     Sets the desired data rate \a rate for a given direction \a dir.
-    If successful, returns true; otherwise false with saved error
+    If successful, returns true; otherwise returns false with saved error
     code which can be obtained by calling error(). To set the speed
     can use enumeration SerialPort::Rate or any positive qint32 value.
 
@@ -1189,7 +1189,7 @@ qint32 SerialPort::rate(Directions dir) const
 
 /*!
     Sets the desired number of data bits \a dataBits in byte.
-    If successful, returns true; otherwise false with saved error
+    If successful, returns true; otherwise returns false with saved error
     code which can be obtained by calling error().
 
     \sa dataBits()
@@ -1213,7 +1213,7 @@ SerialPort::DataBits SerialPort::dataBits() const
 
 /*!
     Sets the desired parity \a parity checking mode.
-    If successful, returns true; otherwise false with saved error
+    If successful, returns true; otherwise returns false with saved error
     code which can be obtained by calling error().
 
     \sa parity()
@@ -1237,7 +1237,7 @@ SerialPort::Parity SerialPort::parity() const
 
 /*!
     Sets the desired number of stop bits \a stopBits in frame.
-    If successful, returns true; otherwise false with saved error
+    If successful, returns true; otherwise returns false with saved error
     code which can be obtained by calling error().
 
     \sa stopBits()
@@ -1261,7 +1261,7 @@ SerialPort::StopBits SerialPort::stopBits() const
 
 /*!
     Sets the desired number flow control mode \a flow.
-    If successful, returns true; otherwise false with saved error
+    If successful, returns true; otherwise returns false with saved error
     code which can be obtained by calling error().
 
     \sa flowControl()
@@ -1286,7 +1286,7 @@ SerialPort::FlowControl SerialPort::flowControl() const
 /*!
     Returns the current state of the line signal DTR.
     If the signal state high, the return true;
-    otherwise false;
+    otherwise returns false;
 
     \sa lines()
 */
@@ -1299,7 +1299,7 @@ bool SerialPort::dtr() const
 /*!
     Returns the current state of the line signal RTS.
     If the signal state high, the return true;
-    otherwise false;
+    otherwise returns false;
 
     \sa lines()
 */
@@ -1326,7 +1326,7 @@ SerialPort::Lines SerialPort::lines() const
 /*!
     This function writes as much as possible from the internal write
     buffer to the underlying serial port, without blocking. If any data
-    was written, this function returns true; otherwise false is returned.
+    was written, this function returns true; otherwise returns false is returned.
 
     Call this function if you need SerialPort to start sending buffered
     data immediately. The number of bytes successfully written depends on
@@ -1346,7 +1346,7 @@ bool SerialPort::flush()
 /*! \reimp
     Resets and clears all buffers of the serial port, including an
     internal class buffer and the UART (driver) buffer. If successful,
-    returns true; otherwise false.
+    returns true; otherwise returns false.
 */
 bool SerialPort::reset()
 {
@@ -1378,7 +1378,7 @@ bool SerialPort::atEnd() const
 /*!
     Sets the error policy \a policy process received character in
     the case of parity error detection. If successful, returns
-    true; otherwise false. By default is set policy IgnorePolicy.
+    true; otherwise returns false. By default is set policy IgnorePolicy.
 
     \sa dataErrorPolicy()
 */
@@ -1475,7 +1475,7 @@ void SerialPort::setReadBufferSize(qint64 size)
 }
 
 /*! \reimp
-    Always returned true. Serial port is sequential device.
+    Always returns true. Serial port is a sequential device.
 */
 bool SerialPort::isSequential() const
 {
@@ -1628,7 +1628,7 @@ bool SerialPort::waitForBytesWritten(int msecs)
 /*!
     Sets the desired state of the line signal DTR,
     depending on the flag \a set. If successful, returns true;
-    otherwise false.
+    otherwise returns false.
 
     If the flag is true then DTR signal is established in the high;
     otherwise low.
@@ -1644,7 +1644,7 @@ bool SerialPort::setDtr(bool set)
 /*!
     Sets the desired state of the line signal RTS,
     depending on the flag \a set. If successful, returns true;
-    otherwise false.
+    otherwise returns false.
 
     If the flag is true then RTS signal is established in the high;
     otherwise low.
@@ -1660,7 +1660,7 @@ bool SerialPort::setRts(bool set)
 /*!
     Sends a continuous stream of zero bits during a specified period
     of time \a duration in msec if the terminal is using asynchronous
-    serial data. If successful, returns true; otherwise false.
+    serial data. If successful, returns true; otherwise returns false.
 
     If duration is zero then zero bits are transmitted by at least
     0.25 seconds, but no more than 0.5 seconds.
@@ -1678,9 +1678,9 @@ bool SerialPort::sendBreak(int duration)
 
 /*!
     Control the signal break, depending on the flag \a set.
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 
-    If set is true then enable break transmission; otherwise disable.
+    If \a set is true then enable break transmission; otherwise disable.
 
     \sa clearBreak(), sendBreak()
 */
@@ -1771,7 +1771,7 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
     \fn bool SerialPort::clearBreak(bool clear)
 
     Control the signal break, depending on the flag \a clear.
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 
     If clear is false then enable break transmission; otherwise disable.
 

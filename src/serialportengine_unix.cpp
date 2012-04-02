@@ -119,7 +119,7 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
     lock file. Creation and analysis of lock file, by using a special
     helper class TTYLocker.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
@@ -302,7 +302,7 @@ static bool trigger_out_line(int fd, int bit, bool set)
 /*!
     Set DTR signal to state \a set.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::setDtr(bool set)
 {
@@ -317,7 +317,7 @@ bool UnixSerialPortEngine::setDtr(bool set)
 /*!
     Set RTS signal to state \a set.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::setRts(bool set)
 {
@@ -333,7 +333,7 @@ bool UnixSerialPortEngine::setRts(bool set)
     The shall block until all data output written to the serial
     port is transmitted.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::flush()
 {
@@ -349,7 +349,7 @@ bool UnixSerialPortEngine::flush()
     Flushes both data received but not read and data written
     but not transmitted.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::reset()
 {
@@ -364,7 +364,7 @@ bool UnixSerialPortEngine::reset()
 /*!
     Send a break for a specific \a duration.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::sendBreak(int duration)
 {
@@ -380,7 +380,7 @@ bool UnixSerialPortEngine::sendBreak(int duration)
     Turn break on or off, that is, start or stop sending zero
     bits, depending on the parameter \a set.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::setBreak(bool set)
 {
@@ -626,7 +626,7 @@ QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
     Also the method make attempts to analyze the type of the desired
     standard or custom speed and trying to set it.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
@@ -711,7 +711,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     Set desired number of data bits \a dataBits in byte. POSIX
     native supported all present number of data bits 5, 6, 7, 8.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
@@ -744,7 +744,7 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     has hardware support for these modes, therefore, no need to
     emulate.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -788,7 +788,7 @@ bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
     Set desired number of stop bits \a stopBits in frame. POSIX
     native supported only 1, 2 number of stop bits.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -812,7 +812,7 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
     present flow control modes no control, hardware (RTS/CTS),
     software (XON/XOFF).
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -1245,7 +1245,7 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
     Updates the termios structure wehn changing of any the
     parameters a serial port.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool UnixSerialPortEngine::updateTermios()
 {

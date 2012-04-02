@@ -150,7 +150,7 @@ WinSerialPortEngine::~WinSerialPortEngine()
     For Windows NT-based platforms, the serial port is opened in the
     overlapped mode, with flag FILE_FLAG_OVERLAPPED.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
@@ -312,7 +312,7 @@ SerialPort::Lines WinSerialPortEngine::lines() const
 /*!
     Set DTR signal to state \a set.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::setDtr(bool set)
 {
@@ -327,7 +327,7 @@ bool WinSerialPortEngine::setDtr(bool set)
 /*!
     Set RTS signal to state \a set.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::setRts(bool set)
 {
@@ -343,7 +343,7 @@ bool WinSerialPortEngine::setRts(bool set)
     Flushes the buffers of a specified serial port and
     causes all buffered data to be written to a serial port.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::flush()
 {
@@ -360,7 +360,7 @@ bool WinSerialPortEngine::flush()
     a specified communications resource. It can also terminate
     pending read or write operations on the resource.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::reset()
 {
@@ -377,7 +377,7 @@ bool WinSerialPortEngine::reset()
     Sends a continuous stream of zero bits during a specified
     period of time \a duration in msec.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::sendBreak(int duration)
 {
@@ -395,7 +395,7 @@ bool WinSerialPortEngine::sendBreak(int duration)
     transmission line in a nonbreak or break state,
     depending on the parameter \a set.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::setBreak(bool set)
 {
@@ -424,7 +424,7 @@ static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
     device's error flag to enable additional input and output
     (I/O) operations.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 qint64 WinSerialPortEngine::bytesAvailable() const
 {
@@ -438,7 +438,7 @@ qint64 WinSerialPortEngine::bytesAvailable() const
     Also it clears the device's error flag to enable additional
     input and output (I/O) operations.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 qint64 WinSerialPortEngine::bytesToWrite() const
 {
@@ -723,7 +723,7 @@ QString WinSerialPortEngine::fromSystemLocation(const QString &location) const
     However, windows does not support separate directions, so the
     method will return an error.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
@@ -740,7 +740,7 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     Set desired number of data bits \a dataBits in byte. Windows
     native supported all present number of data bits 5, 6, 7, 8.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
@@ -753,7 +753,7 @@ bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     Set desired \a parity control mode. Windows native supported
     all present parity types no parity, space, mark, even, odd.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -788,7 +788,7 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
     Windows native supported all present number of stop bits
     1, 1.5, 2.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -815,7 +815,7 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
     present flow control modes no control, hardware (RTS/CTS),
     software (XON/XOFF).
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -1216,7 +1216,7 @@ bool WinSerialPortEngine::event(QEvent *e)
     writing \a tx, and waiting for data from the serial port.
     This method is only used in the method open().
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::createEvents(bool rx, bool tx)
 {
@@ -1318,7 +1318,7 @@ void WinSerialPortEngine::setNotificationEnabled(bool enable, DWORD mask)
     Updates the DCB structure wehn changing of any the parameters
     a serial port.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::updateDcb()
 {
@@ -1342,7 +1342,7 @@ bool WinSerialPortEngine::updateDcb()
     Updates the COMMTIMEUTS structure wehn changing of any timeout the
     parameters a serial port.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool WinSerialPortEngine::updateCommTimeouts()
 {

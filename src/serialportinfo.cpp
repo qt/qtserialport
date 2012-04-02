@@ -174,14 +174,14 @@ QString SerialPortInfo::pid() const
     \fn bool SerialPortInfo::isBusy() const
 
     Returns true if serial port is busy;
-    otherwise false.
+    otherwise returns false.
 */
 
 /*!
     \fn bool SerialPortInfo::isValid() const
 
     Returns true if serial port is present on system;
-    otherwise false.
+    otherwise returns false.
 */
 
 /*!

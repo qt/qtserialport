@@ -128,7 +128,7 @@ SymbianSerialPortEngine::~SymbianSerialPortEngine()
     mode (when the read operation returns immediately) and tries to
     determine its current configuration and install them.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
@@ -531,7 +531,7 @@ QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) con
     method will return an error. Also it supports only the standard
     set of speed.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
@@ -556,7 +556,7 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     Set desired number of data bits \a dataBits in byte. Symbian
     native supported all present number of data bits 5, 6, 7, 8.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
@@ -586,7 +586,7 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
     Set desired \a parity control mode. Symbian native supported
     all present parity types no parity, space, mark, even, odd.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -619,7 +619,7 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
     Set desired number of stop bits \a stopBits in frame. Symbian
     native supported only 1, 2 number of stop bits.
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -644,7 +644,7 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
     present flow control modes no control, hardware (RTS/CTS),
     software (XON/XOFF).
 
-    If successful, returns true; otherwise false, with the setup a
+    If successful, returns true; otherwise returns false, with the setup a
     error code.
 */
 bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -906,7 +906,7 @@ void SymbianSerialPortEngine::detectDefaultSettings()
     Updates the TCommConfig structure wehn changing of any the
     parameters a serial port.
 
-    If successful, returns true; otherwise false.
+    If successful, returns true; otherwise returns false.
 */
 bool SymbianSerialPortEngine::updateCommConfig()
 {
