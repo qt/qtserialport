@@ -132,10 +132,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                             info.d_ptr->manufacturer =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
                                                                                          "ID_VENDOR_FROM_DATABASE"));
-                            info.d_ptr->vid =
+                            info.d_ptr->vendorIdentifier =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
                                                                                          "ID_VENDOR_ID"));
-                            info.d_ptr->pid =
+                            info.d_ptr->productIdentifier =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
                                                                                          "ID_MODEL_ID"));
 
@@ -192,7 +192,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                     info.d_ptr->device = s;
                     info.d_ptr->portName = s.remove(QRegExp(QLatin1String("/[\\w|\\d|\\s]+/")));
 
-                    // Get description, manufacturer, vid, pid is not supported.
+                    // Get description, manufacturer, vendor identifier, product
+                    // identifier are not supported.
 
                     ports.append(info);
 

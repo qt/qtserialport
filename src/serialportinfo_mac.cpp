@@ -60,8 +60,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         ::CFTypeRef portName = 0;
         ::CFTypeRef description = 0;
         ::CFTypeRef manufacturer = 0;
-        ::CFTypeRef vid = 0;
-        ::CFTypeRef pid = 0;
+        ::CFTypeRef vendorIdentifier = 0;
+        ::CFTypeRef productIdentifier = 0;
 
         io_registry_entry_t entry = service;
 
@@ -120,26 +120,26 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
             }
 
-            if (!vid) {
-                vid =
+            if (!vendorIdentifier) {
+                vendorIdentifier =
                         ::IORegistryEntrySearchCFProperty(entry,
                                                           kIOServicePlane,
                                                           CFSTR(kUSBVendorID),
                                                           kCFAllocatorDefault,
                                                           0);
-                if (vid)
+                if (vendorIdentifier)
                     ++matchingPropertiesCounter;
 
             }
 
-            if (!pid) {
-                pid =
+            if (!productIdentifier) {
+                productIdentifier =
                         ::IORegistryEntrySearchCFProperty(entry,
                                                           kIOServicePlane,
                                                           CFSTR(kUSBProductID),
                                                           kCFAllocatorDefault,
                                                           0);
-                if (pid)
+                if (productIdentifier)
                     ++matchingPropertiesCounter;
 
             }
@@ -207,22 +207,22 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
             int value = 0;
 
-            if (vid) {
-                ::CFNumberGetValue(CFNumberRef(vid),
+            if (vendorIdentifier) {
+                ::CFNumberGetValue(CFNumberRef(vendorIdentifier),
                                    kCFNumberIntType,
                                    &value);
 
-                info.d_ptr->vid = QString::number(value, 16);
-                ::CFRelease(vid);
+                info.d_ptr->vendorIdentifier = QString::number(value, 16);
+                ::CFRelease(vendorIdentifier);
             }
 
-            if (pid) {
-                ::CFNumberGetValue(CFNumberRef(pid),
+            if (productIdentifier) {
+                ::CFNumberGetValue(CFNumberRef(productIdentifier),
                                    kCFNumberIntType,
                                    &value);
 
-                info.d_ptr->pid = QString::number(value, 16);
-                ::CFRelease(pid);
+                info.d_ptr->productIdentifier = QString::number(value, 16);
+                ::CFRelease(productIdentifier);
             }
 
             ports.append(info);

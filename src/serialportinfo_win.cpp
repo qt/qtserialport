@@ -271,8 +271,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 info.d_ptr->manufacturer = v.toString();
 
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID);
-                info.d_ptr->vid = parceHardwareId(CMD_EXTRACT_VID, v.toStringList());
-                info.d_ptr->pid = parceHardwareId(CMD_EXTRACT_PID, v.toStringList());
+                info.d_ptr->vendorIdentifier = parceHardwareId(CMD_EXTRACT_VID, v.toStringList());
+                info.d_ptr->productIdentifier = parceHardwareId(CMD_EXTRACT_PID, v.toStringList());
 
                 ports.append(info);
             }
@@ -294,7 +294,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
                                                       QString::fromWCharArray(((const wchar_t *)di.szDeviceKey)));
 
-            // Get manufacturer, vid, pid is not possible.
+            // Get manufacturer, vendor identifier, product identifier are not
+            // possible.
 
             ports.append(info);
 

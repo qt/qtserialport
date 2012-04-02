@@ -21,8 +21,8 @@ public:
     QString device;
     QString description;
     QString manufacturer;
-    QString vid;
-    QString pid;
+    QString vendorIdentifier;
+    QString productIdentifier;
 };
 
 class SerialInfoPrivateDeleter

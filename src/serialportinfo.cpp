@@ -149,10 +149,10 @@ QString SerialPortInfo::manufacturer() const
     port in hexadecimal format, if available; otherwise
     return empty string.
 */
-QString SerialPortInfo::vid() const
+QString SerialPortInfo::vendorIdentifier() const
 {
     Q_D(const SerialPortInfo);
-    return !d ? QString() : d->vid;
+    return !d ? QString() : d->vendorIdentifier;
 }
 
 /*!
@@ -160,10 +160,10 @@ QString SerialPortInfo::vid() const
     port in hexadecimal format, if available; otherwise
     return empty string.
 */
-QString SerialPortInfo::pid() const
+QString SerialPortInfo::productIdentifier() const
 {
     Q_D(const SerialPortInfo);
-    return !d ? QString() : d->pid;
+    return !d ? QString() : d->productIdentifier;
 }
 
 /*!
