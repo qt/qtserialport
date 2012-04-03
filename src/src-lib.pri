@@ -2,7 +2,9 @@ INCLUDEPATH += $$PWD
 
 linux*:DEFINES += HAVE_LIBUDEV
 
-HEADERS += qtaddonserialportversion.h
+greaterThan(QT_MAJOR_VERSION, 4) {
+    HEADERS += qtaddonserialportversion.h
+}
 
 PUBLIC_HEADERS += \
     $$PWD/serialport-global.h \
