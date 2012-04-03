@@ -14,7 +14,11 @@
 #  include <QtCore/qthread.h>
 #  include <QtCore/qtimer.h>
 #else
+# if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #  include <QtCore/qwineventnotifier.h>
+# else
+#  include "qt4support/qwineventnotifier_p.h"
+# endif
 #endif
 
 QT_BEGIN_NAMESPACE_SERIALPORT
