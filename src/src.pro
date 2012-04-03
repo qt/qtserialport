@@ -15,7 +15,6 @@ CONFIG += module create_prl
 MODULE_PRI = ../modules/qt_serialport.pri
 
 include($$PWD/src-lib.pri)
-include(qt4support/qt4support.pri)
 
 mac:QMAKE_FRAMEWORK_BUNDLE_NAME = $$QT.serialport.name
 
