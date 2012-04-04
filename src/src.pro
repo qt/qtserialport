@@ -1,9 +1,12 @@
+include($$PWD/src-lib.pri)
+
 greaterThan(QT_MAJOR_VERSION, 4) {
     load(qt_module)
     load(qt_module_config)
     QT += core-private
 } else {
     include($$PWD/../modules/qt_serialport.pri)
+    include($$PWD/qt4support/include-helper.pri)
 }
 
 TEMPLATE = lib
@@ -16,8 +19,6 @@ DEFINES += QT_ADDON_SERIALPORT_LIB
 
 CONFIG += module create_prl
 MODULE_PRI = ../modules/qt_serialport.pri
-
-include($$PWD/src-lib.pri)
 
 mac:QMAKE_FRAMEWORK_BUNDLE_NAME = $$QT.serialport.name
 
