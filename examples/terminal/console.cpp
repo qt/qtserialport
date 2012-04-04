@@ -1,6 +1,6 @@
 #include "console.h"
 
-#include <QtWidgets/QScrollBar>
+#include <QScrollBar>
 
 #include <QtCore/QDebug>
 

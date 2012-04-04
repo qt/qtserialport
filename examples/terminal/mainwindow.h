@@ -1,7 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtWidgets/QMainWindow>
+#include <QtCore/QtGlobal>
+
+#include <QMainWindow>
 
 #include <QtAddOnSerialPort/serialport-global.h>
 

@@ -3,7 +3,7 @@
 #include "console.h"
 #include "settingsdialog.h"
 
-#include <QtWidgets/QMessageBox>
+#include <QMessageBox>
 #include <QtAddOnSerialPort/serialport.h>
 
 MainWindow::MainWindow(QWidget *parent) :
