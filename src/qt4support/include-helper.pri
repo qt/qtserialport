@@ -7,3 +7,7 @@ for(header_file, PUBLIC_HEADERS) {
 header_files.files  = $$PUBLIC_HEADERS
 header_files.path   = $$[QT_INSTALL_PREFIX]/include/$$QT.serialport.name
 INSTALLS            += header_files
+
+serialport_prf.files    = serialport.prf
+serialport_prf.path     = $$[QT_INSTALL_DATA]/mkspecs/features
+INSTALLS                += serialport_prf
