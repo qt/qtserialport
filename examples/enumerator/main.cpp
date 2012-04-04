@@ -1,7 +1,7 @@
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QWidget>
-#include <QtWidgets/QVBoxLayout>
-#include <QtWidgets/QLabel>
+#include <QApplication>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QLabel>
 #include <QtAddOnSerialPort/serialportinfo.h>
 
 QT_USE_NAMESPACE_SERIALPORT

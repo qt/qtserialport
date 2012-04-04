@@ -1,8 +1,11 @@
-QT       += widgets serialport
+greaterThan(QT_MAJOR_VERSION, 4) {
+    QT       += widgets serialport
+} else {
+    include($$SERIALPORT_PROJECT_ROOT/src/qt4support/serialport.prf)
+}
 
 TARGET = enumerator
 TEMPLATE = app
-
 
 SOURCES += \
     main.cpp
