@@ -1,7 +1,11 @@
-system("mkdir -p $$PWD/../../include/$$QT.serialport.name")
+SERIALPORT_PROJECT_INCLUDEDIR = $$SERIALPORT_PROJECT_ROOT/include/$$QT.serialport.name
+SERIALPORT_PROJECT_INCLUDEDIR ~=s,/,$$QMAKE_DIR_SEP,
+
+system("$$QMAKE_MKDIR $$SERIALPORT_PROJECT_INCLUDEDIR")
 
 for(header_file, PUBLIC_HEADERS) {
-    system("cp $${header_file} $$PWD/../../include/$$QT.serialport.name")
+   header_file ~=s,/,$$QMAKE_DIR_SEP,
+   system("$$QMAKE_COPY $${header_file} $$SERIALPORT_PROJECT_INCLUDEDIR")
 }
 
 header_files.files  = $$PUBLIC_HEADERS
