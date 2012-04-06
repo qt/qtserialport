@@ -9,7 +9,9 @@
 #include "serialportengine_p.h"
 
 #include <termios.h>
-//#  undef CMSPAR
+#if defined (Q_OS_LINUX)
+#  include <linux/serial.h>
+#endif
 
 class QSocketNotifier;
 
@@ -85,7 +87,12 @@ private:
 private:
     struct termios m_currentTermios;
     struct termios m_restoredTermios;
+#if defined (Q_OS_LINUX)
+    struct serial_struct m_currentSerialInfo;
+    struct serial_struct m_restoredSerialInfo;
+#endif
     int m_descriptor;
+    bool m_isCustomRateSupported;
 
     QSocketNotifier *m_readNotifier;
     QSocketNotifier *m_writeNotifier;

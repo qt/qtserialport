@@ -44,9 +44,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#if defined (Q_OS_LINUX)
-#  include <linux/serial.h>
-#elif defined (Q_OS_MAC)
+#if defined (Q_OS_MAC)
 #  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
 #    include <IOKit/serial/ioss.h>
 #  endif
@@ -69,6 +67,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 */
 UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *d)
     : m_descriptor(-1)
+    , m_isCustomRateSupported(false)
     , m_readNotifier(0)
     , m_writeNotifier(0)
     , m_exceptionNotifier(0)
@@ -203,8 +202,13 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
 void UnixSerialPortEngine::close(const QString &location)
 {
     // Restore saved port settings.
-    if (dptr->options.restoreSettingsOnClose)
+    if (dptr->options.restoreSettingsOnClose) {
         ::tcsetattr(m_descriptor, TCSANOW, &m_restoredTermios);
+#if defined (Q_OS_LINUX)
+        if (m_isCustomRateSupported)
+            ::ioctl(m_descriptor, TIOCSSERIAL, &m_restoredSerialInfo);
+#endif
+    }
 
     // Try clean exclusive mode.
 #if defined (TIOCNXCL)
@@ -219,6 +223,7 @@ void UnixSerialPortEngine::close(const QString &location)
         TTYLocker::unlock(location);
 
     m_descriptor = -1;
+    m_isCustomRateSupported = false;
 }
 
 /*!
@@ -636,39 +641,36 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 
     // prepare section
 
-#if defined (Q_OS_LINUX)
-    struct serial_struct ser_info;
-    if (ret)
-        ret = (::ioctl(m_descriptor, TIOCGSERIAL, &ser_info) != -1);
-#endif
-
     if (ret) {
         const qint32 unixRate = settingFromRate(rate);
         if (unixRate > 0) {
             // try prepate to set standard baud rate
-
 #if defined (Q_OS_LINUX)
             // prepare to forcefully reset the custom mode
-            ser_info.flags |= ASYNC_SPD_MASK;
-            ser_info.flags &= ~(ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-            ser_info.custom_divisor = 0;
+            if (m_isCustomRateSupported) {
+                //m_currentSerialInfo.flags |= ASYNC_SPD_MASK;
+                m_currentSerialInfo.flags &= ~(ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+                m_currentSerialInfo.custom_divisor = 0;
+            }
 #endif
             // prepare to set standard rate
             ret = !(((dir & SerialPort::Input) && (::cfsetispeed(&m_currentTermios, unixRate) < 0))
                     || ((dir & SerialPort::Output) && (::cfsetospeed(&m_currentTermios, unixRate) < 0)));
         } else {
             // try prepate to set custom baud rate
-
 #if defined (Q_OS_LINUX)
             // prepare to forcefully set the custom mode
-            ser_info.flags &= ~ASYNC_SPD_MASK;
-            ser_info.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-            ser_info.custom_divisor = ser_info.baud_base / rate;
-            if (ser_info.custom_divisor == 0)
-                ser_info.custom_divisor = 1;
-
-            // for custom mode needed prepare to set B38400 rate
-            ret = (::cfsetspeed(&m_currentTermios, B38400) != -1);
+            if (m_isCustomRateSupported) {
+                m_currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
+                m_currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+                m_currentSerialInfo.custom_divisor = m_currentSerialInfo.baud_base / rate;
+                if (m_currentSerialInfo.custom_divisor == 0)
+                    m_currentSerialInfo.custom_divisor = 1;
+                // for custom mode needed prepare to set B38400 rate
+                ret = (::cfsetspeed(&m_currentTermios, B38400) != -1);
+            } else {
+                ret = false;
+            }
 #elif defined (Q_OS_MAC)
 
 #  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
@@ -692,9 +694,9 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     // finally section
 
 #if defined (Q_OS_LINUX)
-    if (ret) {
+    if (ret && m_isCustomRateSupported) {
         // finally, set or reset the custom mode
-        ret = (::ioctl(m_descriptor, TIOCSSERIAL, &ser_info) != -1);
+        ret = (::ioctl(m_descriptor, TIOCSSERIAL, &m_currentSerialInfo) != -1);
     }
 #endif
 
@@ -1121,36 +1123,42 @@ QList<qint32> UnixSerialPortEngine::standardRates()
 void UnixSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
-    bool isCustomRate = false;
-#if defined (Q_OS_LINUX)
-    // first assume that the baud rate of custom
-    isCustomRate = ((::cfgetispeed(&m_currentTermios) == B38400)
-                    && (::cfgetospeed(&m_currentTermios) == B38400));
+    const speed_t inputUnixRate = ::cfgetispeed(&m_currentTermios);
+    const speed_t outputUnixRate = ::cfgetispeed(&m_currentTermios);
+    bool isCustomRateCurrentSet = false;
 
-    if (isCustomRate) {
-        struct serial_struct ser_info;
-        if (::ioctl(m_descriptor, TIOCGSERIAL, &ser_info) != -1) {
-            if ((ser_info.flags & ASYNC_SPD_CUST)
-                    && (ser_info.custom_divisor > 0)) {
+#if defined (Q_OS_LINUX)
+    // try detect the ability to support custom rate
+    m_isCustomRateSupported = (::ioctl(m_descriptor, TIOCGSERIAL, &m_currentSerialInfo) != -1)
+            && (::ioctl(m_descriptor, TIOCSSERIAL, &m_currentSerialInfo) != -1);
+
+    if (m_isCustomRateSupported) {
+
+        ::memcpy(&m_restoredSerialInfo, &m_currentSerialInfo, sizeof(struct serial_struct));
+
+        // assume that the baud rate is a custom
+        isCustomRateCurrentSet = (inputUnixRate == B38400)
+                && (outputUnixRate == B38400);
+
+        if (isCustomRateCurrentSet) {
+            if ((m_currentSerialInfo.flags & ASYNC_SPD_CUST)
+                    && (m_currentSerialInfo.custom_divisor > 0)) {
 
                 // yes, speed is really custom
-                dptr->options.inputRate = ser_info.baud_base / ser_info.custom_divisor;
+                dptr->options.inputRate = m_currentSerialInfo.baud_base / m_currentSerialInfo.custom_divisor;
+                dptr->options.outputRate = dptr->options.inputRate;
             } else {
-                // no, we were wrong and the speed of a standard 38400 baud
-                dptr->options.inputRate = 38400;
+                // no, we were wrong and the speed is a standard 38400 baud
+                isCustomRateCurrentSet = false;
             }
-        } else {
-            // error get ioctl()
-            dptr->options.inputRate = SerialPort::UnknownRate;
         }
-        dptr->options.outputRate = dptr->options.inputRate;
     }
 #else
     // other *nix
 #endif
-    if (!isCustomRate) {
-        dptr->options.inputRate = rateFromSetting(::cfgetispeed(&m_currentTermios));
-        dptr->options.outputRate = rateFromSetting(::cfgetospeed(&m_currentTermios));
+    if (!m_isCustomRateSupported || !isCustomRateCurrentSet) {
+        dptr->options.inputRate = rateFromSetting(inputUnixRate);
+        dptr->options.outputRate = rateFromSetting(outputUnixRate);
     }
 
     // Detect databits.
