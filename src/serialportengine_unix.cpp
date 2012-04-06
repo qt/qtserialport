@@ -42,6 +42,7 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #if defined (Q_OS_LINUX)
 #  include <linux/serial.h>
