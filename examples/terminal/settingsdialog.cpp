@@ -61,6 +61,7 @@ void SettingsDialog::fillPortsParameters()
     ui->dataBitsBox->addItem(QLatin1String("6"), static_cast<int>(SerialPort::Data6));
     ui->dataBitsBox->addItem(QLatin1String("7"), static_cast<int>(SerialPort::Data7));
     ui->dataBitsBox->addItem(QLatin1String("8"), static_cast<int>(SerialPort::Data8));
+    ui->dataBitsBox->setCurrentIndex(3);
 
     // fill parity
     ui->parityBox->addItem(QLatin1String("None"), static_cast<int>(SerialPort::NoParity));
