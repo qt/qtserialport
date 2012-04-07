@@ -37,6 +37,8 @@ void SettingsDialog::showPortInfo(int idx)
         ui->descriptionLabel->setText(tr("Description: %1").arg(list.at(1)));
         ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.at(2)));
         ui->locationLabel->setText(tr("Location: %1").arg(list.at(3)));
+        ui->vidLabel->setText(tr("Vendor ID: %1").arg(list.at(4)));
+        ui->pidLabel->setText(tr("Product ID: %1").arg(list.at(5)));
     }
 }
 
@@ -89,7 +91,8 @@ void SettingsDialog::fillPortsInfo()
     foreach (const SerialPortInfo &info, SerialPortInfo::availablePorts()) {
         QStringList list;
         list << info.portName() << info.description()
-             << info.manufacturer() << info.systemLocation();
+             << info.manufacturer() << info.systemLocation()
+             << info.vendorIdentifier() << info.productIdentifier();
 
         ui->portsBox->addItem(list.at(0), list);
     }

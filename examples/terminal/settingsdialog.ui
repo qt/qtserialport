@@ -47,14 +47,14 @@
       <item row="4" column="0">
        <widget class="QLabel" name="vidLabel">
         <property name="text">
-         <string>Vid:</string>
+         <string>Vendor ID:</string>
         </property>
        </widget>
       </item>
       <item row="5" column="0">
        <widget class="QLabel" name="pidLabel">
         <property name="text">
-         <string>Pid:</string>
+         <string>Product ID:</string>
         </property>
        </widget>
       </item>
