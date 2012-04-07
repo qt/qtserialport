@@ -65,10 +65,13 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionAbout">
    <property name="text">
-    <string>About</string>
+    <string>&amp;About</string>
    </property>
    <property name="toolTip">
     <string>About program</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+A</string>
    </property>
   </action>
   <action name="actionAboutQt">
@@ -82,10 +85,13 @@
      <normaloff>:/images/connect.png</normaloff>:/images/connect.png</iconset>
    </property>
    <property name="text">
-    <string>Connect</string>
+    <string>C&amp;onnect</string>
    </property>
    <property name="toolTip">
     <string>Connect to serial port</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionDisconnect">
@@ -94,10 +100,13 @@
      <normaloff>:/images/disconnect.png</normaloff>:/images/disconnect.png</iconset>
    </property>
    <property name="text">
-    <string>Disconnect</string>
+    <string>&amp;Disconnect</string>
    </property>
    <property name="toolTip">
     <string>Disconnect from serial port</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="actionConfigure">
@@ -106,10 +115,13 @@
      <normaloff>:/images/settings.png</normaloff>:/images/settings.png</iconset>
    </property>
    <property name="text">
-    <string>Configure</string>
+    <string>&amp;Configure</string>
    </property>
    <property name="toolTip">
     <string>Configure serial port</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+C</string>
    </property>
   </action>
   <action name="actionClear">
@@ -118,10 +130,13 @@
      <normaloff>:/images/clear.png</normaloff>:/images/clear.png</iconset>
    </property>
    <property name="text">
-    <string>Clear</string>
+    <string>C&amp;lear</string>
    </property>
    <property name="toolTip">
     <string>Clear data</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+L</string>
    </property>
   </action>
  </widget>
