@@ -8,6 +8,8 @@ namespace Ui {
 class SettingsDialog;
 }
 
+class QIntValidator;
+
 QT_USE_NAMESPACE_SERIALPORT
 
 class SettingsDialog : public QDialog
@@ -37,6 +39,7 @@ public:
 private slots:
     void showPortInfo(int idx);
     void apply();
+    void checkCustomRatePolicy(int idx);
 
 private:
     void fillPortsParameters();
@@ -46,6 +49,7 @@ private:
 private:
     Ui::SettingsDialog *ui;
     Settings currentSettings;
+    QIntValidator *intValidator;
 };
 
 #endif // SETTINGSDIALOG_H

@@ -2,6 +2,8 @@
 #include "ui_settingsdialog.h"
 
 #include <QtAddOnSerialPort/serialportinfo.h>
+#include <QIntValidator>
+#include <QLineEdit>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
@@ -9,10 +11,16 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    intValidator = new QIntValidator(0, 4000000, this);
+
+    ui->rateBox->setInsertPolicy(QComboBox::NoInsert);
+
     connect(ui->applyButton, SIGNAL(clicked()),
             this, SLOT(apply()));
     connect(ui->portsBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(showPortInfo(int)));
+    connect(ui->rateBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(checkCustomRatePolicy(int)));
 
     fillPortsParameters();
     fillPortsInfo();
@@ -48,6 +56,16 @@ void SettingsDialog::apply()
     hide();
 }
 
+void SettingsDialog::checkCustomRatePolicy(int idx)
+{
+    ui->rateBox->setEditable(idx == 4);
+    if (idx == 4) {
+        ui->rateBox->clearEditText();
+        QLineEdit *edit = ui->rateBox->lineEdit();
+        edit->setValidator(intValidator);
+    }
+}
+
 void SettingsDialog::fillPortsParameters()
 {
     // fill baud rate (is not the entire list of available values,
@@ -56,7 +74,7 @@ void SettingsDialog::fillPortsParameters()
     ui->rateBox->addItem(QLatin1String("19200"), 19200);
     ui->rateBox->addItem(QLatin1String("38400"), 38400);
     ui->rateBox->addItem(QLatin1String("115200"), 115200);
-    ui->rateBox->addItem(QLatin1String("115200"), 115200);
+    ui->rateBox->addItem(QLatin1String("Custom"));
 
     // fill data bits
     ui->dataBitsBox->addItem(QLatin1String("5"), static_cast<int>(SerialPort::Data5));
@@ -103,8 +121,14 @@ void SettingsDialog::updateSettings()
     currentSettings.name = ui->portsBox->currentText();
 
     // Rate
-    currentSettings.rate = static_cast<SerialPort::Rate>(
-                ui->rateBox->itemData(ui->rateBox->currentIndex()).toInt());
+    if (ui->rateBox->currentIndex() == 4) {
+        // custom rate
+        currentSettings.rate = ui->rateBox->currentText().toInt();
+    } else {
+        // standard rate
+        currentSettings.rate = static_cast<SerialPort::Rate>(
+                    ui->rateBox->itemData(ui->rateBox->currentIndex()).toInt());
+    }
     currentSettings.stringRate = QString::number(currentSettings.rate);
 
     // Data bits
