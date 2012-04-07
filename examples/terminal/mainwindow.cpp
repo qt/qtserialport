@@ -54,6 +54,7 @@ void MainWindow::open()
                                        .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
 
         } else {
+            serial->close();
             QMessageBox::critical(this, tr("Error"),
                                   tr("Can't configure the serial port: %1,\n"
                                      "error code: %2")
