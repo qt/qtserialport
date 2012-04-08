@@ -34,7 +34,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::open()
+void MainWindow::openSerialPort()
 {
     SettingsDialog::Settings p = settings->settings();
     serial->setPort(p.name);
@@ -72,7 +72,7 @@ void MainWindow::open()
     }
 }
 
-void MainWindow::close()
+void MainWindow::closeSerialPort()
 {
     serial->close();
     console->setEnabled(false);
@@ -103,8 +103,8 @@ void MainWindow::readData()
 
 void MainWindow::initActionsConnections()
 {
-    connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(open()));
-    connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(close()));
+    connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(openSerialPort()));
+    connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(closeSerialPort()));
     connect(ui->actionConfigure, SIGNAL(triggered()), settings, SLOT(show()));
     connect(ui->actionClear, SIGNAL(triggered()), console, SLOT(clear()));
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));

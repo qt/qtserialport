@@ -29,8 +29,8 @@ public:
     ~MainWindow();
 
 private slots:
-    void open();
-    void close();
+    void openSerialPort();
+    void closeSerialPort();
     void about();
     void writeData(const QByteArray &data);
     void readData();
