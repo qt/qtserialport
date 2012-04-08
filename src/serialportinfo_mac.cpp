@@ -242,7 +242,7 @@ static QList<qint32> emptyList()
     return list;
 }
 
-QList<qint32> SerialPortInfo::standardRates() const
+QList<qint32> SerialPortInfo::standardRates()
 {
     return UnixSerialPortEngine::standardRates();
 }

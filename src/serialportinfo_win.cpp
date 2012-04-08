@@ -308,7 +308,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 }
 
 
-QList<qint32> SerialPortInfo::standardRates() const
+QList<qint32> SerialPortInfo::standardRates()
 {
     return WinSerialPortEngine::standardRates();
 }

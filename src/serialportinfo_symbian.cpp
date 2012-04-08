@@ -173,7 +173,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
-QList<qint32> SerialPortInfo::standardRates() const
+QList<qint32> SerialPortInfo::standardRates()
 {
     return SymbianSerialPortEngine::standardRates();
 }
