@@ -188,7 +188,7 @@ QString SerialPortInfo::productIdentifier() const
 */
 
 /*!
-    \fn QList<qint32> SerialPortInfo::standardRates() const
+    \fn QList<qint32> SerialPortInfo::standardRates()
 
     Returns a list of available standard baud rates supported by
     the current serial port.
