@@ -4,8 +4,17 @@
 
 /*!
     \module QtAddonSerialPort
-    \title Simple enumerator
+    \title Enumerator Example
     \example examples/enumerator
 
-    Bla-bla
+    The Enumerator example shows how to use the class SerialPortInfo for
+    get information about serial devices that are present in the system.
+
+    \image enumerator-example.png Screenshot of the Enumerator example
+
+    In this GUI example, all the information about serial ports, provided by
+    the class SerialPortInfo, displayed in a widget.
+
+    For get information about the available ports using a static method
+    \l{SerialPortInfo::availablePorts()}{availablePorts()}.
 */

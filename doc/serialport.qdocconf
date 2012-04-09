@@ -3,7 +3,7 @@ description = SerialPort Documentation
 
 exampledirs = ../examples ..
 headerdirs  = ./src ../src
-imagedirs   = images
+imagedirs   = ./src/images
 sourcedirs  = ./src ../src
 
 # The index file contains links to the Qt 5 documentation.
