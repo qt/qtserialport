@@ -17,6 +17,10 @@
 #  define SERIALPORT_BUFFERSIZE 16384
 #endif
 
+#ifndef SERIALPORT_READ_CHUNKSIZE
+#  define SERIALPORT_READ_CHUNKSIZE 256
+#endif
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 //----------------------------------------------------------------
@@ -501,7 +505,7 @@ void SerialPortPrivate::clearBuffers()
 bool SerialPortPrivate::readFromPort()
 {
     qint64 bytesToRead = (options.policy == SerialPort::IgnorePolicy) ?
-                bytesAvailable() : 1;
+                (SERIALPORT_READ_CHUNKSIZE) : 1;
 
     if (bytesToRead <= 0)
         return false;
@@ -560,8 +564,6 @@ bool SerialPortPrivate::canReadNotification()
             return false;
         }
 
-        // If reading from the serial fails after getting a read
-        // notification, close the serial.
         newBytes = readBuffer.size();
 
         if (!readFromPort()) {
@@ -578,8 +580,9 @@ bool SerialPortPrivate::canReadNotification()
         }
     }
 
-    // Only emit readyRead() when not recursing, and only if there is data available.
-    bool hasData = (isBuffered) ? (newBytes > 0) : (bytesAvailable() > 0);
+    // Only emit readyRead() when not recursing,
+    // and only if there is data available.
+    const bool hasData = (isBuffered) ? (newBytes > 0) : true;
 
     if ((!emittedReadyRead) && hasData) {
         emittedReadyRead = true;
