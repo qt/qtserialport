@@ -6,16 +6,19 @@
 #include <QMessageBox>
 #include <QtAddOnSerialPort/serialport.h>
 
+//! [0]
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+//! [0]
     ui->setupUi(this);
     console = new Console;
     console->setEnabled(false);
     setCentralWidget(console);
-
+//! [1]
     serial = new SerialPort(this);
+//! [1]
     settings = new SettingsDialog;
 
     ui->actionConnect->setEnabled(true);
@@ -24,10 +27,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionConfigure->setEnabled(true);
 
     initActionsConnections();
-
+//! [2]
     connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+//! [2]
     connect(console, SIGNAL(getData(QByteArray)), this, SLOT(writeData(QByteArray)));
+//! [3]
 }
+//! [3]
 
 MainWindow::~MainWindow()
 {
@@ -35,6 +41,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//! [4]
 void MainWindow::openSerialPort()
 {
     SettingsDialog::Settings p = settings->settings();
@@ -72,7 +79,9 @@ void MainWindow::openSerialPort()
         ui->statusBar->showMessage(tr("Configure error"));
     }
 }
+//! [4]
 
+//! [5]
 void MainWindow::closeSerialPort()
 {
     serial->close();
@@ -82,6 +91,7 @@ void MainWindow::closeSerialPort()
     ui->actionConfigure->setEnabled(true);
     ui->statusBar->showMessage(tr("Disconnected"));
 }
+//! [5]
 
 void MainWindow::about()
 {
@@ -91,16 +101,20 @@ void MainWindow::about()
                           "using Qt, with a menu bar, toolbars, and a status bar."));
 }
 
+//! [6]
 void MainWindow::writeData(const QByteArray &data)
 {
     serial->write(data);
 }
+//! [6]
 
+//! [7]
 void MainWindow::readData()
 {
     QByteArray data = serial->readAll();
     console->putData(data);
 }
+//! [7]
 
 void MainWindow::initActionsConnections()
 {
