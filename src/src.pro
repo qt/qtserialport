@@ -1,17 +1,18 @@
-include($$PWD/src-lib.pri)
+TEMPLATE = lib
+MODULE   = serialport
 
 greaterThan(QT_MAJOR_VERSION, 4) {
+    TARGET   = $$QT.serialport.name
     load(qt_module)
     load(qt_module_config)
     QT += core-private
+    include($$PWD/src-lib.pri)
 } else {
     include($$PWD/../modules/qt_serialport.pri)
+    TARGET   = $$QT.serialport.name
+    include($$PWD/src-lib.pri)
     include($$PWD/qt4support/include-helper.pri)
 }
-
-TEMPLATE = lib
-TARGET   = $$QT.serialport.name
-MODULE   = serialport
 
 DESTDIR = $$QT.serialport.libs
 VERSION = $$QT.serialport.VERSION
