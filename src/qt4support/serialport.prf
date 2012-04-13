@@ -3,4 +3,4 @@
     LIBS        += -L$$SERIALPORT_PROJECT_ROOT/src/
 }
 
-qtAddLibrary(QtAddOnSerialPort)
+qtAddLibrary(SerialPort)

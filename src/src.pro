@@ -8,7 +8,7 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     QT += core-private
     include($$PWD/src-lib.pri)
 } else {
-    include($$PWD/../modules/qt_serialport.pri)
+    include($$PWD/qt4support/serialport.pri)
     TARGET   = $$QT.serialport.name
     include($$PWD/src-lib.pri)
     include($$PWD/qt4support/include-helper.pri)
