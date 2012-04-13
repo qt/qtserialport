@@ -51,7 +51,7 @@ void MainWindow::openSerialPort()
                 && serial->setDataBits(p.dataBits)
                 && serial->setParity(p.parity)
                 && serial->setStopBits(p.stopBits)
-                && serial->setFlowControl(p.flowcontrol)) {
+                && serial->setFlowControl(p.flowControl)) {
 
             console->setEnabled(true);
             ui->actionConnect->setEnabled(false);

@@ -27,7 +27,7 @@ public:
         QString stringParity;
         SerialPort::StopBits stopBits;
         QString stringStopBits;
-        SerialPort::FlowControl flowcontrol;
+        SerialPort::FlowControl flowControl;
         QString stringFlowControl;
     };
 

@@ -147,7 +147,7 @@ void SettingsDialog::updateSettings()
     currentSettings.stringStopBits = ui->stopBitsBox->currentText();
 
     // Flow control
-    currentSettings.flowcontrol = static_cast<SerialPort::FlowControl>(
+    currentSettings.flowControl = static_cast<SerialPort::FlowControl>(
                 ui->flowControlBox->itemData(ui->flowControlBox->currentIndex()).toInt());
     currentSettings.stringFlowControl = ui->flowControlBox->currentText();
 }
