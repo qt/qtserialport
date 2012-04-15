@@ -656,18 +656,18 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \class SerialPort
 
-    \brief The SerialPort class provides the base functionality
-    common to all serial ports types.
+    \brief The SerialPort class provides functionality to access
+    serial ports.
 
     \reentrant
     \ingroup serialport-main
     \inmodule QtAddOnSerialPort
     \since 5.0
 
-    The basis of SerialPort was chosen class QAbstractSocket, so
-    their the functionality and behavior is similar in some cases.
+    The class QAbstractSocket was chosen as base of SerialPort,
+    so their functionality and behavior is similar in many cases.
     For example, in terms of I/O operations, the implementation
-    of the wait methods, the internal architecture and etc.
+    of the wait methods, the internal architecture etc.
     Especially, the implementation of some methods of SerialPort
     take directly from QAbstractSocket with minimal changes.
 
@@ -684,39 +684,40 @@ bool SerialPortPrivate::canErrorNotification()
     \o Do not support the native ability for configuring timeouts
     and delays during the reading.
     \o Does not provide tracking and notification when the state
-    of RS-232 lines was change.
+    of RS-232 lines was changed.
     \endlist
 
-    Getting started with the SerialPort should by creating an
-    object of that class.
+    To get started with the SerialPort, first create an object of
+    that class.
 
-    Next, you must by calling a method setPort() assign to the
-    object the name desired serial port (which is really present
-    in the system). In this case, the name must have a certain
-    format which is platform dependent. If you are unsure of the
-    serial port name, for this you can use the helper class
-    SerialPortInfo and obtain the correct serial port name. You
-    can also use SerialPortInfo as an input parameter to the
-    method setPort() (to retrieve current designated of name need
+    Next, call setPort() to assign the object with the name of the
+    desired serial port (which has to be present in the system).
+    The name must follow a certain format, which is platform dependent.
+
+    The helper class SerialPortInfo allows to enumerate all
+    serial ports in the system. This is useful to obtain the
+    correct serial port name.
+
+    You can also use SerialPortInfo as an input parameter to the
+    method setPort() (to retrieve the currently assigned name,
     use portName()).
 
-    Now you can open the serial port using the method open() and
-    can be open in r/o, w/o or r/w mode.
+    Now the serial port can be opened with open(). This is possible
+    in read-only (r/o), write-only (w/o) or read-write (r/w) mode.
 
-    Note: The serial port always opens with exclusive access (i.e.
-    another process or thread can't get access to an already open
+    Note: The serial port is always opened with exclusive access
+    (i. e. no other process or thread can access an already opened
     serial port).
 
-    With the successful opening of the SerialPort tries to determine
-    its current configuration, and initializes itself to this
-    configuration.
+    With the successful opening, the SerialPort determines
+    it's current configuration and initializes itself to this
+    configuration. To access the current configuration use rate(),
+    dataBits(), parity(), stopBits(), and flowControl().
 
-    To access the current configuration used methods rate(),
-    dataBits(), parity(), stopBits(), flowControl(). If you are
-    satisfied with these settings, you can go to proceed to I/O
+    If you are satisfied with these settings, you can proceed with I/O
     operation. Otherwise you can reconfigure the port to the desired
-    setting using setRate(), setDataBits(), setParity(),
-    setStopBits(), setFlowControl().
+    setting using setRate(), setDataBits(), setParity(), setStopBits(),
+    and setFlowControl().
 
     Read or write data by calling read() or write(), or use the
     convenience functions readLine() and readAll(). SerialPort also
@@ -724,10 +725,10 @@ bool SerialPortPrivate::canErrorNotification()
     which work on single bytes. The bytesWritten() signal is
     emitted when data has been written to the serial port. Note
     that Qt does not limit the write buffer size. You can monitor
-    its size by listening to this signal.
+    it's size by listening to this signal.
 
     The readyRead() signal is emitted every time a new chunk of data
-    has arrived, then bytesAvailable() returns the number of bytes
+    has arrived. bytesAvailable() then returns the number of bytes
     that are available for reading. Typically, you would connect the
     readyRead() signal to a slot and read all available data there.
 
@@ -736,16 +737,17 @@ bool SerialPortPrivate::canErrorNotification()
     appended to SerialPort's internal read buffer. To limit the size
     of the read buffer, call setReadBufferSize().
 
-    To obtain status of line ports, as well as control him are used
-    methods dtr(), rts(), lines(), setDtr(), setRts().
+    The status of the control lines is determined with dtr(), rts()
+    and lines(). To change the control line status, use setDtr() and
+    setRts().
 
-    To close the serial port call close() method. After all pending
-    data has been written to the serial port, SerialPort actually
+    To close the serial port, call close(). After all pending data
+    has been written to the serial port, SerialPort actually
     closes the descriptor.
 
     SerialPort provides a set of functions that suspend the calling
     thread until certain signals are emitted. These functions can be
-    used to implement blocking serial port:
+    used to implement blocking serial ports:
 
     \list
     \o waitForReadyRead() blocks until new data is available for
@@ -773,8 +775,9 @@ bool SerialPortPrivate::canErrorNotification()
     \endcode
 
     If \l{QIODevice::}{waitForReadyRead()} returns false, the
-    connection has been closed or an error has occurred. Programming
-    with a blocking serial port is radically different from
+    connection has been closed or an error has occurred.
+
+    Programming with a blocking serial port is radically different from
     programming with a non-blocking serial port. A blocking serial port
     doesn't require an event loop and typically leads to simpler code.
     However, in a GUI application, blocking serial port should only be
@@ -799,23 +802,21 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::Direction
 
-    This enum describes a possibly direction of data transmission.
+    This enum describes the possibly direction of data transmission.
     Note: It is used to set the speed of the device separately for
-    each direction in some operating systems (eg. POSIX-like).
+    each direction in some operating systems (e. g. POSIX-like).
 
     \value Input Input direction.
     \value Output Output direction
     \value AllDirections Simultaneously in two directions.
-
-    \sa setRate(), rate()
 */
 
 /*!
     \enum SerialPort::Rate
 
     This enum describes the baud rate at which the communications
-    device operates. Note: In this enum is listed only part the
-    most common of the standard rates.
+    device operates. Note: only the most common standard rates
+    are listed in this enum.
 
     \value Rate1200 1200 baud.
     \value Rate2400 2400 baud.
@@ -848,7 +849,7 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::Parity
 
-    This enum describes possibly parity scheme to be used.
+    This enum describes the used parity scheme.
 
     \value NoParity No parity.
     \value EvenParity Even parity.
@@ -863,8 +864,7 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::StopBits
 
-    This enum describes possibly the number of stop bits to
-    be used.
+    This enum describes the used number of stop bits.
 
     \value OneStop 1 stop bit.
     \value OneAndHalfStop 1.5 stop bits.
@@ -877,7 +877,7 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::FlowControl
 
-    This enum describes possibly flow control to be used.
+    This enum describes the used flow control.
 
     \value NoFlowControl No flow control.
     \value HardwareControl Hardware flow control (RTS/CTS).
