@@ -1,4 +1,4 @@
-SERIALPORT_PROJECT_INCLUDEDIR = $$SERIALPORT_PROJECT_ROOT/include/$$QT.serialport.name
+SERIALPORT_PROJECT_INCLUDEDIR = $$SERIALPORT_PROJECT_ROOT/include/QtAddOnSerialPort
 SERIALPORT_PROJECT_INCLUDEDIR ~=s,/,$$QMAKE_DIR_SEP,
 
 system("$$QMAKE_MKDIR $$SERIALPORT_PROJECT_INCLUDEDIR")
@@ -9,7 +9,7 @@ for(header_file, PUBLIC_HEADERS) {
 }
 
 header_files.files  = $$PUBLIC_HEADERS
-header_files.path   = $$[QT_INSTALL_PREFIX]/include/$$QT.serialport.name
+header_files.path   = $$[QT_INSTALL_PREFIX]/include/QtAddOnSerialPort
 INSTALLS            += header_files
 
 serialport_prf.files    = serialport.prf

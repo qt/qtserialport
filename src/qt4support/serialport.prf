@@ -4,3 +4,6 @@
 }
 
 qtAddLibrary(SerialPort)
+
+INCLUDEPATH -= $$[QT_INSTALL_HEADERS]/SerialPort
+INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtAddOnSerialPort
