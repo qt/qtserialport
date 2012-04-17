@@ -1,6 +1,6 @@
 !exists($$[QT_INSTALL_HEADERS]/QtAddOnSerialPort) {
     INCLUDEPATH += $$SERIALPORT_PROJECT_ROOT/include $$SERIALPORT_PROJECT_ROOT/include/QtAddOnSerialPort
-    LIBS        += -L$$SERIALPORT_PROJECT_ROOT/src/
+    LIBS        += -L$$SERIALPORT_BUILD_ROOT/src/
 }
 
 qtAddLibrary(SerialPort)
