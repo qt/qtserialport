@@ -783,10 +783,8 @@ bool SerialPortPrivate::canErrorNotification()
     However, in a GUI application, blocking serial port should only be
     used in non-GUI threads, to avoid freezing the user interface.
 
-    <<!!!
-    See the \*l network/fortuneclient and \*l network/blockingfortuneclient
+    See the \l examples/terminal and \l examples/blockingterminal
     examples for an overview of both approaches.
-    <<!!!
 
     We discourage the use of the blocking functions together
     with signals. One of the two possibilities should be used.
@@ -1048,7 +1046,7 @@ void SerialPort::setPort(const SerialPortInfo &info)
         \o Removes the prefix "/dev/" from the system location
            and returns the remainder of the string.
     \row
-        \o MacOSX
+        \o Mac OSX
         \o Removes the prefix "/dev/cu." and "/dev/tty." from the
            system location and returns the remainder of the string.
     \row
@@ -1360,15 +1358,22 @@ bool SerialPort::reset()
 
 /*! \reimp
 
-     Returns true if no more data is currently
-     available for reading; otherwise returns false.
+    Returns true if no more data is currently
+    available for reading; otherwise returns false.
 
-     This function is most commonly used when reading data from the
-     serial port in a loop. For example:
+    This function is most commonly used when reading data from the
+    serial port in a loop. For example:
 
-     <<!!!
-     \*snippet doc/src/snippets/code/src_network_socket_qabstractsocket.cpp 2
-     <<!!!
+    \code
+    // This slot is connected to SerialPort::readyRead()
+    void SerialPortClass::readyReadSlot()
+    {
+        while (!port.atEnd()) {
+            QByteArray data = port.read(100);
+            ....
+        }
+    }
+    \endcode
 
      \sa bytesAvailable(), readyRead()
  */

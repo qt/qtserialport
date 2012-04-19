@@ -36,28 +36,30 @@
     \endlist
 
     In this example, we will demonstrate the asynchronous approach. The
-    \l{terminal/blockingterminal}{Blocking Simple Terminal} example
+    \l{examples/blockingterminal}{Blocking Simple Terminal} example
     illustrates the synchronous approach.
 
     Our example contains some GUI widgets:
 
     \list
 
-    \o MainWindow - is the main application window that contains all the
-    working logic to a serial port, including configuring, I/O processing and
-    inherits from QMainWindow
+    \o \l{examples/terminal/mainwindow.cpp}{MainWindow} - is the main application
+    window that contains all the working logic to a serial port, including
+    configuring, I/O processing and inherits from QMainWindow
 
-    \o Console - widget to display the transmitted or received data, is
-    central widget for the main window and derived from QPlainTextEdit.
+    \o \l{examples/terminal/console.cpp}{Console} - widget to display the
+    transmitted or received data, is central widget for the main window and
+    derived from QPlainTextEdit.
 
-    \o SettingsDialog - dialog to configure the serial port, as well as to
-    display the available serial ports and information about them.
+    \o \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} - dialog to configure
+    the serial port, as well as to display the available serial ports and
+    information about them.
 
     \endlist
 
-    The serial port creates in the MainWindow constructor. We'll pass the main
-    widget as parent, so that we won't have to worry about deleting the
-    serial port:
+    The serial port creates in the \l{examples/terminal/mainwindow.cpp}{MainWindow}
+    constructor. We'll pass the main widget as parent, so that we won't have to
+    worry about deleting the serial port:
 
     \snippet examples/terminal/mainwindow.cpp 0
     \dots
@@ -76,12 +78,13 @@
 
     \snippet examples/terminal/mainwindow.cpp 4
 
-    In this slot, is read settings from SettingsDialog and attempt to open and
-    initialize the serial port. If successful, the status bar displays a message
-    on the successful opening of the port in a given configuration; otherwise,
-    displays the messagebox with the appropriate error code and message. If the
-    serial port settings have never been called SettingsDialog - the terminal
-    is trying to open the port with the settings: 9600 8N1.
+    In this slot, is read settings from \l{examples/terminal/settingsdialog.cpp}
+    {SettingsDialog} and attempt to open and initialize the serial port. If
+    successful, the status bar displays a message on the successful opening of
+    the port in a given configuration; otherwise, displays the messagebox with
+    the appropriate error code and message. If the serial port settings have
+    never been called \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
+    - the terminal is trying to open the port with the settings: 9600 8N1.
 
     Clicking the \bold{Disconnect} button will invoke the \c
     closeSerialPort() slot:
@@ -95,8 +98,9 @@
 
     \snippet examples/terminal/mainwindow.cpp 6
 
-    This slot gets the characters that were introduced in the Console widget and
-    sends them to the serial port.
+    This slot gets the characters that were introduced in the
+    \l{examples/terminal/console.cpp}{Console} widget and sends them to the
+    serial port.
 
     When the serial port receives new data, it emits a signal
     \l{QTcpSocket::readyRead()}{readyRead()} that is connected to \c
@@ -104,14 +108,16 @@
 
     \snippet examples/terminal/mainwindow.cpp 7
 
-    This slot read data from the serial port and print it to the Console widget.
+    This slot read data from the serial port and print it to the
+    \l{examples/terminal/console.cpp}{Console} widget.
 
     Clicking the \bold{Configure} button will invoke the \c
-    show() slot which belongs to the SettingsDialog widget.
+    show() slot which belongs to the
+    \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} widget.
 
-    This method shows the SettingsDialog where the user can choose the desired of
-    its serial port, see the information about the selected port, and set the
-    desired parameters of the serial port.
+    This method shows the \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
+    where the user can choose the desired of its serial port, see the information
+    about the selected port, and set the desired parameters of the serial port.
 
     \sa {Blocking Simple Terminal Example}
 */
