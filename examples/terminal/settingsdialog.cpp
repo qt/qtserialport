@@ -70,10 +70,10 @@ void SettingsDialog::fillPortsParameters()
 {
     // fill baud rate (is not the entire list of available values,
     // desired values??, add your independently)
-    ui->rateBox->addItem(QLatin1String("9600"), 9600);
-    ui->rateBox->addItem(QLatin1String("19200"), 19200);
-    ui->rateBox->addItem(QLatin1String("38400"), 38400);
-    ui->rateBox->addItem(QLatin1String("115200"), 115200);
+    ui->rateBox->addItem(QLatin1String("9600"), static_cast<int>(SerialPort::Rate9600));
+    ui->rateBox->addItem(QLatin1String("19200"), static_cast<int>(SerialPort::Rate19200));
+    ui->rateBox->addItem(QLatin1String("38400"), static_cast<int>(SerialPort::Rate38400));
+    ui->rateBox->addItem(QLatin1String("115200"), static_cast<int>(SerialPort::Rate115200));
     ui->rateBox->addItem(QLatin1String("Custom"));
 
     // fill data bits
