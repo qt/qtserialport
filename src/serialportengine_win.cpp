@@ -411,9 +411,9 @@ bool WinSerialPortEngine::setBreak(bool set)
 enum CommStatQue { CS_IN_QUE, CS_OUT_QUE };
 static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
 {
-    DWORD err;
     COMSTAT cs;
-    if (::ClearCommError(m_descriptor, &err, &cs) == 0)
+    ::memset(&cs, 0, sizeof(COMSTAT));
+    if (::ClearCommError(m_descriptor, 0, &cs) == 0)
         return -1;
     return qint64((que == CS_IN_QUE) ? (cs.cbInQue) : (cs.cbOutQue));
 }
@@ -932,8 +932,7 @@ void WinSerialPortEngine::setErrorNotificationEnabled(bool enable)
 bool WinSerialPortEngine::processIOErrors()
 {
     DWORD err = 0;
-    COMSTAT cs;
-    bool ret = (::ClearCommError(m_descriptor, &err, &cs) != 0);
+    bool ret = (::ClearCommError(m_descriptor, &err, 0) != 0);
     if (ret && err) {
         if (err & CE_FRAME)
             dptr->setError(SerialPort::FramingError);
