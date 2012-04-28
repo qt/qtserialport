@@ -45,8 +45,8 @@ void SettingsDialog::showPortInfo(int idx)
         ui->descriptionLabel->setText(tr("Description: %1").arg(list.at(1)));
         ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.at(2)));
         ui->locationLabel->setText(tr("Location: %1").arg(list.at(3)));
-        ui->vidLabel->setText(tr("Vendor ID: %1").arg(list.at(4)));
-        ui->pidLabel->setText(tr("Product ID: %1").arg(list.at(5)));
+        ui->vidLabel->setText(tr("Vendor Identifier: %1").arg(list.at(4)));
+        ui->pidLabel->setText(tr("Product Identifier: %1").arg(list.at(5)));
     }
 }
 
