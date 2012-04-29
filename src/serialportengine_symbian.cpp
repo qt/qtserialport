@@ -6,32 +6,24 @@
     \class SymbianSerialPortEngine
     \internal
 
-    \brief The SymbianSerialPortEngine class provides *nix OS
+    \brief The SymbianSerialPortEngine class provides Symbian OS
     platform-specific low level access to a serial port.
 
     \reentrant
     \ingroup serialport-main
     \inmodule QtSerialPort
 
-    Currently the class supports all?? version of Symbian OS.
+    Currently the class supports Symbian3 and Symbian SR1 version of Symbian OS.
 
     SymbianSerialPortEngine (as well as other platform-dependent engines)
     is a class with multiple inheritance, which on the one hand,
     derives from a general abstract class interface SerialPortEngine,
-    on the other hand of a class inherited from QObject.
+    on the other hand from QObject.
 
-    From the abstract class SerialPortEngine, it inherits all virtual
+    From the abstract class SerialPortEngine, this class inherits all virtual
     interface methods that are common to all serial ports on any platform.
-    These methods, the class SymbianSerialPortEngine implements use
+    The class SymbianSerialPortEngine implements these methods using the
     Symbian API.
-
-    From QObject-like class ...
-    ...
-    ...
-    ...
-
-    That is, as seen from the above, the functional SymbianSerialPortEngine
-    completely covers all the necessary tasks.
 */
 
 #include "serialportengine_symbian_p.h"
@@ -95,11 +87,9 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 /* Public methods */
 
 /*!
-    Constructs a SymbianSerialPortEngine with \a parent and
-    initializes all the internal variables of the initial values.
-
-    A pointer \a parent to the object class SerialPortPrivate
-    is required for the recursive call some of its methods.
+    Constructs a SymbianSerialPortEngine and initializes all internal variables
+    to their initial values. The pointer \a d to the private object of class
+    SerialPortPrivate is used to call some common methods.
 */
 SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *d)
 {
@@ -117,18 +107,18 @@ SymbianSerialPortEngine::~SymbianSerialPortEngine()
 }
 
 /*!
-    Tries to open the object desired serial port by \a location
-    in the given open \a mode. In the API of Symbian there is no flag
-    to open the port in r/o, w/o or r/w, most likely he always opens
-    as r/w.
+    Attempts to open the desired serial port by \a location
+    in the given open \a mode. In the Symbian API there is no flag
+    to open the port in r/o, w/o or r/w. The port most likely always
+    opens as r/w.
 
-    Since the port in the Symbian OS can be open in any access mode,
-    then this method forcibly puts a port in exclusive mode access.
-    In the process of discovery, always set a port in non-blocking
-    mode (when the read operation returns immediately) and tries to
-    determine its current configuration and install them.
+    Since Symbian OS allows to open the port in any access mode, this
+    method forces the port in exclusive mode access.
+    In the process of discovery, always sets the serial port in non-blocking
+    mode (where the read operation returns immediately) and tries to determine
+    and install the current configuration to the serial port.
 
-    If successful, returns true; otherwise returns false, with the setup a
+    If successful, returns true; otherwise returns false and sets an
     error code.
 */
 bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode)
@@ -191,7 +181,7 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
 }
 
 /*!
-    Closes a serial port object. Before closing restore previous
+    Closes a serial port. Before closing, restores previous
     serial port settings if necessary.
 */
 void SymbianSerialPortEngine::close(const QString &location)
@@ -206,11 +196,11 @@ void SymbianSerialPortEngine::close(const QString &location)
 }
 
 /*!
-    Returns a bitmap state of RS-232 line signals. On error,
-    bitmap will be empty (equal zero).
+    Returns a bitmap state of the RS-232 line signals. On error,
+    the bitmap will be empty (equal zero).
 
-    Symbian API allows you to receive only the state of signals:
-    CTS, DSR, DCD, RING, RTS, DTR. Other signals are not available.
+    The Symbian API only provides the state of the following signals:
+    CTS, DSR, DCD, RING, RTS, and DTR. Other signals are not available.
 */
 SerialPort::Lines SymbianSerialPortEngine::lines() const
 {
@@ -240,7 +230,7 @@ SerialPort::Lines SymbianSerialPortEngine::lines() const
 /*!
     Set DTR signal to state \a set.
 
-
+    If successful, returns true; otherwise returns false.
 */
 bool SymbianSerialPortEngine::setDtr(bool set)
 {
@@ -256,7 +246,7 @@ bool SymbianSerialPortEngine::setDtr(bool set)
 /*!
     Set RTS signal to state \a set.
 
-
+    If successful, returns true; otherwise returns false.
 */
 bool SymbianSerialPortEngine::setRts(bool set)
 {
@@ -300,7 +290,7 @@ bool SymbianSerialPortEngine::reset()
 
     Setting breaks is not supported on the integral ARM
     serial hardware. EPOC has no support for detecting received
-    breaks. There is no way to detects whether setting a break is
+    breaks. There is no way to detect whether setting a break is
     supported using Caps().
 */
 bool SymbianSerialPortEngine::sendBreak(int duration)
@@ -320,7 +310,7 @@ bool SymbianSerialPortEngine::setBreak(bool set)
 }
 
 /*!
-    Gets the number of bytes currently waiting in the
+    Returns the number of bytes currently waiting in the
     driver's input buffer. A return value of zero means
     the buffer is empty.
 */
@@ -352,15 +342,15 @@ qint64 SymbianSerialPortEngine::bytesToWrite() const
 
 /*!
 
-    Reads data from a serial port only if it arrives before a
+    Reads data from the serial port only if it arrives before a
     specified time-out (zero). All reads from the serial device
-    use 8-bit m_descriptors as data buffers, even on a Unicode system.
+    use 8-bit descriptors as data buffers, even on a Unicode system.
 
     The length of the TDes8 is set to zero on entry, which means that
     buffers can be reused without having to be zeroed first.
 
     The number of bytes to read is set to the maximum length of the
-    m_descriptor.
+    descriptor.
 
     If a read is issued with a data length of zero the Read() completes
     immediately but with the side effect that the serial hardware is
@@ -369,7 +359,7 @@ qint64 SymbianSerialPortEngine::bytesToWrite() const
     When a Read() terminates with KErrTimedOut, different protocol
     modules can show different behaviours. Some may write any data
     received into the aDes buffer, while others may return just an
-    empty m_descriptor. In the case of a returned empty m_descriptor use
+    empty descriptor. In the case of a returned empty descriptor use
     ReadOneOrMore() to read any data left in the buffer.
 
     The behaviour of this API after a call to NotifyDataAvailable() is
@@ -395,11 +385,11 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
 
 /*!
 
-    Writes data to a serial port. All writes to the serial device
-    use 8-bit m_descriptors as data buffers, even on a Unicode system.
+    Writes data to the serial port. All writes to the serial device
+    use 8-bit descriptors as data buffers, even on a Unicode system.
 
     The number of bytes to write is set to the maximum length of
-    the m_descriptor.
+    the descriptor.
 
     When a Write() is issued with a data length of zero it cannot
     complete until the current handshaking configuration and the
@@ -502,10 +492,10 @@ bool SymbianSerialPortEngine::select(int timeout,
 //static const QString defaultPathPostfix = ":";
 
 /*!
-    Converts a platform specific \a port name to system location
-    and return result.
+    Converts a platform specific \a port name to a system location
+    and returns the value.
 
-    Does not do anything because These concepts are equivalent.
+    Does not convert anything because on Symbian both are equal.
 */
 QString SymbianSerialPortEngine::toSystemLocation(const QString &port) const
 {
@@ -514,10 +504,10 @@ QString SymbianSerialPortEngine::toSystemLocation(const QString &port) const
 }
 
 /*!
-    Converts a platform specific system \a location to port name
-    and return result.
+    Converts a platform specific system \a location to a port name
+    and returns the value.
 
-    Does not do anything because These concepts are equivalent.
+    Does not convert anything because on Symbian both are equal.
 */
 QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) const
 {
@@ -526,12 +516,13 @@ QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) con
 }
 
 /*!
-    Set desired \a rate by given direction \a dir.
-    However, Symbian does not support separate directions, so the
-    method will return an error. Also it supports only the standard
-    set of speed.
+    Sets the desired baud \a rate for the given direction \a dir.
+    As Symbian does not support separate directions, the only valid value for
+    \dir is SerialPort::AllDirections.
 
-    If successful, returns true; otherwise returns false, with the setup a
+    On Symbian, this method only supports the standard baud rate set.
+
+    If successful, returns true; otherwise returns false and sets an
     error code.
 */
 bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
@@ -553,10 +544,10 @@ bool SymbianSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 }
 
 /*!
-    Set desired number of data bits \a dataBits in byte. Symbian
-    native supported all present number of data bits 5, 6, 7, 8.
+    Sets the desired number of data bits \a dataBits in a frame. Symbian
+    supports all present number of data bits: 5, 6, 7, and 8.
 
-    If successful, returns true; otherwise returns false, with the setup a
+    If successful, returns true; otherwise returns false and sets an
     error code.
 */
 bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
@@ -583,10 +574,10 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 }
 
 /*!
-    Set desired \a parity control mode. Symbian native supported
-    all present parity types no parity, space, mark, even, odd.
+    Sets the desired \a parity control mode. Symbian supports
+    all present parity types: no parity, space, mark, even, and odd parity.
 
-    If successful, returns true; otherwise returns false, with the setup a
+    If successful, returns true; otherwise returns false and sets an
     error code.
 */
 bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
@@ -616,10 +607,10 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
 }
 
 /*!
-    Set desired number of stop bits \a stopBits in frame. Symbian
-    native supported only 1, 2 number of stop bits.
+    Sets the desired number of stop bits \a stopBits in a frame. Symbian
+    only supports 1 or 2 stop bits.
 
-    If successful, returns true; otherwise returns false, with the setup a
+    If successful, returns true; otherwise returns false and sets an
     error code.
 */
 bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
@@ -640,11 +631,11 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 }
 
 /*!
-    Set desired \a flow control mode. Symbian native supported all
-    present flow control modes no control, hardware (RTS/CTS),
-    software (XON/XOFF).
+    Sets the desired \a flow control mode. Symbian supports all
+    present flow control modes: no control, hardware (RTS/CTS),
+    and software (XON/XOFF).
 
-    If successful, returns true; otherwise returns false, with the setup a
+    If successful, returns true; otherwise returns false and sets an
     error code.
 */
 bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
@@ -789,8 +780,8 @@ static const RatePair *standardRatesTable_end =
         standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
 
 /*!
-    Convert symbian-specific enum of baud rate to a numeric value.
-    If the desired item is not found then returns 0.
+    Converts the symbian-specific baud rate enum to a numeric value.
+    If the desired item is not found, returns 0.
 */
 qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
 {
@@ -800,8 +791,8 @@ qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
 }
 
 /*!
-    Convert a numeric value of baud rate to symbian-specific enum.
-    If the desired item is not found then returns 0.
+    Converts a numeric baud rate value to a symbian-specific enum.
+    If the desired item is not found, returns 0.
 */
 EBps SymbianSerialPortEngine::settingFromRate(qint32 rate)
 {
@@ -811,8 +802,9 @@ EBps SymbianSerialPortEngine::settingFromRate(qint32 rate)
 }
 
 /*!
-    Returns a list standard values of baud rates,
-    enums are defined in
+    Returns a list of standard baud rate values.
+
+    Enums are defined in:
    - d32comm.h for Symbian^3
    - d32public.h for Symbian SR1.
 */
@@ -827,8 +819,8 @@ QList<qint32> SymbianSerialPortEngine::standardRates()
 /* Protected methods */
 
 /*!
-    Attempts to determine the current settings of the serial port,
-    wehn it opened. Used only in the method open().
+    Attempts to determine the current serial port settings,
+    when the port is opened. Used only in the method open().
 */
 void SymbianSerialPortEngine::detectDefaultSettings()
 {
@@ -903,10 +895,9 @@ void SymbianSerialPortEngine::detectDefaultSettings()
 /* Private methods */
 
 /*!
-    Updates the TCommConfig structure wehn changing of any the
-    parameters a serial port.
+    Updates the TCommConfig structure when changing any serial port parameter.
 
-    If successful, returns true; otherwise returns false.
+    If successful, returns true; otherwise returns false and sets an error code.
 */
 bool SymbianSerialPortEngine::updateCommConfig()
 {
