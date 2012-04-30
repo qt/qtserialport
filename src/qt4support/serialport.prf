@@ -1,16 +1,16 @@
 !exists($$[QT_INSTALL_HEADERS]/QtAddOnSerialPort) {
     INCLUDEPATH += $$SERIALPORT_BUILD_ROOT/include $$SERIALPORT_BUILD_ROOT/include/QtAddOnSerialPort
 
-    TARGET_BUILD_SUBDIR = src/
-    win* {
+    SERIALPORT_BUILD_SUBDIR = src
+    win32 {
         CONFIG(debug, debug|release) {
-            TARGET_BUILD_SUBDIR = /src/debug
+            SERIALPORT_BUILD_SUBDIR = $$SERIALPORT_BUILD_SUBDIR/debug
         } else {
-            TARGET_BUILD_SUBDIR = /src/release
+            SERIALPORT_BUILD_SUBDIR = $$SERIALPORT_BUILD_SUBDIR/release
         }
     }
 
-    LIBS += -L$$SERIALPORT_BUILD_ROOT/$$TARGET_BUILD_SUBDIR
+    LIBS += -L$$SERIALPORT_BUILD_ROOT/$$SERIALPORT_BUILD_SUBDIR
 }
 
 qtAddLibrary(SerialPort)
