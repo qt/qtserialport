@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 /*!
     \class SerialPortInfo
 
-    \brief The SerialPortInfo class gives access to information about
+    \brief The SerialPortInfo class provides information about
     existing serial ports.
 
     \ingroup serialport-main
@@ -21,9 +21,10 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
     Use the static functions to generate a list of SerialPortInfo
     objects. Each SerialPortInfo object in the list represents a single
-    serial port and can be queried for port name, system location,
-    description, manufacturer. SerialPortInfo also can be used as an
-    input parameter to the method setPort() a class SerialPort.
+    serial port and can be queried for the port name, system location,
+    description, and manufacturer. The SerialPortInfo class can also be
+    used as an input parameter for the setPort() method of the SerialPort
+    class.
 
     \sa SerialPort
 */
@@ -65,7 +66,9 @@ SerialPortInfo::SerialPortInfo(const SerialPort &port)
 /*!
     Constructs a SerialPortInfo object from serial port \a name.
 
-    ...
+    This constructor finds the relevant serial port among the available ones
+    according to the port name \a name, and constructs the serial port info
+    instance for that port.
 */
 SerialPortInfo::SerialPortInfo(const QString &name)
     : d_ptr(new SerialPortInfoPrivate)
@@ -87,7 +90,6 @@ SerialPortInfo::~SerialPortInfo()
 }
 
 /*! \fn void SerialPortInfo::swap(SerialPortInfo &other)
-    \since 5.0
 
     Swaps SerialPortInfo \a other with this SerialPortInfo. This operation is
     very fast and never fails.
@@ -126,7 +128,7 @@ QString SerialPortInfo::systemLocation() const
 
 /*!
     Returns the description string of the serial port,
-    if available; otherwise return empty string.
+    if available; otherwise returns an empty string.
 */
 QString SerialPortInfo::description() const
 {
@@ -136,7 +138,7 @@ QString SerialPortInfo::description() const
 
 /*!
     Returns the manufacturer string of the serial port,
-    if available; otherwise return empty string.
+    if available; otherwise returns an empty string.
 */
 QString SerialPortInfo::manufacturer() const
 {
@@ -147,7 +149,7 @@ QString SerialPortInfo::manufacturer() const
 /*!
     Returns the vendor identifier string of the serial
     port in hexadecimal format, if available; otherwise
-    return empty string.
+    returns an empty string.
 */
 QString SerialPortInfo::vendorIdentifier() const
 {
@@ -158,7 +160,7 @@ QString SerialPortInfo::vendorIdentifier() const
 /*!
     Returns the product identifier string of the serial
     port in hexadecimal format, if available; otherwise
-    return empty string.
+    returns an empty string.
 */
 QString SerialPortInfo::productIdentifier() const
 {
