@@ -442,7 +442,7 @@ qint64 SerialPortPrivate::bytesToWrite() const
 
     Reads at most \a len bytes from the serial port into \a data, and returns
     the number of bytes read. If an error occurs, this function returns -1 and
-    sets an error code.
+    sets an error code which can be obtained by calling the error() method.
     This operation is platform-dependent, and is provided by the
     native engine.
 */
@@ -455,7 +455,8 @@ qint64 SerialPortPrivate::read(char *data, qint64 len)
 
     Writes at most \a len bytes of data from \a data to the serial port. If
     successful, returns the number of bytes that were actually written;
-    otherwise returns -1 and sets an error code
+    otherwise returns -1 and sets an error code which can be obtained by calling
+    the error() method.
     This operation is platform-dependent, and is provided by the
     native engine.
 */
@@ -500,8 +501,8 @@ void SerialPortPrivate::clearBuffers()
 
     Reads the data from the serial port into the read buffer. Returns
     true on success; otherwise returns false. This operation takes place
-    automatically when the driver (UART) in the input buffer has
-    at least one byte, for instance after an event.
+    automatically when the driver (UART) has at least one byte in the input
+    buffer, for instance after an event.
 */
 bool SerialPortPrivate::readFromPort()
 {
@@ -664,12 +665,11 @@ bool SerialPortPrivate::canErrorNotification()
     \inmodule QtAddOnSerialPort
     \since 5.0
 
-    The class QAbstractSocket was chosen as a reference implementation for
-    certain internal parts of the SerialPort class, so their functionality and
-    behavior are similar in quite a few cases.  For example: in terms of I/O
-    operations, the implementation of the wait methods, the internal
-    architecture and so forth.  Certain SerialPort method implementations were
-    taken directly from the QAbstractSocket class with only minor changes.
+    This class resembles the functionality and behavior of the QAbstractSocket
+    class in many aspects, for instance the I/O operations, the implementation
+    of the wait methods, the internal architecture and so forth. Certain
+    SerialPort method implementations were taken directly from QAbstractSocket
+    with only minor changes.
 
     The features of the implementation and the conduct of the class are
     listed below:
@@ -799,7 +799,7 @@ bool SerialPortPrivate::canErrorNotification()
     \enum SerialPort::Direction
 
     This enum describes the possible directions of the data transmission.
-    Note: This enumeration is used for setting the speed of the device
+    Note: This enumeration is used for setting the baud rate of the device
     separately for each direction in case some operating systems (i.e. POSIX-like).
 
     \value Input            Input direction.
@@ -829,7 +829,7 @@ bool SerialPortPrivate::canErrorNotification()
 /*!
     \enum SerialPort::DataBits
 
-    This enum describes the data bits used.
+    This enum describes the number of data bits used.
 
     \value Data5            Five bits.
     \value Data6            Six bits.
@@ -903,7 +903,7 @@ bool SerialPortPrivate::canErrorNotification()
     \enum SerialPort::DataErrorPolicy
 
     This enum describes the policies for the received symbols
-    while parity errors detected.
+    while parity errors were detected.
 
     \value SkipPolicy           Skips the bad character.
     \value PassZeroPolicy       Replaces bad character to zero.
@@ -934,7 +934,7 @@ bool SerialPortPrivate::canErrorNotification()
     \value FramingError Framing error detected by the hardware while reading data.
     \value BreakConditionError Break condition detected by the hardware on
            the input line.
-    \value IoError I/O error occurred while reading or writing the data.
+    \value IoError An I/O error occurred while reading or writing the data.
     \value UnsupportedPortOperationError The requested device operation is
            not supported or prohibited by the running operating system.
     \value UnknownPortError An unidentified error occurred.
@@ -1155,7 +1155,7 @@ bool SerialPort::restoreSettingsOnClose() const
 /*!
     Sets the desired data rate \a rate for a given direction \a dir. If
     successful, returns true; otherwise returns false and sets an error code
-    which can be obtained by calling error(). To set the speed can use
+    which can be obtained by calling error(). To set the baud rate, use the
     enumeration SerialPort::Rate or any positive qint32 value.
 
     \warning For OS Windows, Windows CE, Symbian supported only
