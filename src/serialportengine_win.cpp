@@ -107,10 +107,10 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
 
 #if !defined (Q_OS_WINCE)
     size = sizeof(OVERLAPPED);
-    ::memset(&m_ovRead, 0, size);
-    ::memset(&m_ovWrite, 0, size);
-    ::memset(&m_ovSelect, 0, size);
-    ::memset(&m_ovNotify, 0, size);
+    ::memset(&m_readOverlapped, 0, size);
+    ::memset(&m_writeOverlapped, 0, size);
+    ::memset(&m_selectOverlapped, 0, size);
+    ::memset(&m_notifyOverlapped, 0, size);
 #endif
 }
 
@@ -468,7 +468,7 @@ static void clear_overlapped(OVERLAPPED *overlapped)
 qint64 WinSerialPortEngine::read(char *data, qint64 len)
 {
 #if !defined (Q_OS_WINCE)
-    clear_overlapped(&m_ovRead);
+    clear_overlapped(&m_readOverlapped);
 #endif
 
     DWORD readBytes = 0;
@@ -481,12 +481,12 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 #if defined (Q_OS_WINCE)
     sucessResult = ::ReadFile(m_descriptor, data, len, &readBytes, 0);
 #else
-    if (::ReadFile(m_descriptor, data, len, &readBytes, &m_ovRead))
+    if (::ReadFile(m_descriptor, data, len, &readBytes, &m_readOverlapped))
         sucessResult = true;
     else if ((::GetLastError() == ERROR_IO_PENDING)
              // Here have to wait for completion of pending transactions
              // to get the number of actually readed bytes.
-             && ::GetOverlappedResult(m_descriptor, &m_ovRead, &readBytes, true)) {
+             && ::GetOverlappedResult(m_descriptor, &m_readOverlapped, &readBytes, true)) {
 
         sucessResult = true;
     }
@@ -523,7 +523,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 {
 #if !defined (Q_OS_WINCE)
-    clear_overlapped(&m_ovWrite);
+    clear_overlapped(&m_writeOverlapped);
 #endif
 
     DWORD writeBytes = 0;
@@ -532,7 +532,7 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 #if defined (Q_OS_WINCE)
     sucessResult = ::WriteFile(m_descriptor, data, len, &writeBytes, 0);
 #else
-    if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_ovWrite))
+    if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_writeOverlapped))
         sucessResult = true;
     else if (::GetLastError() == ERROR_IO_PENDING) {
         // This is not an error. In this case, the number of bytes actually
@@ -588,7 +588,7 @@ bool WinSerialPortEngine::select(int timeout,
     }
 
 #if !defined (Q_OS_WINCE)
-    clear_overlapped(&m_ovSelect);
+    clear_overlapped(&m_selectOverlapped);
 #endif
 
     DWORD oldEventMask = 0;
@@ -619,12 +619,12 @@ bool WinSerialPortEngine::select(int timeout,
     bool sucessResult = false;
 
 #if !defined (Q_OS_WINCE)
-    if (::WaitCommEvent(m_descriptor, &currEventMask, &m_ovSelect))
+    if (::WaitCommEvent(m_descriptor, &currEventMask, &m_selectOverlapped))
         sucessResult = true;
     else if (::GetLastError() == ERROR_IO_PENDING) {
         DWORD bytesTransferred = 0;
-        if ((::WaitForSingleObject(m_ovSelect.hEvent, (timeout < 0) ? 0 : timeout) == WAIT_OBJECT_0)
-                && ::GetOverlappedResult(m_descriptor, &m_ovSelect, &bytesTransferred, false)) {
+        if ((::WaitForSingleObject(m_selectOverlapped.hEvent, (timeout < 0) ? 0 : timeout) == WAIT_OBJECT_0)
+                && ::GetOverlappedResult(m_descriptor, &m_selectOverlapped, &bytesTransferred, false)) {
 
             sucessResult = true;
         } else {
@@ -1177,7 +1177,7 @@ bool WinSerialPortEngine::event(QEvent *e)
     else
         ret = QWinEventNotifier::event(e);
 
-    ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ovNotify);
+    ::WaitCommEvent(m_descriptor, &m_currentMask, &m_notifyOverlapped);
     return ret;
 }
 
@@ -1198,19 +1198,19 @@ bool WinSerialPortEngine::event(QEvent *e)
 bool WinSerialPortEngine::createEvents(bool rx, bool tx)
 {
     if (rx) {
-        m_ovRead.hEvent = ::CreateEvent(0, false, false, 0);
-        Q_ASSERT(m_ovRead.hEvent);
+        m_readOverlapped.hEvent = ::CreateEvent(0, false, false, 0);
+        Q_ASSERT(m_readOverlapped.hEvent);
     }
     if (tx) {
-        m_ovWrite.hEvent = ::CreateEvent(0, false, false, 0);
-        Q_ASSERT(m_ovWrite.hEvent);
+        m_writeOverlapped.hEvent = ::CreateEvent(0, false, false, 0);
+        Q_ASSERT(m_writeOverlapped.hEvent);
     }
-    m_ovSelect.hEvent = ::CreateEvent(0, false, false, 0);
-    Q_ASSERT(m_ovSelect.hEvent);
-    m_ovNotify.hEvent = ::CreateEvent(0, false, false, 0);
-    Q_ASSERT(m_ovNotify.hEvent);
+    m_selectOverlapped.hEvent = ::CreateEvent(0, false, false, 0);
+    Q_ASSERT(m_selectOverlapped.hEvent);
+    m_notifyOverlapped.hEvent = ::CreateEvent(0, false, false, 0);
+    Q_ASSERT(m_notifyOverlapped.hEvent);
 
-    setHandle(m_ovNotify.hEvent);
+    setHandle(m_notifyOverlapped.hEvent);
     return true;
 }
 
@@ -1220,20 +1220,20 @@ bool WinSerialPortEngine::createEvents(bool rx, bool tx)
 */
 void WinSerialPortEngine::closeEvents()
 {
-    if (m_ovRead.hEvent)
-        ::CloseHandle(m_ovRead.hEvent);
-    if (m_ovWrite.hEvent)
-        ::CloseHandle(m_ovWrite.hEvent);
-    if (m_ovSelect.hEvent)
-        ::CloseHandle(m_ovSelect.hEvent);
-    if (m_ovNotify.hEvent)
-        ::CloseHandle(m_ovNotify.hEvent);
+    if (m_readOverlapped.hEvent)
+        ::CloseHandle(m_readOverlapped.hEvent);
+    if (m_writeOverlapped.hEvent)
+        ::CloseHandle(m_writeOverlapped.hEvent);
+    if (m_selectOverlapped.hEvent)
+        ::CloseHandle(m_selectOverlapped.hEvent);
+    if (m_notifyOverlapped.hEvent)
+        ::CloseHandle(m_notifyOverlapped.hEvent);
 
     size_t size = sizeof(OVERLAPPED);
-    ::memset(&m_ovRead, 0, size);
-    ::memset(&m_ovWrite, 0, size);
-    ::memset(&m_ovSelect, 0, size);
-    ::memset(&m_ovNotify, 0, size);
+    ::memset(&m_readOverlapped, 0, size);
+    ::memset(&m_writeOverlapped, 0, size);
+    ::memset(&m_selectOverlapped, 0, size);
+    ::memset(&m_notifyOverlapped, 0, size);
 }
 
 #endif
@@ -1281,7 +1281,7 @@ void WinSerialPortEngine::setNotificationEnabled(bool enable, DWORD mask)
     // the monitoring events and needed disable notification;
     // otherwise needed start the notification if it was stopped.
     if (m_desiredMask) {
-        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_ovNotify);
+        ::WaitCommEvent(m_descriptor, &m_currentMask, &m_notifyOverlapped);
         if (!enable)
             setEnabled(true);
     } else if (enable) {

@@ -168,10 +168,10 @@ private:
     QMutex m_setCommMaskMutex;
     volatile bool m_running;
 #else
-    OVERLAPPED m_ovRead;
-    OVERLAPPED m_ovWrite;
-    OVERLAPPED m_ovSelect;
-    OVERLAPPED m_ovNotify;
+    OVERLAPPED m_readOverlapped;
+    OVERLAPPED m_writeOverlapped;
+    OVERLAPPED m_selectOverlapped;
+    OVERLAPPED m_notifyOverlapped;
 #endif
 };
 
