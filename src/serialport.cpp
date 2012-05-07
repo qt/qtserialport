@@ -549,9 +549,6 @@ bool SerialPortPrivate::readFromPort()
     qint64 bytesToRead = (options.policy == SerialPort::IgnorePolicy) ?
                 (SERIALPORT_READ_CHUNKSIZE) : 1;
 
-    if (bytesToRead <= 0)
-        return false;
-
     if (readBufferMaxSize
             && (bytesToRead > (readBufferMaxSize - readBuffer.size()))) {
 
@@ -561,11 +558,18 @@ bool SerialPortPrivate::readFromPort()
     char *ptr = readBuffer.reserve(bytesToRead);
     qint64 readBytes = read(ptr, bytesToRead);
 
-    if (readBytes <= 0) {
+    if (readBytes == -2) {
+        // No bytes currently available for reading.
+        // Note: only in *nix
         readBuffer.chop(bytesToRead);
-        return false;
+        return true;
     }
+
     readBuffer.chop(int(bytesToRead - ((readBytes < 0) ? qint64(0) : readBytes)));
+
+    // Here, error processing is skipped because error code is set
+    // automatically from the serial engine (if necessary).
+
     return true;
 }
 
@@ -1737,23 +1741,37 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
 
-    if (d->engine->isReadNotificationEnabled() && d->isBuffered)
-        d->engine->setReadNotificationEnabled(true);
-
-    if (!d->isBuffered) {
-        qint64 readBytes = d->read(data, maxSize);
-        return readBytes;
-    }
-
-    if (d->readBuffer.isEmpty())
+    // This is for a buffered SerialPort
+    if (d->isBuffered && d->readBuffer.isEmpty())
         return qint64(0);
 
-    // If readFromSerial() read data, copy it to its destination.
-    if (maxSize == 1) {
+    // short cut for a char read if we have something in the buffer
+    if (maxSize == 1 && !d->readBuffer.isEmpty()) {
         *data = d->readBuffer.getChar();
         return 1;
     }
 
+    // Special case for an Unbuffered SerialPort
+    // Re-filling the buffer.
+    if (!d->isBuffered
+            && d->readBuffer.size() < maxSize
+            && d->readBufferMaxSize > 0
+            && maxSize < d->readBufferMaxSize) {
+        // Our buffer is empty and a read() was requested for a byte amount that is smaller
+        // than the readBufferMaxSize. This means that we should fill our buffer since we want
+        // such small reads come from the buffer and not always go to the costly serial engine read()
+        qint64 bytesToRead = SERIALPORT_READ_CHUNKSIZE;
+        if (bytesToRead > 0) {
+            char *ptr = d->readBuffer.reserve(bytesToRead);
+            qint64 readBytes = d->read(ptr, bytesToRead);
+            if (readBytes == -2)
+                d->readBuffer.chop(bytesToRead); // No bytes currently available for reading.
+            else
+                d->readBuffer.chop(int(bytesToRead - (readBytes < 0 ? qint64(0) : readBytes)));
+        }
+    }
+
+    // First try to satisfy the read from the buffer
     qint64 bytesToRead = qMin(qint64(d->readBuffer.size()), maxSize);
     qint64 readSoFar = 0;
     while (readSoFar < bytesToRead) {
@@ -1764,6 +1782,32 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
         readSoFar += bytesToReadFromThisBlock;
         d->readBuffer.free(bytesToReadFromThisBlock);
     }
+
+    if (!d->engine->isReadNotificationEnabled())
+        d->engine->setReadNotificationEnabled(true);
+
+    if (readSoFar > 0)
+        return readSoFar;
+
+    // This code path is for Unbuffered SerialPort
+    if (!d->isBuffered) {
+        qint64 readBytes = d->read(data, maxSize);
+
+        // -2 from the engine means no bytes available (EAGAIN) so read more later
+        // Note: only in *nix
+        if (readBytes == -2)
+            return 0;
+
+        // Note: Processing errors (at readBytes == -1) is skipped, because it was
+        // done automatically from the serial engine.
+
+        // Only do this when there was no error
+        if ((readBytes >= 0) && !d->engine->isReadNotificationEnabled())
+            d->engine->setReadNotificationEnabled(true);
+
+        return readBytes;
+    }
+
     return readSoFar;
 }
 
