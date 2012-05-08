@@ -27,38 +27,37 @@
 
 /*!
     \module QtAddonSerialPort
-    \title Simple Terminal Example
+    \title Terminal example
     \example examples/terminal
 
-    The Simple Terminal example shows how to create a terminal for a simple
-    serial interface using SerialPort.
+    The Terminal example shows how to create a terminal for a simple serial
+    interface by using SerialPort.
 
-    \image terminal-example.png Screenshot of the Simple Terminal example
+    \image terminal-example.png Screenshot of the Terminal example
 
-    This example shows the main features of the SerialPort class in its
-    configuration, implementation I/O, etc. Also in this case involved a
-    class SerialPortInfo to display information about the available serial
-    ports on the system.
+    This example shows the main features of the SerialPort class, like
+    configuration, I/O implementation and so forth. Also, the class
+    SerialPortInfo is invoked to display information about the serial ports
+    available in the system.
 
-    SerialPort supports two general approaches to serial programming:
+    SerialPort supports two general programming approaches:
 
     \list
 
     \o \i{The asynchronous (non-blocking) approach.} Operations are scheduled
-    and performed when control returns to Qt's event loop. When the operation
-    is finished, SerialPort emits a signal. For example,
-    SerialPort::write() returns immediately, and when the data on the parts
-    will be sent to the port, SerialPort emits
-    \l{SerialPort::bytesWritten()}{bytesWritten()}.
+    and performed when the control returns to Qt's event loop. SerialPort emits
+    a signal when the operation is finished. For example, SerialPort::write()
+    returns immediately. When the data is sent to the serial port, SerialPort
+    emits \l{SerialPort::bytesWritten()}{bytesWritten()}.
 
     \o \i{The synchronous (blocking) approach.} In non-GUI and multithreaded
-    applications, you can call the \c waitFor...() functions (e.g.,
+    applications, the \c waitFor...() functions can be called (i.e.
     SerialPort::waitReadyRead()) to suspend the calling thread until the
-    operation has completed, instead of connecting to signals.
+    operation has completed.
 
     \endlist
 
-    In this example, we will demonstrate the asynchronous approach. The
+    In this example, the asynchronous approach is demonstrated. The
     \l{examples/blockingterminal}{Blocking Simple Terminal} example
     illustrates the synchronous approach.
 
@@ -67,80 +66,81 @@
     \list
 
     \o \l{examples/terminal/mainwindow.cpp}{MainWindow} - is the main application
-    window that contains all the working logic to a serial port, including
-    configuring, I/O processing and inherits from QMainWindow
+    window that contains all the working logic for the serial port programming,
+    including configuration, I/O processing and so forth, while inheriting the
+    QMainWindow.
 
-    \o \l{examples/terminal/console.cpp}{Console} - widget to display the
-    transmitted or received data, is central widget for the main window and
-    derived from QPlainTextEdit.
+    \o \l{examples/terminal/console.cpp}{Console} - is the central widget of the
+    main window, displaying the transmitted or received data. The widget is
+    derived from the QPlainTextEdit class.
 
-    \o \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} - dialog to configure
-    the serial port, as well as to display the available serial ports and
-    information about them.
+    \o \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} - is a dialog
+    for configuring the serial port, as well as for displaying the available
+    serial ports and information about them.
 
     \endlist
 
-    The serial port creates in the \l{examples/terminal/mainwindow.cpp}{MainWindow}
-    constructor. We'll pass the main widget as parent, so that we won't have to
-    worry about deleting the serial port:
+    The serial port is instantiated in the \l{examples/terminal/mainwindow.cpp}{MainWindow}
+    constructor. The main widget is passed as the parent, so the object deletion
+    happens automatically according to the the parent and child mechanism in Qt:
 
     \snippet examples/terminal/mainwindow.cpp 0
     \dots
     \snippet examples/terminal/mainwindow.cpp 1
 
-    The only SerialPort signal we need in this example are
-    SerialPort::readyRead(), signifying that data has been received:
+    The only SerialPort signal invoked in this example is
+    SerialPort::readyRead(), which shows that new data has been received and
+    hence available:
 
     \dots
     \snippet examples/terminal/mainwindow.cpp 2
     \dots
     \snippet examples/terminal/mainwindow.cpp 3
 
-    Clicking the \bold{Connect} button will invoke the \c
-    openSerialPort() slot:
+    Clicking on the \bold{Connect} button invokes the \c openSerialPort() slot:
 
     \snippet examples/terminal/mainwindow.cpp 4
 
-    In this slot, is read settings from \l{examples/terminal/settingsdialog.cpp}
-    {SettingsDialog} and attempt to open and initialize the serial port. If
-    successful, the status bar displays a message on the successful opening of
-    the port in a given configuration; otherwise, displays the messagebox with
-    the appropriate error code and message. If the serial port settings have
-    never been called \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
-    - the terminal is trying to open the port with the settings: 9600 8N1.
+    In this slot, the settings are read from \l{examples/terminal/settingsdialog.cpp}
+    {SettingsDialog} and an attempt is made to open and initialize the serial
+    port accordingly. If successful, the status bar displays a message that the
+    opening was successful with the given configuration; otherwise, a messagebox
+    is displayed with the appropriate error code and message. If the serial port
+    settings have never been called
+    \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}, then the terminal
+    attempts to open the port with the default settings: 9600 8N1.
 
-    Clicking the \bold{Disconnect} button will invoke the \c
-    closeSerialPort() slot:
+    Clicking on the \bold{Disconnect} button invokes the \c closeSerialPort()
+    slot:
 
     \snippet examples/terminal/mainwindow.cpp 5
 
     In this case, handled by the closure of the serial port.
 
-    When you type characters in the console will invoke the \c
-    writeData() slot:
+    Typing characters in the console invokes the \c writeData() slot:
 
     \snippet examples/terminal/mainwindow.cpp 6
 
-    This slot gets the characters that were introduced in the
-    \l{examples/terminal/console.cpp}{Console} widget and sends them to the
-    serial port.
+    This slot sends the characters typed in the given
+    \l{examples/terminal/console.cpp}{Console} widget to the serial port.
 
-    When the serial port receives new data, it emits a signal
-    \l{QTcpSocket::readyRead()}{readyRead()} that is connected to \c
-    MainWindow::readData():
+    When the serial port receives new data, the signal
+    \l{QTcpSocket::readyRead()}{readyRead()} is emitted, and that signal is
+    connected to the \c MainWindow::readData() slot:
 
     \snippet examples/terminal/mainwindow.cpp 7
 
-    This slot read data from the serial port and print it to the
+    This slot reads the data from the serial port and displays that in the
     \l{examples/terminal/console.cpp}{Console} widget.
 
-    Clicking the \bold{Configure} button will invoke the \c
-    show() slot which belongs to the
-    \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} widget.
+    Clicking on the \bold{Configure} button invokes the \c show() slot which
+    belongs to the \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
+    widget.
 
-    This method shows the \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
-    where the user can choose the desired of its serial port, see the information
-    about the selected port, and set the desired parameters of the serial port.
+    This method displays the \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
+    in which the user can choose the desired serial port, see the information
+    about the selected port, and set the desired parameters of the given serial
+    port.
 
     \sa {Blocking Simple Terminal Example}
 */

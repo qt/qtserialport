@@ -43,8 +43,8 @@
 
     \section1 Supported platforms
 
-    Planned to implement support for multiple platforms, the current state of
-    support provided in the table below:
+    The goal is to implement support for multiple platforms, the current state
+    of support provided in the table below:
 
     \table
     \header
@@ -54,11 +54,11 @@
     \row
         \o Windows x86/x64 NT based (2K, XP, Vista, 7, 8)
         \o Full support.
-        \o Expected the support Windows 8, but has not yet been tested.
+        \o Support expected for Windows 8, but has not yet been tested.
     \row
         \o Windows CE
         \o Partially support.
-        \o Tested only on 5 and 6 platforms on the emulator.
+        \o Tested only with platforms 5 and 6 by using the emulator.
     \row
         \o Symbian
         \o Partially support.
