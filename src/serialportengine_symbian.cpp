@@ -353,7 +353,7 @@ bool SymbianSerialPortEngine::setBreak(bool set)
 */
 qint64 SymbianSerialPortEngine::bytesAvailable() const
 {
-    return qint64(m_descriptor.QueryReceiveBuffer());
+    return m_descriptor.QueryReceiveBuffer();
 }
 
 /*!
@@ -415,9 +415,9 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
     TInt err = status.Int();
 
     if (err != KErrNone)
-        return qint64(-1);
+        return -1;
 
-    return qint64(buffer.Length());
+    return buffer.Length();
 }
 
 /*!
@@ -447,10 +447,10 @@ qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
     TInt err = status.Int();
 
     if (err != KErrNone)
-        return qint64(-1);
+        return -1;
 
     // FIXME: How to get the actual number of bytes written?
-    return qint64(len);
+    return len;
 }
 
 /*!

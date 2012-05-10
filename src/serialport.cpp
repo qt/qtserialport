@@ -566,7 +566,7 @@ bool SerialPortPrivate::readFromPort()
         return true;
     }
 
-    readBuffer.chop(int(bytesToRead - ((readBytes < 0) ? qint64(0) : readBytes)));
+    readBuffer.chop(int(bytesToRead - ((readBytes < 0) ? 0 : readBytes)));
 
     if (readBytes < 0) {
         setError(SerialPort::IoError);
@@ -1540,7 +1540,7 @@ qint64 SerialPort::bytesAvailable() const
     Q_D(const SerialPort);
     qint64 ret;
     if (d->isBuffered)
-        ret = qint64(d->readBuffer.size());
+        ret = d->readBuffer.size();
     else
         ret = d->bytesAvailable();
     return ret + QIODevice::bytesAvailable();
@@ -1558,7 +1558,7 @@ qint64 SerialPort::bytesToWrite() const
     Q_D(const SerialPort);
     qint64 ret;
     if (d->isBuffered)
-        ret = qint64(d->writeBuffer.size());
+        ret = d->writeBuffer.size();
     else
         ret = d->bytesToWrite();
     return ret + QIODevice::bytesToWrite();
@@ -1746,7 +1746,7 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
 
     // This is for a buffered SerialPort
     if (d->isBuffered && d->readBuffer.isEmpty())
-        return qint64(0);
+        return 0;
 
     // short cut for a char read if we have something in the buffer
     if (maxSize == 1 && !d->readBuffer.isEmpty()) {
@@ -1770,7 +1770,7 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
             if (readBytes == -2)
                 d->readBuffer.chop(bytesToRead); // No bytes currently available for reading.
             else
-                d->readBuffer.chop(int(bytesToRead - (readBytes < 0 ? qint64(0) : readBytes)));
+                d->readBuffer.chop(int(bytesToRead - ((readBytes < 0) ? 0 : readBytes)));
         }
     }
 

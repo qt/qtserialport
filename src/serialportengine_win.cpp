@@ -446,7 +446,7 @@ static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
     ::memset(&cs, 0, sizeof(COMSTAT));
     if (::ClearCommError(m_descriptor, 0, &cs) == 0)
         return -1;
-    return qint64((que == CS_IN_QUE) ? (cs.cbInQue) : (cs.cbOutQue));
+    return (que == CS_IN_QUE) ? cs.cbInQue : cs.cbOutQue;
 }
 
 /*!
@@ -532,7 +532,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 #endif
 
     if (!sucessResult)
-        return qint64(-1);
+        return -1;
 
     // FIXME: Process emulate policy.
     if (m_flagErrorFromCommEvent) {
@@ -549,7 +549,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
         default:;
         }
     }
-    return qint64(readBytes);
+    return readBytes;
 }
 
 /*!
@@ -583,9 +583,9 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 #endif
 
     if (!sucessResult)
-        return qint64(-1);
+        return -1;
 
-    return quint64(writeBytes);
+    return writeBytes;
 }
 
 /*!
