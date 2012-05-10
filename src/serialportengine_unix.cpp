@@ -507,10 +507,6 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
             break;
         default:;
         }
-        // FIXME: Here need call errno
-        // and set error type?
-        if (bytesRead == -1)
-            dptr->setError(SerialPort::IoError);
     }
     return bytesRead;
 }
@@ -550,10 +546,6 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
             break;
         default:;
         }
-        // FIXME: Here need call errno
-        // and set error type?
-        if (bytesWritten == -1)
-            dptr->setError(SerialPort::IoError);
     }
     return bytesWritten;
 }

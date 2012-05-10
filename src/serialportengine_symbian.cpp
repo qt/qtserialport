@@ -413,10 +413,10 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
     m_descriptor.Read(status, TTimeIntervalMicroSeconds32(0), buffer);
     User::WaitForRequest(status);
     TInt err = status.Int();
-    if (err != KErrNone) {
-        dptr->setError(SerialPort::IoError);
+
+    if (err != KErrNone)
         return qint64(-1);
-    }
+
     return qint64(buffer.Length());
 }
 
@@ -446,10 +446,9 @@ qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
     User::WaitForRequest(status);
     TInt err = status.Int();
 
-    if (err != KErrNone) {
-        dptr->setError(SerialPort::IoError);
-        len = -1;
-    }
+    if (err != KErrNone)
+        return qint64(-1);
+
     // FIXME: How to get the actual number of bytes written?
     return qint64(len);
 }

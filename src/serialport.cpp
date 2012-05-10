@@ -352,6 +352,7 @@ bool SerialPortPrivate::flush()
     // Attempt to write it all in one chunk.
     qint64 written = write(ptr, nextSize);
     if (written < 0) {
+        setError(SerialPort::IoError);
         writeBuffer.clear();
         return false;
     }
@@ -567,8 +568,10 @@ bool SerialPortPrivate::readFromPort()
 
     readBuffer.chop(int(bytesToRead - ((readBytes < 0) ? qint64(0) : readBytes)));
 
-    // Here, error processing is skipped because error code is set
-    // automatically from the serial engine (if necessary).
+    if (readBytes < 0) {
+        setError(SerialPort::IoError);
+        return false;
+    }
 
     return true;
 }
@@ -1798,12 +1801,10 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
         if (readBytes == -2)
             return 0;
 
-        // Note: Processing errors (at readBytes == -1) is skipped, because it was
-        // done automatically from the serial engine.
-
-        // Only do this when there was no error
-        if ((readBytes >= 0) && !d->engine->isReadNotificationEnabled())
-            d->engine->setReadNotificationEnabled(true);
+        if (readBytes < 0)
+            d->setError(SerialPort::IoError);
+        else if (!d->engine->isReadNotificationEnabled())
+            d->engine->setReadNotificationEnabled(true); // Only do this when there was no error
 
         return readBytes;
     }
@@ -1826,11 +1827,11 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 
     if (!d->isBuffered) {
         qint64 written = d->write(data, maxSize);
-        if (written < 0) {
-            //Error
-        } else if (!d->writeBuffer.isEmpty()) {
+
+        if (written < 0)
+            d->setError(SerialPort::IoError);
+        else if (!d->writeBuffer.isEmpty())
             d->engine->setWriteNotificationEnabled(true);
-        }
 
         if (written >= 0)
             emit bytesWritten(written);

@@ -531,10 +531,8 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
     }
 #endif
 
-    if (!sucessResult) {
-        dptr->setError(SerialPort::IoError);
-        return -1;
-    }
+    if (!sucessResult)
+        return qint64(-1);
 
     // FIXME: Process emulate policy.
     if (m_flagErrorFromCommEvent) {
@@ -584,10 +582,9 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
     }
 #endif
 
-    if (!sucessResult) {
-        dptr->setError(SerialPort::IoError);
-        return -1;
-    }
+    if (!sucessResult)
+        return qint64(-1);
+
     return quint64(writeBytes);
 }
 
