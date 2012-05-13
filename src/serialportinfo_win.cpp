@@ -215,7 +215,7 @@ static QString parceHardwareId(ExtractCommand cmd, const QStringList &hardwareId
 
 #else
 
-const static QLatin1String valueName("FriendlyName");
+const static QString valueName(QLatin1String("FriendlyName"));
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 {
     QString result;
