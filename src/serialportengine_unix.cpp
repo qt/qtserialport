@@ -428,31 +428,31 @@ bool UnixSerialPortEngine::setBreak(bool set)
 }
 
 /*!
-    If successful, returns the number of bytes that are
-    immediately available for reading; otherwise -1.
+    If successful, returns the number of bytes in
+    the input buffer; otherwise -1.
 */
 qint64 UnixSerialPortEngine::bytesAvailable() const
 {
-    int cmd = 0;
-#if defined (FIONREAD)
-    cmd = FIONREAD;
-#else
-    cmd = TIOCINQ;
-#endif
-    qint64 nbytes = 0;
-    if (::ioctl(m_descriptor, cmd, &nbytes) == -1)
+    int nbytes = 0;
+#if defined (TIOCINQ)
+    if (::ioctl(m_descriptor, TIOCINQ, &nbytes) == -1)
         return -1;
+#endif
     return nbytes;
 }
 
 /*!
-    Not supported on POSIX-compatible platforms,
-    always returns 0.
+    If successful, returns the number of bytes in
+    the output buffer; otherwise -1.
 */
 qint64 UnixSerialPortEngine::bytesToWrite() const
 {
-    // FIXME: FIONWRITE (or analogy) is exists?
-    return 0;
+    int nbytes = 0;
+#if defined (TIOCOUTQ)
+    if (::ioctl(m_descriptor, TIOCOUTQ, &nbytes) == -1)
+        return -1;
+#endif
+    return nbytes;
 }
 
 /*!
