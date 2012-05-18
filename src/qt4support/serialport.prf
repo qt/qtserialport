@@ -15,5 +15,15 @@
 
 qtAddLibrary(SerialPort)
 
+mac {
+    LIBS -= -framework SerialPort$${QT_LIBINFIX}
+
+   if(!debug_and_release|build_pass):CONFIG(debug, debug|release) {
+       LIBS += -lSerialPort$${QT_LIBINFIX}_debug
+   } else {
+       LIBS += -lSerialPort$${QT_LIBINFIX}
+   }
+}
+
 INCLUDEPATH -= $$[QT_INSTALL_HEADERS]/SerialPort
 INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtAddOnSerialPort
