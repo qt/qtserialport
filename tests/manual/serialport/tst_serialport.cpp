@@ -52,22 +52,33 @@ class tst_SerialPort : public QObject
     Q_OBJECT
 
 private slots:
+    void initTestCase();
     void open();
     void rate();
     void dataBits();
     void parity();
     void stopBits();
     void flowControl();
+
+private:
+    QList<SerialPortInfo> ports;
 };
+
+void tst_SerialPort::initTestCase()
+{
+    ports = SerialPortInfo::availablePorts();
+
+    if (ports.isEmpty()) {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        QSKIP("Test doesn't work because the serial ports are not detected.");
+#else
+        QSKIP("Test doesn't work because the serial ports are not detected.", SkipAll);
+#endif
+    }
+}
 
 void tst_SerialPort::open()
 {
-    const QList<SerialPortInfo> ports = SerialPortInfo::availablePorts();
-
-    if (ports.isEmpty()) {
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-    }
-
     foreach (const SerialPortInfo &info, ports) {
 
         if (info.isBusy())
@@ -103,12 +114,6 @@ void tst_SerialPort::open()
 
 void tst_SerialPort::rate()
 {
-    const QList<SerialPortInfo> ports = SerialPortInfo::availablePorts();
-
-    if (ports.isEmpty()) {
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-    }
-
     foreach (const SerialPortInfo &info, ports) {
 
         SerialPort object1;
@@ -138,12 +143,6 @@ void tst_SerialPort::rate()
 
 void tst_SerialPort::dataBits()
 {
-    const QList<SerialPortInfo> ports = SerialPortInfo::availablePorts();
-
-    if (ports.isEmpty()) {
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-    }
-
     foreach (const SerialPortInfo &info, ports) {
 
         SerialPort object1;
@@ -159,12 +158,6 @@ void tst_SerialPort::dataBits()
 
 void tst_SerialPort::parity()
 {
-    const QList<SerialPortInfo> ports = SerialPortInfo::availablePorts();
-
-    if (ports.isEmpty()) {
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-    }
-
     foreach (const SerialPortInfo &info, ports) {
 
         SerialPort object1;
@@ -188,12 +181,6 @@ void tst_SerialPort::parity()
 
 void tst_SerialPort::stopBits()
 {
-    const QList<SerialPortInfo> ports = SerialPortInfo::availablePorts();
-
-    if (ports.isEmpty()) {
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-    }
-
     foreach (const SerialPortInfo &info, ports) {
 
         SerialPort object1;
@@ -212,12 +199,6 @@ void tst_SerialPort::stopBits()
 
 void tst_SerialPort::flowControl()
 {
-    const QList<SerialPortInfo> ports = SerialPortInfo::availablePorts();
-
-    if (ports.isEmpty()) {
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-    }
-
     foreach (const SerialPortInfo &info, ports) {
 
         SerialPort object1;
