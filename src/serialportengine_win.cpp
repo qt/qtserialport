@@ -348,7 +348,7 @@ SerialPort::Lines WinSerialPortEngine::lines() const
 */
 bool WinSerialPortEngine::setDtr(bool set)
 {
-    bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
+    const bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
     if (!ret) {
         // FIXME: Here need call ::GetLastError()
         // and set error type.
@@ -363,7 +363,7 @@ bool WinSerialPortEngine::setDtr(bool set)
 */
 bool WinSerialPortEngine::setRts(bool set)
 {
-    bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
+    const bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
     if (!ret) {
         // FIXME: Here need call ::GetLastError()
         // and set error type.
@@ -379,7 +379,7 @@ bool WinSerialPortEngine::setRts(bool set)
 */
 bool WinSerialPortEngine::flush()
 {
-    bool ret = ::FlushFileBuffers(m_descriptor);
+    const bool ret = ::FlushFileBuffers(m_descriptor);
     if (!ret) {
         // FIXME: Here need call ::GetLastError()
         // and set error type.
@@ -395,8 +395,8 @@ bool WinSerialPortEngine::flush()
 */
 bool WinSerialPortEngine::reset()
 {
-    DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-    bool ret = ::PurgeComm(m_descriptor, flags);
+    const DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+    const bool ret = ::PurgeComm(m_descriptor, flags);
     if (!ret) {
         // FIXME: Here need call ::GetLastError()
         // and set error type.
@@ -430,7 +430,7 @@ bool WinSerialPortEngine::sendBreak(int duration)
 */
 bool WinSerialPortEngine::setBreak(bool set)
 {
-    bool ret = (set) ?
+    const bool ret = (set) ?
                 (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
     if (!ret) {
         // FIXME: Here need call ::GetLastError()
@@ -947,7 +947,7 @@ void WinSerialPortEngine::setErrorNotificationEnabled(bool enable)
 bool WinSerialPortEngine::processIOErrors()
 {
     DWORD err = 0;
-    bool ret = (::ClearCommError(m_descriptor, &err, 0) != 0);
+    const bool ret = (::ClearCommError(m_descriptor, &err, 0) != 0);
     if (ret && err) {
         if (err & CE_FRAME)
             dptr->setError(SerialPort::FramingError);
@@ -1265,7 +1265,7 @@ void WinSerialPortEngine::closeEvents()
     if (m_notifyOverlapped.hEvent)
         ::CloseHandle(m_notifyOverlapped.hEvent);
 
-    size_t size = sizeof(OVERLAPPED);
+    const size_t size = sizeof(OVERLAPPED);
     ::memset(&m_readOverlapped, 0, size);
     ::memset(&m_writeOverlapped, 0, size);
     ::memset(&m_selectOverlapped, 0, size);

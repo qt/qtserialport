@@ -213,7 +213,7 @@ bool TTYLocker::isLocked(const QString &location, bool *currentPid)
             QString content(QLatin1String(f.readAll()));
             f.close();
             bool ok = false;
-            int pid = content.section(' ', 0, 0, QString::SectionSkipEmpty).toInt(&ok);
+            const int pid = content.section(' ', 0, 0, QString::SectionSkipEmpty).toInt(&ok);
             if (ok) {
 
                 // Checks the validity of the process number that was obtained from the Lock file.

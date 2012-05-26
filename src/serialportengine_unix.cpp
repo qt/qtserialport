@@ -107,7 +107,7 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *d)
 {
     Q_ASSERT(d);
     dptr = d;
-    int size = sizeof(struct termios);
+    const int size = sizeof(struct termios);
     ::memset(&m_currentTermios, 0, size);
     ::memset(&m_restoredTermios, 0, size);
 }
@@ -341,7 +341,7 @@ static bool trigger_out_line(int fd, int bit, bool set)
 */
 bool UnixSerialPortEngine::setDtr(bool set)
 {
-    bool ret = trigger_out_line(m_descriptor, TIOCM_DTR, set);
+    const bool ret = trigger_out_line(m_descriptor, TIOCM_DTR, set);
     if (!ret) {
         // FIXME: Here need call errno
         // and set error type.
@@ -356,7 +356,7 @@ bool UnixSerialPortEngine::setDtr(bool set)
 */
 bool UnixSerialPortEngine::setRts(bool set)
 {
-    bool ret = trigger_out_line(m_descriptor, TIOCM_RTS, set);
+    const bool ret = trigger_out_line(m_descriptor, TIOCM_RTS, set);
     if (!ret) {
         // FIXME: Here need call errno
         // and set error type.
@@ -372,7 +372,7 @@ bool UnixSerialPortEngine::setRts(bool set)
 */
 bool UnixSerialPortEngine::flush()
 {
-    bool ret = (::tcdrain(m_descriptor) != -1);
+    const bool ret = (::tcdrain(m_descriptor) != -1);
     if (!ret) {
         // FIXME: Here need call errno
         // and set error type.
@@ -388,7 +388,7 @@ bool UnixSerialPortEngine::flush()
 */
 bool UnixSerialPortEngine::reset()
 {
-    bool ret = (::tcflush(m_descriptor, TCIOFLUSH) != -1);
+    const bool ret = (::tcflush(m_descriptor, TCIOFLUSH) != -1);
     if (!ret) {
         // FIXME: Here need call errno
         // and set error type.
@@ -403,7 +403,7 @@ bool UnixSerialPortEngine::reset()
 */
 bool UnixSerialPortEngine::sendBreak(int duration)
 {
-    bool ret = (::tcsendbreak(m_descriptor, duration) != -1);
+    const bool ret = (::tcsendbreak(m_descriptor, duration) != -1);
     if (!ret) {
         // FIXME: Here need call errno
         // and set error type.
@@ -419,7 +419,7 @@ bool UnixSerialPortEngine::sendBreak(int duration)
 */
 bool UnixSerialPortEngine::setBreak(bool set)
 {
-    bool ret = (::ioctl(m_descriptor, set ? TIOCSBRK : TIOCCBRK) != -1);
+    const bool ret = (::ioctl(m_descriptor, set ? TIOCSBRK : TIOCCBRK) != -1);
     if (!ret) {
         // FIXME: Here need call errno
         // and set error type.

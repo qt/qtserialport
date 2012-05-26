@@ -346,11 +346,11 @@ bool SerialPortPrivate::flush()
     if (writeBuffer.isEmpty())
         return false;
 
-    int nextSize = writeBuffer.nextDataBlockSize();
+    const int nextSize = writeBuffer.nextDataBlockSize();
     const char *ptr = writeBuffer.readPointer();
 
     // Attempt to write it all in one chunk.
-    qint64 written = write(ptr, nextSize);
+    const qint64 written = write(ptr, nextSize);
     if (written < 0) {
         setError(SerialPort::IoError);
         writeBuffer.clear();
@@ -557,7 +557,7 @@ bool SerialPortPrivate::readFromPort()
     }
 
     char *ptr = readBuffer.reserve(bytesToRead);
-    qint64 readBytes = read(ptr, bytesToRead);
+    const qint64 readBytes = read(ptr, bytesToRead);
 
     if (readBytes == -2) {
         // No bytes currently available for reading.
@@ -671,7 +671,7 @@ bool SerialPortPrivate::canWriteNotification()
         engine->setWriteNotificationEnabled(false);
 #endif
 
-    int tmp = writeBuffer.size();
+    const int tmp = writeBuffer.size();
     flush();
 
 #if defined (Q_OS_WIN)
@@ -1124,7 +1124,7 @@ bool SerialPort::open(OpenMode mode)
     }
 
     // Define while not supported modes.
-    static OpenMode unsupportedModes = (Append | Truncate | Text);
+    static const OpenMode unsupportedModes = (Append | Truncate | Text);
     if ((mode & unsupportedModes) || (mode == NotOpen)) {
         d->setError(SerialPort::UnsupportedPortOperationError);
         return false;
@@ -1573,7 +1573,7 @@ qint64 SerialPort::bytesToWrite() const
 bool SerialPort::canReadLine() const
 {
     Q_D(const SerialPort);
-    bool hasLine = d->readBuffer.canReadLine();
+    const bool hasLine = d->readBuffer.canReadLine();
     return (hasLine || QIODevice::canReadLine());
 }
 
@@ -1763,10 +1763,10 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
         // Our buffer is empty and a read() was requested for a byte amount that is smaller
         // than the readBufferMaxSize. This means that we should fill our buffer since we want
         // such small reads come from the buffer and not always go to the costly serial engine read()
-        qint64 bytesToRead = SERIALPORT_READ_CHUNKSIZE;
+        const qint64 bytesToRead = SERIALPORT_READ_CHUNKSIZE;
         if (bytesToRead > 0) {
             char *ptr = d->readBuffer.reserve(bytesToRead);
-            qint64 readBytes = d->read(ptr, bytesToRead);
+            const qint64 readBytes = d->read(ptr, bytesToRead);
             if (readBytes == -2)
                 d->readBuffer.chop(bytesToRead); // No bytes currently available for reading.
             else
@@ -1775,12 +1775,12 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
     }
 
     // First try to satisfy the read from the buffer
-    qint64 bytesToRead = qMin(qint64(d->readBuffer.size()), maxSize);
+    const qint64 bytesToRead = qMin(qint64(d->readBuffer.size()), maxSize);
     qint64 readSoFar = 0;
     while (readSoFar < bytesToRead) {
         const char *ptr = d->readBuffer.readPointer();
-        int bytesToReadFromThisBlock = qMin(int(bytesToRead - readSoFar),
-                                            d->readBuffer.nextDataBlockSize());
+        const int bytesToReadFromThisBlock = qMin(int(bytesToRead - readSoFar),
+                                                  d->readBuffer.nextDataBlockSize());
         memcpy(data + readSoFar, ptr, bytesToReadFromThisBlock);
         readSoFar += bytesToReadFromThisBlock;
         d->readBuffer.free(bytesToReadFromThisBlock);
@@ -1794,7 +1794,7 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
 
     // This code path is for Unbuffered SerialPort
     if (!d->isBuffered) {
-        qint64 readBytes = d->read(data, maxSize);
+        const qint64 readBytes = d->read(data, maxSize);
 
         // -2 from the engine means no bytes available (EAGAIN) so read more later
         // Note: only in *nix
@@ -1826,7 +1826,7 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
     Q_D(SerialPort);
 
     if (!d->isBuffered) {
-        qint64 written = d->write(data, maxSize);
+        const qint64 written = d->write(data, maxSize);
 
         if (written < 0)
             d->setError(SerialPort::IoError);

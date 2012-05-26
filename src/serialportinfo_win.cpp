@@ -58,7 +58,7 @@
 
 static const GUID guidsArray[] =
 {
-#if !defined (Q_OS_WINCE)
+    #if !defined (Q_OS_WINCE)
     // Windows Ports Class GUID
     { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
     // Virtual Ports Class GUID (i.e. com0com and etc)
@@ -69,9 +69,9 @@ static const GUID guidsArray[] =
     { 0xCC0EF009, 0xB820, 0x42F4, { 0x95, 0xA9, 0x9B, 0xFA, 0x6A, 0x5A, 0xB7, 0xAB } },
     // Advanced Virtual COM Port GUID
     { 0x9341CD95, 0x4371, 0x4A37, { 0xA5, 0xAF, 0xFD, 0xB0, 0xA9, 0xD1, 0x96, 0x31 } },
-#else
+    #else
     { 0xCC5195AC, 0xBA49, 0x48A0, { 0xBE, 0x17, 0xDF, 0x6D, 0x1B, 0x01, 0x73, 0xDD } }
-#endif
+    #endif
 };
 
 #if !defined (Q_OS_WINCE)
@@ -154,8 +154,8 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
 static QString getNativeName(HDEVINFO deviceInfoSet,
                              PSP_DEVINFO_DATA deviceInfoData) {
 
-    HKEY key = ::SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
-                                      0, DIREG_DEV, KEY_READ);
+    const HKEY key = ::SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
+                                            0, DIREG_DEV, KEY_READ);
 
     QString result;
 
@@ -170,12 +170,12 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
         DWORD lenKeyName = bufKeyName.size();
         DWORD lenKeyValue = bufKeyVal.size();
         DWORD keyType = 0;
-        LONG ret = ::RegEnumValue(key,
-                                  index++,
-                                  reinterpret_cast<wchar_t *>(bufKeyName.data()), &lenKeyName,
-                                  0,
-                                  &keyType,
-                                  reinterpret_cast<unsigned char *>(bufKeyVal.data()), &lenKeyValue);
+        const LONG ret = ::RegEnumValue(key,
+                                        index++,
+                                        reinterpret_cast<wchar_t *>(bufKeyName.data()), &lenKeyName,
+                                        0,
+                                        &keyType,
+                                        reinterpret_cast<unsigned char *>(bufKeyVal.data()), &lenKeyValue);
 
         if (ret == ERROR_SUCCESS) {
             if (keyType == REG_SZ) {
@@ -276,7 +276,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
-    static int guidCount = sizeof(guidsArray)/sizeof(GUID);
+    static const int guidCount = sizeof(guidsArray)/sizeof(GUID);
 
 #if !defined (Q_OS_WINCE)
     for (int i = 0; i < guidCount; ++i) {
@@ -287,7 +287,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             return ports;
 
         SP_DEVINFO_DATA deviceInfoData;
-        int size = sizeof(SP_DEVINFO_DATA);
+        const int size = sizeof(SP_DEVINFO_DATA);
         ::memset(&deviceInfoData, 0, size);
         deviceInfoData.cbSize = size;
 
@@ -323,7 +323,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     //for (int i = 0; i < guidCount; ++i) {
     DEVMGR_DEVICE_INFORMATION di;
     di.dwSize = sizeof(DEVMGR_DEVICE_INFORMATION);
-    HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/, L"COM*"/*&guidsArray[i]*/, &di);
+    const HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/,
+                                             L"COM*"/*&guidsArray[i]*/,
+                                             &di);
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
             SerialPortInfo info;
@@ -357,7 +359,7 @@ bool SerialPortInfo::isBusy() const
     QString location = systemLocation();
     QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
 
-    HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
+    const HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
                                      GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
@@ -374,7 +376,7 @@ bool SerialPortInfo::isValid() const
     QString location = systemLocation();
     QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
 
-    HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
+    const HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
                                      GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
