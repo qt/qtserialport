@@ -483,7 +483,8 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 #endif
             bytesRead = 0;
             break;
-        default:;
+        default:
+            break;
         }
     }
     return bytesRead;
@@ -524,7 +525,8 @@ qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
             break;
         case EMSGSIZE:
             break;
-        default:;
+        default:
+            break;
         }
     }
     return bytesWritten;

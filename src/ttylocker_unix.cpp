@@ -239,6 +239,7 @@ bool TTYLocker::isLocked(const QString &location, bool *currentPid)
                     break;
                 default:
                     result = true;
+                    break;
                 }
             }
         }
