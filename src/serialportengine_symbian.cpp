@@ -103,16 +103,16 @@ static bool loadDevices()
 #endif
 
     r = User::LoadPhysicalDevice(KPddName);
-    if ((r != KErrNone) && (r != KErrAlreadyExists))
+    if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 
     r = User::LoadLogicalDevice(KLddName);
-    if ((r != KErrNone) && (r != KErrAlreadyExists))
+    if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 
 #if !defined (__WINS__)
     r = StartC32();
-    if ((r != KErrNone) && (r != KErrAlreadyExists))
+    if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 #endif
 
@@ -196,12 +196,15 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
     if (r != KErrNone) {
         switch (r) {
         case KErrPermissionDenied:
-            dptr->setError(SerialPort::NoSuchDeviceError); break;
+            dptr->setError(SerialPort::NoSuchDeviceError);
+            break;
         case KErrLocked:
         case KErrAccessDenied:
-            dptr->setError(SerialPort::PermissionDeniedError); break;
+            dptr->setError(SerialPort::PermissionDeniedError);
+            break;
         default:
             dptr->setError(SerialPort::UnknownPortError);
+            break;
         }
         return false;
     }
@@ -225,9 +228,8 @@ void SymbianSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
 
-    if (dptr->options.restoreSettingsOnClose) {
+    if (dptr->options.restoreSettingsOnClose)
         m_descriptor.SetConfig(m_restoredSettings);
-    }
 
     m_descriptor.Close();
 }
@@ -277,7 +279,7 @@ bool SymbianSerialPortEngine::setDtr(bool set)
     else
         r = m_descriptor.SetSignalsToSpace(KSignalDTR);
 
-    return (r == KErrNone);
+    return r == KErrNone;
 }
 
 /*!
@@ -293,7 +295,7 @@ bool SymbianSerialPortEngine::setRts(bool set)
     else
         r = m_descriptor.SetSignalsToSpace(KSignalRTS);
 
-    return (r == KErrNone);
+    return r == KErrNone;
 }
 
 /*!
@@ -312,7 +314,7 @@ bool SymbianSerialPortEngine::flush()
 bool SymbianSerialPortEngine::reset()
 {
     TInt r = m_descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
-    return (r == KErrNone);
+    return r == KErrNone;
 }
 
 /*!
@@ -823,7 +825,7 @@ qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
 {
     const RatePair rp = {0, setting};
     const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
-    return (ret != standardRatesTable_end) ? ret->rate : 0;
+    return ret != standardRatesTable_end ? ret->rate : 0;
 }
 
 /*!
@@ -834,7 +836,7 @@ EBps SymbianSerialPortEngine::settingFromRate(qint32 rate)
 {
     const RatePair rp = {rate, 0};
     const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
-    return (ret != standardRatesTable_end) ? ret->setting : 0;
+    return ret != standardRatesTable_end ? ret->setting : 0;
 }
 
 /*!
@@ -880,6 +882,7 @@ void SymbianSerialPortEngine::detectDefaultSettings()
         break;
     default:
         dptr->options.dataBits = SerialPort::UnknownDataBits;
+        break;
     }
 
     // Detect parity.
@@ -901,6 +904,7 @@ void SymbianSerialPortEngine::detectDefaultSettings()
         break;
     default:
         dptr->options.parity = SerialPort::UnknownParity;
+        break;
     }
 
     // Detect stopbits.
@@ -913,6 +917,7 @@ void SymbianSerialPortEngine::detectDefaultSettings()
         break;
     default:
         dptr->options.stopBits = SerialPort::UnknownStopBits;
+        break;
     }
 
     // Detect flow control.

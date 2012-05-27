@@ -204,10 +204,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                          buffer.data(),
                                          buffer.size(),
                                          kCFStringEncodingUTF8)) {
-
                     info.d_ptr->device = QString(buffer);
                 }
-
                 ::CFRelease(device);
             }
 
@@ -216,10 +214,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                          buffer.data(),
                                          buffer.size(),
                                          kCFStringEncodingUTF8)) {
-
                     info.d_ptr->portName = QString(buffer);
                 }
-
                 ::CFRelease(portName);
             }
 
@@ -242,7 +238,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 info.d_ptr->manufacturer = QString(buffer);
                 ::CFRelease(manufacturer);
             }
-
 
             int value = 0;
 

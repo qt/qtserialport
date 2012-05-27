@@ -99,9 +99,8 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
         case REG_EXPAND_SZ:
         case REG_SZ: {
             QString s;
-            if (dataSize) {
+            if (dataSize)
                 s = QString::fromWCharArray(((const wchar_t *)data.constData()));
-            }
             v = QVariant(s);
             break;
         }
@@ -126,9 +125,8 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
         case REG_NONE:
         case REG_BINARY: {
             QString s;
-            if (dataSize) {
+            if (dataSize)
                 s = QString::fromWCharArray((const wchar_t *)data.constData(), data.size() / 2);
-            }
             v = QVariant(s);
             break;
         }
@@ -144,6 +142,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
 
         default:
             v = QVariant();
+            break;
         }
 
     }
@@ -188,9 +187,9 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
                     break;
                 }
             }
-        }
-        else
+        } else {
             break;
+        }
     }
 
     ::RegCloseKey(key);
@@ -244,7 +243,8 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
                     if (dataSize)
                         result = QString::fromWCharArray(((const wchar_t *)data.constData()));
                     break;
-                default:;
+                default:
+                    break;
                 }
             }
         } else {
@@ -365,9 +365,9 @@ bool SerialPortInfo::isBusy() const
     if (descriptor == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_ACCESS_DENIED)
             return true;
-    }
-    else
+    } else {
         ::CloseHandle(descriptor);
+    }
     return false;
 }
 
@@ -382,9 +382,9 @@ bool SerialPortInfo::isValid() const
     if (descriptor == INVALID_HANDLE_VALUE) {
         if (::GetLastError() != ERROR_ACCESS_DENIED)
             return false;
-    }
-    else
+    } else {
         ::CloseHandle(descriptor);
+    }
     return true;
 }
 

@@ -225,6 +225,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
             break;
         default:
             dptr->setError(SerialPort::UnknownPortError);
+            break;
         }
         return false;
     }
@@ -313,10 +314,8 @@ SerialPort::Lines WinSerialPortEngine::lines() const
     DWORD modemStat = 0;
     SerialPort::Lines ret = 0;
 
-    if (::GetCommModemStatus(m_descriptor, &modemStat) == 0) {
-        // Print error?
+    if (::GetCommModemStatus(m_descriptor, &modemStat) == 0)
         return ret;
-    }
 
     if (modemStat & MS_CTS_ON)
         ret |= SerialPort::Cts;
@@ -348,7 +347,7 @@ SerialPort::Lines WinSerialPortEngine::lines() const
 */
 bool WinSerialPortEngine::setDtr(bool set)
 {
-    return ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
+    return ::EscapeCommFunction(m_descriptor, set ? SETDTR : CLRDTR);
 }
 
 /*!
@@ -358,7 +357,7 @@ bool WinSerialPortEngine::setDtr(bool set)
 */
 bool WinSerialPortEngine::setRts(bool set)
 {
-    return ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
+    return ::EscapeCommFunction(m_descriptor, set ? SETRTS : CLRRTS);
 }
 
 /*!
@@ -380,7 +379,7 @@ bool WinSerialPortEngine::flush()
 */
 bool WinSerialPortEngine::reset()
 {
-    const DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
+    const DWORD flags = PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR;
     return ::PurgeComm(m_descriptor, flags);
 }
 
@@ -410,8 +409,9 @@ bool WinSerialPortEngine::sendBreak(int duration)
 */
 bool WinSerialPortEngine::setBreak(bool set)
 {
-    return (set) ?
-                (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
+    if (set)
+        return ::SetCommBreak(m_descriptor);
+    return ::ClearCommBreak(m_descriptor);
 }
 
 enum CommStatQue { CS_IN_QUE, CS_OUT_QUE };
@@ -421,7 +421,7 @@ static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
     ::memset(&cs, 0, sizeof(COMSTAT));
     if (::ClearCommError(m_descriptor, 0, &cs) == 0)
         return -1;
-    return (que == CS_IN_QUE) ? cs.cbInQue : cs.cbOutQue;
+    return que == CS_IN_QUE ? cs.cbInQue : cs.cbOutQue;
 }
 
 /*!
@@ -495,13 +495,12 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 #if defined (Q_OS_WINCE)
     sucessResult = ::ReadFile(m_descriptor, data, len, &readBytes, 0);
 #else
-    if (::ReadFile(m_descriptor, data, len, &readBytes, &m_readOverlapped))
+    if (::ReadFile(m_descriptor, data, len, &readBytes, &m_readOverlapped)) {
         sucessResult = true;
-    else if ((::GetLastError() == ERROR_IO_PENDING)
+    } else if (::GetLastError() == ERROR_IO_PENDING
              // Here have to wait for completion of pending transactions
              // to get the number of actually readed bytes.
              && ::GetOverlappedResult(m_descriptor, &m_readOverlapped, &readBytes, true)) {
-
         sucessResult = true;
     }
 #endif
@@ -521,7 +520,8 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
             break;
         case SerialPort::StopReceivingPolicy:
             break;
-        default:;
+        default:
+            break;
         }
     }
     return readBytes;
@@ -544,9 +544,9 @@ qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 #if defined (Q_OS_WINCE)
     sucessResult = ::WriteFile(m_descriptor, data, len, &writeBytes, 0);
 #else
-    if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_writeOverlapped))
+    if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_writeOverlapped)) {
         sucessResult = true;
-    else if (::GetLastError() == ERROR_IO_PENDING) {
+    } else if (::GetLastError() == ERROR_IO_PENDING) {
         // This is not an error. In this case, the number of bytes actually
         // transmitted can be received only after the completion of pending
         // transactions, but it will freeze the event loop. The solution is
@@ -611,32 +611,27 @@ bool WinSerialPortEngine::select(int timeout,
         currEventMask |= EV_TXEMPTY;
 
     // Save old mask.
-    if (::GetCommMask(m_descriptor, &oldEventMask) == 0) {
-        //Print error?
+    if (::GetCommMask(m_descriptor, &oldEventMask) == 0)
         return false;
-    }
 
     // Checking the old mask bits as in the current mask.
     // And if these bits are not exists, then add them and set the reting mask.
     if (currEventMask != (oldEventMask & currEventMask)) {
         currEventMask |= oldEventMask;
-        if (::SetCommMask(m_descriptor, currEventMask) == 0) {
-            //Print error?
+        if (::SetCommMask(m_descriptor, currEventMask) == 0)
             return false;
-        }
     }
 
     currEventMask = 0;
     bool sucessResult = false;
 
 #if !defined (Q_OS_WINCE)
-    if (::WaitCommEvent(m_descriptor, &currEventMask, &m_selectOverlapped))
+    if (::WaitCommEvent(m_descriptor, &currEventMask, &m_selectOverlapped)) {
         sucessResult = true;
-    else if (::GetLastError() == ERROR_IO_PENDING) {
+    } else if (::GetLastError() == ERROR_IO_PENDING) {
         DWORD bytesTransferred = 0;
-        if ((::WaitForSingleObject(m_selectOverlapped.hEvent, (timeout < 0) ? 0 : timeout) == WAIT_OBJECT_0)
+        if (::WaitForSingleObject(m_selectOverlapped.hEvent, timeout < 0 ? 0 : timeout) == WAIT_OBJECT_0
                 && ::GetOverlappedResult(m_descriptor, &m_selectOverlapped, &bytesTransferred, false)) {
-
             sucessResult = true;
         } else {
             // Here there was a timeout or other error.
@@ -646,7 +641,7 @@ bool WinSerialPortEngine::select(int timeout,
     // FIXME: Here the situation is not properly handled with zero timeout:
     // breaker can work out before you call a method WaitCommEvent()
     // and so it will loop forever!
-    WinCeWaitCommEventBreaker breaker(m_descriptor, (timeout < 0) ? 0 : timeout);
+    WinCeWaitCommEventBreaker breaker(m_descriptor, timeout < 0 ? 0 : timeout);
     ::WaitCommEvent(m_descriptor, &currEventMask, 0);
     breaker.stop();
     sucessResult = !breaker.isWorked();
@@ -660,11 +655,11 @@ bool WinSerialPortEngine::select(int timeout,
         // adding (in the code above) extra bits in the mask currEventMask.
         if (checkRead) {
             Q_ASSERT(selectForRead);
-            *selectForRead = (currEventMask & EV_RXCHAR) && (bytesAvailable() > 0);
+            *selectForRead = (currEventMask & EV_RXCHAR) && bytesAvailable() > 0;
         }
         if (checkWrite) {
             Q_ASSERT(selectForWrite);
-            *selectForWrite =  (currEventMask & EV_TXEMPTY);
+            *selectForWrite =  currEventMask & EV_TXEMPTY;
         }
     }
 
@@ -922,7 +917,7 @@ void WinSerialPortEngine::setErrorNotificationEnabled(bool enable)
 bool WinSerialPortEngine::processIOErrors()
 {
     DWORD err = 0;
-    const bool ret = (::ClearCommError(m_descriptor, &err, 0) != 0);
+    const bool ret = ::ClearCommError(m_descriptor, &err, 0) != 0;
     if (ret && err) {
         if (err & CE_FRAME)
             dptr->setError(SerialPort::FramingError);
@@ -953,6 +948,8 @@ void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool use
     case CanErrorLocker:
         mutex = &m_errorNotificationMutex;
         break;
+    default:
+        break;
     }
 
     if (uselocker)
@@ -972,6 +969,8 @@ void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
         break;
     case CanErrorLocker:
         m_errorNotificationMutex.unlock();
+        break;
+    default:
         break;
     }
 }
@@ -1075,6 +1074,7 @@ void WinSerialPortEngine::detectDefaultSettings()
         break;
     default:
         dptr->options.dataBits = SerialPort::UnknownDataBits;
+        break;
     }
 
     // Detect parity.
@@ -1104,6 +1104,7 @@ void WinSerialPortEngine::detectDefaultSettings()
         break;
     default:
         dptr->options.stopBits = SerialPort::UnknownStopBits;
+        break;
     }
 
     // Detect flow control.
@@ -1184,9 +1185,9 @@ bool WinSerialPortEngine::event(QEvent *e)
             dptr->canWriteNotification();
             ret = true;
         }
-    }
-    else
+    } else {
         ret = QWinEventNotifier::event(e);
+    }
 
     ::WaitCommEvent(m_descriptor, &m_currentMask, &m_notifyOverlapped);
     return ret;
@@ -1259,7 +1260,7 @@ bool WinSerialPortEngine::isNotificationEnabled(DWORD mask) const
 #else
     enabled = isEnabled();
 #endif
-    return (enabled && (m_desiredMask & mask));
+    return enabled && (m_desiredMask & mask);
 }
 
 /*!

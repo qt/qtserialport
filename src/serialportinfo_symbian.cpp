@@ -82,16 +82,16 @@ static bool loadDevices()
 #endif
 
     r = User::LoadPhysicalDevice(KPddName);
-    if ((r != KErrNone) && (r != KErrAlreadyExists))
+    if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 
     r = User::LoadLogicalDevice(KLddName);
-    if ((r != KErrNone) && (r != KErrAlreadyExists))
+    if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 
 #if !defined (__WINS__)
     r = StartC32();
-    if ((r != KErrNone) && (r != KErrAlreadyExists))
+    if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 #endif
 
@@ -232,7 +232,7 @@ bool SerialPortInfo::isBusy() const
     r = port.Open(server, portName, ECommExclusive);
     if (r == KErrNone)
         port.Close();
-    return (r == KErrLocked);
+    return r == KErrLocked;
 }
 
 bool SerialPortInfo::isValid() const
@@ -250,7 +250,7 @@ bool SerialPortInfo::isValid() const
     r = port.Open(server, portName, ECommExclusive);
     if (r == KErrNone)
         port.Close();
-    return (r == KErrNone ) || (r == KErrLocked);
+    return r == KErrNone || r == KErrLocked;
 }
 
 QT_END_NAMESPACE_SERIALPORT
