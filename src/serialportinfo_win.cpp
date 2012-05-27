@@ -281,7 +281,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 #if !defined (Q_OS_WINCE)
     for (int i = 0; i < guidCount; ++i) {
 
-        HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], 0, 0, DIGCF_PRESENT);
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], 0, 0, DIGCF_PRESENT);
 
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return ports;
