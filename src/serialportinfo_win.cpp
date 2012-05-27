@@ -205,7 +205,7 @@ const static QLatin1String hardwareIdPattern("vid_(\\w+)&pid_(\\w+)");
 enum ExtractCommand { CMD_EXTRACT_VID = 1, CMD_EXTRACT_PID = 2 };
 
 // Extract desired part Id type from Hardware ID.
-static QString parceHardwareId(ExtractCommand cmd, const QStringList &hardwareId)
+static QString parseHardwareId(ExtractCommand cmd, const QStringList &hardwareId)
 {
     QRegExp rx(hardwareIdPattern);
     rx.setCaseSensitivity(Qt::CaseInsensitive);
@@ -310,8 +310,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 info.d_ptr->manufacturer = v.toString();
 
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID);
-                info.d_ptr->vendorIdentifier = parceHardwareId(CMD_EXTRACT_VID, v.toStringList());
-                info.d_ptr->productIdentifier = parceHardwareId(CMD_EXTRACT_PID, v.toStringList());
+                info.d_ptr->vendorIdentifier = parseHardwareId(CMD_EXTRACT_VID, v.toStringList());
+                info.d_ptr->productIdentifier = parseHardwareId(CMD_EXTRACT_PID, v.toStringList());
 
                 ports.append(info);
             }
