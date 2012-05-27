@@ -168,6 +168,7 @@ public:
 
 protected:
     virtual void detectDefaultSettings();
+    virtual SerialPort::PortError decodeSystemError() const;
 
 #if defined (Q_OS_WINCE)
     virtual void run();

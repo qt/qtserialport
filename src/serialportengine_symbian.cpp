@@ -70,8 +70,6 @@
 #include <f32file.h>
 
 #include <QtCore/qregexp.h>
-//#include <QtCore/QDebug>
-
 
 // Physical device driver.
 #if defined (__WINS__)
@@ -129,6 +127,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     SerialPortPrivate is used to call some common methods.
 */
 SymbianSerialPortEngine::SymbianSerialPortEngine(SerialPortPrivate *d)
+    : m_errno(KErrNone)
 {
     Q_ASSERT(d);
     // Impl me
@@ -169,50 +168,39 @@ bool SymbianSerialPortEngine::open(const QString &location, QIODevice::OpenMode 
     }
 
     RCommServ server;
-    TInt r = server.Connect();
-    if (r != KErrNone) {
-        dptr->setError(SerialPort::UnknownPortError);
+    m_errno = server.Connect();
+    if (m_errno != KErrNone) {
+        dptr->setError(decodeSystemError());
         return false;
     }
 
     if (location.contains("BTCOMM"))
-        r = server.LoadCommModule(KBluetoothModuleName);
+        m_errno = server.LoadCommModule(KBluetoothModuleName);
     else if (location.contains("IRCOMM"))
-        r = server.LoadCommModule(KInfraRedModuleName);
+        m_errno = server.LoadCommModule(KInfraRedModuleName);
     else if (location.contains("ACM"))
-        r = server.LoadCommModule(KACMModuleName);
+        m_errno = server.LoadCommModule(KACMModuleName);
     else
-        r = server.LoadCommModule(KRS232ModuleName);
+        m_errno = server.LoadCommModule(KRS232ModuleName);
 
-    if (r != KErrNone) {
-        dptr->setError(SerialPort::UnknownPortError);
+    if (m_errno != KErrNone) {
+        dptr->setError(decodeSystemError());
         return false;
     }
 
     // In Symbian OS port opening only in R/W mode !?
     TPtrC portName(static_cast<const TUint16*>(location.utf16()), location.length());
-    r = m_descriptor.Open(server, portName, ECommExclusive);
+    m_errno = m_descriptor.Open(server, portName, ECommExclusive);
 
-    if (r != KErrNone) {
-        switch (r) {
-        case KErrPermissionDenied:
-            dptr->setError(SerialPort::NoSuchDeviceError);
-            break;
-        case KErrLocked:
-        case KErrAccessDenied:
-            dptr->setError(SerialPort::PermissionDeniedError);
-            break;
-        default:
-            dptr->setError(SerialPort::UnknownPortError);
-            break;
-        }
+    if (m_errno != KErrNone) {
+        dptr->setError(decodeSystemError());
         return false;
     }
 
     // Save current port settings.
-    r = m_descriptor.Config(m_restoredSettings);
-    if (r != KErrNone) {
-        dptr->setError(SerialPort::UnknownPortError);
+    m_errno = m_descriptor.Config(m_restoredSettings);
+    if (m_errno != KErrNone) {
+        dptr->setError(decodeSystemError());
         return false;
     }
 
@@ -414,9 +402,9 @@ qint64 SymbianSerialPortEngine::read(char *data, qint64 len)
     TRequestStatus status;
     m_descriptor.Read(status, TTimeIntervalMicroSeconds32(0), buffer);
     User::WaitForRequest(status);
-    TInt err = status.Int();
+    TInt r = status.Int();
 
-    if (err != KErrNone)
+    if (r != KErrNone)
         return -1;
 
     return buffer.Length();
@@ -446,9 +434,9 @@ qint64 SymbianSerialPortEngine::write(const char *data, qint64 len)
     TRequestStatus status;
     m_descriptor.Write(status, buffer);
     User::WaitForRequest(status);
-    TInt err = status.Int();
+    TInt r = status.Int();
 
-    if (err != KErrNone)
+    if (r != KErrNone)
         return -1;
 
     // FIXME: How to get the actual number of bytes written?
@@ -604,8 +592,8 @@ bool SymbianSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
         m_currentSettings().iDataBits = EData8;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentSettings().iDataBits = EData8;
+        break;
     }
 
     return updateCommConfig();
@@ -637,8 +625,8 @@ bool SymbianSerialPortEngine::setParity(SerialPort::Parity parity)
         m_currentSettings().iParity = EParitySpace;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentSettings().iParity = EParityNone;
+        break;
     }
 
     return updateCommConfig();
@@ -661,8 +649,8 @@ bool SymbianSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         m_currentSettings().iStopBits = EStop2;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentSettings().iStopBits = EStop1;
+        break;
     }
 
     return updateCommConfig();
@@ -689,8 +677,8 @@ bool SymbianSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         m_currentSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentSettings().iHandshake = KConfigFailDSR;
+        break;
     }
 
     return updateCommConfig();
@@ -931,6 +919,30 @@ void SymbianSerialPortEngine::detectDefaultSettings()
         dptr->options.flow = SerialPort::NoFlowControl;
     else
         dptr->options.flow = SerialPort::UnknownFlowControl;
+}
+
+/*!
+    Converts the platform-depend code of system error to the
+    corresponding value a SerialPort::PortError.
+*/
+SerialPort::PortError SymbianSerialPortEngine::decodeSystemError() const
+{
+    SerialPort::PortError error;
+    switch (m_errno) {
+    case KErrPermissionDenied:
+        error = SerialPort::NoSuchDeviceError;
+        break;
+    case KErrLocked:
+        error = SerialPort::PermissionDeniedError;
+        break;
+    case KErrAccessDenied:
+        error = SerialPort::PermissionDeniedError;
+        break;
+    default:
+        error = SerialPort::UnknownPortError;
+        break;
+    }
+    return error;
 }
 
 /* Private methods */

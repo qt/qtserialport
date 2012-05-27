@@ -111,6 +111,7 @@ public:
 
 protected:
     virtual void detectDefaultSettings();
+    virtual SerialPort::PortError decodeSystemError() const;
     virtual bool eventFilter(QObject *obj, QEvent *e);
 
 private:

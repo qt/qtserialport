@@ -216,24 +216,14 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
                                 desiredAccess, shareMode, 0, OPEN_EXISTING, flagsAndAttributes, 0);
 
     if (m_descriptor == INVALID_HANDLE_VALUE) {
-        switch (::GetLastError()) {
-        case ERROR_FILE_NOT_FOUND:
-            dptr->setError(SerialPort::NoSuchDeviceError);
-            break;
-        case ERROR_ACCESS_DENIED:
-            dptr->setError(SerialPort::PermissionDeniedError);
-            break;
-        default:
-            dptr->setError(SerialPort::UnknownPortError);
-            break;
-        }
+        dptr->setError(decodeSystemError());
         return false;
     }
 
     // Save current DCB port settings.
     DWORD confSize = sizeof(DCB);
     if (::GetCommState(m_descriptor, &m_restoredDcb) == 0) {
-        dptr->setError(SerialPort::UnknownPortError);
+        dptr->setError(decodeSystemError());
         return false;
     }
     ::memcpy(&m_currentDcb, &m_restoredDcb, confSize);
@@ -253,7 +243,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
     // Save current port timeouts.
     confSize = sizeof(COMMTIMEOUTS);
     if (::GetCommTimeouts(m_descriptor, &m_restoredCommTimeouts) == 0) {
-        dptr->setError(SerialPort::UnknownPortError);
+        dptr->setError(decodeSystemError());
         return false;
     }
     ::memcpy(&m_currentCommTimeouts, &m_restoredCommTimeouts, confSize);
@@ -268,7 +258,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
 
 #if !defined (Q_OS_WINCE)
     if (!createEvents(rxflag, txflag)) {
-        dptr->setError(SerialPort::UnknownPortError);
+        dptr->setError(decodeSystemError());
         return false;
     }
 #endif
@@ -754,21 +744,22 @@ bool WinSerialPortEngine::setParity(SerialPort::Parity parity)
         m_currentDcb.Parity = NOPARITY;
         m_currentDcb.fParity = false;
         break;
-    case SerialPort::SpaceParity:
-        m_currentDcb.Parity = SPACEPARITY;
-        break;
-    case SerialPort::MarkParity:
-        m_currentDcb.Parity = MARKPARITY;
+    case SerialPort::OddParity:
+        m_currentDcb.Parity = ODDPARITY;
         break;
     case SerialPort::EvenParity:
         m_currentDcb.Parity = EVENPARITY;
         break;
-    case SerialPort::OddParity:
-        m_currentDcb.Parity = ODDPARITY;
+    case SerialPort::MarkParity:
+        m_currentDcb.Parity = MARKPARITY;
+        break;
+    case SerialPort::SpaceParity:
+        m_currentDcb.Parity = SPACEPARITY;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentDcb.Parity = NOPARITY;
+        m_currentDcb.fParity = false;
+        break;
     }
     return updateDcb();
 }
@@ -793,8 +784,8 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         m_currentDcb.StopBits = TWOSTOPBITS;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentDcb.StopBits = ONESTOPBIT;
+        break;
     }
     return updateDcb();
 }
@@ -813,21 +804,27 @@ bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
     case SerialPort::NoFlowControl:
         m_currentDcb.fOutxCtsFlow = false;
         m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
-        m_currentDcb.fInX = m_currentDcb.fOutX = false;
+        m_currentDcb.fInX = false;
+        m_currentDcb.fOutX = false;
         break;
     case SerialPort::SoftwareControl:
         m_currentDcb.fOutxCtsFlow = false;
         m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
-        m_currentDcb.fInX = m_currentDcb.fOutX = true;
+        m_currentDcb.fInX = true;
+        m_currentDcb.fOutX = true;
         break;
     case SerialPort::HardwareControl:
         m_currentDcb.fOutxCtsFlow = true;
         m_currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
-        m_currentDcb.fInX = m_currentDcb.fOutX = false;
+        m_currentDcb.fInX = false;
+        m_currentDcb.fOutX = false;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentDcb.fOutxCtsFlow = false;
+        m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
+        m_currentDcb.fInX = false;
+        m_currentDcb.fOutX = false;
+        break;
     }
     return updateDcb();
 }
@@ -1121,6 +1118,33 @@ void WinSerialPortEngine::detectDefaultSettings()
         dptr->options.flow = SerialPort::UnknownFlowControl;
 }
 
+/*!
+    Converts the platform-depend code of system error to the
+    corresponding value a SerialPort::PortError.
+*/
+SerialPort::PortError WinSerialPortEngine::decodeSystemError() const
+{
+    SerialPort::PortError error;
+    switch (::GetLastError()) {
+    case ERROR_FILE_NOT_FOUND:
+        error = SerialPort::NoSuchDeviceError;
+        break;
+    case ERROR_ACCESS_DENIED:
+        error = SerialPort::PermissionDeniedError;
+        break;
+    case ERROR_INVALID_HANDLE:
+        error = SerialPort::DeviceIsNotOpenedError;
+        break;
+    case ERROR_INVALID_PARAMETER:
+        error = SerialPort::UnsupportedPortOperationError;
+        break;
+    default:
+        error = SerialPort::UnknownPortError;
+        break;
+    }
+    return error;
+}
+
 #if defined (Q_OS_WINCE)
 
 /*!
@@ -1320,7 +1344,7 @@ bool WinSerialPortEngine::updateDcb()
     ::SetCommMask(m_descriptor, 0);
 #endif
     if (::SetCommState(m_descriptor, &m_currentDcb) == 0) {
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(decodeSystemError());
         return false;
     }
     return true;
@@ -1335,7 +1359,7 @@ bool WinSerialPortEngine::updateDcb()
 bool WinSerialPortEngine::updateCommTimeouts()
 {
     if (::SetCommTimeouts(m_descriptor, &m_currentCommTimeouts) == 0) {
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(decodeSystemError());
         return false;
     }
     return true;

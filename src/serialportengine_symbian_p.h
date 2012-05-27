@@ -106,6 +106,7 @@ public:
 
 protected:
     virtual void detectDefaultSettings();
+    virtual SerialPort::PortError decodeSystemError() const;
     //virtual bool eventFilter(QObject *obj, QEvent *e);
 
 private:
@@ -116,6 +117,7 @@ private:
     TCommConfig m_restoredSettings;
     RComm m_descriptor;
     mutable RTimer m_selectTimer;
+    TInt m_errno;
 };
 
 QT_END_NAMESPACE_SERIALPORT

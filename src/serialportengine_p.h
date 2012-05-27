@@ -116,6 +116,7 @@ public:
 
 protected:
     virtual void detectDefaultSettings() = 0;
+    virtual SerialPort::PortError decodeSystemError() const = 0;
 
 protected:
     SerialPortPrivate *dptr;

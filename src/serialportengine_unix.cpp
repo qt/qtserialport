@@ -178,17 +178,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     m_descriptor = ::open(location.toLocal8Bit().constData(), flags);
 
     if (m_descriptor == -1) {
-        switch (errno) {
-        case ENODEV:
-            dptr->setError(SerialPort::NoSuchDeviceError);
-            break;
-        case EACCES:
-            dptr->setError(SerialPort::PermissionDeniedError);
-            break;
-        default:
-            dptr->setError(SerialPort::UnknownPortError);
-            break;
-        }
+        dptr->setError(decodeSystemError());
         return false;
     }
 
@@ -206,7 +196,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
 
     // Save current port settings.
     if (::tcgetattr(m_descriptor, &m_restoredTermios) == -1) {
-        dptr->setError(SerialPort::UnknownPortError);
+        dptr->setError(decodeSystemError());
         return false;
     }
     ::memcpy(&m_currentTermios, &m_restoredTermios, sizeof(struct termios));
@@ -700,9 +690,8 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 
     if (ret) // finally, set rate
         ret = updateTermios();
-
-    if (!ret)
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
+    else
+        dptr->setError(decodeSystemError());
     return ret;
 }
 
@@ -730,8 +719,8 @@ bool UnixSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
         m_currentTermios.c_cflag |= CS8;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentTermios.c_cflag |= CS8;
+        break;
     }
     return updateTermios();
 }
@@ -799,8 +788,8 @@ bool UnixSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
         m_currentTermios.c_cflag |= CSTOPB;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentTermios.c_cflag &= ~CSTOPB;
+        break;
     }
     return updateTermios();
 }
@@ -829,8 +818,9 @@ bool UnixSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
         m_currentTermios.c_iflag |= IXON | IXOFF | IXANY;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentTermios.c_cflag &= ~CRTSCTS;
+        m_currentTermios.c_iflag &= ~(IXON | IXOFF | IXANY);
+        break;
     }
     return updateTermios();
 }
@@ -866,8 +856,8 @@ bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy
         m_currentTermios.c_iflag |= parmrkMask | INPCK;
         break;
     default:
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
-        return false;
+        m_currentTermios.c_iflag &= ~INPCK;
+        break;
     }
     return updateTermios();
 }
@@ -1220,6 +1210,33 @@ void UnixSerialPortEngine::detectDefaultSettings()
 }
 
 /*!
+    Converts the platform-depend code of system error to the
+    corresponding value a SerialPort::PortError.
+*/
+SerialPort::PortError UnixSerialPortEngine::decodeSystemError() const
+{
+    SerialPort::PortError error;
+    switch (errno) {
+    case ENODEV:
+        error = SerialPort::NoSuchDeviceError;
+        break;
+    case EACCES:
+        error = SerialPort::PermissionDeniedError;
+        break;
+    case EBUSY:
+        error = SerialPort::PermissionDeniedError;
+        break;
+    case ENOTTY:
+        error = SerialPort::IoError;
+        break;
+    default:
+        error = SerialPort::UnknownPortError;
+        break;
+    }
+    return error;
+}
+
+/*!
     POSIX event loop for notification subsystem.
     Asynchronously in event loop continuous mode tracking the
     events from the serial port, as: fderror, fdread, and fdwrite.
@@ -1255,7 +1272,7 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
 bool UnixSerialPortEngine::updateTermios()
 {
     if (::tcsetattr(m_descriptor, TCSANOW, &m_currentTermios) == -1) {
-        dptr->setError(SerialPort::UnsupportedPortOperationError);
+        dptr->setError(decodeSystemError());
         return false;
     }
     return true;
