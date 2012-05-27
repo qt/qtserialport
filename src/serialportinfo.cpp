@@ -94,7 +94,7 @@ SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
 SerialPortInfo::SerialPortInfo(const SerialPort &port)
     : d_ptr(new SerialPortInfoPrivate)
 {
-    foreach(const SerialPortInfo &info, availablePorts()) {
+    foreach (const SerialPortInfo &info, availablePorts()) {
         if (port.portName() == info.portName()) {
             *this = info;
             break;
@@ -112,7 +112,7 @@ SerialPortInfo::SerialPortInfo(const SerialPort &port)
 SerialPortInfo::SerialPortInfo(const QString &name)
     : d_ptr(new SerialPortInfoPrivate)
 {
-    foreach(const SerialPortInfo &info, availablePorts()) {
+    foreach (const SerialPortInfo &info, availablePorts()) {
         if (name == info.portName()) {
             *this = info;
             break;

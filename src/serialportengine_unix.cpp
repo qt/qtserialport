@@ -851,7 +851,7 @@ bool UnixSerialPortEngine::setDataErrorPolicy(SerialPort::DataErrorPolicy policy
     if (dptr->options.parity == SerialPort::SpaceParity || dptr->options.parity == SerialPort::MarkParity)
         parmrkMask = 0;
 #endif //CMSPAR
-    switch(policy) {
+    switch (policy) {
     case SerialPort::SkipPolicy:
         m_currentTermios.c_iflag &= ~parmrkMask;
         m_currentTermios.c_iflag |= IGNPAR | INPCK;

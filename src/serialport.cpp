@@ -1659,7 +1659,7 @@ bool SerialPort::waitForBytesWritten(int msecs)
             return false;
         }
         if (readyToRead) {
-            if(!d->canReadNotification())
+            if (!d->canReadNotification())
                 return false;
         }
         if (readyToWrite) {
