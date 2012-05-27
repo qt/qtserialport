@@ -823,7 +823,7 @@ static const RatePair *standardRatesTable_end =
 */
 qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
 {
-    const RatePair rp = {0, setting};
+    const RatePair rp = { 0, setting };
     const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
     return ret != standardRatesTable_end ? ret->rate : 0;
 }
@@ -834,7 +834,7 @@ qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
 */
 EBps SymbianSerialPortEngine::settingFromRate(qint32 rate)
 {
-    const RatePair rp = {rate, 0};
+    const RatePair rp = { rate, 0 };
     const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
     return ret != standardRatesTable_end ? ret->setting : 0;
 }
