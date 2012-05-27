@@ -347,8 +347,7 @@ static bool trigger_out_line(int fd, int bit, bool set)
 */
 bool UnixSerialPortEngine::setDtr(bool set)
 {
-    const bool ret = trigger_out_line(m_descriptor, TIOCM_DTR, set);
-    return ret;
+    return trigger_out_line(m_descriptor, TIOCM_DTR, set);
 }
 
 /*!
@@ -358,8 +357,7 @@ bool UnixSerialPortEngine::setDtr(bool set)
 */
 bool UnixSerialPortEngine::setRts(bool set)
 {
-    const bool ret = trigger_out_line(m_descriptor, TIOCM_RTS, set);
-    return ret;
+    return trigger_out_line(m_descriptor, TIOCM_RTS, set);
 }
 
 /*!
@@ -370,8 +368,7 @@ bool UnixSerialPortEngine::setRts(bool set)
 */
 bool UnixSerialPortEngine::flush()
 {
-    const bool ret = (::tcdrain(m_descriptor) != -1);
-    return ret;
+    return (::tcdrain(m_descriptor) != -1);
 }
 
 /*!
@@ -382,8 +379,7 @@ bool UnixSerialPortEngine::flush()
 */
 bool UnixSerialPortEngine::reset()
 {
-    const bool ret = (::tcflush(m_descriptor, TCIOFLUSH) != -1);
-    return ret;
+    return (::tcflush(m_descriptor, TCIOFLUSH) != -1);
 }
 
 /*!
@@ -393,8 +389,7 @@ bool UnixSerialPortEngine::reset()
 */
 bool UnixSerialPortEngine::sendBreak(int duration)
 {
-    const bool ret = (::tcsendbreak(m_descriptor, duration) != -1);
-    return ret;
+    return (::tcsendbreak(m_descriptor, duration) != -1);
 }
 
 /*!
@@ -405,8 +400,7 @@ bool UnixSerialPortEngine::sendBreak(int duration)
 */
 bool UnixSerialPortEngine::setBreak(bool set)
 {
-    const bool ret = (::ioctl(m_descriptor, set ? TIOCSBRK : TIOCCBRK) != -1);
-    return ret;
+    return (::ioctl(m_descriptor, set ? TIOCSBRK : TIOCCBRK) != -1);
 }
 
 /*!

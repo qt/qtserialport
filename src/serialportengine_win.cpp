@@ -348,8 +348,7 @@ SerialPort::Lines WinSerialPortEngine::lines() const
 */
 bool WinSerialPortEngine::setDtr(bool set)
 {
-    const bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
-    return ret;
+    return ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
 }
 
 /*!
@@ -359,8 +358,7 @@ bool WinSerialPortEngine::setDtr(bool set)
 */
 bool WinSerialPortEngine::setRts(bool set)
 {
-    const bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
-    return ret;
+    return ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
 }
 
 /*!
@@ -371,8 +369,7 @@ bool WinSerialPortEngine::setRts(bool set)
 */
 bool WinSerialPortEngine::flush()
 {
-    const bool ret = ::FlushFileBuffers(m_descriptor);
-    return ret;
+    return ::FlushFileBuffers(m_descriptor);
 }
 
 /*!
@@ -384,8 +381,7 @@ bool WinSerialPortEngine::flush()
 bool WinSerialPortEngine::reset()
 {
     const DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
-    const bool ret = ::PurgeComm(m_descriptor, flags);
-    return ret;
+    return ::PurgeComm(m_descriptor, flags);
 }
 
 /*!
@@ -414,9 +410,8 @@ bool WinSerialPortEngine::sendBreak(int duration)
 */
 bool WinSerialPortEngine::setBreak(bool set)
 {
-    const bool ret = (set) ?
+    return (set) ?
                 (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
-    return ret;
 }
 
 enum CommStatQue { CS_IN_QUE, CS_OUT_QUE };
