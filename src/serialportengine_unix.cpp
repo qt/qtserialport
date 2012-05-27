@@ -268,44 +268,50 @@ SerialPort::Lines UnixSerialPortEngine::lines() const
     int arg = 0;
     SerialPort::Lines ret = 0;
 
-    if (::ioctl(m_descriptor, TIOCMGET, &arg) == -1) {
-        // Print error?
+    if (::ioctl(m_descriptor, TIOCMGET, &arg) == -1)
         return ret;
-    }
 
 #if defined (TIOCLE)
-    if (arg & TIOCLE) ret |= SerialPort::Le;
+    if (arg & TIOCLE)
+        ret |= SerialPort::Le;
 #endif
 #if defined (TIOCDTR)
-    if (arg & TIOCDTR) ret |= SerialPort::Dtr;
+    if (arg & TIOCDTR)
+        ret |= SerialPort::Dtr;
 #endif
 #if defined (TIOCRTS)
-    if (arg & TIOCRTS) ret |= SerialPort::Rts;
+    if (arg & TIOCRTS)
+        ret |= SerialPort::Rts;
 #endif
 #if defined (TIOCST)
-    if (arg & TIOCST) ret |= SerialPort::St;
+    if (arg & TIOCST)
+        ret |= SerialPort::St;
 #endif
 #if defined (TIOCSR)
-    if (arg & TIOCSR) ret |= SerialPort::Sr;
+    if (arg & TIOCSR)
+        ret |= SerialPort::Sr;
 #endif
 #if defined (TIOCCTS)
-    if (arg & TIOCCTS) ret |= SerialPort::Cts;
+    if (arg & TIOCCTS)
+        ret |= SerialPort::Cts;
 #endif
-
 #if defined (TIOCCAR)
-    if (arg & TIOCCAR) ret |= SerialPort::Dcd;
+    if (arg & TIOCCAR)
+        ret |= SerialPort::Dcd;
 #elif defined (TIOCCD)
-    if (arg & TIOCCD) ret |= SerialPort::Dcd;
+    if (arg & TIOCCD)
+        ret |= SerialPort::Dcd;
 #endif
-
 #if defined (TIOCRNG)
-    if (arg & TIOCRNG) ret |= SerialPort::Ri;
+    if (arg & TIOCRNG)
+        ret |= SerialPort::Ri;
 #elif defined (TIOCRI)
-    if (arg & TIOCRI) ret |= SerialPort::Ri;
+    if (arg & TIOCRI)
+        ret |= SerialPort::Ri;
 #endif
-
 #if defined (TIOCDSR)
-    if (arg & TIOCDSR) ret |= SerialPort::Dsr;
+    if (arg & TIOCDSR)
+        ret |= SerialPort::Dsr;
 #endif
 
     return ret;
