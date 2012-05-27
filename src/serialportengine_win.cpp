@@ -630,7 +630,7 @@ bool WinSerialPortEngine::select(int timeout,
         sucessResult = true;
     } else if (::GetLastError() == ERROR_IO_PENDING) {
         DWORD bytesTransferred = 0;
-        if (::WaitForSingleObject(m_selectOverlapped.hEvent, timeout < 0 ? 0 : timeout) == WAIT_OBJECT_0
+        if (::WaitForSingleObject(m_selectOverlapped.hEvent, qMax(timeout, 0)) == WAIT_OBJECT_0
                 && ::GetOverlappedResult(m_descriptor, &m_selectOverlapped, &bytesTransferred, false)) {
             sucessResult = true;
         } else {
@@ -641,7 +641,7 @@ bool WinSerialPortEngine::select(int timeout,
     // FIXME: Here the situation is not properly handled with zero timeout:
     // breaker can work out before you call a method WaitCommEvent()
     // and so it will loop forever!
-    WinCeWaitCommEventBreaker breaker(m_descriptor, timeout < 0 ? 0 : timeout);
+    WinCeWaitCommEventBreaker breaker(m_descriptor, qMax(timeout, 0));
     ::WaitCommEvent(m_descriptor, &currEventMask, 0);
     breaker.stop();
     sucessResult = !breaker.isWorked();
