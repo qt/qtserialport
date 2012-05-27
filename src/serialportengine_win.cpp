@@ -349,10 +349,6 @@ SerialPort::Lines WinSerialPortEngine::lines() const
 bool WinSerialPortEngine::setDtr(bool set)
 {
     const bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETDTR : CLRDTR);
-    if (!ret) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type.
-    }
     return ret;
 }
 
@@ -364,10 +360,6 @@ bool WinSerialPortEngine::setDtr(bool set)
 bool WinSerialPortEngine::setRts(bool set)
 {
     const bool ret = ::EscapeCommFunction(m_descriptor, (set) ? SETRTS : CLRRTS);
-    if (!ret) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type.
-    }
     return ret;
 }
 
@@ -380,10 +372,6 @@ bool WinSerialPortEngine::setRts(bool set)
 bool WinSerialPortEngine::flush()
 {
     const bool ret = ::FlushFileBuffers(m_descriptor);
-    if (!ret) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type.
-    }
     return ret;
 }
 
@@ -397,10 +385,6 @@ bool WinSerialPortEngine::reset()
 {
     const DWORD flags = (PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
     const bool ret = ::PurgeComm(m_descriptor, flags);
-    if (!ret) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type.
-    }
     return ret;
 }
 
@@ -432,10 +416,6 @@ bool WinSerialPortEngine::setBreak(bool set)
 {
     const bool ret = (set) ?
                 (::SetCommBreak(m_descriptor)) : (::ClearCommBreak(m_descriptor));
-    if (!ret) {
-        // FIXME: Here need call ::GetLastError()
-        // and set error type.
-    }
     return ret;
 }
 
