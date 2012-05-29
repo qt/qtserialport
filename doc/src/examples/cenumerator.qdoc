@@ -1,6 +1,5 @@
 /****************************************************************************
 **
-** Copyright (C) 2011-2012 Denis Shienkov <scapig2@yandex.ru>
 ** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/
 **
@@ -28,14 +27,19 @@
 
 /*!
     \module QtAddonSerialPort
-    \title Examples
-    \page examples.html
-    \previouspage Building and usage
-    \contentspage {Examples} {Contents}
+    \title Command Line Enumerator example
+    \example examples/cenumerator
 
-    \list
-    \o \l examples/cenumerator
-    \o \l examples/enumerator
-    \o \l examples/terminal
-    \endlist
+    The Command Line Enumerator example shows how to use the class
+    SerialPortInfo for getting information about serial devices that are present
+    in the system.
+
+    \image cenumerator-example.png Screenshot of the Command Line Enumerator
+    example
+
+    This command line example displays information about serial ports in a
+    console, provided by the class SerialPortInfo.
+
+    For getting information about the available ports, use the static method
+    \l{SerialPortInfo::availablePorts()}{availablePorts()}.
 */
