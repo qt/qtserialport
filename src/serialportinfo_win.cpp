@@ -109,7 +109,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
             QStringList l;
             if (dataSize) {
                 int i = 0;
-                for (;;) {
+                forever {
                     QString s = QString::fromWCharArray((const wchar_t *)data.constData() + i);
                     i += s.length() + 1;
 
@@ -165,7 +165,7 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
     QByteArray bufKeyName(16384, 0);
     QByteArray bufKeyVal(16384, 0);
 
-    for (;;) {
+    forever {
         DWORD lenKeyName = bufKeyName.size();
         DWORD lenKeyValue = bufKeyVal.size();
         DWORD keyType = 0;
