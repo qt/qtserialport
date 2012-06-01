@@ -709,7 +709,7 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
         dptr->setError(SerialPort::UnsupportedPortOperationError);
         return false;
     }
-    m_currentDcb.BaudRate = DWORD(rate);
+    m_currentDcb.BaudRate = rate;
     return updateDcb();
 }
 
@@ -722,7 +722,7 @@ bool WinSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 */
 bool WinSerialPortEngine::setDataBits(SerialPort::DataBits dataBits)
 {
-    m_currentDcb.ByteSize = BYTE(dataBits);
+    m_currentDcb.ByteSize = dataBits;
     return updateDcb();
 }
 

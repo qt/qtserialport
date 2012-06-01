@@ -564,7 +564,7 @@ bool SerialPortPrivate::readFromPort()
         return true;
     }
 
-    readBuffer.chop(int(bytesToRead - qMax(readBytes, qint64(0))));
+    readBuffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
 
     if (readBytes < 0) {
         setError(SerialPort::IoError);
@@ -1763,7 +1763,7 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
             if (readBytes == -2)
                 d->readBuffer.chop(bytesToRead); // No bytes currently available for reading.
             else
-                d->readBuffer.chop(int(bytesToRead - qMax(readBytes, qint64(0))));
+                d->readBuffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
         }
     }
 

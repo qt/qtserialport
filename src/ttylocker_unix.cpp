@@ -219,7 +219,7 @@ bool TTYLocker::isLocked(const QString &location, bool *currentPid)
                 // Checks the validity of the process number that was obtained from the Lock file.
                 enum CheckPidResult pidResult = CHK_PID_UNKNOWN_ERROR;
 
-                if (::kill(pid_t(pid), 0) == -1) {
+                if (::kill(pid, 0) == -1) {
                     pidResult = (errno == ESRCH) ?
                                 (CHK_PID_PROCESS_NOT_EXISTS) : (CHK_PID_UNKNOWN_ERROR);
                 } else {

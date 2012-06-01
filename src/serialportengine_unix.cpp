@@ -1304,7 +1304,7 @@ qint64 UnixSerialPortEngine::writePerChar(const char *data, qint64 maxSize)
         bool par = evenParity(*data & charMask);
         // False if need EVEN, true if need ODD.
         par ^= dptr->options.parity == SerialPort::MarkParity;
-        if (par ^ bool(m_currentTermios.c_cflag & PARODD)) { // Need switch parity mode?
+        if (par ^ (m_currentTermios.c_cflag & PARODD)) { // Need switch parity mode?
             m_currentTermios.c_cflag ^= PARODD;
             flush(); //force sending already buffered data, because updateTermios() cleares buffers
             //todo: add receiving buffered data!!!
@@ -1371,8 +1371,8 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
         }
         // Now: par contains parity ok or error, *data contains received character
         par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
-        par ^= bool(m_currentTermios.c_cflag & PARODD); //par contains parity bit value for current mode
-        if (par ^ bool(dptr->options.parity == SerialPort::SpaceParity)) { //if parity error
+        par ^= (m_currentTermios.c_cflag & PARODD); //par contains parity bit value for current mode
+        if (par ^ (dptr->options.parity == SerialPort::SpaceParity)) { //if parity error
             switch (dptr->options.policy) {
             case SerialPort::SkipPolicy:
                 continue;       //ignore received character

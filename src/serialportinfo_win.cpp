@@ -100,7 +100,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
         case REG_SZ: {
             QString s;
             if (dataSize)
-                s = QString::fromWCharArray(((const wchar_t *)data.constData()));
+                s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()));
             v = QVariant(s);
             break;
         }
@@ -110,7 +110,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
             if (dataSize) {
                 int i = 0;
                 forever {
-                    QString s = QString::fromWCharArray((const wchar_t *)data.constData() + i);
+                    QString s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()) + i);
                     i += s.length() + 1;
 
                     if (s.isEmpty())
@@ -126,7 +126,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
         case REG_BINARY: {
             QString s;
             if (dataSize)
-                s = QString::fromWCharArray((const wchar_t *)data.constData(), data.size() / 2);
+                s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()), data.size() / 2);
             v = QVariant(s);
             break;
         }
@@ -135,7 +135,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
         case REG_DWORD: {
             Q_ASSERT(data.size() == sizeof(int));
             int i = 0;
-            ::memcpy((void *)(&i), data.constData(), sizeof(int));
+            ::memcpy(&i, data.constData(), sizeof(int));
             v = i;
             break;
         }
@@ -180,7 +180,7 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
             if (keyType == REG_SZ) {
 
                 QString itemName = QString::fromUtf16(reinterpret_cast<ushort *>(bufKeyName.data()), lenKeyName);
-                QString itemValue = QString::fromUtf16(((const ushort *)bufKeyVal.constData()));
+                QString itemValue = QString::fromUtf16(reinterpret_cast<const ushort *>(bufKeyVal.constData()));
 
                 if (itemName.contains(QLatin1String("PortName"))) {
                     result = itemValue;
@@ -241,7 +241,7 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
                 case REG_EXPAND_SZ:
                 case REG_SZ:
                     if (dataSize)
-                        result = QString::fromWCharArray(((const wchar_t *)data.constData()));
+                        result = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()));
                     break;
                 default:
                     break;
@@ -329,11 +329,11 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
             SerialPortInfo info;
-            info.d_ptr->device = QString::fromWCharArray(((const wchar_t *)di.szLegacyName));
+            info.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
             info.d_ptr->portName = info.d_ptr->device;
             info.d_ptr->portName.remove(':');
             info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
-                                                      QString::fromWCharArray(((const wchar_t *)di.szDeviceKey)));
+                                                      QString::fromWCharArray(di.szDeviceKey));
 
             // Get manufacturer, vendor identifier, product identifier are not
             // possible.
