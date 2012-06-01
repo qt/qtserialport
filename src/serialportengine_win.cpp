@@ -208,11 +208,8 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
         txflag = true;
     }
 
-    QByteArray filePath = QByteArray((const char *)location.utf16(),
-                                     location.size() * 2 + 1);
-
     // Try opened serial device.
-    m_descriptor = ::CreateFile((const wchar_t*)filePath.constData(),
+    m_descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(location.utf16()),
                                 desiredAccess, shareMode, 0, OPEN_EXISTING, flagsAndAttributes, 0);
 
     if (m_descriptor == INVALID_HANDLE_VALUE) {

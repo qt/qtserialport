@@ -356,11 +356,8 @@ QList<qint32> SerialPortInfo::standardRates()
 
 bool SerialPortInfo::isBusy() const
 {
-    QString location = systemLocation();
-    QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
-
-    const HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
-                                     GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+                                           GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_ACCESS_DENIED)
@@ -373,11 +370,8 @@ bool SerialPortInfo::isBusy() const
 
 bool SerialPortInfo::isValid() const
 {
-    QString location = systemLocation();
-    QByteArray nativeFilePath = QByteArray((const char *)location.utf16(), location.size() * 2 + 1);
-
-    const HANDLE descriptor = ::CreateFile((const wchar_t*)nativeFilePath.constData(),
-                                     GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+                                           GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
         if (::GetLastError() != ERROR_ACCESS_DENIED)
