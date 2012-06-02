@@ -155,7 +155,9 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
 {
     // First, here need check locked device or not.
     bool byCurrPid = false;
-    if (TTYLocker::isLocked(location, &byCurrPid)) {
+    QByteArray portName = fromSystemLocation(location).toLocal8Bit();
+    const char *ptr = portName.constData();
+    if (TTYLocker::isLocked(ptr, &byCurrPid)) {
         dptr->setError(SerialPort::PermissionDeniedError);
         return false;
     }
@@ -183,8 +185,8 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     }
 
     // Try lock device by location and check it state is locked.
-    TTYLocker::lock(location);
-    if (!TTYLocker::isLocked(location, &byCurrPid)) {
+    TTYLocker::lock(ptr);
+    if (!TTYLocker::isLocked(ptr, &byCurrPid)) {
         dptr->setError(SerialPort::PermissionDeniedError);
         return false;
     }
@@ -239,8 +241,10 @@ void UnixSerialPortEngine::close(const QString &location)
 
     // Try unlock device by location.
     bool byCurrPid = false;
-    if (TTYLocker::isLocked(location, &byCurrPid) && byCurrPid)
-        TTYLocker::unlock(location);
+    QByteArray portName = fromSystemLocation(location).toLocal8Bit();
+    const char *ptr = portName.constData();
+    if (TTYLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
+        TTYLocker::unlock(ptr);
 
     m_descriptor = -1;
     m_isCustomRateSupported = false;

@@ -284,7 +284,7 @@ QList<qint32> SerialPortInfo::standardRates()
 bool SerialPortInfo::isBusy() const
 {
     bool currPid = false;
-    return TTYLocker::isLocked(systemLocation(), &currPid);
+    return TTYLocker::isLocked(portName().toLocal8Bit().constData(), &currPid);
 }
 
 bool SerialPortInfo::isValid() const

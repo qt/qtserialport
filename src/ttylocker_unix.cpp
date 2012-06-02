@@ -58,15 +58,6 @@
 #  include <QtCore/qstringlist.h>
 #endif // defined (HAVE_BAUDBOY_H)
 
-// Truncate the full name of the device to short.
-// For example the long name "/dev/ttyS0" will cut up to "ttyS0".
-static
-QString shortNameFromLocation(const QString &location)
-{
-    return QDir::cleanPath(location).section(QDir::separator() , -1);
-}
-
-
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
 static
@@ -84,60 +75,25 @@ const char *entryLockDirectoryList[] = {
 // Verification of directories is of the order in accordance with the order
 // of records in the variable lockDirList.
 static
-QString getFirstSharedLockDir()
+QString lookupFirstSharedLockDir()
 {
     for (int i = 0; entryLockDirectoryList[i] != 0; ++i) {
-        if (::access(entryLockDirectoryList[i], (R_OK | W_OK)) == 0)
+        if (::access(entryLockDirectoryList[i], R_OK | W_OK) == 0)
             return QLatin1String(entryLockDirectoryList[i]);
     }
     return QString();
 }
 
-/*
-// Returns the name of the lock file, which is tied to the
-// major and minor device number, eg "LCK.30.50" etc.
-static QString get_lock_file_in_numeric_form(const QString &location)
-{
-    QString result = getFirstSharedLockDir();
-    if (!result.isEmpty()) {
-        struct stat buf;
-        if (::stat(location.toLocal8Bit().constData(), &buf))
-            result.clear();
-        else {
-            result.append("/LCK.%1.%2");
-            result = result.arg(major(buf.st_rdev)).arg(minor(buf.st_rdev));
-        }
-    }
-    return result;
-}
-*/
-
 // Returns the name of the lock file which is tied to the
 // device name, eg "LCK..ttyS0", etc.
 static
-QString getLockFileInNamedForm(const QString &location)
+QString generateLockFileNameAsNamedForm(const char *portName)
 {
-    QString result(getFirstSharedLockDir());
-    if (!result.isEmpty()) {
-        result.append(QLatin1String("/LCK..%1"));
-        result = result.arg(shortNameFromLocation(location));
-    }
+    QString result(lookupFirstSharedLockDir());
+    if (!result.isEmpty())
+        result.append(QLatin1String("/LCK..") + QLatin1String(portName));
     return result;
 }
-
-/*
-// Returns the name of the lock file, which is tied to the number of
-// the process which uses a device, such as "LCK...999", etc.
-static QString get_lock_file_in_pid_form(const QString &location)
-{
-    QString result = getFirstSharedLockDir();
-    if (!result.isEmpty()) {
-        result.append("/LCK...%1");
-        result = result.arg(::getpid());
-    }
-    return result;
-}
-*/
 
 #endif //!(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
@@ -145,107 +101,79 @@ static QString get_lock_file_in_pid_form(const QString &location)
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Try lock serial device. However, other processes can not access it.
-bool TTYLocker::lock(const QString &location)
+bool TTYLocker::lock(const char *portName)
 {
-    bool result = false;
 #if defined (HAVE_BAUDBOY_H)
-    if (::ttylock(shortNameFromLocation(location).toLocal8Bit().constData()))
-        ::ttywait(shortNameFromLocation(location).toLocal8Bit().constData());
-    result = (::ttylock(shortNameFromLocation(location).toLocal8Bit().constData()) != -1);
+    if (::ttylock(portName)
+        ::ttywait(portName);
+    return ::ttylock(portName) != -1;
 #elif defined (HAVE_LOCKDEV_H)
-    result = (::dev_lock(shortNameFromLocation(location).toLocal8Bit().constData()) != -1);
+    return ::dev_lock(portName) != -1;
 #else
-    QFile f(getLockFileInNamedForm(location));
+    QFile f(generateLockFileNameAsNamedForm(portName));
     if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         QString content(QLatin1String("     %1 %2\x0A"));
         content = content.arg(::getpid()).arg(::getuid());
-
-        if (f.write(content.toLocal8Bit()) > 0)
-            result = true;
+        if (f.write(content.toLocal8Bit()) > 0) {
+            f.close();
+            return true;
+        }
         f.close();
     }
+    return false;
 #endif
-    return result;
 }
 
 // Try unlock serial device. However, other processes can access it.
-bool TTYLocker::unlock(const QString &location)
+bool TTYLocker::unlock(const char *portName)
 {
-    bool result = true;
 #if defined (HAVE_BAUDBOY_H)
-    result = (::ttyunlock(shortNameFromLocation(location).toLocal8Bit().constData()) != -1);
+    return ::ttyunlock(portName != -1;
 #elif defined (HAVE_LOCKDEV_H)
-    result = (::dev_unlock(shortNameFromLocation(location).toLocal8Bit().constData(), ::getpid()) != -1);
+    return ::dev_unlock(portName, ::getpid()) != -1;
 #else
-    QFile f(getLockFileInNamedForm(location));
-    f.remove();
+    QFile f(generateLockFileNameAsNamedForm(portName));
+    return f.remove();
 #endif
-    return result;
 }
 
 // Verifies the device is locked or not.
 // If returned currentPid = true - this means that the device is locked the current process.
-bool TTYLocker::isLocked(const QString &location, bool *currentPid)
+bool TTYLocker::isLocked(const char *portName, bool *currentPid)
 {
-    bool result = false;
+    if (!currentPid)
+        return true;
+
+    *currentPid = false;
+
 #if defined (HAVE_BAUDBOY_H)
-    result = (::ttylocked(shortNameFromLocation(location).toLocal8Bit().constData()) != -1);
-    *currentPid = false;
+    return ::ttylocked(portName) != -1;
 #elif defined (HAVE_LOCKDEV_H)
-    result = (::dev_testlock(shortNameFromLocation(location).toLocal8Bit().constData()) != -1);
-    *currentPid = false;
+    return ::dev_testlock(portName) != -1;
 #else
 
-    enum CheckPidResult {
-        CHK_PID_PROCESS_NOT_EXISTS,     /* process does not exist */
-        CHK_PID_PROCESS_EXISTS_FOREIGN, /* process exists and it is "foreign" (ie not current) */
-        CHK_PID_PROCESS_EXISTS_CURRENT, /* process exists and it is "their" (ie, current) */
-        CHK_PID_UNKNOWN_ERROR           /* another error */
-    };
+    QFile f(generateLockFileNameAsNamedForm(portName));
+    if (!f.exists())
+        return false;
+    if (!f.open(QIODevice::ReadOnly))
+        return true;
 
-    *currentPid = false;
+    QString content(QLatin1String(f.readAll()));
+    f.close();
 
-    QFile f(getLockFileInNamedForm(location));
-    if (f.exists()) {
-        if (!f.open(QIODevice::ReadOnly)) {
-            result = true;
-        } else {
-            QString content(QLatin1String(f.readAll()));
-            f.close();
-            bool ok = false;
-            const int pid = content.section(' ', 0, 0, QString::SectionSkipEmpty).toInt(&ok);
-            if (ok) {
+    const pid_t pid = content.section(' ', 0, 0, QString::SectionSkipEmpty).toInt();
 
-                // Checks the validity of the process number that was obtained from the Lock file.
-                enum CheckPidResult pidResult = CHK_PID_UNKNOWN_ERROR;
-
-                if (::kill(pid, 0) == -1) {
-                    pidResult = (errno == ESRCH) ?
-                                (CHK_PID_PROCESS_NOT_EXISTS) : (CHK_PID_UNKNOWN_ERROR);
-                } else {
-                    pidResult = (::getpid() == pid) ?
-                                (CHK_PID_PROCESS_EXISTS_CURRENT) : (CHK_PID_PROCESS_EXISTS_FOREIGN);
-                }
-
-                switch (pidResult) {
-                case CHK_PID_PROCESS_NOT_EXISTS:
-                    break;
-                case CHK_PID_PROCESS_EXISTS_FOREIGN:
-                    result = true;
-                    break;
-                case CHK_PID_PROCESS_EXISTS_CURRENT:
-                    result = true;
-                    *currentPid = true;
-                    break;
-                default:
-                    result = true;
-                    break;
-                }
-            }
-        }
+    if (::kill(pid, 0) == -1) {
+        if (errno == ESRCH) // Process does not exists
+            return false;
+    } else {
+        if (::getpid() == pid) // Process exists and it is "their", i.e current
+            *currentPid = true;
     }
+
+    return true;
+
 #endif
-    return result;
 }
 
 QT_END_NAMESPACE_SERIALPORT

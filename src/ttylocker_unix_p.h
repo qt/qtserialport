@@ -49,9 +49,9 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 class TTYLocker
 {
 public:
-    static bool lock(const QString &location);
-    static bool unlock(const QString &location);
-    static bool isLocked(const QString &location, bool *currentPid);
+    static bool lock(const char *portName);
+    static bool unlock(const char *portName);
+    static bool isLocked(const char *portName, bool *currentPid);
 };
 
 QT_END_NAMESPACE_SERIALPORT
