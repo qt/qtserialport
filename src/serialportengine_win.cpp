@@ -401,16 +401,6 @@ bool WinSerialPortEngine::setBreak(bool set)
     return ::ClearCommBreak(m_descriptor);
 }
 
-enum CommStatQue { CS_IN_QUE, CS_OUT_QUE };
-static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
-{
-    COMSTAT cs;
-    ::memset(&cs, 0, sizeof(COMSTAT));
-    if (::ClearCommError(m_descriptor, 0, &cs) == 0)
-        return -1;
-    return que == CS_IN_QUE ? cs.cbInQue : cs.cbOutQue;
-}
-
 /*!
     Returns the number of bytes received by the serial provider
     but not yet read by a read() operation. Also clears the
@@ -421,7 +411,11 @@ static qint64 get_commstat_que(HANDLE m_descriptor, enum CommStatQue que)
 */
 qint64 WinSerialPortEngine::bytesAvailable() const
 {
-    return get_commstat_que(m_descriptor, CS_IN_QUE);
+    COMSTAT cs;
+    ::memset(&cs, 0, sizeof(COMSTAT));
+    if (::ClearCommError(m_descriptor, 0, &cs) == 0)
+        return -1;
+    return cs.cbInQue;
 }
 
 /*!
@@ -435,7 +429,11 @@ qint64 WinSerialPortEngine::bytesAvailable() const
 */
 qint64 WinSerialPortEngine::bytesToWrite() const
 {
-    return get_commstat_que(m_descriptor, CS_OUT_QUE);
+    COMSTAT cs;
+    ::memset(&cs, 0, sizeof(COMSTAT));
+    if (::ClearCommError(m_descriptor, 0, &cs) == 0)
+        return -1;
+    return cs.cbOutQue;
 }
 
 #if !defined (Q_OS_WINCE)
