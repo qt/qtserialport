@@ -797,30 +797,22 @@ bool WinSerialPortEngine::setStopBits(SerialPort::StopBits stopBits)
 */
 bool WinSerialPortEngine::setFlowControl(SerialPort::FlowControl flow)
 {
+    m_currentDcb.fInX = false;
+    m_currentDcb.fOutX = false;
+    m_currentDcb.fOutxCtsFlow = false;
+    m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
     switch (flow) {
     case SerialPort::NoFlowControl:
-        m_currentDcb.fOutxCtsFlow = false;
-        m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
-        m_currentDcb.fInX = false;
-        m_currentDcb.fOutX = false;
         break;
     case SerialPort::SoftwareControl:
-        m_currentDcb.fOutxCtsFlow = false;
-        m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
         m_currentDcb.fInX = true;
         m_currentDcb.fOutX = true;
         break;
     case SerialPort::HardwareControl:
         m_currentDcb.fOutxCtsFlow = true;
         m_currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
-        m_currentDcb.fInX = false;
-        m_currentDcb.fOutX = false;
         break;
     default:
-        m_currentDcb.fOutxCtsFlow = false;
-        m_currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
-        m_currentDcb.fInX = false;
-        m_currentDcb.fOutX = false;
         break;
     }
     return updateDcb();
