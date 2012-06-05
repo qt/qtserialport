@@ -61,7 +61,7 @@
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
 static
-const char *entryLockDirectoryList[] = {
+const char * const entryLockDirectoryList[] = {
     "/var/lock",
     "/etc/locks",
     "/var/spool/locks",
