@@ -103,235 +103,6 @@ SerialPortPrivate::~SerialPortPrivate()
 
 /*! \internal
 
-    Sets the internal variable system location, by converting the serial \a port
-    name. The serial port name conversation to the system location is done by
-    the native engine. The conversion is platform-dependent. The conversion
-    from the system location to the port name is accomplished by the method
-    SerialPortPrivate::port().
-*/
-void SerialPortPrivate::setPort(const QString &port)
-{
-    options.systemLocation = engine->toSystemLocation(port);
-}
-
-/*! \internal
-
-    Returns the serial port name obtained by the conversion from the internal
-    system location variable. The system location to the port name
-    conversion is done by the native engine. This conversion is
-    platform-dependent. The conversion from the port name to the system location
-    is accomplished by the SerialPortPrivate::setPort() method.
-*/
-QString SerialPortPrivate::port() const
-{
-    return engine->fromSystemLocation(options.systemLocation);
-}
-
-/*! \internal
-
-    Opens the serial port with a given internal system location
-    variable with the given open \a mode. This operation is
-    platform-dependent, and is provided by the native engine.
-*/
-bool SerialPortPrivate::open(QIODevice::OpenMode mode)
-{
-    return engine->open(options.systemLocation, mode);
-}
-
-/*! \internal
-
-    Closes the serial port specified in the internal variable
-    as system location. This operation is platform-dependent,
-    and is provided by the native engine.
-*/
-void SerialPortPrivate::close()
-{
-    engine->close(options.systemLocation);
-}
-
-/*! \internal
-
-    Sets the desired baud \a rate for the given direction \a dir
-    of the serial port. This operation is platform-dependent,
-    and is provided by the native engine.
-*/
-bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
-{
-    if (engine->setRate(rate, dir)) {
-        if (dir & SerialPort::Input)
-            options.inputRate = rate;
-        if (dir & SerialPort::Output)
-            options.outputRate = rate;
-        return true;
-    }
-    return false;
-}
-
-/*! \internal
-
-    Returns the current baudrate value for the given direction
-    \a dir from the corresponding internal variables.
-*/
-qint32 SerialPortPrivate::rate(SerialPort::Directions dir) const
-{
-    if (dir == SerialPort::AllDirections)
-        return options.inputRate == options.outputRate ?
-                    options.inputRate : SerialPort::UnknownRate;
-    return dir & SerialPort::Input ? options.inputRate : options.outputRate;
-}
-
-/*! \internal
-
-    Sets the desired number of data bits \a dataBits in a frame
-    for the serial port. This operation is platform-dependent,
-    and is provided by the native engine.
-*/
-bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
-{
-    if (engine->setDataBits(dataBits)) {
-        options.dataBits = dataBits;
-        return true;
-    }
-    return false;
-}
-
-/*! \internal
-
-    Returns the current number of data bits in a frame from the
-    corresponding internal variable.
-*/
-SerialPort::DataBits SerialPortPrivate::dataBits() const
-{
-    return options.dataBits;
-}
-
-/*! \internal
-
-    Sets the desired \a parity control mode for the serial port.
-    This operation is platform-dependent, and is provided by the
-    native engine.
-*/
-bool SerialPortPrivate::setParity(SerialPort::Parity parity)
-{
-    if (engine->setParity(parity)) {
-        options.parity = parity;
-        return true;
-    }
-    return false;
-}
-
-/*! \internal
-
-    Returns the current parity control mode from the
-    corresponding internal variable.
-*/
-SerialPort::Parity SerialPortPrivate::parity() const
-{
-    return options.parity;
-}
-
-/*! \internal
-
-    Sets the desired number of stop bits \a stopBits in a frame for
-    the serial port. This operation is platform-dependent, and
-    is provided by the native engine.
-*/
-bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
-{
-    if (engine->setStopBits(stopBits)) {
-        options.stopBits = stopBits;
-        return true;
-    }
-    return false;
-}
-
-/*! \internal
-
-    Returns the current number of stop bits in a frame from the
-    corresponding internal variable.
-*/
-SerialPort::StopBits SerialPortPrivate::stopBits() const
-{
-    return options.stopBits;
-}
-
-/*! \internal
-
-    Sets the desired \a flow control mode for the serial port.
-    This operation is platform-dependent, and is provided by the
-    native engine.
-*/
-bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
-{
-    if (engine->setFlowControl(flow)) {
-        options.flow = flow;
-        return true;
-    }
-    return false;
-}
-
-/*! \internal
-
-    Returns the current flow control mode from the
-    corresponding internal variable.
-*/
-SerialPort::FlowControl SerialPortPrivate::flowControl() const
-{
-    return options.flow;
-}
-
-/*! \internal
-
-    Returns the DTR signal state. This operation is platform-dependent,
-    and is provided by the native engine.
-*/
-bool SerialPortPrivate::dtr() const
-{
-    return engine->lines() & SerialPort::Dtr;
-}
-
-/*! \internal
-
-    Returns the RTS signal state. This operation is platform-dependent,
-    and is provided by the native engine.
-*/
-bool SerialPortPrivate::rts() const
-{
-    return engine->lines() & SerialPort::Rts;
-}
-
-/*! \internal
-
-    Sets the desired DTR signal state \a set. This operation is
-    platform-dependent, and is provided by the native engine.
-*/
-bool SerialPortPrivate::setDtr(bool set)
-{
-    return engine->setDtr(set);
-}
-
-/*! \internal
-
-    Sets the desired RTS signal state \a set. This operation is
-    platform-dependent, and is provided by the native engine.
-*/
-bool SerialPortPrivate::setRts(bool set)
-{
-    return engine->setRts(set);
-}
-
-/*! \internal
-
-    Returns the bitmap signals of the RS-232 lines. This operation is
-    platform-dependent, and is provided by the native engine.
-*/
-SerialPort::Lines SerialPortPrivate::lines() const
-{
-    return engine->lines();
-}
-
-/*! \internal
-
     Writes the pending data in the write buffers to the serial port.
     The function writes out as much as it can without blocking.
 
@@ -351,7 +122,7 @@ bool SerialPortPrivate::flush()
     const char *ptr = writeBuffer.readPointer();
 
     // Attempt to write it all in one chunk.
-    const qint64 written = write(ptr, nextSize);
+    const qint64 written = engine->write(ptr, nextSize);
     if (written < 0) {
         setError(SerialPort::IoError);
         writeBuffer.clear();
@@ -377,156 +148,11 @@ bool SerialPortPrivate::flush()
 
 /*! \internal
 
-    Resets and clears the receiving and transmitting driver buffers
-    (UART). This operation is platform-dependent, and is provided
-    by the native engine.
-*/
-bool SerialPortPrivate::reset()
-{
-    return engine->reset();
-}
-
-/*! \internal
-
-    Sends a continuous stream of zero bits for specified the duration \a
-    duration in msec. This operation is platform-dependent, and is
-    provided by the native engine.
-*/
-bool SerialPortPrivate::sendBreak(int duration)
-{
-    return engine->sendBreak(duration);
-}
-
-/*! \internal
-
-    Controls the signal break, depending on the \a set. This operation
-    is platform-dependent, and is provided by the native engine.
-*/
-bool SerialPortPrivate::setBreak(bool set)
-{
-    return engine->setBreak(set);
-}
-
-/*! \internal
-
-    Sets the policy type \a policy for processing the received symbol when parity
-    error is detected in the corresponding internal variable. The value
-    of this variable is taken further into account when processing
-    received symbol in the implementation of the reading method in the native engine.
-*/
-bool SerialPortPrivate::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
-{
-    const bool ret = options.policy == policy || engine->setDataErrorPolicy(policy);
-    if (ret)
-        options.policy = policy;
-    return ret;
-}
-
-/*! \internal
-
-    Returns the current value of the internal policy variable.
-*/
-SerialPort::DataErrorPolicy SerialPortPrivate::dataErrorPolicy() const
-{
-    return options.policy;
-}
-
-/*! \internal
-
-    Returns the current error code.
-*/
-SerialPort::PortError SerialPortPrivate::error() const
-{
-    return portError;
-}
-
-/*! \internal
-
-    Clears the error code.
-*/
-void SerialPortPrivate::unsetError()
-{
-    portError = SerialPort::NoError;
-}
-
-/*! \internal
-
     Sets the error code \a error in the corresponding internal variable.
 */
 void SerialPortPrivate::setError(SerialPort::PortError error)
 {
     portError = error;
-}
-
-/*! \internal
-
-    Returns the number of bytes available for reading, which
-    are in the receive buffer driver (UART). This operation
-    is platform-dependent, and is provided by the native engine.
-*/
-qint64 SerialPortPrivate::bytesAvailable() const
-{
-    return engine->bytesAvailable();
-}
-
-/*! \internal
-
-    Returns the number of bytes ready for sending in the transmit buffer driver
-    (UART). This operation is platform-dependent, and is provided by the native
-    engine.
-*/
-qint64 SerialPortPrivate::bytesToWrite() const
-{
-    return engine->bytesToWrite();
-}
-
-/*! \internal
-
-    Reads at most \a len bytes from the serial port into \a data, and returns
-    the number of bytes read. If an error occurs, this function returns -1 and
-    sets an error code which can be obtained by calling the error() method.
-    This operation is platform-dependent, and is provided by the
-    native engine.
-*/
-qint64 SerialPortPrivate::read(char *data, qint64 len)
-{
-    return engine->read(data, len);
-}
-
-/*! \internal
-
-    Writes at most \a len bytes of data from \a data to the serial port. If
-    successful, returns the number of bytes that were actually written;
-    otherwise returns -1 and sets an error code which can be obtained by calling
-    the error() method.
-    This operation is platform-dependent, and is provided by the
-    native engine.
-*/
-qint64 SerialPortPrivate::write(const char *data, qint64 len)
-{
-    return engine->write(data, len);
-}
-
-/*! \internal
-
-    Implements a generic "wait" method, expected within the \a timeout
-    in millisecond occurrence of any of the two events:
-
-    - appearance in the reception buffer driver (UART) at least one
-    character, if the flag \a checkRead is set on true
-    - devastation of the transmit buffer driver (UART) with the transfer
-    of the last character, if the flag \a checkWrite is set on true
-
-    Also, all these events can happen simultaneously. The result of
-    catch of the corresponding event returns to the variables
-    \a selectForRead and \a selectForWrite. This operation is
-    platform-dependent, and is provided by the native engine.
-*/
-bool SerialPortPrivate::waitForReadOrWrite(int timeout,
-                                           bool checkRead, bool checkWrite,
-                                           bool *selectForRead, bool *selectForWrite)
-{
-    return engine->select(timeout, checkRead, checkWrite, selectForRead, selectForWrite);
 }
 
 /*! \internal
@@ -555,7 +181,7 @@ bool SerialPortPrivate::readFromPort()
         bytesToRead = readBufferMaxSize - readBuffer.size();
 
     char *ptr = readBuffer.reserve(bytesToRead);
-    const qint64 readBytes = read(ptr, bytesToRead);
+    const qint64 readBytes = engine->read(ptr, bytesToRead);
 
     if (readBytes == -2) {
         // No bytes currently available for reading.
@@ -1040,7 +666,7 @@ SerialPort::~SerialPort()
 void SerialPort::setPort(const QString &name)
 {
     Q_D(SerialPort);
-    d->setPort(name);
+    d->options.systemLocation = d->engine->toSystemLocation(name);
 }
 
 /*!
@@ -1051,7 +677,7 @@ void SerialPort::setPort(const QString &name)
 void SerialPort::setPort(const SerialPortInfo &info)
 {
     Q_D(SerialPort);
-    d->setPort(info.systemLocation());
+    d->options.systemLocation = d->engine->toSystemLocation(info.systemLocation());
 }
 
 /*!
@@ -1093,7 +719,7 @@ void SerialPort::setPort(const SerialPortInfo &info)
 QString SerialPort::portName() const
 {
     Q_D(const SerialPort);
-    return d->port();
+    return d->engine->fromSystemLocation(d->options.systemLocation);
 }
 
 /*! \reimp
@@ -1124,7 +750,7 @@ bool SerialPort::open(OpenMode mode)
     }
 
     unsetError();
-    if (d->open(mode)) {
+    if (d->engine->open(d->options.systemLocation, mode)) {
         QIODevice::open(mode);
         d->clearBuffers();
 
@@ -1161,7 +787,7 @@ void SerialPort::close()
     d->engine->setWriteNotificationEnabled(false);
     d->engine->setErrorNotificationEnabled(false);
     d->clearBuffers();
-    d->close();
+    d->engine->close(d->options.systemLocation);
 }
 
 /*!
@@ -1206,7 +832,14 @@ bool SerialPort::restoreSettingsOnClose() const
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
     Q_D(SerialPort);
-    return d->setRate(rate, dir);
+    if (d->engine->setRate(rate, dir)) {
+        if (dir & SerialPort::Input)
+            d->options.inputRate = rate;
+        if (dir & SerialPort::Output)
+            d->options.outputRate = rate;
+        return true;
+    }
+    return false;
 }
 
 /*!
@@ -1220,7 +853,10 @@ bool SerialPort::setRate(qint32 rate, Directions dir)
 qint32 SerialPort::rate(Directions dir) const
 {
     Q_D(const SerialPort);
-    return d->rate(dir);
+    if (dir == SerialPort::AllDirections)
+        return d->options.inputRate == d->options.outputRate ?
+                    d->options.inputRate : SerialPort::UnknownRate;
+    return dir & SerialPort::Input ? d->options.inputRate : d->options.outputRate;
 }
 
 /*!
@@ -1233,7 +869,11 @@ qint32 SerialPort::rate(Directions dir) const
 bool SerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(SerialPort);
-    return d->setDataBits(dataBits);
+    if (d->engine->setDataBits(dataBits)) {
+        d->options.dataBits = dataBits;
+        return true;
+    }
+    return false;
 }
 
 /*!
@@ -1244,7 +884,7 @@ bool SerialPort::setDataBits(DataBits dataBits)
 SerialPort::DataBits SerialPort::dataBits() const
 {
     Q_D(const SerialPort);
-    return d->dataBits();
+    return d->options.dataBits;
 }
 
 /*!
@@ -1257,7 +897,11 @@ SerialPort::DataBits SerialPort::dataBits() const
 bool SerialPort::setParity(Parity parity)
 {
     Q_D(SerialPort);
-    return d->setParity(parity);
+    if (d->engine->setParity(parity)) {
+        d->options.parity = parity;
+        return true;
+    }
+    return false;
 }
 
 /*!
@@ -1268,7 +912,7 @@ bool SerialPort::setParity(Parity parity)
 SerialPort::Parity SerialPort::parity() const
 {
     Q_D(const SerialPort);
-    return d->parity();
+    return d->options.parity;
 }
 
 /*!
@@ -1281,7 +925,11 @@ SerialPort::Parity SerialPort::parity() const
 bool SerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(SerialPort);
-    return d->setStopBits(stopBits);
+    if (d->engine->setStopBits(stopBits)) {
+        d->options.stopBits = stopBits;
+        return true;
+    }
+    return false;
 }
 
 /*!
@@ -1292,7 +940,7 @@ bool SerialPort::setStopBits(StopBits stopBits)
 SerialPort::StopBits SerialPort::stopBits() const
 {
     Q_D(const SerialPort);
-    return d->stopBits();
+    return d->options.stopBits;
 }
 
 /*!
@@ -1305,7 +953,11 @@ SerialPort::StopBits SerialPort::stopBits() const
 bool SerialPort::setFlowControl(FlowControl flow)
 {
     Q_D(SerialPort);
-    return d->setFlowControl(flow);
+    if (d->engine->setFlowControl(flow)) {
+        d->options.flow = flow;
+        return true;
+    }
+    return false;
 }
 
 /*!
@@ -1316,7 +968,7 @@ bool SerialPort::setFlowControl(FlowControl flow)
 SerialPort::FlowControl SerialPort::flowControl() const
 {
     Q_D(const SerialPort);
-    return d->flowControl();
+    return d->options.flow;
 }
 
 /*!
@@ -1328,7 +980,7 @@ SerialPort::FlowControl SerialPort::flowControl() const
 bool SerialPort::dtr() const
 {
     Q_D(const SerialPort);
-    return d->dtr();
+    return d->engine->lines() & SerialPort::Dtr;
 }
 
 /*!
@@ -1340,7 +992,7 @@ bool SerialPort::dtr() const
 bool SerialPort::rts() const
 {
     Q_D(const SerialPort);
-    return d->rts();
+    return d->engine->lines() & SerialPort::Rts;
 }
 
 /*!
@@ -1354,7 +1006,7 @@ bool SerialPort::rts() const
 SerialPort::Lines SerialPort::lines() const
 {
     Q_D(const SerialPort);
-    return d->lines();
+    return d->engine->lines();
 }
 
 /*!
@@ -1386,7 +1038,7 @@ bool SerialPort::reset()
 {
     Q_D(SerialPort);
     d->clearBuffers();
-    return d->reset();
+    return d->engine->reset();
 }
 
 /*! \reimp
@@ -1426,7 +1078,10 @@ bool SerialPort::atEnd() const
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(SerialPort);
-    return d->setDataErrorPolicy(policy);
+    const bool ret = d->options.policy == policy || d->engine->setDataErrorPolicy(policy);
+    if (ret)
+        d->options.policy = policy;
+    return ret;
 }
 
 /*!
@@ -1437,7 +1092,7 @@ bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 {
     Q_D(const SerialPort);
-    return d->dataErrorPolicy();
+    return d->options.policy;
 }
 
 /*!
@@ -1452,7 +1107,7 @@ SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 SerialPort::PortError SerialPort::error() const
 {
     Q_D(const SerialPort);
-    return d->error();
+    return d->portError;
 }
 
 /*!
@@ -1463,7 +1118,7 @@ SerialPort::PortError SerialPort::error() const
 void SerialPort::unsetError()
 {
     Q_D(SerialPort);
-    d->unsetError();
+    d->portError = SerialPort::NoError;
 }
 
 /*!
@@ -1535,7 +1190,7 @@ qint64 SerialPort::bytesAvailable() const
     if (d->isBuffered)
         ret = d->readBuffer.size();
     else
-        ret = d->bytesAvailable();
+        ret = d->engine->bytesAvailable();
     return ret + QIODevice::bytesAvailable();
 }
 
@@ -1553,7 +1208,7 @@ qint64 SerialPort::bytesToWrite() const
     if (d->isBuffered)
         ret = d->writeBuffer.size();
     else
-        ret = d->bytesToWrite();
+        ret = d->engine->bytesToWrite();
     return ret + QIODevice::bytesToWrite();
 }
 
@@ -1612,9 +1267,9 @@ bool SerialPort::waitForReadyRead(int msecs)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        if (!d->waitForReadOrWrite(qt_timeout_value(msecs, stopWatch.elapsed()),
-                                   true, !d->writeBuffer.isEmpty(),
-                                   &readyToRead, &readyToWrite)) {
+        if (!d->engine->select(qt_timeout_value(msecs, stopWatch.elapsed()),
+                               true, !d->writeBuffer.isEmpty(),
+                               &readyToRead, &readyToWrite)) {
             return false;
         }
         if (readyToRead) {
@@ -1647,9 +1302,9 @@ bool SerialPort::waitForBytesWritten(int msecs)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        if (!d->waitForReadOrWrite(qt_timeout_value(msecs, stopWatch.elapsed()),
-                                   true, !d->writeBuffer.isEmpty(),
-                                   &readyToRead, &readyToWrite)) {
+        if (!d->engine->select(qt_timeout_value(msecs, stopWatch.elapsed()),
+                               true, !d->writeBuffer.isEmpty(),
+                               &readyToRead, &readyToWrite)) {
             return false;
         }
         if (readyToRead) {
@@ -1678,7 +1333,7 @@ bool SerialPort::waitForBytesWritten(int msecs)
 bool SerialPort::setDtr(bool set)
 {
     Q_D(SerialPort);
-    return d->setDtr(set);
+    return d->engine->setDtr(set);
 }
 
 /*!
@@ -1693,7 +1348,7 @@ bool SerialPort::setDtr(bool set)
 bool SerialPort::setRts(bool set)
 {
     Q_D(SerialPort);
-    return d->setRts(set);
+    return d->engine->setRts(set);
 }
 
 /*!
@@ -1712,7 +1367,7 @@ bool SerialPort::setRts(bool set)
 bool SerialPort::sendBreak(int duration)
 {
     Q_D(SerialPort);
-    return d->sendBreak(duration);
+    return d->engine->sendBreak(duration);
 }
 
 /*!
@@ -1726,7 +1381,7 @@ bool SerialPort::sendBreak(int duration)
 bool SerialPort::setBreak(bool set)
 {
     Q_D(SerialPort);
-    return d->setBreak(set);
+    return d->engine->setBreak(set);
 }
 
 /* Protected methods */
@@ -1759,7 +1414,7 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
         const qint64 bytesToRead = SERIALPORT_READ_CHUNKSIZE;
         if (bytesToRead > 0) {
             char *ptr = d->readBuffer.reserve(bytesToRead);
-            const qint64 readBytes = d->read(ptr, bytesToRead);
+            const qint64 readBytes = d->engine->read(ptr, bytesToRead);
             if (readBytes == -2)
                 d->readBuffer.chop(bytesToRead); // No bytes currently available for reading.
             else
@@ -1787,7 +1442,7 @@ qint64 SerialPort::readData(char *data, qint64 maxSize)
 
     // This code path is for Unbuffered SerialPort
     if (!d->isBuffered) {
-        const qint64 readBytes = d->read(data, maxSize);
+        const qint64 readBytes = d->engine->read(data, maxSize);
 
         // -2 from the engine means no bytes available (EAGAIN) so read more later
         // Note: only in *nix
@@ -1819,7 +1474,7 @@ qint64 SerialPort::writeData(const char *data, qint64 maxSize)
     Q_D(SerialPort);
 
     if (!d->isBuffered) {
-        const qint64 written = d->write(data, maxSize);
+        const qint64 written = d->engine->write(data, maxSize);
 
         if (written < 0)
             d->setError(SerialPort::IoError);

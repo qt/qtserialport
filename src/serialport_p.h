@@ -89,56 +89,9 @@ public:
     SerialPortPrivate(SerialPort *parent);
     virtual ~SerialPortPrivate();
 
-    void setPort(const QString &port);
-    QString port() const;
-
-    bool open(QIODevice::OpenMode mode);
-    void close();
-
-    bool setRate(qint32 rate, SerialPort::Directions dir);
-    qint32 rate(SerialPort::Directions dir) const;
-
-    bool setDataBits(SerialPort::DataBits dataBits);
-    SerialPort::DataBits dataBits() const;
-
-    bool setParity(SerialPort::Parity parity);
-    SerialPort::Parity parity() const;
-
-    bool setStopBits(SerialPort::StopBits stopBits);
-    SerialPort::StopBits stopBits() const;
-
-    bool setFlowControl(SerialPort::FlowControl flow);
-    SerialPort::FlowControl flowControl() const;
-
-    bool dtr() const;
-    bool rts() const;
-
-    bool setDtr(bool set);
-    bool setRts(bool set);
-
-    SerialPort::Lines lines() const;
-
     bool flush();
-    bool reset();
 
-    bool sendBreak(int duration);
-    bool setBreak(bool set);
-
-    bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy);
-    SerialPort::DataErrorPolicy dataErrorPolicy() const;
-
-    SerialPort::PortError error() const;
-    void unsetError();
     void setError(SerialPort::PortError error);
-
-    qint64 bytesAvailable() const;
-    qint64 bytesToWrite() const;
-
-    qint64 read(char *data, qint64 len);
-    qint64 write(const char *data, qint64 len);
-    bool waitForReadOrWrite(int timeout,
-                            bool checkRead, bool checkWrite,
-                            bool *selectForRead, bool *selectForWrite);
 
     void clearBuffers();
     bool readFromPort();
