@@ -146,7 +146,7 @@ UnixSerialPortEngine::~UnixSerialPortEngine()
 
     Two methods need to be used due to the fact that some platforms doesn't
     support the constant TIOCEXCL. In this case, only the lock file is used.
-    Lock file creation and analysis is done by the helper class TTYLocker.
+    Lock file creation and analysis is done by the helper class TtyLocker.
 
     If successful, returns true; otherwise returns false and sets an
     error code.
@@ -157,7 +157,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     bool byCurrPid = false;
     QByteArray portName = fromSystemLocation(location).toLocal8Bit();
     const char *ptr = portName.constData();
-    if (TTYLocker::isLocked(ptr, &byCurrPid)) {
+    if (TtyLocker::isLocked(ptr, &byCurrPid)) {
         dptr->setError(SerialPort::PermissionDeniedError);
         return false;
     }
@@ -185,8 +185,8 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     }
 
     // Try lock device by location and check it state is locked.
-    TTYLocker::lock(ptr);
-    if (!TTYLocker::isLocked(ptr, &byCurrPid)) {
+    TtyLocker::lock(ptr);
+    if (!TtyLocker::isLocked(ptr, &byCurrPid)) {
         dptr->setError(SerialPort::PermissionDeniedError);
         return false;
     }
@@ -243,8 +243,8 @@ void UnixSerialPortEngine::close(const QString &location)
     bool byCurrPid = false;
     QByteArray portName = fromSystemLocation(location).toLocal8Bit();
     const char *ptr = portName.constData();
-    if (TTYLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
-        TTYLocker::unlock(ptr);
+    if (TtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
+        TtyLocker::unlock(ptr);
 
     m_descriptor = -1;
     m_isCustomRateSupported = false;

@@ -101,7 +101,7 @@ QString generateLockFileNameAsNamedForm(const char *portName)
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Try lock serial device. However, other processes can not access it.
-bool TTYLocker::lock(const char *portName)
+bool TtyLocker::lock(const char *portName)
 {
 #if defined (HAVE_BAUDBOY_H)
     if (::ttylock(portName)
@@ -125,7 +125,7 @@ bool TTYLocker::lock(const char *portName)
 }
 
 // Try unlock serial device. However, other processes can access it.
-bool TTYLocker::unlock(const char *portName)
+bool TtyLocker::unlock(const char *portName)
 {
 #if defined (HAVE_BAUDBOY_H)
     return ::ttyunlock(portName != -1;
@@ -139,7 +139,7 @@ bool TTYLocker::unlock(const char *portName)
 
 // Verifies the device is locked or not.
 // If returned currentPid = true - this means that the device is locked the current process.
-bool TTYLocker::isLocked(const char *portName, bool *currentPid)
+bool TtyLocker::isLocked(const char *portName, bool *currentPid)
 {
     if (!currentPid)
         return true;

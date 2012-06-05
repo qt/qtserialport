@@ -46,7 +46,7 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class TTYLocker
+class TtyLocker
 {
 public:
     static bool lock(const char *portName);
