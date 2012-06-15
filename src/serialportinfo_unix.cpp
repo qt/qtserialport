@@ -89,6 +89,7 @@ static QStringList generateFiltersOfDevices()
     l << QLatin1String("ttyS*")    // Standart UART 8250 and etc.
       << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
       << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
+      << QLatin1String("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
       << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
       << QLatin1String("rfcomm*"); // Bluetooth serial device.
 #  elif defined (Q_OS_FREEBSD)
