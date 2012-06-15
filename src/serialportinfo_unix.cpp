@@ -182,8 +182,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                         } else if (subsys.contains(QLatin1String("pnp"))) {
                             // FIXME: How can I get a additional info about standard serial devices?
 
-                        } else {
-                            // Others subsystems.
+                        } else if (subsys.isEmpty()) {
+                            // FIXME: How to get additional information about serial devices with empty subsystem, like gadget serial devices ?
+                        } else if (subsys == QLatin1String("platform")) {
+                            // Platform subsystems.
                             // Skip, while don't use.
                             do_append = false;
                         }
