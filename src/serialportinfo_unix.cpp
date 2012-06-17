@@ -153,41 +153,47 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                     SerialPortInfo info;
 
                     info.d_ptr->device =
-                            QString::fromLatin1(::udev_device_get_devnode(dev));
+                            QLatin1String(::udev_device_get_devnode(dev));
                     info.d_ptr->portName =
-                            QString::fromLatin1(::udev_device_get_sysname(dev));
+                            QLatin1String(::udev_device_get_sysname(dev));
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
                     if (parentdev) {
 
-                        QString subsys(QLatin1String(::udev_device_get_subsystem(parentdev)));
+                        QLatin1String subsys(::udev_device_get_subsystem(parentdev));
 
                         bool do_append = true;
 
-                        if (subsys.contains(QLatin1String("usb"))) {
+                        if (subsys == QLatin1String("usb-serial")) { // USB bus type
+                            // Append this devices and try get additional information about them.
                             info.d_ptr->description =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev,
-                                                                                         "ID_MODEL_FROM_DATABASE"));
+                                    QLatin1String(::udev_device_get_property_value(dev,
+                                                                                   "ID_MODEL_FROM_DATABASE"));
                             info.d_ptr->manufacturer =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev,
-                                                                                         "ID_VENDOR_FROM_DATABASE"));
+                                    QLatin1String(::udev_device_get_property_value(dev,
+                                                                                   "ID_VENDOR_FROM_DATABASE"));
                             info.d_ptr->vendorIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev,
-                                                                                         "ID_VENDOR_ID"));
+                                    QLatin1String(::udev_device_get_property_value(dev,
+                                                                                   "ID_VENDOR_ID"));
                             info.d_ptr->productIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev,
-                                                                                         "ID_MODEL_ID"));
-
-                        } else if (subsys.contains(QLatin1String("pnp"))) {
-                            // FIXME: How can I get a additional info about standard serial devices?
-
-                        } else if (subsys.isEmpty()) {
-                            // FIXME: How to get additional information about serial devices with empty subsystem, like gadget serial devices ?
-                        } else if (subsys == QLatin1String("platform")) {
-                            // Platform subsystems.
-                            // Skip, while don't use.
+                                    QLatin1String(::udev_device_get_property_value(dev,
+                                                                                   "ID_MODEL_ID"));
+                        } else if (subsys == QLatin1String("pnp")) { // PNP bus type
+                            // Append this device.
+                            // FIXME: How to get additional information about serial devices
+                            // with this subsystem?
+                        } else if (subsys == QLatin1String("platform")) { // Platform 'pseudo' bus for legacy device.
+                            // Skip this devices because this type of subsystem does
+                            // not include a real physical serial device.
                             do_append = false;
+                        } else { // Others types of subsystems.
+                            // Append this devices because we believe that any other types of
+                            // subsystems provide a real serial devices. For example, for devices
+                            // such as ttyGSx, its driver provide an empty subsystem name, but it
+                            // devices is a real physical serial devices.
+                            // FIXME: How to get additional information about serial devices
+                            // with this subsystems?
                         }
 
                         if (do_append)
