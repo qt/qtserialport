@@ -77,6 +77,9 @@ extern "C"
 // For detail enumerate - skipping, filters is not used.
 // Instead of filters used libudev.
 
+// White list for devices without a parent
+static const QString rfcommDeviceName(QLatin1String("rfcomm"));
+
 #else
 
 // For simple enumerate.
@@ -159,11 +162,11 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
+                    bool do_append = true;
+
                     if (parentdev) {
 
                         QLatin1String subsys(::udev_device_get_subsystem(parentdev));
-
-                        bool do_append = true;
 
                         if (subsys == QLatin1String("usb-serial")) { // USB bus type
                             // Append this devices and try get additional information about them.
@@ -195,10 +198,23 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                             // FIXME: How to get additional information about serial devices
                             // with this subsystems?
                         }
+                    } else { // Devices without a parent
+                        if (info.d_ptr->portName.startsWith(rfcommDeviceName)) { // Bluetooth device
+                            bool ok;
+                            // Check for an unsigned decimal integer at the end of the device name: "rfcomm0", "rfcomm15"
+                            // devices with negative and invalid numbers in the name are rejected
+                            int portNumber = info.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
 
-                        if (do_append)
-                            ports.append(info);
+                            if (!ok || (portNumber < 0) || (portNumber > 255)) {
+                                do_append = false;
+                            }
+                        } else {
+                            do_append = false;
+                        }
                     }
+
+                    if (do_append)
+                        ports.append(info);
 
                     ::udev_device_unref(dev);
                 }
