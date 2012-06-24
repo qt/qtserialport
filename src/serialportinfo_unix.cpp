@@ -162,7 +162,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
-                    bool do_append = true;
+                    bool canAppendToList = true;
 
                     if (parentdev) {
 
@@ -189,7 +189,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                         } else if (subsys == QLatin1String("platform")) { // Platform 'pseudo' bus for legacy device.
                             // Skip this devices because this type of subsystem does
                             // not include a real physical serial device.
-                            do_append = false;
+                            canAppendToList = false;
                         } else { // Others types of subsystems.
                             // Append this devices because we believe that any other types of
                             // subsystems provide a real serial devices. For example, for devices
@@ -206,14 +206,14 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                             int portNumber = info.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
 
                             if (!ok || (portNumber < 0) || (portNumber > 255)) {
-                                do_append = false;
+                                canAppendToList = false;
                             }
                         } else {
-                            do_append = false;
+                            canAppendToList = false;
                         }
                     }
 
-                    if (do_append)
+                    if (canAppendToList)
                         ports.append(info);
 
                     ::udev_device_unref(dev);
