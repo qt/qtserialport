@@ -666,7 +666,7 @@ SerialPort::~SerialPort()
 void SerialPort::setPort(const QString &name)
 {
     Q_D(SerialPort);
-    d->options.systemLocation = d->engine->toSystemLocation(name);
+    d->options.systemLocation = SerialPortPrivate::portNameToSystemLocation(name);
 }
 
 /*!
@@ -677,7 +677,7 @@ void SerialPort::setPort(const QString &name)
 void SerialPort::setPort(const SerialPortInfo &info)
 {
     Q_D(SerialPort);
-    d->options.systemLocation = d->engine->toSystemLocation(info.systemLocation());
+    d->options.systemLocation = SerialPortPrivate::portNameToSystemLocation(info.systemLocation());
 }
 
 /*!
@@ -719,7 +719,7 @@ void SerialPort::setPort(const SerialPortInfo &info)
 QString SerialPort::portName() const
 {
     Q_D(const SerialPort);
-    return d->engine->fromSystemLocation(d->options.systemLocation);
+    return SerialPortPrivate::portNameFromSystemLocation(d->options.systemLocation);
 }
 
 /*! \reimp

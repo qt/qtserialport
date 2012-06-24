@@ -101,6 +101,15 @@ public:
     bool canErrorNotification();
 
 public:
+    static QString portNameToSystemLocation(const QString &port);
+    static QString portNameFromSystemLocation(const QString &location);
+
+    static qint32 rateFromSetting(qint32 setting);
+    static qint32 settingFromRate(qint32 rate);
+
+    static QList<qint32> standardRates();
+
+public:
     qint64 readBufferMaxSize;
     QRingBuffer readBuffer;
     QRingBuffer writeBuffer;

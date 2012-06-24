@@ -79,9 +79,6 @@ public:
                         bool checkRead, bool checkWrite,
                         bool *selectForRead, bool *selectForWrite);
 
-    virtual QString toSystemLocation(const QString &port) const;
-    virtual QString fromSystemLocation(const QString &location) const;
-
     virtual bool setRate(qint32 rate, SerialPort::Directions dir);
     virtual bool setDataBits(SerialPort::DataBits dataBits);
     virtual bool setParity(SerialPort::Parity parity);
@@ -98,11 +95,6 @@ public:
     virtual void setErrorNotificationEnabled(bool enable);
 
     virtual bool processIOErrors();
-
-public:
-    static qint32 rateFromSetting(EBps setting);
-    static EBps settingFromRate(qint32 rate);
-    static QList<qint32> standardRates();
 
 protected:
     virtual void detectDefaultSettings();

@@ -515,32 +515,6 @@ bool SymbianSerialPortEngine::select(int timeout,
     return result;
 }
 
-//static const QString defaultPathPostfix = ":";
-
-/*!
-    Converts a platform specific \a port name to a system location
-    and returns the value.
-
-    Does not convert anything because on Symbian both are equal.
-*/
-QString SymbianSerialPortEngine::toSystemLocation(const QString &port) const
-{
-    // Port name is equval to port location.
-    return port;
-}
-
-/*!
-    Converts a platform specific system \a location to a port name
-    and returns the value.
-
-    Does not convert anything because on Symbian both are equal.
-*/
-QString SymbianSerialPortEngine::fromSystemLocation(const QString &location) const
-{
-    // Port name is equval to port location.
-    return location;
-}
-
 /*!
     Sets the desired baud \a rate for the given direction \a dir.
     As Symbian does not support separate directions, the only valid value for
@@ -757,91 +731,6 @@ bool SymbianSerialPortEngine::processIOErrors()
     return false;
 }
 
-/* Public static methods */
-
-struct RatePair
-{
-   qint32 rate;    // The numerical value of baud rate.
-   qint32 setting; // The OS-specific code of baud rate.
-   bool operator<(const RatePair &other) const { return rate < other.rate; }
-   bool operator==(const RatePair &other) const { return setting == other.setting; }
-};
-
-// This table contains correspondences standard pairs values of
-// baud rates that are defined in files
-// - d32comm.h for Symbian^3
-// - d32public.h for Symbian SR1
-static
-const RatePair standardRatesTable[] =
-{
-    { 50, EBps50 },
-    { 75, EBps75 },
-    { 110, EBps110},
-    { 134, EBps134 },
-    { 150, EBps150 },
-    { 300, EBps300 },
-    { 600, EBps600 },
-    { 1200, EBps1200 },
-    { 1800, EBps1800 },
-    { 2000, EBps2000 },
-    { 2400, EBps2400 },
-    { 3600, EBps3600 },
-    { 4800, EBps4800 },
-    { 7200, EBps7200 },
-    { 9600, EBps9600 },
-    { 19200, EBps19200 },
-    { 38400, EBps38400 },
-    { 57600, EBps57600 },
-    { 115200, EBps115200 },
-    { 230400, EBps230400 },
-    { 460800, EBps460800 },
-    { 576000, EBps576000 },
-    { 921600, EBps921600 },
-    { 1152000, EBps1152000 },
-    //{ 1843200, EBps1843200 }, only for Symbian SR1
-    { 4000000, EBps4000000 }
-};
-
-static const RatePair *standardRatesTable_end =
-        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
-
-/*!
-    Converts the symbian-specific baud rate enum to a numeric value.
-    If the desired item is not found, returns 0.
-*/
-qint32 SymbianSerialPortEngine::rateFromSetting(EBps setting)
-{
-    const RatePair rp = { 0, setting };
-    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->rate : 0;
-}
-
-/*!
-    Converts a numeric baud rate value to a symbian-specific enum.
-    If the desired item is not found, returns 0.
-*/
-EBps SymbianSerialPortEngine::settingFromRate(qint32 rate)
-{
-    const RatePair rp = { rate, 0 };
-    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->setting : 0;
-}
-
-/*!
-    Returns a list of standard baud rate values.
-
-    Enums are defined in:
-   - d32comm.h for Symbian^3
-   - d32public.h for Symbian SR1.
-*/
-QList<qint32> SymbianSerialPortEngine::standardRates()
-{
-    QList<qint32> ret;
-    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
-       ret.append(it->rate);
-    return ret;
-}
-
 /* Protected methods */
 
 /*!
@@ -965,6 +854,115 @@ bool SymbianSerialPortEngine::updateCommConfig()
 SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 {
     return new SymbianSerialPortEngine(d);
+}
+
+/* Public static the SerialPortPrivate methods */
+
+/*!
+    Converts a platform specific \a port name to a system location
+    and returns the value.
+
+    Does not convert anything because on Symbian both are equal.
+*/
+QString SerialPortPrivate::portNameToSystemLocation(const QString &port) const
+{
+    // Port name is equval to port location.
+    return port;
+}
+
+/*!
+    Converts a platform specific system \a location to a port name
+    and returns the value.
+
+    Does not convert anything because on Symbian both are equal.
+*/
+QString SerialPortPrivate::portNameFromSystemLocation(const QString &location) const
+{
+    // Port name is equval to port location.
+    return location;
+}
+
+struct RatePair
+{
+   qint32 rate;    // The numerical value of baud rate.
+   qint32 setting; // The OS-specific code of baud rate.
+   bool operator<(const RatePair &other) const { return rate < other.rate; }
+   bool operator==(const RatePair &other) const { return setting == other.setting; }
+};
+
+// This table contains correspondences standard pairs values of
+// baud rates that are defined in files
+// - d32comm.h for Symbian^3
+// - d32public.h for Symbian SR1
+static
+const RatePair standardRatesTable[] =
+{
+    { 50, EBps50 },
+    { 75, EBps75 },
+    { 110, EBps110},
+    { 134, EBps134 },
+    { 150, EBps150 },
+    { 300, EBps300 },
+    { 600, EBps600 },
+    { 1200, EBps1200 },
+    { 1800, EBps1800 },
+    { 2000, EBps2000 },
+    { 2400, EBps2400 },
+    { 3600, EBps3600 },
+    { 4800, EBps4800 },
+    { 7200, EBps7200 },
+    { 9600, EBps9600 },
+    { 19200, EBps19200 },
+    { 38400, EBps38400 },
+    { 57600, EBps57600 },
+    { 115200, EBps115200 },
+    { 230400, EBps230400 },
+    { 460800, EBps460800 },
+    { 576000, EBps576000 },
+    { 921600, EBps921600 },
+    { 1152000, EBps1152000 },
+    //{ 1843200, EBps1843200 }, only for Symbian SR1
+    { 4000000, EBps4000000 }
+};
+
+static const RatePair *standardRatesTable_end =
+        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+
+/*!
+    Converts the symbian-specific baud rate enum to a numeric value.
+    If the desired item is not found, returns 0.
+*/
+qint32 SerialPortPrivate::rateFromSetting(qint32 setting)
+{
+    const RatePair rp = { 0, setting };
+    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
+    return ret != standardRatesTable_end ? ret->rate : 0;
+}
+
+/*!
+    Converts a numeric baud rate value to a symbian-specific enum.
+    If the desired item is not found, returns 0.
+*/
+qint32 SerialPortPrivate::settingFromRate(qint32 rate)
+{
+    const RatePair rp = { rate, 0 };
+    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
+    return ret != standardRatesTable_end ? ret->setting : 0;
+}
+
+/*!
+    Returns a list of standard baud rate values.
+
+    Enums are defined in:
+   - d32comm.h for Symbian^3
+   - d32public.h for Symbian SR1.
+*/
+QList<qint32> SerialPortPrivate::standardRates()
+{
+    QList<qint32> ret;
+    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
+       ret.append(it->rate);
+    return ret;
 }
 
 #include "moc_serialportengine_symbian_p.cpp"

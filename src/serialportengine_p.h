@@ -88,9 +88,6 @@ public:
                         bool checkRead, bool checkWrite,
                         bool *selectForRead, bool *selectForWrite) = 0;
 
-    virtual QString toSystemLocation(const QString &port) const = 0;
-    virtual QString fromSystemLocation(const QString &location) const = 0;
-
     virtual bool setRate(qint32 rate, SerialPort::Directions dir) = 0;
     virtual bool setDataBits(SerialPort::DataBits dataBits) = 0;
     virtual bool setParity(SerialPort::Parity parity) = 0;

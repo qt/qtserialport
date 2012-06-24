@@ -301,7 +301,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             if (!(s.isEmpty() || s.contains(QLatin1String("LPT")))) {
 
                 info.d_ptr->portName = s;
-                info.d_ptr->device = QLatin1String("\\\\.\\") + s;
+                info.d_ptr->device = SerialPortPrivate::portNameToSystemLocation(s);
 
                 v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
                 info.d_ptr->description = v.toString();
@@ -330,8 +330,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         do {
             SerialPortInfo info;
             info.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
-            info.d_ptr->portName = info.d_ptr->device;
-            info.d_ptr->portName.remove(':');
+            info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
             info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
                                                       QString::fromWCharArray(di.szDeviceKey));
 
@@ -351,7 +350,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 QList<qint32> SerialPortInfo::standardRates()
 {
-    return WinSerialPortEngine::standardRates();
+    return SerialPortPrivate::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

@@ -254,7 +254,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                     SerialPortInfo info;
 
                     info.d_ptr->device = s;
-                    info.d_ptr->portName = s.remove(QRegExp(QLatin1String("/[\\w|\\d|\\s]+/")));
+                    info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(s);
 
                     // Get description, manufacturer, vendor identifier, product
                     // identifier are not supported.
@@ -273,7 +273,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 QList<qint32> SerialPortInfo::standardRates()
 {
-    return UnixSerialPortEngine::standardRates();
+    return SerialPortPrivate::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

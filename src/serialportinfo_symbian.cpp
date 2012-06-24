@@ -200,7 +200,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                 info.d_ptr->device = s
                         .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
                         .arg(i);
-                info.d_ptr->portName = info.d_ptr->device;
+                info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
                 info.d_ptr->description =
                         QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
                 info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
@@ -214,7 +214,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 QList<qint32> SerialPortInfo::standardRates()
 {
-    return SymbianSerialPortEngine::standardRates();
+    return SerialPortPrivate::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

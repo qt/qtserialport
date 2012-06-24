@@ -278,7 +278,7 @@ static QList<qint32> emptyList()
 
 QList<qint32> SerialPortInfo::standardRates()
 {
-    return UnixSerialPortEngine::standardRates();
+    return SerialPortPrivate::standardRates();
 }
 
 bool SerialPortInfo::isBusy() const

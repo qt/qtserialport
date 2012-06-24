@@ -653,46 +653,6 @@ bool WinSerialPortEngine::select(int timeout,
     return sucessResult;
 }
 
-#if !defined (Q_OS_WINCE)
-static const QString defaultPathPrefix = QLatin1String("\\\\.\\");
-#else
-static const QString defaultPathPostfix = QLatin1String(":");
-#endif
-
-/*!
-    Converts a platform specific \a port name to a system location
-    and returns the value.
-*/
-QString WinSerialPortEngine::toSystemLocation(const QString &port) const
-{
-    QString ret = port;
-#if !defined (Q_OS_WINCE)
-    if (!ret.contains(defaultPathPrefix))
-        ret.prepend(defaultPathPrefix);
-#else
-    if (!ret.contains(defaultPathPostfix))
-        ret.append(defaultPathPostfix);
-#endif
-    return ret;
-}
-
-/*!
-    Converts a platform specific system \a location to a port name
-    and returns the value.
-*/
-QString WinSerialPortEngine::fromSystemLocation(const QString &location) const
-{
-    QString ret = location;
-#if !defined (Q_OS_WINCE)
-    if (ret.contains(defaultPathPrefix))
-        ret.remove(defaultPathPrefix);
-#else
-    if (ret.contains(defaultPathPostfix))
-        ret.remove(defaultPathPostfix);
-#endif
-    return ret;
-}
-
 /*!
     Sets the desired baud \a rate for the given direction \a dir.
     As Windows does not support separate directions, the only valid value for
@@ -960,75 +920,6 @@ void WinSerialPortEngine::unlockNotification(NotificationLockerType type)
 }
 
 #endif
-
-/* Public static methods */
-
-// This table contains standard values of baud rates that
-// are defined in MSDN and/or in Win SDK file winbase.h
-static
-const qint32 standardRatesTable[] =
-{
-    #if defined (CBR_110)
-    CBR_110,
-    #endif
-    #if defined (CBR_300)
-    CBR_300,
-    #endif
-    #if defined (CBR_600)
-    CBR_600,
-    #endif
-    #if defined (CBR_1200)
-    CBR_1200,
-    #endif
-    #if defined (CBR_2400)
-    CBR_2400,
-    #endif
-    #if defined (CBR_4800)
-    CBR_4800,
-    #endif
-    #if defined (CBR_9600)
-    CBR_9600,
-    #endif
-    #if defined (CBR_14400)
-    CBR_14400,
-    #endif
-    #if defined (CBR_19200)
-    CBR_19200,
-    #endif
-    #if defined (CBR_38400)
-    CBR_38400,
-    #endif
-    #if defined (CBR_56000)
-    CBR_56000,
-    #endif
-    #if defined (CBR_57600)
-    CBR_57600,
-    #endif
-    #if defined (CBR_115200)
-    CBR_115200,
-    #endif
-    #if defined (CBR_128000)
-    CBR_128000,
-    #endif
-    #if defined (CBR_256000)
-    CBR_256000
-    #endif
-};
-
-static const qint32 *standardRatesTable_end =
-        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
-
-/*!
-   Returns a list of standard baud rates that
-   are defined in MSDN and/or in Win SDK file winbase.h.
-*/
-QList<qint32> WinSerialPortEngine::standardRates()
-{
-   QList<qint32> l;
-   for (const qint32 *it = standardRatesTable; it != standardRatesTable_end; ++it)
-      l.append(*it);
-   return l;
-}
 
 /* Protected methods */
 
@@ -1356,6 +1247,135 @@ bool WinSerialPortEngine::updateCommTimeouts()
 SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 {
     return new WinSerialPortEngine(d);
+}
+
+/* Public static the SerialPortPrivate methods */
+
+#if !defined (Q_OS_WINCE)
+static const QLatin1String defaultPathPrefix("\\\\.\\");
+#else
+static const QLatin1String defaultPathPostfix(":");
+#endif
+
+/*!
+    Converts a platform specific \a port name to a system location
+    and returns the value.
+*/
+QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
+{
+    QString ret = port;
+#if !defined (Q_OS_WINCE)
+    if (!ret.contains(defaultPathPrefix))
+        ret.prepend(defaultPathPrefix);
+#else
+    if (!ret.contains(defaultPathPostfix))
+        ret.append(defaultPathPostfix);
+#endif
+    return ret;
+}
+
+/*!
+    Converts a platform specific system \a location to a port name
+    and returns the value.
+*/
+QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
+{
+    QString ret = location;
+#if !defined (Q_OS_WINCE)
+    if (ret.contains(defaultPathPrefix))
+        ret.remove(defaultPathPrefix);
+#else
+    if (ret.contains(defaultPathPostfix))
+        ret.remove(defaultPathPostfix);
+#endif
+    return ret;
+}
+
+// This table contains standard values of baud rates that
+// are defined in MSDN and/or in Win SDK file winbase.h
+static
+const qint32 standardRatesTable[] =
+{
+    #if defined (CBR_110)
+    CBR_110,
+    #endif
+    #if defined (CBR_300)
+    CBR_300,
+    #endif
+    #if defined (CBR_600)
+    CBR_600,
+    #endif
+    #if defined (CBR_1200)
+    CBR_1200,
+    #endif
+    #if defined (CBR_2400)
+    CBR_2400,
+    #endif
+    #if defined (CBR_4800)
+    CBR_4800,
+    #endif
+    #if defined (CBR_9600)
+    CBR_9600,
+    #endif
+    #if defined (CBR_14400)
+    CBR_14400,
+    #endif
+    #if defined (CBR_19200)
+    CBR_19200,
+    #endif
+    #if defined (CBR_38400)
+    CBR_38400,
+    #endif
+    #if defined (CBR_56000)
+    CBR_56000,
+    #endif
+    #if defined (CBR_57600)
+    CBR_57600,
+    #endif
+    #if defined (CBR_115200)
+    CBR_115200,
+    #endif
+    #if defined (CBR_128000)
+    CBR_128000,
+    #endif
+    #if defined (CBR_256000)
+    CBR_256000
+    #endif
+};
+
+static const qint32 *standardRatesTable_end =
+        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+
+/*!
+    Converts the windows-specific baud rate code \a setting to a numeric value.
+    If the desired item is not found, returns 0.
+*/
+qint32 SerialPortPrivate::rateFromSetting(qint32 setting)
+{
+    const qint32 *ret = qFind(standardRatesTable, standardRatesTable_end, setting);
+    return ret != standardRatesTable_end ? *ret : 0;
+}
+
+/*!
+    Converts a numeric baud \a rate value to the windows-specific code.
+    If the desired item is not found, returns 0.
+*/
+qint32 SerialPortPrivate::settingFromRate(qint32 rate)
+{
+    const qint32 *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rate);
+    return ret != standardRatesTable_end ? *ret : 0;
+}
+
+/*!
+   Returns a list of standard baud rates that
+   are defined in MSDN and/or in Win SDK file winbase.h.
+*/
+QList<qint32> SerialPortPrivate::standardRates()
+{
+   QList<qint32> l;
+   for (const qint32 *it = standardRatesTable; it != standardRatesTable_end; ++it)
+      l.append(*it);
+   return l;
 }
 
 #include "moc_serialportengine_win_p.cpp"

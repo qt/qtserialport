@@ -155,7 +155,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
 {
     // First, here need check locked device or not.
     bool byCurrPid = false;
-    QByteArray portName = fromSystemLocation(location).toLocal8Bit();
+    QByteArray portName = SerialPortPrivate::portNameFromSystemLocation(location).toLocal8Bit();
     const char *ptr = portName.constData();
     if (TtyLocker::isLocked(ptr, &byCurrPid)) {
         dptr->setError(SerialPort::PermissionDeniedError);
@@ -241,7 +241,7 @@ void UnixSerialPortEngine::close(const QString &location)
 
     // Try unlock device by location.
     bool byCurrPid = false;
-    QByteArray portName = fromSystemLocation(location).toLocal8Bit();
+    QByteArray portName = SerialPortPrivate::portNameFromSystemLocation(location).toLocal8Bit();
     const char *ptr = portName.constData();
     if (TtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
         TtyLocker::unlock(ptr);
@@ -580,46 +580,6 @@ bool UnixSerialPortEngine::select(int timeout,
     return true;
 }
 
-#if defined (Q_OS_MAC)
-static const QString defaultPathPrefix = QLatin1String("/dev/cu.");
-static const QString notUsedPathPrefix = QLatin1String("/dev/tty.");
-#else
-static const QString defaultPathPrefix = QLatin1String("/dev/");
-#endif
-
-/*!
-    Converts a platform specific \a port name to a system location
-    and returns the value.
-*/
-QString UnixSerialPortEngine::toSystemLocation(const QString &port) const
-{
-    QString ret = port;
-
-#if defined (Q_OS_MAC)
-    ret.remove(notUsedPathPrefix);
-#endif
-
-    if (!ret.contains(defaultPathPrefix))
-        ret.prepend(defaultPathPrefix);
-    return ret;
-}
-
-/*!
-    Converts a platform specific system \a location to a port name
-    and returns the value.
-*/
-QString UnixSerialPortEngine::fromSystemLocation(const QString &location) const
-{
-    QString ret = location;
-
-#if defined (Q_OS_MAC)
-    ret.remove(notUsedPathPrefix);
-#endif
-
-    ret.remove(defaultPathPrefix);
-    return ret;
-}
-
 /*!
     Sets the desired baud \a rate for the given direction \a dir,
     where \a rate is expressed by any positive integer type qint32.
@@ -636,7 +596,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
     // prepare section
 
     if (ret) {
-        const qint32 unixRate = settingFromRate(rate);
+        const qint32 unixRate = SerialPortPrivate::settingFromRate(rate);
         if (unixRate > 0) {
             // try prepate to set standard baud rate
 #if defined (Q_OS_LINUX)
@@ -961,149 +921,6 @@ bool UnixSerialPortEngine::processIOErrors()
     return false;
 }
 
-/* Public static methods */
-
-struct RatePair
-{
-   qint32 rate;    // The numerical value of baud rate.
-   qint32 setting; // The OS-specific code of baud rate.
-   bool operator<(const RatePair &other) const { return rate < other.rate; }
-   bool operator==(const RatePair &other) const { return setting == other.setting; }
-};
-
-// This table contains correspondences standard pairs values of
-// baud rates that are defined in file termios.h
-static
-const RatePair standardRatesTable[] =
-{
-    #if defined (B50)
-    { 50, B50 },
-    #endif
-    #if defined (B75)
-    { 75, B75 },
-    #endif
-    #if defined (B110)
-    { 110, B110 },
-    #endif
-    #if defined (B134)
-    { 134, B134 },
-    #endif
-    #if defined (B150)
-    { 150, B150 },
-    #endif
-    #if defined (B200)
-    { 200, B200 },
-    #endif
-    #if defined (B300)
-    { 300, B300 },
-    #endif
-    #if defined (B600)
-    { 600, B600 },
-    #endif
-    #if defined (B1200)
-    { 1200, B1200 },
-    #endif
-    #if defined (B1800)
-    { 1800, B1800 },
-    #endif
-    #if defined (B2400)
-    { 2400, B2400 },
-    #endif
-    #if defined (B4800)
-    { 4800, B4800 },
-    #endif
-    #if defined (B9600)
-    { 9600, B9600 },
-    #endif
-    #if defined (B19200)
-    { 19200, B19200 },
-    #endif
-    #if defined (B38400)
-    { 38400, B38400 },
-    #endif
-    #if defined (B57600)
-    { 57600, B57600 },
-    #endif
-    #if defined (B115200)
-    { 115200, B115200 },
-    #endif
-    #if defined (B230400)
-    { 230400, B230400 },
-    #endif
-    #if defined (B460800)
-    { 460800, B460800 },
-    #endif
-    #if defined (B500000)
-    { 500000, B500000 },
-    #endif
-    #if defined (B576000)
-    { 576000, B576000 },
-    #endif
-    #if defined (B921600)
-    { 921600, B921600 },
-    #endif
-    #if defined (B1000000)
-    { 1000000, B1000000 },
-    #endif
-    #if defined (B1152000)
-    { 1152000, B1152000 },
-    #endif
-    #if defined (B1500000)
-    { 1500000, B1500000 },
-    #endif
-    #if defined (B2000000)
-    { 2000000, B2000000},
-    #endif
-    #if defined (B2500000)
-    { 2500000, B2500000 },
-    #endif
-    #if defined (B3000000)
-    { 3000000, B3000000 },
-    #endif
-    #if defined (B3500000)
-    { 3500000, B3500000 },
-    #endif
-    #if defined (B4000000)
-    { 4000000, B4000000 }
-    #endif
-};
-
-static const RatePair *standardRatesTable_end =
-        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
-
-/*!
-    Converts the *nix-specific baud rate code \a setting to a numeric value.
-    If the desired item is not found, returns 0.
-*/
-qint32 UnixSerialPortEngine::rateFromSetting(qint32 setting)
-{
-    const RatePair rp = { 0, setting };
-    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->rate : 0;
-}
-
-/*!
-    Converts a numeric baud \a rate value to the *nix-specific code.
-    If the desired item is not found, returns 0.
-*/
-qint32 UnixSerialPortEngine::settingFromRate(qint32 rate)
-{
-    const RatePair rp = { rate, 0 };
-    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->setting : 0;
-}
-
-/*!
-    Returns a list of standard baud rate values, codes are defined in termios.h.
-*/
-QList<qint32> UnixSerialPortEngine::standardRates()
-{
-    QList<qint32> ret;
-    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
-       ret.append(it->rate);
-    return ret;
-}
-
 /* Protected methods */
 
 /*!
@@ -1146,8 +963,8 @@ void UnixSerialPortEngine::detectDefaultSettings()
     // other *nix
 #endif
     if (!m_isCustomRateSupported || !isCustomRateCurrentSet) {
-        dptr->options.inputRate = rateFromSetting(inputUnixRate);
-        dptr->options.outputRate = rateFromSetting(outputUnixRate);
+        dptr->options.inputRate = SerialPortPrivate::rateFromSetting(inputUnixRate);
+        dptr->options.outputRate = SerialPortPrivate::rateFromSetting(outputUnixRate);
     }
 
     // Detect databits.
@@ -1407,6 +1224,189 @@ qint64 UnixSerialPortEngine::readPerChar(char *data, qint64 maxSize)
 SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 {
     return new UnixSerialPortEngine(d);
+}
+
+/* Public static the SerialPortPrivate methods */
+
+#if defined (Q_OS_MAC)
+static const QLatin1String defaultPathPrefix("/dev/cu.");
+static const QLatin1String notUsedPathPrefix("/dev/tty.");
+#else
+static const QLatin1String defaultPathPrefix("/dev/");
+#endif
+
+/*!
+    Converts a platform specific \a port name to a system location
+    and returns the value.
+*/
+QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
+{
+    QString ret = port;
+
+#if defined (Q_OS_MAC)
+    ret.remove(notUsedPathPrefix);
+#endif
+
+    if (!ret.contains(defaultPathPrefix))
+        ret.prepend(defaultPathPrefix);
+    return ret;
+}
+
+/*!
+    Converts a platform specific system \a location to a port name
+    and returns the value.
+*/
+QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
+{
+    QString ret = location;
+
+#if defined (Q_OS_MAC)
+    ret.remove(notUsedPathPrefix);
+#endif
+
+    ret.remove(defaultPathPrefix);
+    return ret;
+}
+
+struct RatePair
+{
+   qint32 rate;    // The numerical value of baud rate.
+   qint32 setting; // The OS-specific code of baud rate.
+   bool operator<(const RatePair &other) const { return rate < other.rate; }
+   bool operator==(const RatePair &other) const { return setting == other.setting; }
+};
+
+// This table contains correspondences standard pairs values of
+// baud rates that are defined in file termios.h
+static
+const RatePair standardRatesTable[] =
+{
+    #if defined (B50)
+    { 50, B50 },
+    #endif
+    #if defined (B75)
+    { 75, B75 },
+    #endif
+    #if defined (B110)
+    { 110, B110 },
+    #endif
+    #if defined (B134)
+    { 134, B134 },
+    #endif
+    #if defined (B150)
+    { 150, B150 },
+    #endif
+    #if defined (B200)
+    { 200, B200 },
+    #endif
+    #if defined (B300)
+    { 300, B300 },
+    #endif
+    #if defined (B600)
+    { 600, B600 },
+    #endif
+    #if defined (B1200)
+    { 1200, B1200 },
+    #endif
+    #if defined (B1800)
+    { 1800, B1800 },
+    #endif
+    #if defined (B2400)
+    { 2400, B2400 },
+    #endif
+    #if defined (B4800)
+    { 4800, B4800 },
+    #endif
+    #if defined (B9600)
+    { 9600, B9600 },
+    #endif
+    #if defined (B19200)
+    { 19200, B19200 },
+    #endif
+    #if defined (B38400)
+    { 38400, B38400 },
+    #endif
+    #if defined (B57600)
+    { 57600, B57600 },
+    #endif
+    #if defined (B115200)
+    { 115200, B115200 },
+    #endif
+    #if defined (B230400)
+    { 230400, B230400 },
+    #endif
+    #if defined (B460800)
+    { 460800, B460800 },
+    #endif
+    #if defined (B500000)
+    { 500000, B500000 },
+    #endif
+    #if defined (B576000)
+    { 576000, B576000 },
+    #endif
+    #if defined (B921600)
+    { 921600, B921600 },
+    #endif
+    #if defined (B1000000)
+    { 1000000, B1000000 },
+    #endif
+    #if defined (B1152000)
+    { 1152000, B1152000 },
+    #endif
+    #if defined (B1500000)
+    { 1500000, B1500000 },
+    #endif
+    #if defined (B2000000)
+    { 2000000, B2000000},
+    #endif
+    #if defined (B2500000)
+    { 2500000, B2500000 },
+    #endif
+    #if defined (B3000000)
+    { 3000000, B3000000 },
+    #endif
+    #if defined (B3500000)
+    { 3500000, B3500000 },
+    #endif
+    #if defined (B4000000)
+    { 4000000, B4000000 }
+    #endif
+};
+
+static const RatePair *standardRatesTable_end =
+        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+
+/*!
+    Converts the *nix-specific baud rate code \a setting to a numeric value.
+    If the desired item is not found, returns 0.
+*/
+qint32 SerialPortPrivate::rateFromSetting(qint32 setting)
+{
+    const RatePair rp = { 0, setting };
+    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
+    return ret != standardRatesTable_end ? ret->rate : 0;
+}
+
+/*!
+    Converts a numeric baud \a rate value to the *nix-specific code.
+    If the desired item is not found, returns 0.
+*/
+qint32 SerialPortPrivate::settingFromRate(qint32 rate)
+{
+    const RatePair rp = { rate, 0 };
+    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
+    return ret != standardRatesTable_end ? ret->setting : 0;
+}
+
+/*!
+    Returns a list of standard baud rate values, codes are defined in termios.h.
+*/
+QList<qint32> SerialPortPrivate::standardRates()
+{
+    QList<qint32> ret;
+    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
+       ret.append(it->rate);
+    return ret;
 }
 
 #include "moc_serialportengine_unix_p.cpp"
