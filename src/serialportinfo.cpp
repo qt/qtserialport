@@ -68,8 +68,6 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     \sa SerialPort
 */
 
-/* Public methods */
-
 /*!
     Constructs an empty SerialPortInfo object.
 

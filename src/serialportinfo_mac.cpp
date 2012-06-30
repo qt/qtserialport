@@ -65,9 +65,6 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-/* Public methods */
-
-//
 enum { MATCHING_PROPERTIES_COUNT = 6 };
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()

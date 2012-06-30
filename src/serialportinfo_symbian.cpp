@@ -100,8 +100,6 @@ static bool loadDevices()
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-/* Public methods */
-
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;

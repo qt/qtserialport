@@ -119,8 +119,6 @@ static bool loadDevices()
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-/* Public methods */
-
 /*!
     Constructs a SymbianSerialPortEngine and initializes all internal variables
     to their initial values. The pointer \a d to the private object of class
@@ -833,8 +831,6 @@ SerialPort::PortError SymbianSerialPortEngine::decodeSystemError() const
     }
     return error;
 }
-
-/* Private methods */
 
 /*!
     Updates the TCommConfig structure when changing any serial port parameter.

@@ -119,8 +119,6 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-/* Public methods */
-
 /*!
     Constructs a WinSerialPortEngine and initializes all internal variables
     to their initial values. The pointer \a d to the private object of class
@@ -1096,8 +1094,6 @@ bool WinSerialPortEngine::event(QEvent *e)
 }
 
 #endif
-
-/* Private methods */
 
 #if !defined (Q_OS_WINCE)
 

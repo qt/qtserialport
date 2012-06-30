@@ -91,8 +91,6 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-/* Public methods */
-
 /*!
     Constructs a UnixSerialPortEngine and initializes all internal variables
     to their initial values. The pointer \a d to the private object of class
@@ -1082,8 +1080,6 @@ bool UnixSerialPortEngine::eventFilter(QObject *obj, QEvent *e)
     }
     return QObject::eventFilter(obj, e);
 }
-
-/* Private methods */
 
 /*!
     Updates the termios structure when changing any serial port parameter.

@@ -63,10 +63,6 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-//----------------------------------------------------------------
-
-/* Public methods */
-
 /*! \internal
 
     Constructs a SerialPortPrivate. Initializes all members.
@@ -316,9 +312,6 @@ bool SerialPortPrivate::canErrorNotification()
 #endif
     return engine->processIOErrors();
 }
-
-//----------------------------------------------------------------
-//************* SerialPort
 
 /*!
     \class SerialPort
@@ -609,8 +602,6 @@ bool SerialPortPrivate::canErrorNotification()
 */
 
 
-
-/* Public methods */
 
 /*!
     Constructs a new serial port object with the given \a parent.
