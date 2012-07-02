@@ -54,13 +54,6 @@ symbian {
 }
 
 unix:!symbian {
-    maemo5 {
-        target.path = /opt/usr/lib
-    } else {
-        target.path = /usr/lib
-    }
-    INSTALLS += target
-
     PRIVATE_HEADERS += \
         $$PWD/ttylocker_unix_p.h \
         $$PWD/serialportengine_unix_p.h

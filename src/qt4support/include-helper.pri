@@ -8,10 +8,13 @@ for(header_file, PUBLIC_HEADERS) {
    system("$$QMAKE_COPY $${header_file} $$SERIALPORT_PROJECT_INCLUDEDIR")
 }
 
-header_files.files  = $$PUBLIC_HEADERS
-header_files.path   = $$[QT_INSTALL_PREFIX]/include/QtAddOnSerialPort
-INSTALLS            += header_files
+target_headers.files  = $$PUBLIC_HEADERS
+target_headers.path   = $$[QT_INSTALL_PREFIX]/include/QtAddOnSerialPort
+INSTALLS              += target_headers
 
-serialport_prf.files    = serialport.prf
-serialport_prf.path     = $$[QT_INSTALL_DATA]/mkspecs/features
-INSTALLS                += serialport_prf
+mkspecs_features.files    = $$SERIALPORT_PROJECT_ROOT/src/qt4support/serialport.prf
+mkspecs_features.path     = $$[QT_INSTALL_DATA]/mkspecs/features
+INSTALLS                  += mkspecs_features
+
+target.path = $$[QT_INSTALL_LIBS]
+INSTALLS += target
