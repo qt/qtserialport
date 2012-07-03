@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     include($$PWD/qt4support/serialport.pri)
     TARGET   = $$qtLibraryTarget($$QT.serialport.name)
     include($$PWD/src-lib.pri)
-    include($$PWD/qt4support/include-helper.pri)
+    include($$PWD/qt4support/install-helper.pri)
 }
 
 DESTDIR = $$QT.serialport.libs
