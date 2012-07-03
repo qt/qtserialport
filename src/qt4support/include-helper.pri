@@ -16,5 +16,10 @@ mkspecs_features.files    = $$SERIALPORT_PROJECT_ROOT/src/qt4support/serialport.
 mkspecs_features.path     = $$[QT_INSTALL_DATA]/mkspecs/features
 INSTALLS                  += mkspecs_features
 
+win32 {
+   dlltarget.path = $$[QT_INSTALL_BINS]
+   INSTALLS += dlltarget
+}
+
 target.path = $$[QT_INSTALL_LIBS]
 INSTALLS += target
