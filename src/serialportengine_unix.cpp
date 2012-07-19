@@ -235,6 +235,22 @@ void UnixSerialPortEngine::close(const QString &location)
     ::ioctl(m_descriptor, TIOCNXCL);
 #endif
 
+    // Delete all notifiers
+    if (m_readNotifier) {
+        delete m_readNotifier;
+        m_readNotifier = 0;
+    }
+
+    if (m_writeNotifier) {
+        delete m_writeNotifier;
+        m_writeNotifier = 0;
+    }
+
+    if (m_exceptionNotifier) {
+        delete m_exceptionNotifier;
+        m_exceptionNotifier = 0;
+    }
+
     ::close(m_descriptor);
 
     // Try unlock device by location.
