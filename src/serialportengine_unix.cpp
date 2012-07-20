@@ -111,16 +111,10 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *d)
 }
 
 /*!
-    Stops the serial port event tracking and destructs a UnixSerialPortEngine.
+    Destructs a UnixSerialPortEngine.
 */
 UnixSerialPortEngine::~UnixSerialPortEngine()
 {
-    if (m_readNotifier)
-        m_readNotifier->setEnabled(false);
-    if (m_writeNotifier)
-        m_writeNotifier->setEnabled(false);
-    if (m_exceptionNotifier)
-        m_exceptionNotifier->setEnabled(false);
 }
 
 /*!
