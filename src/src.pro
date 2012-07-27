@@ -2,14 +2,14 @@ TEMPLATE = lib
 MODULE   = serialport
 
 greaterThan(QT_MAJOR_VERSION, 4) {
-    TARGET   = $$QT.serialport.name
+    TARGET   = $$QT.serialport.name$$QT_LIBINFIX
     load(qt_module)
     load(qt_module_config)
     QT += core-private
     include($$PWD/src-lib.pri)
 } else {
     include($$PWD/qt4support/serialport.pri)
-    TARGET   = $$qtLibraryTarget($$QT.serialport.name)
+    TARGET   = $$qtLibraryTarget($$QT.serialport.name$$QT_LIBINFIX)
     include($$PWD/src-lib.pri)
     include($$PWD/qt4support/install-helper.pri)
 }
