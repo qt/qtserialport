@@ -193,7 +193,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
         dptr->setError(decodeSystemError());
         return false;
     }
-    ::memcpy(&m_currentTermios, &m_restoredTermios, sizeof(struct termios));
+    m_currentTermios = m_restoredTermios;
 
     // Set other options.
     ::cfmakeraw(&m_currentTermios);
@@ -949,7 +949,7 @@ void UnixSerialPortEngine::detectDefaultSettings()
 
     if (m_isCustomRateSupported) {
 
-        ::memcpy(&m_restoredSerialInfo, &m_currentSerialInfo, sizeof(struct serial_struct));
+        m_restoredSerialInfo = m_currentSerialInfo;
 
         // assume that the baud rate is a custom
         isCustomRateCurrentSet = inputUnixRate == B38400 && outputUnixRate == B38400;

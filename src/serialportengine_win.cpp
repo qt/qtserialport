@@ -216,12 +216,11 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
     }
 
     // Save current DCB port settings.
-    DWORD confSize = sizeof(DCB);
     if (::GetCommState(m_descriptor, &m_restoredDcb) == 0) {
         dptr->setError(decodeSystemError());
         return false;
     }
-    ::memcpy(&m_currentDcb, &m_restoredDcb, confSize);
+    m_currentDcb = m_restoredDcb;
 
     // Set other DCB port options.
     m_currentDcb.fBinary = true;
@@ -236,15 +235,14 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
         return false;
 
     // Save current port timeouts.
-    confSize = sizeof(COMMTIMEOUTS);
     if (::GetCommTimeouts(m_descriptor, &m_restoredCommTimeouts) == 0) {
         dptr->setError(decodeSystemError());
         return false;
     }
-    ::memcpy(&m_currentCommTimeouts, &m_restoredCommTimeouts, confSize);
+    m_currentCommTimeouts = m_restoredCommTimeouts;
 
     // Set new port timeouts.
-    ::memset(&m_currentCommTimeouts, 0, confSize);
+    ::memset(&m_currentCommTimeouts, 0, sizeof(COMMTIMEOUTS));
     m_currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
     // Apply new port timeouts.
