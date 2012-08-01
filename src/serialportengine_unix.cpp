@@ -939,7 +939,7 @@ void UnixSerialPortEngine::detectDefaultSettings()
 {
     // Detect rate.
     const speed_t inputUnixRate = ::cfgetispeed(&m_currentTermios);
-    const speed_t outputUnixRate = ::cfgetispeed(&m_currentTermios);
+    const speed_t outputUnixRate = ::cfgetospeed(&m_currentTermios);
     bool isCustomRateCurrentSet = false;
 
 #if defined (Q_OS_LINUX)
