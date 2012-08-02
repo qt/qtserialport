@@ -476,13 +476,7 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
         case EINVAL:
         case EIO:
             break;
-#if defined (Q_OS_SYMBIAN)
-        case EPIPE:
-#endif
         case ECONNRESET:
-#if defined (Q_OS_VXWORKS)
-        case ESHUTDOWN:
-#endif
             bytesRead = 0;
             break;
         default:
