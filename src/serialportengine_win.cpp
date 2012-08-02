@@ -135,19 +135,16 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
 {
     Q_ASSERT(d);
     dptr = d;
-    size_t size = sizeof(DCB);
-    ::memset(&m_currentDcb, 0, size);
-    ::memset(&m_restoredDcb, 0, size);
-    size = sizeof(COMMTIMEOUTS);
-    ::memset(&m_currentCommTimeouts, 0, size);
-    ::memset(&m_restoredCommTimeouts, 0, size);
+    ::memset(&m_currentDcb, 0, sizeof(m_currentDcb));
+    ::memset(&m_restoredDcb, 0, sizeof(m_restoredDcb));
+    ::memset(&m_currentCommTimeouts, 0, sizeof(m_currentCommTimeouts));
+    ::memset(&m_restoredCommTimeouts, 0, sizeof(m_restoredCommTimeouts));
 
 #if !defined (Q_OS_WINCE)
-    size = sizeof(OVERLAPPED);
-    ::memset(&m_readOverlapped, 0, size);
-    ::memset(&m_writeOverlapped, 0, size);
-    ::memset(&m_selectOverlapped, 0, size);
-    ::memset(&m_notifyOverlapped, 0, size);
+    ::memset(&m_readOverlapped, 0, sizeof(m_readOverlapped));
+    ::memset(&m_writeOverlapped, 0, sizeof(m_writeOverlapped));
+    ::memset(&m_selectOverlapped, 0, sizeof(m_selectOverlapped));
+    ::memset(&m_notifyOverlapped, 0, sizeof(m_notifyOverlapped));
 #endif
 }
 
@@ -242,7 +239,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
     m_currentCommTimeouts = m_restoredCommTimeouts;
 
     // Set new port timeouts.
-    ::memset(&m_currentCommTimeouts, 0, sizeof(COMMTIMEOUTS));
+    ::memset(&m_currentCommTimeouts, 0, sizeof(m_currentCommTimeouts));
     m_currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
     // Apply new port timeouts.
@@ -311,7 +308,7 @@ SerialPort::Lines WinSerialPortEngine::lines() const
 
     DWORD bytesReturned = 0;
     if (::DeviceIoControl(m_descriptor, IOCTL_SERIAL_GET_DTRRTS, 0, 0,
-                          &modemStat, sizeof(DWORD),
+                          &modemStat, sizeof(bytesReturned),
                           &bytesReturned, 0)) {
 
         if (modemStat & SERIAL_DTR_STATE)
@@ -408,7 +405,7 @@ bool WinSerialPortEngine::setBreak(bool set)
 qint64 WinSerialPortEngine::bytesAvailable() const
 {
     COMSTAT cs;
-    ::memset(&cs, 0, sizeof(COMSTAT));
+    ::memset(&cs, 0, sizeof(cs));
     if (::ClearCommError(m_descriptor, 0, &cs) == 0)
         return -1;
     return cs.cbInQue;
@@ -426,7 +423,7 @@ qint64 WinSerialPortEngine::bytesAvailable() const
 qint64 WinSerialPortEngine::bytesToWrite() const
 {
     COMSTAT cs;
-    ::memset(&cs, 0, sizeof(COMSTAT));
+    ::memset(&cs, 0, sizeof(cs));
     if (::ClearCommError(m_descriptor, 0, &cs) == 0)
         return -1;
     return cs.cbOutQue;
@@ -1137,11 +1134,10 @@ void WinSerialPortEngine::closeEvents()
     if (m_notifyOverlapped.hEvent)
         ::CloseHandle(m_notifyOverlapped.hEvent);
 
-    const size_t size = sizeof(OVERLAPPED);
-    ::memset(&m_readOverlapped, 0, size);
-    ::memset(&m_writeOverlapped, 0, size);
-    ::memset(&m_selectOverlapped, 0, size);
-    ::memset(&m_notifyOverlapped, 0, size);
+    ::memset(&m_readOverlapped, 0, sizeof(m_readOverlapped));
+    ::memset(&m_writeOverlapped, 0, sizeof(m_writeOverlapped));
+    ::memset(&m_selectOverlapped, 0, sizeof(m_selectOverlapped));
+    ::memset(&m_notifyOverlapped, 0, sizeof(m_notifyOverlapped));
 }
 
 #endif

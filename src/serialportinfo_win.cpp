@@ -135,7 +135,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
         case REG_DWORD: {
             Q_ASSERT(data.size() == sizeof(int));
             int i = 0;
-            ::memcpy(&i, data.constData(), sizeof(int));
+            ::memcpy(&i, data.constData(), sizeof(i));
             v = i;
             break;
         }
@@ -273,7 +273,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
-    static const int guidCount = sizeof(guidsArray)/sizeof(GUID);
+    static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
 #if !defined (Q_OS_WINCE)
     for (int i = 0; i < guidCount; ++i) {
@@ -284,9 +284,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             return ports;
 
         SP_DEVINFO_DATA deviceInfoData;
-        const int size = sizeof(SP_DEVINFO_DATA);
-        ::memset(&deviceInfoData, 0, size);
-        deviceInfoData.cbSize = size;
+        ::memset(&deviceInfoData, 0, sizeof(deviceInfoData));
+        deviceInfoData.cbSize = sizeof(deviceInfoData);
 
         DWORD index = 0;
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
@@ -319,7 +318,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 #else
     //for (int i = 0; i < guidCount; ++i) {
     DEVMGR_DEVICE_INFORMATION di;
-    di.dwSize = sizeof(DEVMGR_DEVICE_INFORMATION);
+    di.dwSize = sizeof(di);
     const HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/,
                                              L"COM*"/*&guidsArray[i]*/,
                                              &di);

@@ -105,9 +105,8 @@ UnixSerialPortEngine::UnixSerialPortEngine(SerialPortPrivate *d)
 {
     Q_ASSERT(d);
     dptr = d;
-    const int size = sizeof(struct termios);
-    ::memset(&m_currentTermios, 0, size);
-    ::memset(&m_restoredTermios, 0, size);
+    ::memset(&m_currentTermios, 0, sizeof(m_currentTermios));
+    ::memset(&m_restoredTermios, 0, sizeof(m_restoredTermios));
 }
 
 /*!
