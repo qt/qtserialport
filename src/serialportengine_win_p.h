@@ -47,7 +47,7 @@
 #include "serialportengine_p.h"
 
 #include <qt_windows.h>
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
 #  include <QtCore/qmutex.h>
 #  include <QtCore/qthread.h>
 #  include <QtCore/qtimer.h>
@@ -61,7 +61,7 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
 
 class WinCeWaitCommEventBreaker : public QThread
 {
@@ -103,7 +103,7 @@ private:
 };
 #endif
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
 class WinSerialPortEngine : public QThread, public SerialPortEngine
 #else
 class WinSerialPortEngine : public QWinEventNotifier, public SerialPortEngine
@@ -154,7 +154,7 @@ public:
 
     virtual bool processIOErrors();
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     // FIXME
     virtual void lockNotification(NotificationLockerType type, bool uselocker);
     virtual void unlockNotification(NotificationLockerType type);
@@ -164,7 +164,7 @@ protected:
     virtual void detectDefaultSettings();
     virtual SerialPort::PortError decodeSystemError() const;
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     virtual void run();
 #else
     virtual bool event(QEvent *e);
@@ -172,7 +172,7 @@ protected:
 
 private:
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     bool createEvents(bool rx, bool tx);
     void closeEvents();
 #endif
@@ -193,7 +193,7 @@ private:
     DWORD m_currentMask;
     DWORD m_desiredMask;
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     QMutex m_readNotificationMutex;
     QMutex m_writeNotificationMutex;
     QMutex m_errorNotificationMutex;

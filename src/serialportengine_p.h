@@ -51,7 +51,7 @@ class SerialPortEngine
 {
 public:
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     // FIXME
     // Only for WinCE.
     enum NotificationLockerType {
@@ -105,7 +105,7 @@ public:
 
     virtual bool processIOErrors() = 0;
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     // FIXME
     virtual void lockNotification(NotificationLockerType type, bool uselocker) = 0;
     virtual void unlockNotification(NotificationLockerType type) = 0;

@@ -48,7 +48,7 @@
 #include <qt_windows.h>
 #include <objbase.h>
 #include <initguid.h>
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
 #  include <setupapi.h>
 #endif
 
@@ -58,7 +58,7 @@
 
 static const GUID guidsArray[] =
 {
-    #if !defined (Q_OS_WINCE)
+    #ifndef Q_OS_WINCE
     // Windows Ports Class GUID
     { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
     // Virtual Ports Class GUID (i.e. com0com and etc)
@@ -74,7 +74,7 @@ static const GUID guidsArray[] =
     #endif
 };
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
 
 static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
@@ -275,7 +275,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     QList<SerialPortInfo> ports;
     static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     for (int i = 0; i < guidCount; ++i) {
 
         const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], 0, 0, DIGCF_PRESENT);

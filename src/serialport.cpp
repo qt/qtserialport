@@ -206,7 +206,7 @@ bool SerialPortPrivate::canReadNotification()
 {
     Q_Q(SerialPort);
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     engine->lockNotification(SerialPortEngine::CanReadLocker, true);
 #endif
     // Prevent recursive calls.
@@ -277,11 +277,11 @@ bool SerialPortPrivate::canReadNotification()
 */
 bool SerialPortPrivate::canWriteNotification()
 {
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     engine->lockNotification(SerialPortEngine::CanWriteLocker, true);
 #endif
 
-#if defined (Q_OS_WIN)
+#ifdef Q_OS_WIN
     if (engine->isWriteNotificationEnabled())
         engine->setWriteNotificationEnabled(false);
 #endif
@@ -289,7 +289,7 @@ bool SerialPortPrivate::canWriteNotification()
     const int tmp = writeBuffer.size();
     flush();
 
-#if defined (Q_OS_WIN)
+#ifdef Q_OS_WIN
     if (!writeBuffer.isEmpty())
         engine->setWriteNotificationEnabled(true);
 #else
@@ -307,7 +307,7 @@ bool SerialPortPrivate::canWriteNotification()
 */
 bool SerialPortPrivate::canErrorNotification()
 {
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     engine->lockNotification(SerialPortEngine::CanErrorLocker, true);
 #endif
     return engine->processIOErrors();

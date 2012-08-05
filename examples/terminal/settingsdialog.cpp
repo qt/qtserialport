@@ -134,7 +134,7 @@ void SettingsDialog::fillPortsParameters()
 
     // fill stop bits
     ui->stopBitsBox->addItem(QLatin1String("1"), SerialPort::OneStop);
-#if defined (Q_OS_WIN)
+#ifdef Q_OS_WIN
     ui->stopBitsBox->addItem(QLatin1String("1.5"), SerialPort::OneAndHalfStop);
 #endif
     ui->stopBitsBox->addItem(QLatin1String("2"), SerialPort::TwoStop);

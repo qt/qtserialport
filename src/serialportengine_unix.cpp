@@ -79,7 +79,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#if defined (Q_OS_MAC)
+#ifdef Q_OS_MAC
 #  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
 #    include <IOKit/serial/ioss.h>
 #  endif
@@ -183,7 +183,7 @@ bool UnixSerialPortEngine::open(const QString &location, QIODevice::OpenMode mod
     }
 
     // Try set exclusive mode.
-#if defined (TIOCEXCL)
+#ifdef TIOCEXCL
     ::ioctl(m_descriptor, TIOCEXCL);
 #endif
 
@@ -217,14 +217,14 @@ void UnixSerialPortEngine::close(const QString &location)
     // Restore saved port settings.
     if (dptr->options.restoreSettingsOnClose) {
         ::tcsetattr(m_descriptor, TCSANOW, &m_restoredTermios);
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
         if (m_isCustomRateSupported)
             ::ioctl(m_descriptor, TIOCSSERIAL, &m_restoredSerialInfo);
 #endif
     }
 
     // Try clean exclusive mode.
-#if defined (TIOCNXCL)
+#ifdef TIOCNXCL
     ::ioctl(m_descriptor, TIOCNXCL);
 #endif
 
@@ -273,45 +273,45 @@ SerialPort::Lines UnixSerialPortEngine::lines() const
     if (::ioctl(m_descriptor, TIOCMGET, &arg) == -1)
         return ret;
 
-#if defined (TIOCLE)
+#ifdef TIOCLE
     if (arg & TIOCLE)
         ret |= SerialPort::Le;
 #endif
-#if defined (TIOCDTR)
+#ifdef TIOCDTR
     if (arg & TIOCDTR)
         ret |= SerialPort::Dtr;
 #endif
-#if defined (TIOCRTS)
+#ifdef TIOCRTS
     if (arg & TIOCRTS)
         ret |= SerialPort::Rts;
 #endif
-#if defined (TIOCST)
+#ifdef TIOCST
     if (arg & TIOCST)
         ret |= SerialPort::St;
 #endif
-#if defined (TIOCSR)
+#ifdef TIOCSR
     if (arg & TIOCSR)
         ret |= SerialPort::Sr;
 #endif
-#if defined (TIOCCTS)
+#ifdef TIOCCTS
     if (arg & TIOCCTS)
         ret |= SerialPort::Cts;
 #endif
-#if defined (TIOCCAR)
+#ifdef TIOCCAR
     if (arg & TIOCCAR)
         ret |= SerialPort::Dcd;
 #elif defined (TIOCCD)
     if (arg & TIOCCD)
         ret |= SerialPort::Dcd;
 #endif
-#if defined (TIOCRNG)
+#ifdef TIOCRNG
     if (arg & TIOCRNG)
         ret |= SerialPort::Ri;
 #elif defined (TIOCRI)
     if (arg & TIOCRI)
         ret |= SerialPort::Ri;
 #endif
-#if defined (TIOCDSR)
+#ifdef TIOCDSR
     if (arg & TIOCDSR)
         ret |= SerialPort::Dsr;
 #endif
@@ -412,7 +412,7 @@ bool UnixSerialPortEngine::setBreak(bool set)
 qint64 UnixSerialPortEngine::bytesAvailable() const
 {
     int nbytes = 0;
-#if defined (TIOCINQ)
+#ifdef TIOCINQ
     if (::ioctl(m_descriptor, TIOCINQ, &nbytes) == -1)
         return -1;
 #endif
@@ -426,7 +426,7 @@ qint64 UnixSerialPortEngine::bytesAvailable() const
 qint64 UnixSerialPortEngine::bytesToWrite() const
 {
     int nbytes = 0;
-#if defined (TIOCOUTQ)
+#ifdef TIOCOUTQ
     if (::ioctl(m_descriptor, TIOCOUTQ, &nbytes) == -1)
         return -1;
 #endif
@@ -447,7 +447,7 @@ qint64 UnixSerialPortEngine::bytesToWrite() const
 qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 {
     qint64 bytesRead = 0;
-#if defined (CMSPAR)
+#ifdef CMSPAR
     if (dptr->options.parity == SerialPort::NoParity
             || dptr->options.policy != SerialPort::StopReceivingPolicy) {
 #else
@@ -496,7 +496,7 @@ qint64 UnixSerialPortEngine::read(char *data, qint64 len)
 qint64 UnixSerialPortEngine::write(const char *data, qint64 len)
 {
     qint64 bytesWritten = 0;
-#if defined (CMSPAR)
+#ifdef CMSPAR
     bytesWritten = ::write(m_descriptor, data, len);
 #else
     if (dptr->options.parity != SerialPort::MarkParity
@@ -600,7 +600,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
         const qint32 unixRate = SerialPortPrivate::settingFromRate(rate);
         if (unixRate > 0) {
             // try prepate to set standard baud rate
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
             // prepare to forcefully reset the custom mode
             if (m_isCustomRateSupported) {
                 //m_currentSerialInfo.flags |= ASYNC_SPD_MASK;
@@ -613,7 +613,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
                     || ((dir & SerialPort::Output) && ::cfsetospeed(&m_currentTermios, unixRate) < 0));
         } else {
             // try prepate to set custom baud rate
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
             // prepare to forcefully set the custom mode
             if (m_isCustomRateSupported) {
                 m_currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
@@ -648,7 +648,7 @@ bool UnixSerialPortEngine::setRate(qint32 rate, SerialPort::Directions dir)
 
     // finally section
 
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
     if (ret && m_isCustomRateSupported) // finally, set or reset the custom mode
         ret = ::ioctl(m_descriptor, TIOCSSERIAL, &m_currentSerialInfo) != -1;
 #endif
@@ -706,7 +706,7 @@ bool UnixSerialPortEngine::setParity(SerialPort::Parity parity)
 
     switch (parity) {
 
-#if defined (CMSPAR)
+#ifdef CMSPAR
     // Here Installation parity only for GNU/Linux where the macro CMSPAR.
     case SerialPort::SpaceParity:
         m_currentTermios.c_cflag &= ~PARODD;
@@ -935,7 +935,7 @@ void UnixSerialPortEngine::detectDefaultSettings()
     const speed_t outputUnixRate = ::cfgetospeed(&m_currentTermios);
     bool isCustomRateCurrentSet = false;
 
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
     // try detect the ability to support custom rate
     m_isCustomRateSupported = ::ioctl(m_descriptor, TIOCGSERIAL, &m_currentSerialInfo) != -1
             && ::ioctl(m_descriptor, TIOCSSERIAL, &m_currentSerialInfo) != -1;
@@ -988,7 +988,7 @@ void UnixSerialPortEngine::detectDefaultSettings()
     }
 
     // Detect parity.
-#if defined (CMSPAR)
+#ifdef CMSPAR
     if (m_currentTermios.c_cflag & CMSPAR) {
         dptr->options.parity = m_currentTermios.c_cflag & PARODD ?
                     SerialPort::MarkParity : SerialPort::SpaceParity;
@@ -1000,7 +1000,7 @@ void UnixSerialPortEngine::detectDefaultSettings()
         } else {
             dptr->options.parity = SerialPort::NoParity;
         }
-#if defined (CMSPAR)
+#ifdef CMSPAR
     }
 #endif
 
@@ -1107,7 +1107,7 @@ static inline bool evenParity(quint8 c)
     return c & 1;       //(c7 ^ c3)(c5 ^ c1)(c6 ^ c2)(c4 ^ c0)
 }
 
-#if !defined (CMSPAR)
+#ifndef CMSPAR
 
 /*!
     For platforms that do not have the support of parities mark and space
@@ -1227,7 +1227,7 @@ SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 
 /* Public static the SerialPortPrivate methods */
 
-#if defined (Q_OS_MAC)
+#ifdef Q_OS_MAC
 static const QLatin1String defaultPathPrefix("/dev/cu.");
 static const QLatin1String notUsedPathPrefix("/dev/tty.");
 #else
@@ -1242,7 +1242,7 @@ QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
 {
     QString ret = port;
 
-#if defined (Q_OS_MAC)
+#ifdef Q_OS_MAC
     ret.remove(notUsedPathPrefix);
 #endif
 
@@ -1259,7 +1259,7 @@ QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
 {
     QString ret = location;
 
-#if defined (Q_OS_MAC)
+#ifdef Q_OS_MAC
     ret.remove(notUsedPathPrefix);
 #endif
 
@@ -1280,94 +1280,94 @@ struct RatePair
 static
 const RatePair standardRatesTable[] =
 {
-    #if defined (B50)
+    #ifdef B50
     { 50, B50 },
     #endif
-    #if defined (B75)
+    #ifdef B75
     { 75, B75 },
     #endif
-    #if defined (B110)
+    #ifdef B110
     { 110, B110 },
     #endif
-    #if defined (B134)
+    #ifdef B134
     { 134, B134 },
     #endif
-    #if defined (B150)
+    #ifdef B150
     { 150, B150 },
     #endif
-    #if defined (B200)
+    #ifdef B200
     { 200, B200 },
     #endif
-    #if defined (B300)
+    #ifdef B300
     { 300, B300 },
     #endif
-    #if defined (B600)
+    #ifdef B600
     { 600, B600 },
     #endif
-    #if defined (B1200)
+    #ifdef B1200
     { 1200, B1200 },
     #endif
-    #if defined (B1800)
+    #ifdef B1800
     { 1800, B1800 },
     #endif
-    #if defined (B2400)
+    #ifdef B2400
     { 2400, B2400 },
     #endif
-    #if defined (B4800)
+    #ifdef B4800
     { 4800, B4800 },
     #endif
-    #if defined (B9600)
+    #ifdef B9600
     { 9600, B9600 },
     #endif
-    #if defined (B19200)
+    #ifdef B19200
     { 19200, B19200 },
     #endif
-    #if defined (B38400)
+    #ifdef B38400
     { 38400, B38400 },
     #endif
-    #if defined (B57600)
+    #ifdef B57600
     { 57600, B57600 },
     #endif
-    #if defined (B115200)
+    #ifdef B115200
     { 115200, B115200 },
     #endif
-    #if defined (B230400)
+    #ifdef B230400
     { 230400, B230400 },
     #endif
-    #if defined (B460800)
+    #ifdef B460800
     { 460800, B460800 },
     #endif
-    #if defined (B500000)
+    #ifdef B500000
     { 500000, B500000 },
     #endif
-    #if defined (B576000)
+    #ifdef B576000
     { 576000, B576000 },
     #endif
-    #if defined (B921600)
+    #ifdef B921600
     { 921600, B921600 },
     #endif
-    #if defined (B1000000)
+    #ifdef B1000000
     { 1000000, B1000000 },
     #endif
-    #if defined (B1152000)
+    #ifdef B1152000
     { 1152000, B1152000 },
     #endif
-    #if defined (B1500000)
+    #ifdef B1500000
     { 1500000, B1500000 },
     #endif
-    #if defined (B2000000)
+    #ifdef B2000000
     { 2000000, B2000000},
     #endif
-    #if defined (B2500000)
+    #ifdef B2500000
     { 2500000, B2500000 },
     #endif
-    #if defined (B3000000)
+    #ifdef B3000000
     { 3000000, B3000000 },
     #endif
-    #if defined (B3500000)
+    #ifdef B3500000
     { 3500000, B3500000 },
     #endif
-    #if defined (B4000000)
+    #ifdef B4000000
     { 4000000, B4000000 }
     #endif
 };

@@ -72,7 +72,7 @@
 #include <QtCore/qregexp.h>
 
 // Physical device driver.
-#if defined (__WINS__)
+#ifdef __WINS__
 _LIT(KPddName, "ECDRV");
 #else // defined (__EPOC32__)
 _LIT(KPddName, "EUART");
@@ -92,7 +92,7 @@ _LIT(KACMModuleName, "ECACM");
 static bool loadDevices()
 {
     TInt r = KErrNone;
-#if defined (__WINS__)
+#ifdef __WINS__
     RFs fileServer;
     r = User::LeaveIfError(fileServer.Connect());
     if (r != KErrNone)
@@ -108,7 +108,7 @@ static bool loadDevices()
     if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);
 
-#if !defined (__WINS__)
+#ifndef __WINS__
     r = StartC32();
     if (r != KErrNone && r != KErrAlreadyExists)
         return false; //User::Leave(r);

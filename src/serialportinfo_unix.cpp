@@ -53,7 +53,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
 #  include <linux/serial.h>
 #endif
 
@@ -88,7 +88,7 @@ static QStringList generateFiltersOfDevices()
 {
     QStringList l;
 
-#  if defined (Q_OS_LINUX)
+#  ifdef Q_OS_LINUX
     l << QLatin1String("ttyS*")    // Standart UART 8250 and etc.
       << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
       << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).

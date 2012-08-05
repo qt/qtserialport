@@ -41,7 +41,7 @@
 
 #include "ttylocker_unix_p.h"
 
-#if defined (HAVE_BAUDBOY_H)
+#ifdef HAVE_BAUDBOY_H
 #  include <baudboy.h>
 #  include <cstdlib>
 #elif defined (HAVE_LOCKDEV_H)
@@ -103,7 +103,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 // Try lock serial device. However, other processes can not access it.
 bool TtyLocker::lock(const char *portName)
 {
-#if defined (HAVE_BAUDBOY_H)
+#ifdef HAVE_BAUDBOY_H
     if (::ttylock(portName)
         ::ttywait(portName);
     return ::ttylock(portName) != -1;
@@ -127,7 +127,7 @@ bool TtyLocker::lock(const char *portName)
 // Try unlock serial device. However, other processes can access it.
 bool TtyLocker::unlock(const char *portName)
 {
-#if defined (HAVE_BAUDBOY_H)
+#ifdef HAVE_BAUDBOY_H
     return ::ttyunlock(portName != -1;
 #elif defined (HAVE_LOCKDEV_H)
     return ::dev_unlock(portName, ::getpid()) != -1;
@@ -146,7 +146,7 @@ bool TtyLocker::isLocked(const char *portName, bool *currentPid)
 
     *currentPid = false;
 
-#if defined (HAVE_BAUDBOY_H)
+#ifdef HAVE_BAUDBOY_H
     return ::ttylocked(portName) != -1;
 #elif defined (HAVE_LOCKDEV_H)
     return ::dev_testlock(portName) != -1;

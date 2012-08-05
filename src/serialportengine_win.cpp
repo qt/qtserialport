@@ -81,7 +81,7 @@
 #include "serialportengine_win_p.h"
 
 #include <QtCore/qregexp.h>
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
 #  include <QtCore/qcoreevent.h>
 #endif
 
@@ -129,7 +129,7 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
     , m_flagErrorFromCommEvent(false)
     , m_currentMask(0)
     , m_desiredMask(0)
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     , m_running(true)
 #endif
 {
@@ -140,7 +140,7 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
     ::memset(&m_currentCommTimeouts, 0, sizeof(m_currentCommTimeouts));
     ::memset(&m_restoredCommTimeouts, 0, sizeof(m_restoredCommTimeouts));
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     ::memset(&m_readOverlapped, 0, sizeof(m_readOverlapped));
     ::memset(&m_writeOverlapped, 0, sizeof(m_writeOverlapped));
     ::memset(&m_selectOverlapped, 0, sizeof(m_selectOverlapped));
@@ -153,7 +153,7 @@ WinSerialPortEngine::WinSerialPortEngine(SerialPortPrivate *d)
 */
 WinSerialPortEngine::~WinSerialPortEngine()
 {
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     m_running = false;
     ::SetCommMask(m_descriptor, 0);
     //terminate();
@@ -188,7 +188,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
     bool rxflag = false;
     bool txflag = false;
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     flagsAndAttributes |= FILE_FLAG_OVERLAPPED;
 #endif
 
@@ -246,7 +246,7 @@ bool WinSerialPortEngine::open(const QString &location, QIODevice::OpenMode mode
     if (!updateCommTimeouts())
         return false;
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     if (!createEvents(rxflag, txflag)) {
         dptr->setError(decodeSystemError());
         return false;
@@ -265,7 +265,7 @@ void WinSerialPortEngine::close(const QString &location)
 {
     Q_UNUSED(location);
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     ::CancelIo(m_descriptor);
 #endif
 
@@ -276,7 +276,7 @@ void WinSerialPortEngine::close(const QString &location)
 
     ::CloseHandle(m_descriptor);
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     closeEvents();
 #endif
     m_descriptor = INVALID_HANDLE_VALUE;
@@ -429,7 +429,7 @@ qint64 WinSerialPortEngine::bytesToWrite() const
     return cs.cbOutQue;
 }
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
 // Clear overlapped structure, but does not affect the event.
 static void clear_overlapped(OVERLAPPED *overlapped)
 {
@@ -459,7 +459,7 @@ static void clear_overlapped(OVERLAPPED *overlapped)
 */
 qint64 WinSerialPortEngine::read(char *data, qint64 len)
 {
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     clear_overlapped(&m_readOverlapped);
 #endif
 
@@ -470,7 +470,7 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
     if (dptr->options.policy != SerialPort::IgnorePolicy)
         len = 1;
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     sucessResult = ::ReadFile(m_descriptor, data, len, &readBytes, 0);
 #else
     if (::ReadFile(m_descriptor, data, len, &readBytes, &m_readOverlapped)) {
@@ -512,14 +512,14 @@ qint64 WinSerialPortEngine::read(char *data, qint64 len)
 */
 qint64 WinSerialPortEngine::write(const char *data, qint64 len)
 {
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     clear_overlapped(&m_writeOverlapped);
 #endif
 
     DWORD writeBytes = 0;
     bool sucessResult = false;
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     sucessResult = ::WriteFile(m_descriptor, data, len, &writeBytes, 0);
 #else
     if (::WriteFile(m_descriptor, data, len, &writeBytes, &m_writeOverlapped)) {
@@ -576,7 +576,7 @@ bool WinSerialPortEngine::select(int timeout,
         return true;
     }
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     clear_overlapped(&m_selectOverlapped);
 #endif
 
@@ -603,7 +603,7 @@ bool WinSerialPortEngine::select(int timeout,
     currEventMask = 0;
     bool sucessResult = false;
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     if (::WaitCommEvent(m_descriptor, &currEventMask, &m_selectOverlapped)) {
         sucessResult = true;
     } else if (::GetLastError() == ERROR_IO_PENDING) {
@@ -870,7 +870,7 @@ bool WinSerialPortEngine::processIOErrors()
     return ret;
 }
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
 
 void WinSerialPortEngine::lockNotification(NotificationLockerType type, bool uselocker)
 {
@@ -1016,7 +1016,7 @@ SerialPort::PortError WinSerialPortEngine::decodeSystemError() const
     return error;
 }
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
 
 /*!
     Embedded-based (WinCE) event loop for the notification subsystem.
@@ -1090,7 +1090,7 @@ bool WinSerialPortEngine::event(QEvent *e)
 
 #endif
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
 
 /*!
     For Windows NT-based OS, creates event handles for OVERLAPPED
@@ -1147,7 +1147,7 @@ void WinSerialPortEngine::closeEvents()
 bool WinSerialPortEngine::isNotificationEnabled(DWORD mask) const
 {
     bool enabled;
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     enabled = isRunning();
 #else
     enabled = isEnabled();
@@ -1160,7 +1160,7 @@ bool WinSerialPortEngine::isNotificationEnabled(DWORD mask) const
 void WinSerialPortEngine::setNotificationEnabled(bool enable, DWORD mask)
 {
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     m_setCommMaskMutex.lock();
     ::GetCommMask(m_descriptor, &m_currentMask);
 #endif
@@ -1173,7 +1173,7 @@ void WinSerialPortEngine::setNotificationEnabled(bool enable, DWORD mask)
 
     ::SetCommMask(m_descriptor, m_desiredMask);
 
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     m_setCommMaskMutex.unlock();
 
     if (enable && !isRunning())
@@ -1202,7 +1202,7 @@ void WinSerialPortEngine::setNotificationEnabled(bool enable, DWORD mask)
 */
 bool WinSerialPortEngine::updateDcb()
 {
-#if defined (Q_OS_WINCE)
+#ifdef Q_OS_WINCE
     // Grab a mutex, in order after exit WaitCommEvent
     // block the flow of run() notifier until there is a change DCB.
     QMutexLocker locker(&m_settingsChangeMutex);
@@ -1241,7 +1241,7 @@ SerialPortEngine *SerialPortEngine::create(SerialPortPrivate *d)
 
 /* Public static the SerialPortPrivate methods */
 
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
 static const QLatin1String defaultPathPrefix("\\\\.\\");
 #else
 static const QLatin1String defaultPathPostfix(":");
@@ -1254,7 +1254,7 @@ static const QLatin1String defaultPathPostfix(":");
 QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
 {
     QString ret = port;
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     if (!ret.contains(defaultPathPrefix))
         ret.prepend(defaultPathPrefix);
 #else
@@ -1271,7 +1271,7 @@ QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
 QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
 {
     QString ret = location;
-#if !defined (Q_OS_WINCE)
+#ifndef Q_OS_WINCE
     if (ret.contains(defaultPathPrefix))
         ret.remove(defaultPathPrefix);
 #else
@@ -1286,49 +1286,49 @@ QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
 static
 const qint32 standardRatesTable[] =
 {
-    #if defined (CBR_110)
+    #ifdef CBR_110
     CBR_110,
     #endif
-    #if defined (CBR_300)
+    #ifdef CBR_300
     CBR_300,
     #endif
-    #if defined (CBR_600)
+    #ifdef CBR_600
     CBR_600,
     #endif
-    #if defined (CBR_1200)
+    #ifdef CBR_1200
     CBR_1200,
     #endif
-    #if defined (CBR_2400)
+    #ifdef CBR_2400
     CBR_2400,
     #endif
-    #if defined (CBR_4800)
+    #ifdef CBR_4800
     CBR_4800,
     #endif
-    #if defined (CBR_9600)
+    #ifdef CBR_9600
     CBR_9600,
     #endif
-    #if defined (CBR_14400)
+    #ifdef CBR_14400
     CBR_14400,
     #endif
-    #if defined (CBR_19200)
+    #ifdef CBR_19200
     CBR_19200,
     #endif
-    #if defined (CBR_38400)
+    #ifdef CBR_38400
     CBR_38400,
     #endif
-    #if defined (CBR_56000)
+    #ifdef CBR_56000
     CBR_56000,
     #endif
-    #if defined (CBR_57600)
+    #ifdef CBR_57600
     CBR_57600,
     #endif
-    #if defined (CBR_115200)
+    #ifdef CBR_115200
     CBR_115200,
     #endif
-    #if defined (CBR_128000)
+    #ifdef CBR_128000
     CBR_128000,
     #endif
-    #if defined (CBR_256000)
+    #ifdef CBR_256000
     CBR_256000
     #endif
 };

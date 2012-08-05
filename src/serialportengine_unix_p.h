@@ -46,7 +46,7 @@
 #include "serialportengine_p.h"
 
 #include <termios.h>
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
 #  include <linux/serial.h>
 #endif
 
@@ -109,7 +109,7 @@ protected:
 private:
     bool updateTermios();
 
-#if !defined (CMSPAR)
+#ifndef CMSPAR
     qint64 writePerChar(const char *data, qint64 maxSize);
 #endif
     qint64 readPerChar(char *data, qint64 maxSize);
@@ -117,7 +117,7 @@ private:
 private:
     struct termios m_currentTermios;
     struct termios m_restoredTermios;
-#if defined (Q_OS_LINUX)
+#ifdef Q_OS_LINUX
     struct serial_struct m_currentSerialInfo;
     struct serial_struct m_restoredSerialInfo;
 #endif
