@@ -55,6 +55,7 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 static const GUID guidsArray[] =
 {
@@ -267,8 +268,6 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 }
 
 #endif
-
-QT_BEGIN_NAMESPACE_SERIALPORT
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {

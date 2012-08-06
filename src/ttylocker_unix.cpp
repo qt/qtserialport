@@ -58,6 +58,8 @@
 #  include <QtCore/qstringlist.h>
 #endif // defined (HAVE_BAUDBOY_H)
 
+QT_BEGIN_NAMESPACE_SERIALPORT
+
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
 static
@@ -96,9 +98,6 @@ QString generateLockFileNameAsNamedForm(const char *portName)
 }
 
 #endif //!(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
-
-
-QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Try lock serial device. However, other processes can not access it.
 bool TtyLocker::lock(const char *portName)

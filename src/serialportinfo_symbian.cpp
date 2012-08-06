@@ -52,6 +52,7 @@
 
 #include <QtCore/qobject.h>
 
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Physical device driver.
 #ifdef __WINS__
@@ -97,8 +98,6 @@ static bool loadDevices()
 
     return true;
 }
-
-QT_BEGIN_NAMESPACE_SERIALPORT
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {

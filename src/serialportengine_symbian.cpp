@@ -71,6 +71,8 @@
 
 #include <QtCore/qregexp.h>
 
+QT_BEGIN_NAMESPACE_SERIALPORT
+
 // Physical device driver.
 #ifdef __WINS__
 _LIT(KPddName, "ECDRV");
@@ -116,8 +118,6 @@ static bool loadDevices()
 
     return true;
 }
-
-QT_BEGIN_NAMESPACE_SERIALPORT
 
 /*!
     Constructs a SymbianSerialPortEngine and initializes all internal variables

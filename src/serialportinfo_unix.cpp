@@ -70,7 +70,7 @@ extern "C"
 #include <QtCore/qregexp.h>
 #include <QtCore/qfile.h>
 
-
+QT_BEGIN_NAMESPACE_SERIALPORT
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 
@@ -115,9 +115,6 @@ inline QStringList& filtersOfDevices()
 }
 
 #endif
-
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
