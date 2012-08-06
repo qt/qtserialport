@@ -55,6 +55,8 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
+#ifndef Q_OS_WINCE
+
 static const GUID guidsArray[] =
 {
     // Windows Ports Class GUID
@@ -253,6 +255,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
+#endif
+
+// common part
 
 QList<qint32> SerialPortInfo::standardRates()
 {

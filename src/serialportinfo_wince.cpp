@@ -43,21 +43,13 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
-#include "serialportengine_win_p.h"
 
 #include <qt_windows.h>
-#include <objbase.h>
-#include <initguid.h>
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 
 QT_BEGIN_NAMESPACE_SERIALPORT
-
-static const GUID guidsArray[] =
-{
-    { 0xCC5195AC, 0xBA49, 0x48A0, { 0xBE, 0x17, 0xDF, 0x6D, 0x1B, 0x01, 0x73, 0xDD } }
-};
 
 const static QString valueName(QLatin1String("FriendlyName"));
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
@@ -138,40 +130,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     }
 
     return ports;
-}
-
-
-QList<qint32> SerialPortInfo::standardRates()
-{
-    return SerialPortPrivate::standardRates();
-}
-
-bool SerialPortInfo::isBusy() const
-{
-    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-
-    if (descriptor == INVALID_HANDLE_VALUE) {
-        if (::GetLastError() == ERROR_ACCESS_DENIED)
-            return true;
-    } else {
-        ::CloseHandle(descriptor);
-    }
-    return false;
-}
-
-bool SerialPortInfo::isValid() const
-{
-    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
-
-    if (descriptor == INVALID_HANDLE_VALUE) {
-        if (::GetLastError() != ERROR_ACCESS_DENIED)
-            return false;
-    } else {
-        ::CloseHandle(descriptor);
-    }
-    return true;
 }
 
 QT_END_NAMESPACE_SERIALPORT

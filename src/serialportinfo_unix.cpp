@@ -46,43 +46,27 @@
 #include "ttylocker_unix_p.h"
 #include "serialportengine_unix_p.h"
 
-#include <sys/types.h>
-#include <signal.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-
-#ifdef Q_OS_LINUX
-#  include <linux/serial.h>
-#endif
+#ifndef Q_OS_MAC
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 extern "C"
 {
-#  include <libudev.h>
+#include <libudev.h>
 }
 #else
-#  include <QtCore/qdir.h>
-#endif
-
+#include <QtCore/qdir.h>
 #include <QtCore/qstringlist.h>
-#include <QtCore/qregexp.h>
 #include <QtCore/qfile.h>
+#endif
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 
-// For detail enumerate - skipping, filters is not used.
-// Instead of filters used libudev.
-
 // White list for devices without a parent
 static const QString rfcommDeviceName(QLatin1String("rfcomm"));
 
 #else
-
-// For simple enumerate.
 
 static QStringList generateFiltersOfDevices()
 {
@@ -104,10 +88,6 @@ static QStringList generateFiltersOfDevices()
     return l;
 }
 
-// Only for a simple enumeration by the mask of all available
-// devices in /dev directory. Used in the following cases:
-// - for Gnu/Linux without libudev
-// - for any other *nix, bsd (exception Mac OSX)
 inline QStringList& filtersOfDevices()
 {
     static QStringList l = generateFiltersOfDevices();
@@ -121,8 +101,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     QList<SerialPortInfo> ports;
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
-
-    // Detailed enumerate devices for Gnu/Linux with use libudev.
 
     struct ::udev *udev = ::udev_new();
     if (udev) {
@@ -222,13 +200,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     }
 
 #elif defined (Q_OS_FREEBSD) && defined (HAVE_LIBUSB)
-
     // TODO: Implement me.
-    //
-
 #else
-
-    // Simple enumerate devices for other *nix OS in device directory /dev.
 
     QDir devDir(QLatin1String("/dev"));
     if (devDir.exists()) {
@@ -264,6 +237,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
     return ports;
 }
+
+#endif // Q_OS_MAC
+
+// common part
 
 QList<qint32> SerialPortInfo::standardRates()
 {

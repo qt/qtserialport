@@ -43,7 +43,6 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
-#include "ttylocker_unix_p.h"
 #include "serialportengine_unix_p.h"
 
 #include <sys/param.h>
@@ -58,10 +57,6 @@
 #  include <IOKit/serial/ioss.h>
 #endif
 #include <IOKit/IOBSD.h>
-
-#include <QtCore/qvariant.h>
-#include <QtCore/qstringlist.h>
-#include <QtCore/qfile.h>
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
@@ -265,29 +260,6 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     (void) ::IOObjectRelease(iter);
 
     return ports;
-}
-
-static QList<qint32> emptyList()
-{
-    QList<qint32> list;
-    return list;
-}
-
-QList<qint32> SerialPortInfo::standardRates()
-{
-    return SerialPortPrivate::standardRates();
-}
-
-bool SerialPortInfo::isBusy() const
-{
-    bool currPid = false;
-    return TtyLocker::isLocked(portName().toLocal8Bit().constData(), &currPid);
-}
-
-bool SerialPortInfo::isValid() const
-{
-    QFile f(systemLocation());
-    return f.exists();
 }
 
 QT_END_NAMESPACE_SERIALPORT

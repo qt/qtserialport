@@ -20,15 +20,15 @@ SOURCES += \
     $$PWD/serialport.cpp \
     $$PWD/serialportinfo.cpp
 
-
 win32 {
+    SOURCES += $$PWD/serialportinfo_win.cpp
+
     !wince*: {
         PRIVATE_HEADERS += \
             $$PWD/serialportengine_win_p.h
 
         SOURCES += \
-            $$PWD/serialportengine_win.cpp \
-            $$PWD/serialportinfo_win.cpp
+            $$PWD/serialportengine_win.cpp
 
         LIBS += -lsetupapi -luuid -ladvapi32
     } else {
@@ -69,13 +69,13 @@ unix:!symbian {
         $$PWD/serialportengine_unix_p.h
     SOURCES += \
         $$PWD/ttylocker_unix.cpp \
-        $$PWD/serialportengine_unix.cpp
+        $$PWD/serialportengine_unix.cpp \
+        $$PWD/serialportinfo_unix.cpp
 
     macx {
         SOURCES += $$PWD/serialportinfo_mac.cpp
         LIBS += -framework IOKit -framework CoreFoundation
     } else {
-        SOURCES += $$PWD/serialportinfo_unix.cpp
         linux*:contains( DEFINES, HAVE_LIBUDEV ) {
             LIBS += -ludev
         }
