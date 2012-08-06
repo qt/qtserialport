@@ -48,9 +48,7 @@
 #include <qt_windows.h>
 #include <objbase.h>
 #include <initguid.h>
-#ifndef Q_OS_WINCE
-#  include <setupapi.h>
-#endif
+#include <setupapi.h>
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
@@ -59,7 +57,6 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 static const GUID guidsArray[] =
 {
-    #ifndef Q_OS_WINCE
     // Windows Ports Class GUID
     { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
     // Virtual Ports Class GUID (i.e. com0com and etc)
@@ -70,12 +67,7 @@ static const GUID guidsArray[] =
     { 0xCC0EF009, 0xB820, 0x42F4, { 0x95, 0xA9, 0x9B, 0xFA, 0x6A, 0x5A, 0xB7, 0xAB } },
     // Advanced Virtual COM Port GUID
     { 0x9341CD95, 0x4371, 0x4A37, { 0xA5, 0xAF, 0xFD, 0xB0, 0xA9, 0xD1, 0x96, 0x31 } },
-    #else
-    { 0xCC5195AC, 0xBA49, 0x48A0, { 0xBE, 0x17, 0xDF, 0x6D, 0x1B, 0x01, 0x73, 0xDD } }
-    #endif
 };
-
-#ifndef Q_OS_WINCE
 
 static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
@@ -213,68 +205,11 @@ static QString parseHardwareId(ExtractCommand cmd, const QStringList &hardwareId
     return rx.cap(cmd);
 }
 
-#else
-
-const static QString valueName(QLatin1String("FriendlyName"));
-static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
-{
-    QString result;
-    HKEY hSubKey = 0;
-    LONG res = ::RegOpenKeyEx(parentKeyHandle, reinterpret_cast<const wchar_t *>(subKey.utf16()),
-                              0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hSubKey);
-
-    if (res == ERROR_SUCCESS) {
-
-        DWORD dataType = 0;
-        DWORD dataSize = 0;
-        res = ::RegQueryValueEx(hSubKey, reinterpret_cast<const wchar_t *>(valueName.utf16()),
-                                0, &dataType, 0, &dataSize);
-
-        if (res == ERROR_SUCCESS) {
-            QByteArray data(dataSize, 0);
-            res = ::RegQueryValueEx(hSubKey, reinterpret_cast<const wchar_t *>(valueName.utf16()),
-                                    0, 0,
-                                    reinterpret_cast<unsigned char *>(data.data()),
-                                    &dataSize);
-
-            if (res == ERROR_SUCCESS) {
-                switch (dataType) {
-                case REG_EXPAND_SZ:
-                case REG_SZ:
-                    if (dataSize)
-                        result = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()));
-                    break;
-                default:
-                    break;
-                }
-            }
-        } else {
-            DWORD index = 0;
-            dataSize = 255; // Max. key length (see MSDN).
-            QByteArray data(dataSize, 0);
-            while (::RegEnumKeyEx(hSubKey, index++,
-                                  reinterpret_cast<wchar_t *>(data.data()), &dataSize,
-                                  0, 0, 0, 0) == ERROR_SUCCESS) {
-
-                result = findDescription(hSubKey,
-                                         QString::fromUtf16(reinterpret_cast<ushort *>(data.data()), dataSize));
-                if (!result.isEmpty())
-                    break;
-            }
-        }
-        ::RegCloseKey(hSubKey);
-    }
-    return result;
-}
-
-#endif
-
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
 {
     QList<SerialPortInfo> ports;
     static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
-#ifndef Q_OS_WINCE
     for (int i = 0; i < guidCount; ++i) {
 
         const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], 0, 0, DIGCF_PRESENT);
@@ -314,31 +249,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
-#else
-    //for (int i = 0; i < guidCount; ++i) {
-    DEVMGR_DEVICE_INFORMATION di;
-    di.dwSize = sizeof(di);
-    const HANDLE hSearch = ::FindFirstDevice(DeviceSearchByLegacyName/*DeviceSearchByGuid*/,
-                                             L"COM*"/*&guidsArray[i]*/,
-                                             &di);
-    if (hSearch != INVALID_HANDLE_VALUE) {
-        do {
-            SerialPortInfo info;
-            info.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
-            info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
-            info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
-                                                      QString::fromWCharArray(di.szDeviceKey));
 
-            // Get manufacturer, vendor identifier, product identifier are not
-            // possible.
-
-            ports.append(info);
-
-        } while (::FindNextDevice(hSearch, &di));
-        ::FindClose(hSearch);
-    }
-    //}
-#endif
     return ports;
 }
 

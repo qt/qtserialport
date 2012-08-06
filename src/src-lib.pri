@@ -22,13 +22,23 @@ SOURCES += \
 
 
 win32 {
-    PRIVATE_HEADERS += \
-        $$PWD/serialportengine_win_p.h
-    SOURCES += \
-        $$PWD/serialportengine_win.cpp \
-        $$PWD/serialportinfo_win.cpp
+    !wince*: {
+        PRIVATE_HEADERS += \
+            $$PWD/serialportengine_win_p.h
 
-    !wince*: LIBS += -lsetupapi -luuid -ladvapi32
+        SOURCES += \
+            $$PWD/serialportengine_win.cpp \
+            $$PWD/serialportinfo_win.cpp
+
+        LIBS += -lsetupapi -luuid -ladvapi32
+    } else {
+        PRIVATE_HEADERS += \
+            $$PWD/serialportengine_wince_p.h
+
+        SOURCES += \
+            $$PWD/serialportengine_wince.cpp \
+            $$PWD/serialportinfo_wince.cpp
+    }
 }
 
 symbian {
