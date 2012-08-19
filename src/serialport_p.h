@@ -54,23 +54,22 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPortEngine;
-
-// General port parameters (for any OS).
-class SerialPortOptions
+class SerialPortPrivateData
 {
+    Q_DECLARE_PUBLIC(SerialPort)
 public:
-    SerialPortOptions()
-        : inputRate(SerialPort::UnknownRate)
-        , outputRate(SerialPort::UnknownRate)
-        , dataBits(SerialPort::UnknownDataBits)
-        , parity(SerialPort::UnknownParity)
-        , stopBits(SerialPort::UnknownStopBits)
-        , flow(SerialPort::UnknownFlowControl)
-        , policy(SerialPort::IgnorePolicy)
-        , restoreSettingsOnClose(true)
-    {}
+    enum IoConstants {
+        ReadChunkSize = 512,
+        WriteChunkSize = 512
+    };
 
+    SerialPortPrivateData(SerialPort *q);
+    int timeoutValue(int msecs, int elapsed);
+
+    qint64 readBufferMaxSize;
+    QRingBuffer readBuffer;
+    QRingBuffer writeBuffer;
+    SerialPort::PortError portError;
     QString systemLocation;
     qint32 inputRate;
     qint32 outputRate;
@@ -80,54 +79,6 @@ public:
     SerialPort::FlowControl flow;
     SerialPort::DataErrorPolicy policy;
     bool restoreSettingsOnClose;
-};
-
-class SerialPortPrivate
-{
-    Q_DECLARE_PUBLIC(SerialPort)
-public:
-    SerialPortPrivate(SerialPort *parent);
-    virtual ~SerialPortPrivate();
-
-    bool flush();
-
-    void setError(SerialPort::PortError error);
-
-    void clearBuffers();
-    bool readFromPort();
-
-    bool canReadNotification();
-    bool canWriteNotification();
-    bool canErrorNotification();
-
-public:
-    static QString portNameToSystemLocation(const QString &port);
-    static QString portNameFromSystemLocation(const QString &location);
-
-    static qint32 rateFromSetting(qint32 setting);
-    static qint32 settingFromRate(qint32 rate);
-
-    static QList<qint32> standardRates();
-
-public:
-    qint64 readBufferMaxSize;
-    QRingBuffer readBuffer;
-    QRingBuffer writeBuffer;
-    bool isBuffered;
-
-    bool readSerialNotifierCalled;
-    bool readSerialNotifierState;
-    bool readSerialNotifierStateSet;
-    bool emittedReadyRead;
-    bool emittedBytesWritten;
-
-    SerialPort::PortError portError;
-
-    SerialPortEngine *engine;
-
-    SerialPortOptions options;
-
-private:
     SerialPort * const q_ptr;
 };
 

@@ -44,273 +44,45 @@
 
 #include "serialport.h"
 #include "serialportinfo.h"
-#include "serialport_p.h"
-#include "serialportengine_p.h"
 
-#if QT_VERSION >= 0x040700
-#  include <QtCore/qelapsedtimer.h>
+#ifdef Q_OS_WIN
+#include "serialport_win_p.h"
+#elif defined (Q_OS_SYMBIAN)
+#include "serialport_symbian_p.h"
+#elif defined (Q_OS_UNIX)
+#include "serialport_unix_p.h"
 #else
-#  include <QtCore/qdatetime.h>
+#error Unsupported OS
 #endif
 
 #ifndef SERIALPORT_BUFFERSIZE
 #  define SERIALPORT_BUFFERSIZE 16384
 #endif
 
-#ifndef SERIALPORT_READ_CHUNKSIZE
-#  define SERIALPORT_READ_CHUNKSIZE 256
-#endif
-
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-/*! \internal
-
-    Constructs a SerialPortPrivate. Initializes all members.
-*/
-SerialPortPrivate::SerialPortPrivate(SerialPort *parent)
+SerialPortPrivateData::SerialPortPrivateData(SerialPort *q)
     : readBufferMaxSize(0)
     , readBuffer(SERIALPORT_BUFFERSIZE)
     , writeBuffer(SERIALPORT_BUFFERSIZE)
-    , isBuffered(true)
-    , readSerialNotifierCalled(false)
-    , readSerialNotifierState(false)
-    , readSerialNotifierStateSet(false)
-    , emittedReadyRead(false)
-    , emittedBytesWritten(false)
     , portError(SerialPort::NoError)
-    , engine(0)
-    , q_ptr(parent)
-
+    , inputRate(0)
+    , outputRate(0)
+    , dataBits(SerialPort::UnknownDataBits)
+    , parity(SerialPort::UnknownParity)
+    , stopBits(SerialPort::UnknownStopBits)
+    , flow(SerialPort::UnknownFlowControl)
+    , restoreSettingsOnClose(true)
+    , q_ptr(q)
 {
-    engine = SerialPortEngine::create(this);
-    Q_ASSERT(engine);
 }
 
-/*! \internal
-
-    Destructs the SerialPort. Also, if the native engine exists, that gets
-    deleted.
-*/
-SerialPortPrivate::~SerialPortPrivate()
+int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 {
-    if (engine)
-        delete engine;
-}
-
-/*! \internal
-
-    Writes the pending data in the write buffers to the serial port.
-    The function writes out as much as it can without blocking.
-
-    This method is usually invoked by the write notification after one
-    or more calls to write().
-
-    Emits bytesWritten().
-*/
-bool SerialPortPrivate::flush()
-{
-    Q_Q(SerialPort);
-
-    if (writeBuffer.isEmpty())
-        return false;
-
-    const int nextSize = writeBuffer.nextDataBlockSize();
-    const char *ptr = writeBuffer.readPointer();
-
-    // Attempt to write it all in one chunk.
-    const qint64 written = engine->write(ptr, nextSize);
-    if (written < 0) {
-        setError(SerialPort::IoError);
-        writeBuffer.clear();
-        return false;
-    }
-
-    // Remove what we wrote so far.
-    writeBuffer.free(written);
-    if (written > 0) {
-        // Don't emit bytesWritten() recursively.
-        if (!emittedBytesWritten) {
-            emittedBytesWritten = true;
-            emit q->bytesWritten(written);
-            emittedBytesWritten = false;
-        }
-    }
-
-    if (writeBuffer.isEmpty() && engine->isWriteNotificationEnabled())
-        engine->setWriteNotificationEnabled(false);
-
-    return true;
-}
-
-/*! \internal
-
-    Sets the error code \a error in the corresponding internal variable.
-*/
-void SerialPortPrivate::setError(SerialPort::PortError error)
-{
-    portError = error;
-}
-
-/*! \internal
-
-    Clears the internal read and write buffers.
-*/
-void SerialPortPrivate::clearBuffers()
-{
-    writeBuffer.clear();
-    readBuffer.clear();
-}
-
-/*! \internal
-
-    Reads the data from the serial port into the read buffer. Returns
-    true on success; otherwise returns false. This operation takes place
-    automatically when the driver (UART) has at least one byte in the input
-    buffer, for instance after an event.
-*/
-bool SerialPortPrivate::readFromPort()
-{
-    qint64 bytesToRead = options.policy == SerialPort::IgnorePolicy ?
-                SERIALPORT_READ_CHUNKSIZE : 1;
-
-    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size()))
-        bytesToRead = readBufferMaxSize - readBuffer.size();
-
-    char *ptr = readBuffer.reserve(bytesToRead);
-    const qint64 readBytes = engine->read(ptr, bytesToRead);
-
-    if (readBytes == -2) {
-        // No bytes currently available for reading.
-        // Note: only in *nix
-        readBuffer.chop(bytesToRead);
-        return true;
-    }
-
-    readBuffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
-
-    if (readBytes < 0) {
-        setError(SerialPort::IoError);
-        return false;
-    }
-
-    return true;
-}
-
-/*! \internal
-
-    This method is called from the native engine when there is new data
-    available for reading, for instance after the handler read notification.
-    Handles recursive calls.
-*/
-bool SerialPortPrivate::canReadNotification()
-{
-    Q_Q(SerialPort);
-
-#ifdef Q_OS_WINCE
-    engine->lockNotification(SerialPortEngine::CanReadLocker, true);
-#endif
-    // Prevent recursive calls.
-    if (readSerialNotifierCalled) {
-        if (!readSerialNotifierStateSet) {
-            readSerialNotifierStateSet = true;
-            readSerialNotifierState = engine->isReadNotificationEnabled();
-            engine->setReadNotificationEnabled(false);
-        }
-    }
-    readSerialNotifierCalled = true;
-
-    //if (!isBuffered)
-    //    this->serialEngine->setReadNotificationEnabled(false);
-
-    // If buffered, read data from the serial into the read buffer.
-    qint64 newBytes = 0;
-    if (isBuffered) {
-        // Return if there is no space in the buffer.
-        if (readBufferMaxSize && readBuffer.size() >= readBufferMaxSize) {
-            readSerialNotifierCalled = false;
-            return false;
-        }
-
-        newBytes = readBuffer.size();
-
-        if (!readFromPort()) {
-            readSerialNotifierCalled = false;
-            return false;
-        }
-        newBytes = readBuffer.size() - newBytes;
-
-        // If read buffer is full, disable the read serial notifier.
-        if (readBufferMaxSize && readBuffer.size() == readBufferMaxSize) {
-            engine->setReadNotificationEnabled(false);
-        }
-    }
-
-    // Only emit readyRead() when not recursing,
-    // and only if there is data available.
-    const bool hasData = isBuffered ? (newBytes > 0) : true;
-
-    if (!emittedReadyRead && hasData) {
-        emittedReadyRead = true;
-        emit q->readyRead();
-        emittedReadyRead = false;
-    }
-
-    if (!hasData && engine->isReadNotificationEnabled())
-        engine->setReadNotificationEnabled(true);
-
-    // Reset the read serial notifier state if we reentered inside the
-    // readyRead() connected slot.
-    if (readSerialNotifierStateSet
-            && readSerialNotifierState != engine->isReadNotificationEnabled()) {
-        engine->setReadNotificationEnabled(readSerialNotifierState);
-        readSerialNotifierStateSet = false;
-    }
-    readSerialNotifierCalled = false;
-    return true;
-}
-
-/*! \internal
-
-    This method is called from the native engine when the serial port is ready
-    for writing, for instance after the handler write notification. Handles
-    recursive calls.
-*/
-bool SerialPortPrivate::canWriteNotification()
-{
-#ifdef Q_OS_WINCE
-    engine->lockNotification(SerialPortEngine::CanWriteLocker, true);
-#endif
-
-#ifdef Q_OS_WIN
-    if (engine->isWriteNotificationEnabled())
-        engine->setWriteNotificationEnabled(false);
-#endif
-
-    const int tmp = writeBuffer.size();
-    flush();
-
-#ifdef Q_OS_WIN
-    if (!writeBuffer.isEmpty())
-        engine->setWriteNotificationEnabled(true);
-#else
-    if (writeBuffer.isEmpty())
-        engine->setWriteNotificationEnabled(false);
-#endif
-    return writeBuffer.size() < tmp;
-}
-
-/*! \internal
-
-    This method is called from the native engine when the serial
-    port hardware detects an I/O error. Typical examples are parity, frame
-    errors and so forth. Handles recursive calls.
-*/
-bool SerialPortPrivate::canErrorNotification()
-{
-#ifdef Q_OS_WINCE
-    engine->lockNotification(SerialPortEngine::CanErrorLocker, true);
-#endif
-    return engine->processIOErrors();
+    if (msecs == -1)
+        return msecs;
+    msecs -= elapsed;
+    return qMax(msecs, 0);
 }
 
 /*!
@@ -657,7 +429,7 @@ SerialPort::~SerialPort()
 void SerialPort::setPort(const QString &name)
 {
     Q_D(SerialPort);
-    d->options.systemLocation = SerialPortPrivate::portNameToSystemLocation(name);
+    d->systemLocation = SerialPortPrivate::portNameToSystemLocation(name);
 }
 
 /*!
@@ -668,7 +440,7 @@ void SerialPort::setPort(const QString &name)
 void SerialPort::setPort(const SerialPortInfo &info)
 {
     Q_D(SerialPort);
-    d->options.systemLocation = SerialPortPrivate::portNameToSystemLocation(info.systemLocation());
+    d->systemLocation = SerialPortPrivate::portNameToSystemLocation(info.systemLocation());
 }
 
 /*!
@@ -710,7 +482,7 @@ void SerialPort::setPort(const SerialPortInfo &info)
 QString SerialPort::portName() const
 {
     Q_D(const SerialPort);
-    return SerialPortPrivate::portNameFromSystemLocation(d->options.systemLocation);
+    return SerialPortPrivate::portNameFromSystemLocation(d->systemLocation);
 }
 
 /*! \reimp
@@ -729,30 +501,20 @@ bool SerialPort::open(OpenMode mode)
     Q_D(SerialPort);
 
     if (isOpen()) {
-        d->setError(SerialPort::DeviceAlreadyOpenedError);
+        d->portError = SerialPort::DeviceAlreadyOpenedError;
         return false;
     }
 
     // Define while not supported modes.
-    static const OpenMode unsupportedModes = Append | Truncate | Text;
+    static const OpenMode unsupportedModes = Append | Truncate | Text | Unbuffered;
     if ((mode & unsupportedModes) || mode == NotOpen) {
-        d->setError(SerialPort::UnsupportedPortOperationError);
+        d->portError = SerialPort::UnsupportedPortOperationError;
         return false;
     }
 
     unsetError();
-    if (d->engine->open(d->options.systemLocation, mode)) {
+    if (d->open(mode)) {
         QIODevice::open(mode);
-        d->clearBuffers();
-
-        if (mode & ReadOnly)
-            d->engine->setReadNotificationEnabled(true);
-        if (mode & WriteOnly)
-            d->engine->setWriteNotificationEnabled(true);
-
-        d->engine->setErrorNotificationEnabled(true);
-
-        d->isBuffered = (mode & Unbuffered) == 0;
         return true;
     }
     return false;
@@ -768,17 +530,12 @@ void SerialPort::close()
 {
     Q_D(SerialPort);
     if (!isOpen()) {
-        d->setError(SerialPort::DeviceIsNotOpenedError);
+        d->portError = SerialPort::DeviceIsNotOpenedError;
         return;
     }
 
-    flush();
     QIODevice::close();
-    d->engine->setReadNotificationEnabled(false);
-    d->engine->setWriteNotificationEnabled(false);
-    d->engine->setErrorNotificationEnabled(false);
-    d->clearBuffers();
-    d->engine->close(d->options.systemLocation);
+    d->close();
 }
 
 /*!
@@ -793,7 +550,7 @@ void SerialPort::close()
 void SerialPort::setRestoreSettingsOnClose(bool restore)
 {
     Q_D( SerialPort);
-    d->options.restoreSettingsOnClose = restore;
+    d->restoreSettingsOnClose = restore;
 }
 
 /*!
@@ -806,7 +563,7 @@ void SerialPort::setRestoreSettingsOnClose(bool restore)
 bool SerialPort::restoreSettingsOnClose() const
 {
     Q_D(const SerialPort);
-    return d->options.restoreSettingsOnClose;
+    return d->restoreSettingsOnClose;
 }
 
 /*!
@@ -823,11 +580,11 @@ bool SerialPort::restoreSettingsOnClose() const
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
     Q_D(SerialPort);
-    if (d->engine->setRate(rate, dir)) {
+    if (d->setRate(rate, dir)) {
         if (dir & SerialPort::Input)
-            d->options.inputRate = rate;
+            d->inputRate = rate;
         if (dir & SerialPort::Output)
-            d->options.outputRate = rate;
+            d->outputRate = rate;
         return true;
     }
     return false;
@@ -845,9 +602,9 @@ qint32 SerialPort::rate(Directions dir) const
 {
     Q_D(const SerialPort);
     if (dir == SerialPort::AllDirections)
-        return d->options.inputRate == d->options.outputRate ?
-                    d->options.inputRate : SerialPort::UnknownRate;
-    return dir & SerialPort::Input ? d->options.inputRate : d->options.outputRate;
+        return d->inputRate == d->outputRate ?
+                    d->inputRate : SerialPort::UnknownRate;
+    return dir & SerialPort::Input ? d->inputRate : d->outputRate;
 }
 
 /*!
@@ -860,8 +617,8 @@ qint32 SerialPort::rate(Directions dir) const
 bool SerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(SerialPort);
-    if (d->engine->setDataBits(dataBits)) {
-        d->options.dataBits = dataBits;
+    if (d->setDataBits(dataBits)) {
+        d->dataBits = dataBits;
         return true;
     }
     return false;
@@ -875,7 +632,7 @@ bool SerialPort::setDataBits(DataBits dataBits)
 SerialPort::DataBits SerialPort::dataBits() const
 {
     Q_D(const SerialPort);
-    return d->options.dataBits;
+    return d->dataBits;
 }
 
 /*!
@@ -888,8 +645,8 @@ SerialPort::DataBits SerialPort::dataBits() const
 bool SerialPort::setParity(Parity parity)
 {
     Q_D(SerialPort);
-    if (d->engine->setParity(parity)) {
-        d->options.parity = parity;
+    if (d->setParity(parity)) {
+        d->parity = parity;
         return true;
     }
     return false;
@@ -903,7 +660,7 @@ bool SerialPort::setParity(Parity parity)
 SerialPort::Parity SerialPort::parity() const
 {
     Q_D(const SerialPort);
-    return d->options.parity;
+    return d->parity;
 }
 
 /*!
@@ -916,8 +673,8 @@ SerialPort::Parity SerialPort::parity() const
 bool SerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(SerialPort);
-    if (d->engine->setStopBits(stopBits)) {
-        d->options.stopBits = stopBits;
+    if (d->setStopBits(stopBits)) {
+        d->stopBits = stopBits;
         return true;
     }
     return false;
@@ -931,7 +688,7 @@ bool SerialPort::setStopBits(StopBits stopBits)
 SerialPort::StopBits SerialPort::stopBits() const
 {
     Q_D(const SerialPort);
-    return d->options.stopBits;
+    return d->stopBits;
 }
 
 /*!
@@ -944,8 +701,8 @@ SerialPort::StopBits SerialPort::stopBits() const
 bool SerialPort::setFlowControl(FlowControl flow)
 {
     Q_D(SerialPort);
-    if (d->engine->setFlowControl(flow)) {
-        d->options.flow = flow;
+    if (d->setFlowControl(flow)) {
+        d->flow = flow;
         return true;
     }
     return false;
@@ -959,7 +716,7 @@ bool SerialPort::setFlowControl(FlowControl flow)
 SerialPort::FlowControl SerialPort::flowControl() const
 {
     Q_D(const SerialPort);
-    return d->options.flow;
+    return d->flow;
 }
 
 /*!
@@ -971,7 +728,7 @@ SerialPort::FlowControl SerialPort::flowControl() const
 bool SerialPort::dtr() const
 {
     Q_D(const SerialPort);
-    return d->engine->lines() & SerialPort::Dtr;
+    return d->lines() & SerialPort::Dtr;
 }
 
 /*!
@@ -983,7 +740,7 @@ bool SerialPort::dtr() const
 bool SerialPort::rts() const
 {
     Q_D(const SerialPort);
-    return d->engine->lines() & SerialPort::Rts;
+    return d->lines() & SerialPort::Rts;
 }
 
 /*!
@@ -997,7 +754,7 @@ bool SerialPort::rts() const
 SerialPort::Lines SerialPort::lines() const
 {
     Q_D(const SerialPort);
-    return d->engine->lines();
+    return d->lines();
 }
 
 /*!
@@ -1017,7 +774,7 @@ SerialPort::Lines SerialPort::lines() const
 bool SerialPort::flush()
 {
     Q_D(SerialPort);
-    return d->flush() || d->engine->flush();
+    return d->flush();
 }
 
 /*! \reimp
@@ -1028,8 +785,9 @@ bool SerialPort::flush()
 bool SerialPort::reset()
 {
     Q_D(SerialPort);
-    d->clearBuffers();
-    return d->engine->reset();
+    d->readBuffer.clear();
+    d->writeBuffer.clear();
+    return d->reset();
 }
 
 /*! \reimp
@@ -1069,9 +827,9 @@ bool SerialPort::atEnd() const
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(SerialPort);
-    const bool ret = d->options.policy == policy || d->engine->setDataErrorPolicy(policy);
+    const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
     if (ret)
-        d->options.policy = policy;
+        d->policy = policy;
     return ret;
 }
 
@@ -1083,7 +841,7 @@ bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 {
     Q_D(const SerialPort);
-    return d->options.policy;
+    return d->policy;
 }
 
 /*!
@@ -1151,14 +909,6 @@ void SerialPort::setReadBufferSize(qint64 size)
     if (d->readBufferMaxSize == size)
         return;
     d->readBufferMaxSize = size;
-    if (!d->readSerialNotifierCalled && d->engine) {
-        // Ensure that the read notification is enabled if we've now got
-        // room in the read buffer.
-        // But only if we're not inside canReadNotification --
-        // that will take care on its own.
-        if (size == 0 || d->readBuffer.size() < size)
-            d->engine->setReadNotificationEnabled(true);
-    }
 }
 
 /*! \reimp
@@ -1177,12 +927,7 @@ bool SerialPort::isSequential() const
 qint64 SerialPort::bytesAvailable() const
 {
     Q_D(const SerialPort);
-    qint64 ret;
-    if (d->isBuffered)
-        ret = d->readBuffer.size();
-    else
-        ret = d->engine->bytesAvailable();
-    return ret + QIODevice::bytesAvailable();
+    return d->readBuffer.size() + QIODevice::bytesAvailable();
 }
 
 /*! \reimp
@@ -1195,12 +940,7 @@ qint64 SerialPort::bytesAvailable() const
 qint64 SerialPort::bytesToWrite() const
 {
     Q_D(const SerialPort);
-    qint64 ret;
-    if (d->isBuffered)
-        ret = d->writeBuffer.size();
-    else
-        ret = d->engine->bytesToWrite();
-    return ret + QIODevice::bytesToWrite();
+    return d->writeBuffer.size() + QIODevice::bytesToWrite();
 }
 
 /*! \reimp
@@ -1214,16 +954,6 @@ bool SerialPort::canReadLine() const
     Q_D(const SerialPort);
     const bool hasLine = d->readBuffer.canReadLine();
     return hasLine || QIODevice::canReadLine();
-}
-
-// Returns the difference between msecs and elapsed. If msecs is -1,
-// however, -1 is returned.
-static int qt_timeout_value(int msecs, int elapsed)
-{
-    if (msecs == -1)
-        return msecs;
-    msecs -= elapsed;
-    return qMax(msecs, 0);
 }
 
 /*! \reimp
@@ -1240,37 +970,7 @@ static int qt_timeout_value(int msecs, int elapsed)
 bool SerialPort::waitForReadyRead(int msecs)
 {
     Q_D(SerialPort);
-
-    if (d->isBuffered && !d->readBuffer.isEmpty())
-        return true;
-
-    if (d->engine->isReadNotificationEnabled())
-        d->engine->setReadNotificationEnabled(false);
-
-#if QT_VERSION >= 0x040700
-    QElapsedTimer stopWatch;
-#else
-    QTime stopWatch;
-#endif
-
-    stopWatch.start();
-
-    forever {
-        bool readyToRead = false;
-        bool readyToWrite = false;
-        if (!d->engine->select(qt_timeout_value(msecs, stopWatch.elapsed()),
-                               true, !d->writeBuffer.isEmpty(),
-                               &readyToRead, &readyToWrite)) {
-            return false;
-        }
-        if (readyToRead) {
-            if (d->canReadNotification())
-                return true;
-        }
-        if (readyToWrite)
-            d->canWriteNotification();
-    }
-    return false;
+    return d->waitForReadyRead(msecs);
 }
 
 /*! \reimp
@@ -1278,39 +978,8 @@ bool SerialPort::waitForReadyRead(int msecs)
 bool SerialPort::waitForBytesWritten(int msecs)
 {
     Q_D(SerialPort);
-
-    if (d->isBuffered && d->writeBuffer.isEmpty())
-        return false;
-
-#if QT_VERSION >= 0x040700
-    QElapsedTimer stopWatch;
-#else
-    QTime stopWatch;
-#endif
-
-    stopWatch.start();
-
-    forever {
-        bool readyToRead = false;
-        bool readyToWrite = false;
-        if (!d->engine->select(qt_timeout_value(msecs, stopWatch.elapsed()),
-                               true, !d->writeBuffer.isEmpty(),
-                               &readyToRead, &readyToWrite)) {
-            return false;
-        }
-        if (readyToRead) {
-            if (!d->canReadNotification())
-                return false;
-        }
-        if (readyToWrite) {
-            if (d->canWriteNotification())
-                return true;
-        }
-    }
-    return false;
+    return d->waitForBytesWritten(msecs);
 }
-
-/* Public slots */
 
 /*!
     Sets the desired state of the line signal DTR,
@@ -1324,7 +993,7 @@ bool SerialPort::waitForBytesWritten(int msecs)
 bool SerialPort::setDtr(bool set)
 {
     Q_D(SerialPort);
-    return d->engine->setDtr(set);
+    return d->setDtr(set);
 }
 
 /*!
@@ -1339,7 +1008,7 @@ bool SerialPort::setDtr(bool set)
 bool SerialPort::setRts(bool set)
 {
     Q_D(SerialPort);
-    return d->engine->setRts(set);
+    return d->setRts(set);
 }
 
 /*!
@@ -1358,7 +1027,7 @@ bool SerialPort::setRts(bool set)
 bool SerialPort::sendBreak(int duration)
 {
     Q_D(SerialPort);
-    return d->engine->sendBreak(duration);
+    return d->sendBreak(duration);
 }
 
 /*!
@@ -1372,83 +1041,15 @@ bool SerialPort::sendBreak(int duration)
 bool SerialPort::setBreak(bool set)
 {
     Q_D(SerialPort);
-    return d->engine->setBreak(set);
+    return d->setBreak(set);
 }
-
-/* Protected methods */
 
 /*! \reimp
 */
 qint64 SerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
-
-    // This is for a buffered SerialPort
-    if (d->isBuffered && d->readBuffer.isEmpty())
-        return 0;
-
-    // short cut for a char read if we have something in the buffer
-    if (maxSize == 1 && !d->readBuffer.isEmpty()) {
-        *data = d->readBuffer.getChar();
-        return 1;
-    }
-
-    // Special case for an Unbuffered SerialPort
-    // Re-filling the buffer.
-    if (!d->isBuffered
-            && d->readBuffer.size() < maxSize
-            && d->readBufferMaxSize > 0
-            && maxSize < d->readBufferMaxSize) {
-        // Our buffer is empty and a read() was requested for a byte amount that is smaller
-        // than the readBufferMaxSize. This means that we should fill our buffer since we want
-        // such small reads come from the buffer and not always go to the costly serial engine read()
-        const qint64 bytesToRead = SERIALPORT_READ_CHUNKSIZE;
-        if (bytesToRead > 0) {
-            char *ptr = d->readBuffer.reserve(bytesToRead);
-            const qint64 readBytes = d->engine->read(ptr, bytesToRead);
-            if (readBytes == -2)
-                d->readBuffer.chop(bytesToRead); // No bytes currently available for reading.
-            else
-                d->readBuffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
-        }
-    }
-
-    // First try to satisfy the read from the buffer
-    const qint64 bytesToRead = qMin(qint64(d->readBuffer.size()), maxSize);
-    qint64 readSoFar = 0;
-    while (readSoFar < bytesToRead) {
-        const char *ptr = d->readBuffer.readPointer();
-        const int bytesToReadFromThisBlock = qMin(int(bytesToRead - readSoFar),
-                                                  d->readBuffer.nextDataBlockSize());
-        memcpy(data + readSoFar, ptr, bytesToReadFromThisBlock);
-        readSoFar += bytesToReadFromThisBlock;
-        d->readBuffer.free(bytesToReadFromThisBlock);
-    }
-
-    if (!d->engine->isReadNotificationEnabled())
-        d->engine->setReadNotificationEnabled(true);
-
-    if (readSoFar > 0)
-        return readSoFar;
-
-    // This code path is for Unbuffered SerialPort
-    if (!d->isBuffered) {
-        const qint64 readBytes = d->engine->read(data, maxSize);
-
-        // -2 from the engine means no bytes available (EAGAIN) so read more later
-        // Note: only in *nix
-        if (readBytes == -2)
-            return 0;
-
-        if (readBytes < 0)
-            d->setError(SerialPort::IoError);
-        else if (!d->engine->isReadNotificationEnabled())
-            d->engine->setReadNotificationEnabled(true); // Only do this when there was no error
-
-        return readBytes;
-    }
-
-    return readSoFar;
+    return d->readFromBuffer(data, maxSize);
 }
 
 /*! \reimp
@@ -1463,31 +1064,7 @@ qint64 SerialPort::readLineData(char *data, qint64 maxSize)
 qint64 SerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(SerialPort);
-
-    if (!d->isBuffered) {
-        const qint64 written = d->engine->write(data, maxSize);
-
-        if (written < 0)
-            d->setError(SerialPort::IoError);
-        else if (!d->writeBuffer.isEmpty())
-            d->engine->setWriteNotificationEnabled(true);
-
-        if (written >= 0)
-            emit bytesWritten(written);
-
-        return written;
-    }
-
-    char *ptr = d->writeBuffer.reserve(maxSize);
-    if (maxSize == 1)
-        *ptr = *data;
-    else
-        memcpy(ptr, data, maxSize);
-
-    if (!d->writeBuffer.isEmpty())
-        d->engine->setWriteNotificationEnabled(true);
-
-    return maxSize;
+    return d->writeToBuffer(data, maxSize);
 }
 
 /*!

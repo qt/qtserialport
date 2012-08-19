@@ -43,12 +43,15 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
-#include "serialportengine_win_p.h"
+#include "serialport_win_p.h"
 
 #include <qt_windows.h>
+
+#ifndef Q_OS_WINCE
 #include <objbase.h>
 #include <initguid.h>
 #include <setupapi.h>
+#endif
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>

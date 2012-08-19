@@ -43,7 +43,7 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
-#include "serialportengine_symbian_p.h"
+#include "serialport_symbian_p.h"
 
 #include <e32base.h>
 //#include <e32test.h>

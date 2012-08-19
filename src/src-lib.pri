@@ -13,7 +13,6 @@ PUBLIC_HEADERS += \
 
 PRIVATE_HEADERS += \
     $$PWD/serialport_p.h \
-    $$PWD/serialportengine_p.h \
     $$PWD/serialportinfo_p.h
 
 SOURCES += \
@@ -21,22 +20,18 @@ SOURCES += \
     $$PWD/serialportinfo.cpp
 
 win32 {
-    SOURCES += $$PWD/serialportinfo_win.cpp
+    PRIVATE_HEADERS += \
+        $$PWD/serialport_win_p.h
+
+    SOURCES += \
+        $$PWD/serialport_win.cpp \
+        $$PWD/serialportinfo_win.cpp
 
     !wince*: {
-        PRIVATE_HEADERS += \
-            $$PWD/serialportengine_win_p.h
-
-        SOURCES += \
-            $$PWD/serialportengine_win.cpp
-
         LIBS += -lsetupapi -luuid -ladvapi32
     } else {
-        PRIVATE_HEADERS += \
-            $$PWD/serialportengine_wince_p.h
-
         SOURCES += \
-            $$PWD/serialportengine_wince.cpp \
+            $$PWD/serialport_wince.cpp \
             $$PWD/serialportinfo_wince.cpp
     }
 }
@@ -56,24 +51,28 @@ symbian {
     INCLUDEPATH += c:/QtSDK/Symbian/SDKs/Symbian3Qt473/epoc32/include/platform
 
     PRIVATE_HEADERS += \
-        $$PWD/serialportengine_symbian_p.h
+        $$PWD/serialport_symbian_p.h
+
     SOURCES += \
-        $$PWD/serialportengine_symbian.cpp \
+        $$PWD/serialport_symbian.cpp \
         $$PWD/serialportinfo_symbian.cpp
+
     LIBS += -leuser -lefsrv -lc32
 }
 
 unix:!symbian {
     PRIVATE_HEADERS += \
         $$PWD/ttylocker_unix_p.h \
-        $$PWD/serialportengine_unix_p.h
+        $$PWD/serialport_unix_p.h
+
     SOURCES += \
         $$PWD/ttylocker_unix.cpp \
-        $$PWD/serialportengine_unix.cpp \
+        $$PWD/serialport_unix.cpp \
         $$PWD/serialportinfo_unix.cpp
 
     macx {
         SOURCES += $$PWD/serialportinfo_mac.cpp
+
         LIBS += -framework IOKit -framework CoreFoundation
     } else {
         linux*:contains( DEFINES, HAVE_LIBUDEV ) {
