@@ -45,6 +45,7 @@
 #include "serialportinfo_p.h"
 #include "ttylocker_unix_p.h"
 #include "serialportengine_unix_p.h"
+#include <QtCore/qfile.h>
 
 #ifndef Q_OS_MAC
 
@@ -56,7 +57,6 @@ extern "C"
 #else
 #include <QtCore/qdir.h>
 #include <QtCore/qstringlist.h>
-#include <QtCore/qfile.h>
 #endif
 
 QT_BEGIN_NAMESPACE_SERIALPORT
