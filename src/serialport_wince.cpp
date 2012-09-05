@@ -375,12 +375,10 @@ bool SerialPortPrivate::notifyWrite()
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
-    bool sucessResult = ::WriteFile(descriptor, ptr, nextSize, &bytesWritten, 0);
-    if (!sucessResult)
+    if (::WriteFile(descriptor, ptr, nextSize, &bytesWritten, 0) == 0)
         return false;
 
-    if (sucessResult)
-        writeBuffer.free(bytesWritten);
+    writeBuffer.free(bytesWritten);
 
     if (bytesWritten > 0)
         emit q_ptr->bytesWritten(bytesWritten);
