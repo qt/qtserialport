@@ -43,11 +43,7 @@
 
 #include "serialport_win_p.h"
 
-#if (QT_VERSION >= 0x040700)
 #include <QtCore/qelapsedtimer.h>
-#else
-#include <QtCore/qtime.h>
-#endif
 
 #include <QtCore/qthread.h>
 #include <QtCore/qtimer.h>
@@ -267,11 +263,7 @@ bool SerialPortPrivate::waitForReadyRead(int msec)
     if (!readBuffer.isEmpty())
         return true;
 
-#if QT_VERSION >= 0x040700
     QElapsedTimer stopWatch;
-#else
-    QTime stopWatch;
-#endif
 
     stopWatch.start();
 
@@ -300,11 +292,7 @@ bool SerialPortPrivate::waitForBytesWritten(int msec)
     if (writeBuffer.isEmpty())
         return false;
 
-#if QT_VERSION >= 0x040700
     QElapsedTimer stopWatch;
-#else
-    QTime stopWatch;
-#endif
 
     stopWatch.start();
 
