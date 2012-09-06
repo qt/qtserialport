@@ -223,6 +223,11 @@ void SerialPortPrivate::close()
     descriptor = INVALID_HANDLE_VALUE;
 }
 
+bool SerialPortPrivate::flush()
+{
+    return notifyWrite(false) && ::FlushFileBuffers(descriptor);
+}
+
 qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
 {
     if (readBuffer.isEmpty())
@@ -369,9 +374,12 @@ bool SerialPortPrivate::notifyRead()
     return true;
 }
 
-bool SerialPortPrivate::notifyWrite()
+bool SerialPortPrivate::notifyWrite(bool byChunk)
 {
-    const DWORD nextSize = qMin(writeBuffer.nextDataBlockSize(), int(WriteChunkSize));
+    int nextSize = writeBuffer.nextDataBlockSize();
+    if (byChunk)
+        nextSize = qMin(nextSize, int(WriteChunkSize));
+
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;

@@ -90,7 +90,7 @@ public:
     bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy);
 
     bool readNotification();
-    bool writeNotification();
+    bool writeNotification(bool byChunk = true);
     bool exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);

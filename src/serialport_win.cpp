@@ -360,10 +360,14 @@ bool SerialPortPrivate::setRts(bool set)
     return ::EscapeCommFunction(descriptor, set ? SETRTS : CLRRTS);
 }
 
+#ifndef Q_OS_WINCE
+
 bool SerialPortPrivate::flush()
 {
-    return ::FlushFileBuffers(descriptor);
+    return startAsyncWrite(false) && ::FlushFileBuffers(descriptor);
 }
+
+#endif
 
 bool SerialPortPrivate::reset()
 {
@@ -695,11 +699,14 @@ bool SerialPortPrivate::startAsyncRead()
     return true;
 }
 
-bool SerialPortPrivate::startAsyncWrite()
+bool SerialPortPrivate::startAsyncWrite(bool byChunk)
 {
     writeSequenceStarted = true;
 
-    const DWORD nextSize = qMin(writeBuffer.nextDataBlockSize(), int(WriteChunkSize));
+    int nextSize = writeBuffer.nextDataBlockSize();
+    if (byChunk)
+        nextSize = qMin(nextSize, int(WriteChunkSize));
+
     const char *ptr = writeBuffer.readPointer();
 
     if (::WriteFile(descriptor, ptr, nextSize, 0, &writeOverlapped))

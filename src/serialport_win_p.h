@@ -94,12 +94,12 @@ public:
     bool processIoErrors();
 #ifndef Q_OS_WINCE
     bool startAsyncRead();
-    bool startAsyncWrite();
+    bool startAsyncWrite(bool byChunk = true);
     bool completeAsyncRead(DWORD numberOfBytes);
     bool completeAsyncWrite(DWORD numberOfBytes);
 #else
     bool notifyRead();
-    bool notifyWrite();
+    bool notifyWrite(bool byChunk = true);
 #endif
 
     static QString portNameToSystemLocation(const QString &port);

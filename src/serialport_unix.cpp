@@ -337,7 +337,7 @@ bool SerialPortPrivate::setRts(bool set)
 
 bool SerialPortPrivate::flush()
 {
-    return ::tcdrain(descriptor) != -1;
+    return writeNotification(false) && (::tcdrain(descriptor) != -1);
 }
 
 bool SerialPortPrivate::reset()
@@ -747,7 +747,7 @@ bool SerialPortPrivate::readNotification()
     return true;
 }
 
-bool SerialPortPrivate::writeNotification()
+bool SerialPortPrivate::writeNotification(bool byChunk)
 {
     const int tmp = writeBuffer.size();
 
@@ -756,7 +756,10 @@ bool SerialPortPrivate::writeNotification()
         return false;
     }
 
-    const int nextSize = qMin(writeBuffer.nextDataBlockSize(), int(WriteChunkSize));
+    int nextSize = writeBuffer.nextDataBlockSize();
+    if (byChunk)
+        nextSize = qMin(nextSize, int(WriteChunkSize));
+
     const char *ptr = writeBuffer.readPointer();
 
     // Attempt to write it chunk.
