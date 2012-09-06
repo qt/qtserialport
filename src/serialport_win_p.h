@@ -94,7 +94,7 @@ public:
     bool processIoErrors();
 #ifndef Q_OS_WINCE
     bool startAsyncRead();
-    bool startAsyncWrite(bool byChunk = true);
+    bool startAsyncWrite(int maxSize = INT_MAX);
     bool completeAsyncRead(DWORD numberOfBytes);
     bool completeAsyncWrite(DWORD numberOfBytes);
 #else

@@ -108,7 +108,7 @@ protected:
                     dptr->startAsyncRead();
             }
             if (EV_TXEMPTY & dptr->eventMask)
-                dptr->startAsyncWrite();
+                dptr->startAsyncWrite(SerialPortPrivateData::WriteChunkSize);
             ::WaitCommEvent(dptr->descriptor, &dptr->eventMask, &dptr->eventOverlapped);
         }
         return ret;
@@ -364,7 +364,7 @@ bool SerialPortPrivate::setRts(bool set)
 
 bool SerialPortPrivate::flush()
 {
-    return startAsyncWrite(false) && ::FlushFileBuffers(descriptor);
+    return startAsyncWrite() && ::FlushFileBuffers(descriptor);
 }
 
 #endif
@@ -455,7 +455,7 @@ qint64 SerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
     }
 
     if (!writeSequenceStarted)
-        startAsyncWrite();
+        startAsyncWrite(WriteChunkSize);
 
     return maxSize;
 }
@@ -487,7 +487,7 @@ bool SerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (readyToStartWrite) {
-            if (!startAsyncWrite())
+            if (!startAsyncWrite(WriteChunkSize))
                 return false;
         }
 
@@ -542,7 +542,7 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
         }
 
         if (readyToStartWrite) {
-            startAsyncWrite();
+            startAsyncWrite(WriteChunkSize);
         }
 
         DWORD bytesTransferred = 0;
@@ -699,13 +699,11 @@ bool SerialPortPrivate::startAsyncRead()
     return true;
 }
 
-bool SerialPortPrivate::startAsyncWrite(bool byChunk)
+bool SerialPortPrivate::startAsyncWrite(int maxSize)
 {
     writeSequenceStarted = true;
 
-    int nextSize = writeBuffer.nextDataBlockSize();
-    if (byChunk)
-        nextSize = qMin(nextSize, int(WriteChunkSize));
+    int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
 
     const char *ptr = writeBuffer.readPointer();
 

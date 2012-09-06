@@ -94,7 +94,7 @@ protected:
     virtual bool event(QEvent *e) {
         bool ret = QSocketNotifier::event(e);
         if (ret)
-            dptr->writeNotification();
+            dptr->writeNotification(SerialPortPrivateData::WriteChunkSize);
         return ret;
     }
 
@@ -337,7 +337,7 @@ bool SerialPortPrivate::setRts(bool set)
 
 bool SerialPortPrivate::flush()
 {
-    return writeNotification(false) && (::tcdrain(descriptor) != -1);
+    return writeNotification() && (::tcdrain(descriptor) != -1);
 }
 
 bool SerialPortPrivate::reset()
@@ -448,7 +448,7 @@ bool SerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (readyToWrite)
-            writeNotification();
+            writeNotification(WriteChunkSize);
 
     } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
     return false;
@@ -476,7 +476,7 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
         if (readyToRead && !readNotification())
             return false;
 
-        if (readyToWrite && writeNotification())
+        if (readyToWrite && writeNotification(WriteChunkSize))
             return true;
     }
     return false;
@@ -747,7 +747,7 @@ bool SerialPortPrivate::readNotification()
     return true;
 }
 
-bool SerialPortPrivate::writeNotification(bool byChunk)
+bool SerialPortPrivate::writeNotification(int maxSize)
 {
     const int tmp = writeBuffer.size();
 
@@ -756,9 +756,7 @@ bool SerialPortPrivate::writeNotification(bool byChunk)
         return false;
     }
 
-    int nextSize = writeBuffer.nextDataBlockSize();
-    if (byChunk)
-        nextSize = qMin(nextSize, int(WriteChunkSize));
+    int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
 
     const char *ptr = writeBuffer.readPointer();
 

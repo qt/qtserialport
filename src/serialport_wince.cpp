@@ -92,7 +92,7 @@ private slots:
         if (EV_RXCHAR &eventMask)
             dptr->notifyRead();
         if (EV_TXEMPTY & eventMask)
-            dptr->notifyWrite();
+            dptr->notifyWrite(SerialPortPrivateData::WriteChunkSize);
     }
 
 private:
@@ -225,7 +225,7 @@ void SerialPortPrivate::close()
 
 bool SerialPortPrivate::flush()
 {
-    return notifyWrite(false) && ::FlushFileBuffers(descriptor);
+    return notifyWrite() && ::FlushFileBuffers(descriptor);
 }
 
 qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
@@ -287,7 +287,7 @@ bool SerialPortPrivate::waitForReadyRead(int msec)
                 return true;
         }
         if (readyToWrite)
-            notifyWrite();
+            notifyWrite(WriteChunkSize);
     }
     return false;
 }
@@ -316,7 +316,7 @@ bool SerialPortPrivate::waitForBytesWritten(int msec)
                 return false;
         }
         if (readyToWrite) {
-            if (notifyWrite())
+            if (notifyWrite(WriteChunkSize))
                 return true;
         }
     }
@@ -374,11 +374,9 @@ bool SerialPortPrivate::notifyRead()
     return true;
 }
 
-bool SerialPortPrivate::notifyWrite(bool byChunk)
+bool SerialPortPrivate::notifyWrite(int maxSize)
 {
-    int nextSize = writeBuffer.nextDataBlockSize();
-    if (byChunk)
-        nextSize = qMin(nextSize, int(WriteChunkSize));
+    int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
 
     const char *ptr = writeBuffer.readPointer();
 
