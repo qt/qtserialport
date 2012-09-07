@@ -83,14 +83,14 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
     QVariant v;
 
     ::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
-                                       property, &dataType, 0, 0, &dataSize);
+                                       property, &dataType, NULL, 0, &dataSize);
 
     QByteArray data(dataSize, 0);
 
     if (::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
-                                           property, 0,
+                                           property, NULL,
                                            reinterpret_cast<unsigned char*>(data.data()),
-                                           dataSize, 0)) {
+                                           dataSize, NULL)) {
 
         switch (dataType) {
 
@@ -170,7 +170,7 @@ static QString getNativeName(HDEVINFO deviceInfoSet,
         const LONG ret = ::RegEnumValue(key,
                                         index++,
                                         reinterpret_cast<wchar_t *>(bufKeyName.data()), &lenKeyName,
-                                        0,
+                                        NULL,
                                         &keyType,
                                         reinterpret_cast<unsigned char *>(bufKeyVal.data()), &lenKeyValue);
 
@@ -217,7 +217,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
     for (int i = 0; i < guidCount; ++i) {
 
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], 0, 0, DIGCF_PRESENT);
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], NULL, 0, DIGCF_PRESENT);
 
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return ports;
@@ -270,7 +270,7 @@ QList<qint32> SerialPortInfo::standardRates()
 bool SerialPortInfo::isBusy() const
 {
     const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+                                           GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_ACCESS_DENIED)
@@ -284,7 +284,7 @@ bool SerialPortInfo::isBusy() const
 bool SerialPortInfo::isValid() const
 {
     const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, 0, 0);
+                                           GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
         if (::GetLastError() != ERROR_ACCESS_DENIED)

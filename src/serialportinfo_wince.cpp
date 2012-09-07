@@ -65,12 +65,12 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
         DWORD dataType = 0;
         DWORD dataSize = 0;
         res = ::RegQueryValueEx(hSubKey, reinterpret_cast<const wchar_t *>(valueName.utf16()),
-                                0, &dataType, 0, &dataSize);
+                                NULL, &dataType, NULL, &dataSize);
 
         if (res == ERROR_SUCCESS) {
             QByteArray data(dataSize, 0);
             res = ::RegQueryValueEx(hSubKey, reinterpret_cast<const wchar_t *>(valueName.utf16()),
-                                    0, 0,
+                                    NULL, NULL,
                                     reinterpret_cast<unsigned char *>(data.data()),
                                     &dataSize);
 
@@ -91,7 +91,7 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
             QByteArray data(dataSize, 0);
             while (::RegEnumKeyEx(hSubKey, index++,
                                   reinterpret_cast<wchar_t *>(data.data()), &dataSize,
-                                  0, 0, 0, 0) == ERROR_SUCCESS) {
+                                  NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
 
                 result = findDescription(hSubKey,
                                          QString::fromUtf16(reinterpret_cast<ushort *>(data.data()), dataSize));

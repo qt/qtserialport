@@ -75,7 +75,7 @@ protected:
     virtual void run() {
         DWORD mask = 0;
         while (running) {
-            if (::WaitCommEvent(dptr->descriptor, &mask, 0) != 0) {
+            if (::WaitCommEvent(dptr->descriptor, &mask, FALSE) != FALSE) {
                 // Wait until complete the operation changes the port settings,
                 // see updateDcb().
                 dptr->settingsChangeMutex.lock();
@@ -166,14 +166,14 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, 0, OPEN_EXISTING, 0, 0);
+                              desiredAccess, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
         portError = decodeSystemError();
         return false;
     }
 
-    if (::GetCommState(descriptor, &restoredDcb) == 0) {
+    if (::GetCommState(descriptor, &restoredDcb) == FALSE) {
         portError = decodeSystemError();
         return false;
     }
@@ -189,7 +189,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateDcb())
         return false;
 
-    if (::GetCommTimeouts(descriptor, &restoredCommTimeouts) == 0) {
+    if (::GetCommTimeouts(descriptor, &restoredCommTimeouts) == FALSE) {
         portError = decodeSystemError();
         return false;
     }
@@ -339,7 +339,7 @@ bool SerialPortPrivate::notifyRead()
     char *ptr = readBuffer.reserve(bytesToRead);
 
     DWORD readBytes = 0;
-    bool sucessResult = ::ReadFile(descriptor, ptr, bytesToRead, &readBytes, 0);
+    BOOL sucessResult = ::ReadFile(descriptor, ptr, bytesToRead, &readBytes, NULL);
 
     if (!sucessResult) {
         readBuffer.truncate(bytesToRead);
@@ -381,7 +381,7 @@ bool SerialPortPrivate::notifyWrite(int maxSize)
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
-    if (::WriteFile(descriptor, ptr, nextSize, &bytesWritten, 0) == 0)
+    if (::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL) == FALSE)
         return false;
 
     writeBuffer.free(bytesWritten);
@@ -400,7 +400,7 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForW
     // breaker can work out before you call a method WaitCommEvent()
     // and so it will loop forever!
     WaitCommEventBreaker breaker(descriptor, qMax(msecs, 0));
-    ::WaitCommEvent(descriptor, &eventMask, 0);
+    ::WaitCommEvent(descriptor, &eventMask, NULL);
     breaker.stop();
 
     if (breaker.isWorked())
@@ -428,13 +428,13 @@ bool SerialPortPrivate::updateDcb()
 
     DWORD eventMask = 0;
     // Save the event mask
-    if (::GetCommMask(descriptor, &eventMask) == 0)
+    if (::GetCommMask(descriptor, &eventMask) == FALSE)
         return false;
 
     // Break event notifier from WaitCommEvent
     ::SetCommMask(descriptor, 0);
     // Change parameters
-    bool ret = (::SetCommState(descriptor, &currentDcb) != 0);
+    bool ret = (::SetCommState(descriptor, &currentDcb) != FALSE);
     if (!ret)
         portError = decodeSystemError();
     // Restore the event mask
@@ -445,7 +445,7 @@ bool SerialPortPrivate::updateDcb()
 
 bool SerialPortPrivate::updateCommTimeouts()
 {
-    if (::SetCommTimeouts(descriptor, &currentCommTimeouts) == 0) {
+    if (::SetCommTimeouts(descriptor, &currentCommTimeouts) == FALSE) {
         portError = decodeSystemError();
         return false;
     }

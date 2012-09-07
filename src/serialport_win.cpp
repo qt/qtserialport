@@ -131,10 +131,10 @@ protected:
         bool ret = QWinEventNotifier::event(e);
         if (ret) {
             DWORD numberOfBytesTransferred = 0;
-            bool success = ::GetOverlappedResult(dptr->descriptor,
+            BOOL success = ::GetOverlappedResult(dptr->descriptor,
                                                  &dptr->readOverlapped,
                                                  &numberOfBytesTransferred,
-                                                 false);
+                                                 FALSE);
             if (success)
                 dptr->completeAsyncRead(numberOfBytesTransferred);
         }
@@ -158,10 +158,10 @@ protected:
         bool ret = QWinEventNotifier::event(e);
         if (ret) {
             DWORD numberOfBytesTransferred = 0;
-            bool success = ::GetOverlappedResult(dptr->descriptor,
+            BOOL success = ::GetOverlappedResult(dptr->descriptor,
                                                  &dptr->writeOverlapped,
                                                  &numberOfBytesTransferred,
-                                                 false);
+                                                 FALSE);
             if (success)
                 dptr->completeAsyncWrite(numberOfBytesTransferred);
         }
@@ -203,30 +203,30 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, 0, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+                              desiredAccess, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
         portError = decodeSystemError();
         return false;
     }
 
-    if (::GetCommState(descriptor, &restoredDcb) == 0) {
+    if (::GetCommState(descriptor, &restoredDcb) == FALSE) {
         portError = decodeSystemError();
         return false;
     }
 
     currentDcb = restoredDcb;
-    currentDcb.fBinary = true;
-    currentDcb.fInX = false;
-    currentDcb.fOutX = false;
-    currentDcb.fAbortOnError = false;
-    currentDcb.fNull = false;
-    currentDcb.fErrorChar = false;
+    currentDcb.fBinary = TRUE;
+    currentDcb.fInX = FALSE;
+    currentDcb.fOutX = FALSE;
+    currentDcb.fAbortOnError = FALSE;
+    currentDcb.fNull = FALSE;
+    currentDcb.fErrorChar = FALSE;
 
     if (!updateDcb())
         return false;
 
-    if (::GetCommTimeouts(descriptor, &restoredCommTimeouts) == 0) {
+    if (::GetCommTimeouts(descriptor, &restoredCommTimeouts) == FALSE) {
         portError = decodeSystemError();
         return false;
     }
@@ -238,25 +238,25 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
 
     ::memset(&selectOverlapped, 0, sizeof(selectOverlapped));
-    selectOverlapped.hEvent = ::CreateEvent(0, true, false, 0);
+    selectOverlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 
     if (eventMask & EV_RXCHAR) {
         ::memset(&readOverlapped, 0, sizeof(readOverlapped));
-        readOverlapped.hEvent = ::CreateEvent(0, false, false, 0);
+        readOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
         readCompletionNotifier = new ReadCompletionNotifier(this, q_ptr);
         readCompletionNotifier->setEnabled(true);
     }
 
     if (eventMask & EV_TXEMPTY) {
         ::memset(&writeOverlapped, 0, sizeof(writeOverlapped));
-        writeOverlapped.hEvent = ::CreateEvent(0, false, false, 0);
+        writeOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
         writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
         writeCompletionNotifier->setEnabled(true);
     }
 
     ::SetCommMask(descriptor, eventMask);
     ::memset(&eventOverlapped, 0, sizeof(eventOverlapped));
-    eventOverlapped.hEvent = ::CreateEvent(0, true, false, 0);
+    eventOverlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
     eventNotifier = new CommEventNotifier(this, q_ptr);
     eventNotifier->setEnabled(true);
     ::WaitCommEvent(descriptor, &eventMask, &eventOverlapped);
@@ -324,7 +324,7 @@ SerialPort::Lines SerialPortPrivate::lines() const
     DWORD modemStat = 0;
     SerialPort::Lines ret = 0;
 
-    if (::GetCommModemStatus(descriptor, &modemStat) == 0)
+    if (::GetCommModemStatus(descriptor, &modemStat) == FALSE)
         return ret;
 
     if (modemStat & MS_CTS_ON)
@@ -337,9 +337,9 @@ SerialPort::Lines SerialPortPrivate::lines() const
         ret |= SerialPort::Dcd;
 
     DWORD bytesReturned = 0;
-    if (::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, 0, 0,
+    if (::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
                           &modemStat, sizeof(modemStat),
-                          &bytesReturned, 0)) {
+                          &bytesReturned, NULL)) {
 
         if (modemStat & SERIAL_DTR_STATE)
             ret |= SerialPort::Dtr;
@@ -397,7 +397,7 @@ qint64 SerialPortPrivate::bytesAvailable() const
 {
     COMSTAT cs;
     ::memset(&cs, 0, sizeof(cs));
-    if (::ClearCommError(descriptor, 0, &cs) == 0)
+    if (::ClearCommError(descriptor, NULL, &cs) == FALSE)
         return -1;
     return cs.cbInQue;
 }
@@ -406,7 +406,7 @@ qint64 SerialPortPrivate::bytesToWrite() const
 {
     COMSTAT cs;
     ::memset(&cs, 0, sizeof(cs));
-    if (::ClearCommError(descriptor, 0, &cs) == 0)
+    if (::ClearCommError(descriptor, NULL, &cs) == FALSE)
         return -1;
     return cs.cbOutQue;
 }
@@ -495,7 +495,7 @@ bool SerialPortPrivate::waitForReadyRead(int msecs)
 
         if (readyToCompleteRead) {
             if (!::GetOverlappedResult(descriptor, &readOverlapped,
-                                       &bytesTransferred, false)) {
+                                       &bytesTransferred, FALSE)) {
                 return false;
             }
             return completeAsyncRead(bytesTransferred);
@@ -503,7 +503,7 @@ bool SerialPortPrivate::waitForReadyRead(int msecs)
 
         if (readyToCompleteWrite) {
             if (::GetOverlappedResult(descriptor, &readOverlapped,
-                                      &bytesTransferred, false)) {
+                                      &bytesTransferred, FALSE)) {
                 completeAsyncWrite(bytesTransferred);
             }
         }
@@ -549,7 +549,7 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
 
         if (readyToCompleteRead) {
             if (!::GetOverlappedResult(descriptor, &readOverlapped,
-                                       &bytesTransferred, false)) {
+                                       &bytesTransferred, FALSE)) {
                 return false;
             }
             if (!completeAsyncRead(bytesTransferred))
@@ -558,7 +558,7 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
 
         if (readyToCompleteWrite) {
             if (::GetOverlappedResult(descriptor, &readOverlapped,
-                                      &bytesTransferred, false)) {
+                                      &bytesTransferred, FALSE)) {
                 if (completeAsyncWrite(bytesTransferred))
                     return true;
             }
@@ -588,11 +588,11 @@ bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
 
 bool SerialPortPrivate::setParity(SerialPort::Parity parity)
 {
-    currentDcb.fParity = true;
+    currentDcb.fParity = TRUE;
     switch (parity) {
     case SerialPort::NoParity:
         currentDcb.Parity = NOPARITY;
-        currentDcb.fParity = false;
+        currentDcb.fParity = FALSE;
         break;
     case SerialPort::OddParity:
         currentDcb.Parity = ODDPARITY;
@@ -608,7 +608,7 @@ bool SerialPortPrivate::setParity(SerialPort::Parity parity)
         break;
     default:
         currentDcb.Parity = NOPARITY;
-        currentDcb.fParity = false;
+        currentDcb.fParity = FALSE;
         break;
     }
     return updateDcb();
@@ -635,19 +635,19 @@ bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
 
 bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
 {
-    currentDcb.fInX = false;
-    currentDcb.fOutX = false;
-    currentDcb.fOutxCtsFlow = false;
+    currentDcb.fInX = FALSE;
+    currentDcb.fOutX = FALSE;
+    currentDcb.fOutxCtsFlow = FALSE;
     currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
     switch (flow) {
     case SerialPort::NoFlowControl:
         break;
     case SerialPort::SoftwareControl:
-        currentDcb.fInX = true;
-        currentDcb.fOutX = true;
+        currentDcb.fInX = TRUE;
+        currentDcb.fOutX = TRUE;
         break;
     case SerialPort::HardwareControl:
-        currentDcb.fOutxCtsFlow = true;
+        currentDcb.fOutxCtsFlow = TRUE;
         currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
         break;
     default:
@@ -680,7 +680,7 @@ bool SerialPortPrivate::startAsyncRead()
     char *ptr = readBuffer.reserve(bytesToRead);
 
     readSequenceStarted = true;
-    if (::ReadFile(descriptor, ptr, bytesToRead, 0, &readOverlapped))
+    if (::ReadFile(descriptor, ptr, bytesToRead, NULL, &readOverlapped))
         return true;
 
     switch (::GetLastError()) {
@@ -707,7 +707,7 @@ bool SerialPortPrivate::startAsyncWrite(int maxSize)
 
     const char *ptr = writeBuffer.readPointer();
 
-    if (::WriteFile(descriptor, ptr, nextSize, 0, &writeOverlapped))
+    if (::WriteFile(descriptor, ptr, nextSize, NULL, &writeOverlapped))
         return true;
 
     switch (::GetLastError()) {
@@ -730,7 +730,7 @@ bool SerialPortPrivate::startAsyncWrite(int maxSize)
 bool SerialPortPrivate::processIoErrors()
 {
     DWORD error = 0;
-    const bool ret = ::ClearCommError(descriptor, &error, 0) != 0;
+    const bool ret = ::ClearCommError(descriptor, &error, FALSE) != FALSE;
     if (ret && error) {
         if (error & CE_FRAME)
             portError = SerialPort::FramingError;
@@ -808,7 +808,7 @@ bool SerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
 
 bool SerialPortPrivate::updateDcb()
 {
-    if (::SetCommState(descriptor, &currentDcb) == 0) {
+    if (::SetCommState(descriptor, &currentDcb) == FALSE) {
         portError = decodeSystemError();
         return false;
     }
@@ -817,7 +817,7 @@ bool SerialPortPrivate::updateDcb()
 
 bool SerialPortPrivate::updateCommTimeouts()
 {
-    if (::SetCommTimeouts(descriptor, &currentCommTimeouts) == 0) {
+    if (::SetCommTimeouts(descriptor, &currentCommTimeouts) == FALSE) {
         portError = decodeSystemError();
         return false;
     }
@@ -932,7 +932,7 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForStartRead, bool *selec
 
     DWORD eventMask = 0;
 
-    if (::WaitCommEvent(descriptor, &eventMask, &selectOverlapped) == 0
+    if (::WaitCommEvent(descriptor, &eventMask, &selectOverlapped) == FALSE
             && ::GetLastError() != ERROR_IO_PENDING) {
         return false;
     }
@@ -952,7 +952,7 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForStartRead, bool *selec
 
     DWORD waitResult = ::WaitForMultipleObjects(NumberOfEvents,
                                                 events,
-                                                false, // wait any event
+                                                FALSE, // wait any event
                                                 qMax(msecs, 0));
 
     switch (waitResult) {
