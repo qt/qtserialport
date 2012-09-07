@@ -188,9 +188,12 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 
     ::memset(&currentTermios, 0, sizeof(currentTermios));
     ::cfmakeraw(&currentTermios);
-    currentTermios.c_cflag |= CREAD | CLOCAL;
+    currentTermios.c_cflag |= CLOCAL;
     currentTermios.c_cc[VTIME] = 0;
     currentTermios.c_cc[VMIN] = 0;
+
+    if (mode & QIODevice::ReadOnly)
+        currentTermios.c_cflag |= CREAD;
 
     if (!updateTermios())
         return false;
