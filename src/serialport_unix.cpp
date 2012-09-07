@@ -343,9 +343,10 @@ bool SerialPortPrivate::flush()
     return writeNotification() && (::tcdrain(descriptor) != -1);
 }
 
-bool SerialPortPrivate::reset()
+bool SerialPortPrivate::clear(SerialPort::Directions dir)
 {
-    return ::tcflush(descriptor, TCIOFLUSH) != -1;
+    return ::tcflush(descriptor, (dir == SerialPort::AllDirections)
+                     ? TCIOFLUSH : (dir & SerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
 }
 
 bool SerialPortPrivate::sendBreak(int duration)

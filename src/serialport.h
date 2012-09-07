@@ -191,7 +191,7 @@ public:
     Lines lines() const;
 
     bool flush();
-    virtual bool reset();
+    bool clear(Directions dir = AllDirections);
     virtual bool atEnd() const;
 
     bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);

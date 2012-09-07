@@ -62,7 +62,7 @@ public:
     bool setRts(bool set);
 
     bool flush();
-    bool reset();
+    bool clear(SerialPort::Directions dir);
 
     bool sendBreak(int duration);
     bool setBreak(bool set);

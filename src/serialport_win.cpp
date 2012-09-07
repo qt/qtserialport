@@ -369,9 +369,13 @@ bool SerialPortPrivate::flush()
 
 #endif
 
-bool SerialPortPrivate::reset()
+bool SerialPortPrivate::clear(SerialPort::Directions dir)
 {
-    static const DWORD flags = PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR;
+    DWORD flags = 0;
+    if (dir & SerialPort::Input)
+        flags |= PURGE_RXABORT | PURGE_RXCLEAR;
+    if (dir & SerialPort::Output)
+        flags |= PURGE_TXABORT | PURGE_TXCLEAR;
     return ::PurgeComm(descriptor, flags);
 }
 

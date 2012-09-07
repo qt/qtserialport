@@ -211,9 +211,14 @@ bool SerialPortPrivate::flush()
     return false;
 }
 
-bool SerialPortPrivate::reset()
+bool SerialPortPrivate::clear(SerialPort::Directions dir)
 {
-    TInt r = descriptor.ResetBuffers(KCommResetRx | KCommResetTx);
+    TUint flags = 0;
+    if (dir & SerialPort::Input)
+        flags |= KCommResetRx;
+    if (dir & SerialPort::Output)
+        flags |= KCommResetTx;
+    TInt r = descriptor.ResetBuffers(flags);
     return r == KErrNone;
 }
 

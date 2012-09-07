@@ -777,17 +777,20 @@ bool SerialPort::flush()
     return d->flush();
 }
 
-/*! \reimp
-    Resets and clears all the buffers of the serial port, including an
-    internal class buffer and the UART (driver) buffer. If successful,
-    returns true; otherwise returns false.
+/*!
+    Discards all characters from the output or input buffer, depending on
+    a given direction \a dir. Including clear an internal class buffers and
+    the UART (driver) buffers. Also terminate pending read or write operations.
+    If successful, returns true; otherwise returns false.
 */
-bool SerialPort::reset()
+bool SerialPort::clear(Directions dir)
 {
     Q_D(SerialPort);
-    d->readBuffer.clear();
-    d->writeBuffer.clear();
-    return d->reset();
+    if (dir & Input)
+        d->readBuffer.clear();
+    if (dir & Output)
+        d->writeBuffer.clear();
+    return d->clear(dir);
 }
 
 /*! \reimp
