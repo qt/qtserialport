@@ -210,7 +210,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    if (::GetCommState(descriptor, &restoredDcb) == FALSE) {
+    if (!::GetCommState(descriptor, &restoredDcb)) {
         portError = decodeSystemError();
         return false;
     }
@@ -226,7 +226,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateDcb())
         return false;
 
-    if (::GetCommTimeouts(descriptor, &restoredCommTimeouts) == FALSE) {
+    if (!::GetCommTimeouts(descriptor, &restoredCommTimeouts)) {
         portError = decodeSystemError();
         return false;
     }
@@ -324,7 +324,7 @@ SerialPort::Lines SerialPortPrivate::lines() const
     DWORD modemStat = 0;
     SerialPort::Lines ret = 0;
 
-    if (::GetCommModemStatus(descriptor, &modemStat) == FALSE)
+    if (!::GetCommModemStatus(descriptor, &modemStat))
         return ret;
 
     if (modemStat & MS_CTS_ON)
@@ -401,7 +401,7 @@ qint64 SerialPortPrivate::bytesAvailable() const
 {
     COMSTAT cs;
     ::memset(&cs, 0, sizeof(cs));
-    if (::ClearCommError(descriptor, NULL, &cs) == FALSE)
+    if (!::ClearCommError(descriptor, NULL, &cs))
         return -1;
     return cs.cbInQue;
 }
@@ -410,7 +410,7 @@ qint64 SerialPortPrivate::bytesToWrite() const
 {
     COMSTAT cs;
     ::memset(&cs, 0, sizeof(cs));
-    if (::ClearCommError(descriptor, NULL, &cs) == FALSE)
+    if (!::ClearCommError(descriptor, NULL, &cs))
         return -1;
     return cs.cbOutQue;
 }
@@ -734,7 +734,7 @@ bool SerialPortPrivate::startAsyncWrite(int maxSize)
 bool SerialPortPrivate::processIoErrors()
 {
     DWORD error = 0;
-    const bool ret = ::ClearCommError(descriptor, &error, FALSE) != FALSE;
+    const bool ret = ::ClearCommError(descriptor, &error, FALSE);
     if (ret && error) {
         if (error & CE_FRAME)
             portError = SerialPort::FramingError;
@@ -812,7 +812,7 @@ bool SerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
 
 bool SerialPortPrivate::updateDcb()
 {
-    if (::SetCommState(descriptor, &currentDcb) == FALSE) {
+    if (!::SetCommState(descriptor, &currentDcb)) {
         portError = decodeSystemError();
         return false;
     }
@@ -821,7 +821,7 @@ bool SerialPortPrivate::updateDcb()
 
 bool SerialPortPrivate::updateCommTimeouts()
 {
-    if (::SetCommTimeouts(descriptor, &currentCommTimeouts) == FALSE) {
+    if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
         portError = decodeSystemError();
         return false;
     }
@@ -936,7 +936,7 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForStartRead, bool *selec
 
     DWORD eventMask = 0;
 
-    if (::WaitCommEvent(descriptor, &eventMask, &selectOverlapped) == FALSE
+    if (!::WaitCommEvent(descriptor, &eventMask, &selectOverlapped)
             && ::GetLastError() != ERROR_IO_PENDING) {
         return false;
     }

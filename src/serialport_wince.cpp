@@ -75,7 +75,7 @@ protected:
     virtual void run() {
         DWORD mask = 0;
         while (running) {
-            if (::WaitCommEvent(dptr->descriptor, &mask, FALSE) != FALSE) {
+            if (::WaitCommEvent(dptr->descriptor, &mask, FALSE)) {
                 // Wait until complete the operation changes the port settings,
                 // see updateDcb().
                 dptr->settingsChangeMutex.lock();
@@ -173,7 +173,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    if (::GetCommState(descriptor, &restoredDcb) == FALSE) {
+    if (!::GetCommState(descriptor, &restoredDcb)) {
         portError = decodeSystemError();
         return false;
     }
@@ -189,7 +189,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateDcb())
         return false;
 
-    if (::GetCommTimeouts(descriptor, &restoredCommTimeouts) == FALSE) {
+    if (!::GetCommTimeouts(descriptor, &restoredCommTimeouts)) {
         portError = decodeSystemError();
         return false;
     }
@@ -381,7 +381,7 @@ bool SerialPortPrivate::notifyWrite(int maxSize)
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
-    if (::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL) == FALSE)
+    if (!::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL))
         return false;
 
     writeBuffer.free(bytesWritten);
@@ -428,13 +428,13 @@ bool SerialPortPrivate::updateDcb()
 
     DWORD eventMask = 0;
     // Save the event mask
-    if (::GetCommMask(descriptor, &eventMask) == FALSE)
+    if (!::GetCommMask(descriptor, &eventMask))
         return false;
 
     // Break event notifier from WaitCommEvent
     ::SetCommMask(descriptor, 0);
     // Change parameters
-    bool ret = (::SetCommState(descriptor, &currentDcb) != FALSE);
+    bool ret = ::SetCommState(descriptor, &currentDcb);
     if (!ret)
         portError = decodeSystemError();
     // Restore the event mask
@@ -445,7 +445,7 @@ bool SerialPortPrivate::updateDcb()
 
 bool SerialPortPrivate::updateCommTimeouts()
 {
-    if (::SetCommTimeouts(descriptor, &currentCommTimeouts) == FALSE) {
+    if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
         portError = decodeSystemError();
         return false;
     }
