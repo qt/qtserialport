@@ -524,7 +524,7 @@ bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
             }
 #elif Q_OS_MAC
 
-#  ifdef MAC_OS_X_VERSION_10_4 && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+#  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
             // Starting with Tiger, the IOSSIOSPEED ioctl can be used to set arbitrary baud rates
             // other than those specified by POSIX. The driver for the underlying serial hardware
             // ultimately determines which baud rates can be used. This ioctl sets both the input
