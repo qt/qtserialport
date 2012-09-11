@@ -59,7 +59,11 @@ extern "C"
 #include <QtCore/qstringlist.h>
 #endif
 
+#endif // Q_OS_MAC
+
 QT_BEGIN_NAMESPACE_SERIALPORT
+
+#ifndef Q_OS_MAC
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 

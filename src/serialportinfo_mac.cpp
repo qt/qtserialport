@@ -43,7 +43,6 @@
 
 #include "serialportinfo.h"
 #include "serialportinfo_p.h"
-#include "serialportengine_unix_p.h"
 
 #include <sys/param.h>
 
