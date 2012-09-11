@@ -48,7 +48,6 @@
 #include <qt_windows.h>
 
 #ifndef Q_OS_WINCE
-#include <objbase.h>
 #include <initguid.h>
 #include <setupapi.h>
 #endif
@@ -59,6 +58,9 @@
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 #ifndef Q_OS_WINCE
+
+//see http://msdn.microsoft.com/en-us/library/windows/desktop/ms724872%28v=vs.85%29.aspx
+#define MAX_REGISTRY_VALUE_NAME  (16383)
 
 static const GUID guidsArray[] =
 {
@@ -80,134 +82,61 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
 {
     DWORD dataType = 0;
     DWORD dataSize = 0;
-    QVariant v;
-
     ::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
                                        property, &dataType, NULL, 0, &dataSize);
-
     QByteArray data(dataSize, 0);
-
-    if (::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
-                                           property, NULL,
-                                           reinterpret_cast<unsigned char*>(data.data()),
-                                           dataSize, NULL)) {
-
-        switch (dataType) {
-
-        case REG_EXPAND_SZ:
-        case REG_SZ: {
-            QString s;
-            if (dataSize)
-                s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()));
-            v = QVariant(s);
-            break;
-        }
-
-        case REG_MULTI_SZ: {
-            QStringList l;
-            if (dataSize) {
-                int i = 0;
-                forever {
-                    QString s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()) + i);
-                    i += s.length() + 1;
-
-                    if (s.isEmpty())
-                        break;
-                    l.append(s);
-                }
-            }
-            v = QVariant(l);
-            break;
-        }
-
-        case REG_NONE:
-        case REG_BINARY: {
-            QString s;
-            if (dataSize)
-                s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()), data.size() / 2);
-            v = QVariant(s);
-            break;
-        }
-
-        case REG_DWORD_BIG_ENDIAN:
-        case REG_DWORD: {
-            Q_ASSERT(data.size() == sizeof(int));
-            int i = 0;
-            ::memcpy(&i, data.constData(), sizeof(i));
-            v = i;
-            break;
-        }
-
-        default:
-            v = QVariant();
-            break;
-        }
-
+    if (!::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, NULL,
+                                            reinterpret_cast<unsigned char*>(data.data()),
+                                            dataSize, NULL)
+            || !dataSize) {
+        return QVariant();
     }
 
-    return v;
+    switch (dataType) {
+
+    case REG_EXPAND_SZ:
+    case REG_SZ: {
+        return QVariant(QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData())));
+    }
+
+    case REG_MULTI_SZ: {
+        QStringList list;
+        int i = 0;
+        forever {
+            QString s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()) + i);
+            i += s.length() + 1;
+            if (s.isEmpty())
+                break;
+            list.append(s);
+        }
+        return QVariant(list);
+    }
+
+    default:
+        break;
+    }
+
+    return QVariant();
 }
 
-static QString getNativeName(HDEVINFO deviceInfoSet,
-                             PSP_DEVINFO_DATA deviceInfoData) {
-
+static QString getPortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
+{
     const HKEY key = ::SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
                                             0, DIREG_DEV, KEY_READ);
-
-    QString result;
-
     if (key == INVALID_HANDLE_VALUE)
-        return result;
+        return QString();
 
-    DWORD index = 0;
-    QByteArray bufKeyName(16384, 0);
-    QByteArray bufKeyVal(16384, 0);
-
-    forever {
-        DWORD lenKeyName = bufKeyName.size();
-        DWORD lenKeyValue = bufKeyVal.size();
-        DWORD keyType = 0;
-        const LONG ret = ::RegEnumValue(key,
-                                        index++,
-                                        reinterpret_cast<wchar_t *>(bufKeyName.data()), &lenKeyName,
-                                        NULL,
-                                        &keyType,
-                                        reinterpret_cast<unsigned char *>(bufKeyVal.data()), &lenKeyValue);
-
-        if (ret == ERROR_SUCCESS) {
-            if (keyType == REG_SZ) {
-
-                QString itemName = QString::fromUtf16(reinterpret_cast<ushort *>(bufKeyName.data()), lenKeyName);
-                QString itemValue = QString::fromUtf16(reinterpret_cast<const ushort *>(bufKeyVal.constData()));
-
-                if (itemName.contains(QLatin1String("PortName"))) {
-                    result = itemValue;
-                    break;
-                }
-            }
-        } else {
-            break;
-        }
+    QString portKeyName(QLatin1String("PortName"));
+    DWORD dataSize = MAX_REGISTRY_VALUE_NAME;
+    QByteArray data(dataSize, 0);
+    if (::RegQueryValueEx(key, reinterpret_cast<const wchar_t *>(portKeyName.utf16()), NULL, NULL,
+                          reinterpret_cast<unsigned char *>(data.data()), &dataSize)
+            != ERROR_SUCCESS) {
+        ::RegCloseKey(key);
+        return QString();
     }
-
     ::RegCloseKey(key);
-
-    return result;
-}
-
-// Regular expression pattern for extraction a VID/PID from Hardware ID
-const static QLatin1String hardwareIdPattern("vid_(\\w+)&pid_(\\w+)");
-
-// Command for extraction desired VID/PID from Hardware ID.
-enum ExtractCommand { CMD_EXTRACT_VID = 1, CMD_EXTRACT_PID = 2 };
-
-// Extract desired part Id type from Hardware ID.
-static QString parseHardwareId(ExtractCommand cmd, const QStringList &hardwareId)
-{
-    QRegExp rx(hardwareIdPattern);
-    rx.setCaseSensitivity(Qt::CaseInsensitive);
-    rx.indexIn(hardwareId.at(0));
-    return rx.cap(cmd);
+    return QString::fromWCharArray(((const wchar_t *)data.constData()));
 }
 
 QList<SerialPortInfo> SerialPortInfo::availablePorts()
@@ -216,9 +145,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
     for (int i = 0; i < guidCount; ++i) {
-
         const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], NULL, 0, DIGCF_PRESENT);
-
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return ports;
 
@@ -228,33 +155,27 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
         DWORD index = 0;
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
-
             SerialPortInfo info;
-            QVariant v = getNativeName(deviceInfoSet, &deviceInfoData);
-            QString s = v.toString();
 
-            if (!(s.isEmpty() || s.contains(QLatin1String("LPT")))) {
+            QString s = getPortName(deviceInfoSet, &deviceInfoData);
+            if (s.isEmpty() || s.contains(QLatin1String("LPT")))
+                continue;
 
-                info.d_ptr->portName = s;
-                info.d_ptr->device = SerialPortPrivate::portNameToSystemLocation(s);
+            info.d_ptr->portName = s;
+            info.d_ptr->device = SerialPortPrivate::portNameToSystemLocation(s);
+            info.d_ptr->description =
+                    getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
+            info.d_ptr->manufacturer =
+                    getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
 
-                v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
-                info.d_ptr->description = v.toString();
+            s = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().at(0).toUpper();
+            info.d_ptr->vendorIdentifier = s.mid(s.indexOf(QLatin1String("VID_")) + 4, 4);
+            info.d_ptr->productIdentifier = s.mid(s.indexOf(QLatin1String("PID_")) + 4, 4);
 
-                v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
-                info.d_ptr->manufacturer = v.toString();
-
-                v = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID);
-                info.d_ptr->vendorIdentifier = parseHardwareId(CMD_EXTRACT_VID, v.toStringList());
-                info.d_ptr->productIdentifier = parseHardwareId(CMD_EXTRACT_PID, v.toStringList());
-
-                ports.append(info);
-            }
+            ports.append(info);
         }
-
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
-
     return ports;
 }
 

@@ -28,7 +28,7 @@ win32 {
         $$PWD/serialportinfo_win.cpp
 
     !wince*: {
-        LIBS += -lsetupapi -luuid -ladvapi32
+        LIBS += -lsetupapi -ladvapi32
     } else {
         SOURCES += \
             $$PWD/serialport_wince.cpp \
