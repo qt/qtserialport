@@ -59,9 +59,6 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 #ifndef Q_OS_WINCE
 
-//see http://msdn.microsoft.com/en-us/library/windows/desktop/ms724872%28v=vs.85%29.aspx
-#define MAX_REGISTRY_VALUE_NAME  (16383)
-
 static const GUID guidsArray[] =
 {
     // Windows Ports Class GUID
@@ -75,6 +72,8 @@ static const GUID guidsArray[] =
     // Advanced Virtual COM Port GUID
     { 0x9341CD95, 0x4371, 0x4A37, { 0xA5, 0xAF, 0xFD, 0xB0, 0xA9, 0xD1, 0x96, 0x31 } },
 };
+
+static const wchar_t portKeyName[] = L"PortName";
 
 static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
@@ -126,12 +125,16 @@ static QString getPortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoDa
     if (key == INVALID_HANDLE_VALUE)
         return QString();
 
-    QString portKeyName(QLatin1String("PortName"));
-    DWORD dataSize = MAX_REGISTRY_VALUE_NAME;
+    DWORD dataSize;
+    if (::RegQueryValueEx(key, portKeyName, NULL, NULL, NULL, &dataSize) != ERROR_SUCCESS) {
+        ::RegCloseKey(key);
+        return QString();
+    }
+
     QByteArray data(dataSize, 0);
-    if (::RegQueryValueEx(key, reinterpret_cast<const wchar_t *>(portKeyName.utf16()), NULL, NULL,
-                          reinterpret_cast<unsigned char *>(data.data()), &dataSize)
-            != ERROR_SUCCESS) {
+
+    if (::RegQueryValueEx(key, portKeyName, NULL, NULL,
+                reinterpret_cast<unsigned char *>(data.data()), &dataSize) != ERROR_SUCCESS) {
         ::RegCloseKey(key);
         return QString();
     }
