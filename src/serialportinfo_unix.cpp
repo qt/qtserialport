@@ -211,28 +211,25 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     if (devDir.exists()) {
 
         devDir.setNameFilters(filtersOfDevices());
-        devDir.setFilter(QDir::Files | QDir::System);
+        devDir.setFilter(QDir::Files | QDir::System | QDir::NoSymLinks);
 
         QStringList foundDevices; // Found devices list.
 
         foreach (const QFileInfo &fi, devDir.entryInfoList()) {
-            if (!fi.isDir()) {
+            QString s = fi.absoluteFilePath().split('.').at(0);
+            if (!foundDevices.contains(s)) {
+                foundDevices.append(s);
 
-                QString s = fi.absoluteFilePath().split('.').at(0);
-                if (!foundDevices.contains(s)) {
-                    foundDevices.append(s);
+                SerialPortInfo info;
 
-                    SerialPortInfo info;
+                info.d_ptr->device = s;
+                info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(s);
 
-                    info.d_ptr->device = s;
-                    info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(s);
+                // Get description, manufacturer, vendor identifier, product
+                // identifier are not supported.
 
-                    // Get description, manufacturer, vendor identifier, product
-                    // identifier are not supported.
+                ports.append(info);
 
-                    ports.append(info);
-
-                }
             }
         }
     }
