@@ -216,7 +216,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         QStringList foundDevices; // Found devices list.
 
         foreach (const QFileInfo &fi, devDir.entryInfoList()) {
-            QString s = fi.absoluteFilePath().split('.').at(0);
+            QString s = fi.absoluteFilePath();
             if (!foundDevices.contains(s)) {
                 foundDevices.append(s);
 
