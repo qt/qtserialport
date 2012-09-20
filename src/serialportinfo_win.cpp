@@ -75,7 +75,7 @@ static const GUID guidsArray[] =
 
 static const wchar_t portKeyName[] = L"PortName";
 
-static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
+static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
                                           DWORD property)
 {
@@ -118,7 +118,7 @@ static QVariant getDeviceRegistryProperty(HDEVINFO deviceInfoSet,
     return QVariant();
 }
 
-static QString getPortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
+static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
 {
     const HKEY key = ::SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
                                             0, DIREG_DEV, KEY_READ);
@@ -160,18 +160,18 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
             SerialPortInfo info;
 
-            QString s = getPortName(deviceInfoSet, &deviceInfoData);
+            QString s = devicePortName(deviceInfoSet, &deviceInfoData);
             if (s.isEmpty() || s.contains(QLatin1String("LPT")))
                 continue;
 
             info.d_ptr->portName = s;
             info.d_ptr->device = SerialPortPrivate::portNameToSystemLocation(s);
             info.d_ptr->description =
-                    getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
+                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
             info.d_ptr->manufacturer =
-                    getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
+                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
 
-            s = getDeviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().at(0).toUpper();
+            s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().at(0).toUpper();
             info.d_ptr->vendorIdentifier = s.mid(s.indexOf(QLatin1String("VID_")) + 4, 4);
             info.d_ptr->productIdentifier = s.mid(s.indexOf(QLatin1String("PID_")) + 4, 4);
 
