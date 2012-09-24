@@ -99,7 +99,7 @@ public:
     bool completeAsyncWrite(DWORD numberOfBytes);
 #else
     bool notifyRead();
-    bool notifyWrite(bool byChunk = true);
+    bool notifyWrite(int maxSize = INT_MAX);
 #endif
 
     static QString portNameToSystemLocation(const QString &port);
