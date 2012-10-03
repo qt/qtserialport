@@ -147,12 +147,12 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                         if (subsys == QLatin1String("usb-serial")
                                 || subsys == QLatin1String("usb")) { // USB bus type
                             // Append this devices and try get additional information about them.
-                            info.d_ptr->description =
+                            info.d_ptr->description = QString(
                                     QLatin1String(::udev_device_get_property_value(dev,
-                                                                                   "ID_MODEL_FROM_DATABASE"));
-                            info.d_ptr->manufacturer =
+                                                                                   "ID_MODEL"))).replace('_', ' ');
+                            info.d_ptr->manufacturer = QString(
                                     QLatin1String(::udev_device_get_property_value(dev,
-                                                                                   "ID_VENDOR_FROM_DATABASE"));
+                                                                                   "ID_VENDOR"))).replace('_', ' ');
                             info.d_ptr->vendorIdentifier =
                                     QLatin1String(::udev_device_get_property_value(dev,
                                                                                    "ID_VENDOR_ID"));
