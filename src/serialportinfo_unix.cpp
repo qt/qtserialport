@@ -144,7 +144,8 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                         QLatin1String subsys(::udev_device_get_subsystem(parentdev));
 
-                        if (subsys == QLatin1String("usb-serial")) { // USB bus type
+                        if (subsys == QLatin1String("usb-serial")
+                                || subsys == QLatin1String("usb")) { // USB bus type
                             // Append this devices and try get additional information about them.
                             info.d_ptr->description =
                                     QLatin1String(::udev_device_get_property_value(dev,
