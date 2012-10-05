@@ -306,36 +306,16 @@ SerialPort::Lines SerialPortPrivate::lines() const
     return ret;
 }
 
-static bool trigger_out_line(int fd, int bit, bool set)
-{
-    int arg = 0;
-    bool ret = ::ioctl(fd, TIOCMGET, &arg) != -1;
-
-    if (ret) {
-        int tmp = arg & bit;
-
-        // If line already installed, then it no need change.
-        if ((tmp && set) || (!(tmp || set)))
-            return true;
-
-        if (set)
-            arg |= bit;
-        else
-            arg &= ~bit;
-
-        ret = ::ioctl(fd, TIOCMSET, &arg) != -1;
-    }
-    return ret;
-}
-
 bool SerialPortPrivate::setDtr(bool set)
 {
-    return trigger_out_line(descriptor, TIOCM_DTR, set);
+    int status = TIOCM_DTR;
+    return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
 }
 
 bool SerialPortPrivate::setRts(bool set)
 {
-    return trigger_out_line(descriptor, TIOCM_RTS, set);
+    int status = TIOCM_RTS;
+    return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
 }
 
 bool SerialPortPrivate::flush()
