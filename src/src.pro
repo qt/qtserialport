@@ -1,5 +1,6 @@
 TEMPLATE = lib
 MODULE   = serialport
+QT      -= gui
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     TARGET   = $$QT.serialport.name$$QT_LIBINFIX
