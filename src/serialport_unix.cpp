@@ -404,7 +404,7 @@ qint64 SerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 
     const qint64 written = maxSize;
 
-    if (!writeBuffer.isEmpty())
+    if (!writeBuffer.isEmpty() && !isWriteNotificationEnabled())
         setWriteNotificationEnabled(true);
 
     return written;
@@ -735,7 +735,7 @@ bool SerialPortPrivate::writeNotification(int maxSize)
 {
     const int tmp = writeBuffer.size();
 
-    if (writeBuffer.isEmpty() && bytesToWrite() == 0) {
+    if (writeBuffer.isEmpty()) {
         setWriteNotificationEnabled(false);
         return false;
     }
@@ -762,7 +762,7 @@ bool SerialPortPrivate::writeNotification(int maxSize)
         }
     }
 
-    if (writeBuffer.isEmpty() && bytesToWrite() == 0)
+    if (writeBuffer.isEmpty())
         setWriteNotificationEnabled(false);
 
     return (writeBuffer.size() < tmp);
