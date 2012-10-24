@@ -107,8 +107,6 @@ protected:
                 if (!dptr->readSequenceStarted)
                     dptr->startAsyncRead();
             }
-            if (EV_TXEMPTY & dptr->eventMask)
-                dptr->startAsyncWrite(SerialPortPrivateData::WriteChunkSize);
             ::WaitCommEvent(dptr->descriptor, &dptr->eventMask, &dptr->eventOverlapped);
         }
         return ret;
@@ -248,6 +246,10 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     if (eventMask & EV_TXEMPTY) {
+        // Disable EV_TXEMPTY for CommEventNotifier because not all serial ports
+        // (such as from Bluetooth stack of Microsoft) supported this feature.
+        // I.e. now do not use this event to write to the port.
+        eventMask &= ~EV_TXEMPTY;
         ::memset(&writeOverlapped, 0, sizeof(writeOverlapped));
         writeOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
         writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
@@ -804,8 +806,11 @@ bool SerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
 
     if (numberOfBytes > 0)
         emit q_ptr->bytesWritten(numberOfBytes);
-    else
+
+    if (writeBuffer.isEmpty())
         writeSequenceStarted = false;
+    else
+        startAsyncWrite(WriteChunkSize);
 
     return true;
 }
