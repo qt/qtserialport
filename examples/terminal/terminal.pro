@@ -1,7 +1,7 @@
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT       += widgets serialport
 } else {
-    include($$SERIALPORT_PROJECT_ROOT/src/qt4support/serialport.prf)
+    include($$SERIALPORT_PROJECT_ROOT/src/serialport/qt4support/serialport.prf)
 }
 
 TARGET = terminal

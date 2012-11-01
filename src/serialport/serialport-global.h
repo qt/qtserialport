@@ -44,10 +44,10 @@
 
 #include "qglobal.h"
 
-#if defined(QT_ADDON_SERIALPORT_LIB)
-#  define Q_ADDON_SERIALPORT_EXPORT Q_DECL_EXPORT
+#if defined(QT_SERIALPORT_LIB)
+#  define Q_SERIALPORT_EXPORT Q_DECL_EXPORT
 #else
-#  define Q_ADDON_SERIALPORT_EXPORT Q_DECL_IMPORT
+#  define Q_SERIALPORT_EXPORT Q_DECL_IMPORT
 #endif
 
 #if defined(QT_NAMESPACE)

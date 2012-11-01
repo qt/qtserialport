@@ -12,7 +12,7 @@ target_headers.files  = $$PUBLIC_HEADERS
 target_headers.path   = $$[QT_INSTALL_PREFIX]/include/QtAddOnSerialPort
 INSTALLS              += target_headers
 
-mkspecs_features.files    = $$SERIALPORT_PROJECT_ROOT/src/qt4support/serialport.prf
+mkspecs_features.files    = $$SERIALPORT_PROJECT_ROOT/src/serialport/qt4support/serialport.prf
 mkspecs_features.path     = $$[QT_INSTALL_DATA]/mkspecs/features
 INSTALLS                  += mkspecs_features
 

@@ -54,7 +54,7 @@ class SerialPort;
 class SerialPortInfoPrivate;
 class SerialInfoPrivateDeleter;
 
-class Q_ADDON_SERIALPORT_EXPORT SerialPortInfo
+class Q_SERIALPORT_EXPORT SerialPortInfo
 {
     Q_DECLARE_PRIVATE(SerialPortInfo)
 public:

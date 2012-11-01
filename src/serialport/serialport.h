@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 class SerialPortInfo;
 class SerialPortPrivate;
 
-class Q_ADDON_SERIALPORT_EXPORT SerialPort : public QIODevice
+class Q_SERIALPORT_EXPORT SerialPort : public QIODevice
 {
     Q_OBJECT
 
