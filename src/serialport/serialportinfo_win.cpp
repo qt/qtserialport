@@ -45,8 +45,6 @@
 #include "serialportinfo_p.h"
 #include "serialport_win_p.h"
 
-#include <qt_windows.h>
-
 #ifndef Q_OS_WINCE
 #include <initguid.h>
 #include <setupapi.h>
