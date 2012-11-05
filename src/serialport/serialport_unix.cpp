@@ -186,7 +186,7 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::memset(&currentTermios, 0, sizeof(currentTermios));
+    currentTermios = restoredTermios;
     ::cfmakeraw(&currentTermios);
     currentTermios.c_cflag |= CLOCAL;
     currentTermios.c_cc[VTIME] = 0;
