@@ -97,6 +97,7 @@ public:
     bool startAsyncWrite(int maxSize = INT_MAX);
     bool completeAsyncRead(DWORD numberOfBytes);
     bool completeAsyncWrite(DWORD numberOfBytes);
+    QWinEventNotifier *notUsedWriteCompletionNotifier();
 #else
     bool notifyRead();
     bool notifyWrite(int maxSize = INT_MAX);
@@ -121,15 +122,15 @@ public:
 #ifndef Q_OS_WINCE
     OVERLAPPED eventOverlapped;
     OVERLAPPED readOverlapped;
-    OVERLAPPED writeOverlapped;
     OVERLAPPED selectOverlapped;
 
     QWinEventNotifier *eventNotifier;
     QWinEventNotifier *readCompletionNotifier;
-    QWinEventNotifier *writeCompletionNotifier;
+    QList<QWinEventNotifier *> writeCompletionNotifiers;
 
     qint64 actualReadBufferSize;
     qint64 actualWriteBufferSize;
+    qint64 acyncWritePosition;
     bool readyReadEmitted;
     bool readSequenceStarted;
     bool writeSequenceStarted;

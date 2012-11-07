@@ -147,9 +147,23 @@ class WriteCompletionNotifier : public QWinEventNotifier
 {
 public:
     WriteCompletionNotifier(SerialPortPrivate *d, QObject *parent)
-        : QWinEventNotifier(d->writeOverlapped.hEvent, parent)
-        , dptr(d)
-    {}
+        : QWinEventNotifier(parent)
+        , dptr(d) {
+
+        ::memset(&o, 0, sizeof(o));
+        o.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+        setHandle(o.hEvent);
+    }
+
+    OVERLAPPED *overlapped() {
+        return &o;
+    }
+
+    virtual ~WriteCompletionNotifier() {
+        setEnabled(false);
+        ::CancelIo(o.hEvent);
+        ::CloseHandle(o.hEvent);
+    }
 
 protected:
     virtual bool event(QEvent *e) {
@@ -157,17 +171,20 @@ protected:
         if (ret) {
             DWORD numberOfBytesTransferred = 0;
             BOOL success = ::GetOverlappedResult(dptr->descriptor,
-                                                 &dptr->writeOverlapped,
+                                                 &o,
                                                  &numberOfBytesTransferred,
                                                  FALSE);
             if (success)
                 dptr->completeAsyncWrite(numberOfBytesTransferred);
+
+            setEnabled(false);
         }
         return ret;
     }
 
 private:
     SerialPortPrivate *dptr;
+    OVERLAPPED o;
 };
 
 SerialPortPrivate::SerialPortPrivate(SerialPort *q)
@@ -177,9 +194,9 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *q)
     , eventMask(EV_ERR)
     , eventNotifier(0)
     , readCompletionNotifier(0)
-    , writeCompletionNotifier(0)
     , actualReadBufferSize(0)
     , actualWriteBufferSize(0)
+    , acyncWritePosition(0)
     , readyReadEmitted(0)
     , readSequenceStarted(false)
     , writeSequenceStarted(false)
@@ -197,7 +214,6 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     }
     if (mode & QIODevice::WriteOnly) {
         desiredAccess |= GENERIC_WRITE;
-        eventMask |= EV_TXEMPTY;
     }
 
     descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
@@ -245,17 +261,6 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
         readCompletionNotifier->setEnabled(true);
     }
 
-    if (eventMask & EV_TXEMPTY) {
-        // Disable EV_TXEMPTY for CommEventNotifier because not all serial ports
-        // (such as from Bluetooth stack of Microsoft) supported this feature.
-        // I.e. now do not use this event to write to the port.
-        eventMask &= ~EV_TXEMPTY;
-        ::memset(&writeOverlapped, 0, sizeof(writeOverlapped));
-        writeOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-        writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
-        writeCompletionNotifier->setEnabled(true);
-    }
-
     ::SetCommMask(descriptor, eventMask);
     ::memset(&eventOverlapped, 0, sizeof(eventOverlapped));
     eventOverlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -293,19 +298,15 @@ void SerialPortPrivate::close()
     readBuffer.clear();
     actualReadBufferSize = 0;
 
-    if (writeCompletionNotifier) {
-        writeCompletionNotifier->setEnabled(false);
-        ::CancelIo(writeOverlapped.hEvent);
-        ::CloseHandle(writeOverlapped.hEvent);
-        writeCompletionNotifier->deleteLater();
-        writeCompletionNotifier = 0;
-    }
+    qDeleteAll(writeCompletionNotifiers);
+    writeCompletionNotifiers.clear();
 
     if (writeSequenceStarted)
         writeSequenceStarted = false;
 
     writeBuffer.clear();
     actualWriteBufferSize = 0;
+    acyncWritePosition = 0;
 
     readyReadEmitted = false;
     flagErrorFromCommEvent = false;
@@ -707,14 +708,25 @@ bool SerialPortPrivate::startAsyncRead()
 
 bool SerialPortPrivate::startAsyncWrite(int maxSize)
 {
+    qint64 nextSize = 0;
+    const char *ptr = writeBuffer.readPointerAtPosition(acyncWritePosition, nextSize);
+
+    nextSize = qMin(nextSize, qint64(maxSize));
+    acyncWritePosition += nextSize;
+
+    // no more data to write
+    if (!ptr || nextSize == 0)
+        return true;
+
     writeSequenceStarted = true;
 
-    int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
+    QWinEventNotifier *writeCompletionNotifier = notUsedWriteCompletionNotifier();
+    writeCompletionNotifier->setEnabled(true);
 
-    const char *ptr = writeBuffer.readPointer();
-
-    if (::WriteFile(descriptor, ptr, nextSize, NULL, &writeOverlapped))
+    if (::WriteFile(descriptor, ptr, nextSize, NULL,
+                    (reinterpret_cast<WriteCompletionNotifier *>(writeCompletionNotifier))->overlapped())) {
         return true;
+    }
 
     switch (::GetLastError()) {
     case ERROR_IO_PENDING:
@@ -803,6 +815,7 @@ bool SerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
 {
     writeBuffer.free(numberOfBytes);
     actualWriteBufferSize -= qint64(numberOfBytes);
+    acyncWritePosition -= qint64(numberOfBytes);
 
     if (numberOfBytes > 0)
         emit q_ptr->bytesWritten(numberOfBytes);
@@ -813,6 +826,26 @@ bool SerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
         startAsyncWrite(WriteChunkSize);
 
     return true;
+}
+
+QWinEventNotifier *SerialPortPrivate::notUsedWriteCompletionNotifier()
+{
+    if (writeCompletionNotifiers.isEmpty()) {
+        QWinEventNotifier *writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
+        writeCompletionNotifiers.append(writeCompletionNotifier);
+        return writeCompletionNotifier;
+    }
+
+    // find first free not running notifier
+    foreach (QWinEventNotifier *writeCompletionNotifier, writeCompletionNotifiers) {
+        if (!writeCompletionNotifier->isEnabled())
+            return writeCompletionNotifier;
+    }
+
+    // if all notifiers in use, then create new notifier
+    QWinEventNotifier *writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
+    writeCompletionNotifiers.append(writeCompletionNotifier);
+    return writeCompletionNotifier;
 }
 
 bool SerialPortPrivate::updateDcb()
@@ -946,49 +979,42 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForStartRead, bool *selec
         return false;
     }
 
-    enum {
-        SelectEventIndex = 0,
-        ReadEventIndex = 1,
-        WriteEventIndex = 2,
-        NumberOfEvents = 3
-    };
+    QVector<HANDLE> handles;
+    handles.append(selectOverlapped.hEvent);
+    handles.append(readOverlapped.hEvent);
 
-    HANDLE events[NumberOfEvents] = {
-        selectOverlapped.hEvent,
-        readOverlapped.hEvent,
-        writeOverlapped.hEvent
-    };
+    foreach (QWinEventNotifier *n, writeCompletionNotifiers) {
+        handles.append((reinterpret_cast<WriteCompletionNotifier *>(n))->overlapped()->hEvent);
+    }
 
-    DWORD waitResult = ::WaitForMultipleObjects(NumberOfEvents,
-                                                events,
+    DWORD waitResult = ::WaitForMultipleObjects(handles.count(),
+                                                handles.constData(),
                                                 FALSE, // wait any event
                                                 qMax(msecs, 0));
 
     switch (waitResult) {
-    case WAIT_OBJECT_0 + SelectEventIndex: {
+    case WAIT_OBJECT_0 + 0: { // select event
         if (checkRead && (eventMask == EV_RXCHAR))
             *selectForStartRead = true;
-        if (checkWrite && (eventMask == EV_TXEMPTY))
-            *selectForStartWrite = true;
     }
         break;
-    case WAIT_OBJECT_0 + ReadEventIndex: {
+    case WAIT_OBJECT_0 + 1: { // read completion event
         if (checkRead)
             *selectForCompleteRead = true;
     }
         break;
-    case WAIT_OBJECT_0 + WriteEventIndex: {
-        if (checkWrite)
-            *selectForCompleteWrite = true;
-    }
-        break;
-    case WAIT_OBJECT_0 + WAIT_TIMEOUT: {
+    case WAIT_OBJECT_0 + WAIT_TIMEOUT: { // timeout
         *timedOut = true;
         return false;
     }
-        break;
-    default:
-        return false;
+    default: {
+        if (waitResult < MAXIMUM_WAIT_OBJECTS) { // any write completion event
+            if (checkWrite)
+                *selectForCompleteWrite = true;
+        } else { // error, another event
+            return false;
+        }
+    }
     }
 
     return true;
