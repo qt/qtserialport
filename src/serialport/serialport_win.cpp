@@ -736,7 +736,7 @@ bool SerialPortPrivate::startAsyncWrite(int maxSize)
 bool SerialPortPrivate::processIoErrors()
 {
     DWORD error = 0;
-    const bool ret = ::ClearCommError(descriptor, &error, FALSE);
+    const bool ret = ::ClearCommError(descriptor, &error, NULL);
     if (ret && error) {
         if (error & CE_FRAME)
             portError = SerialPort::FramingError;
