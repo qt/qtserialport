@@ -72,6 +72,7 @@ SerialPortPrivateData::SerialPortPrivateData(SerialPort *q)
     , parity(SerialPort::UnknownParity)
     , stopBits(SerialPort::UnknownStopBits)
     , flow(SerialPort::UnknownFlowControl)
+    , policy(SerialPort::IgnorePolicy)
     , restoreSettingsOnClose(true)
     , q_ptr(q)
 {
