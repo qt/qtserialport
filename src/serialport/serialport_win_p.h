@@ -49,12 +49,17 @@
 
 #ifndef Q_OS_WINCE
 class QWinEventNotifier;
+#include <QtCore/qhash.h>
 #else
 class QThread;
 #include <QtCore/qmutex.h>
 #endif
 
 QT_BEGIN_NAMESPACE_SERIALPORT
+
+#ifndef Q_OS_WINCE
+class AbstractOverlappedEventNotifier;
+#endif
 
 class SerialPortPrivate : public SerialPortPrivateData
 {
@@ -97,7 +102,9 @@ public:
     bool startAsyncWrite(int maxSize = INT_MAX);
     bool completeAsyncRead(DWORD numberOfBytes);
     bool completeAsyncWrite(DWORD numberOfBytes);
-    QWinEventNotifier *notUsedWriteCompletionNotifier();
+    AbstractOverlappedEventNotifier *lookupFreeWriteCompletionNotifier();
+    AbstractOverlappedEventNotifier *lookupCommEventNotifier();
+    AbstractOverlappedEventNotifier *lookupReadCompletionNotifier();
 #else
     bool notifyRead();
     bool notifyWrite(int maxSize = INT_MAX);
@@ -117,22 +124,13 @@ public:
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE descriptor;
     bool flagErrorFromCommEvent;
-    DWORD eventMask;
 
 #ifndef Q_OS_WINCE
-    OVERLAPPED eventOverlapped;
-    OVERLAPPED readOverlapped;
-    OVERLAPPED selectOverlapped;
-
-    QWinEventNotifier *eventNotifier;
-    QWinEventNotifier *readCompletionNotifier;
-    QList<QWinEventNotifier *> writeCompletionNotifiers;
-
+    QHash<HANDLE, AbstractOverlappedEventNotifier *> notifiers;
     qint64 actualReadBufferSize;
     qint64 actualWriteBufferSize;
     qint64 acyncWritePosition;
     bool readyReadEmitted;
-    bool readSequenceStarted;
     bool writeSequenceStarted;
 #else
     QThread *eventNotifier;
@@ -147,10 +145,8 @@ private:
     SerialPort::PortError decodeSystemError() const;
 
 #ifndef Q_OS_WINCE
-    bool waitForReadOrWrite(bool *selectForStartRead, bool *selectForStartWrite,
-                            bool *selectForCompleteRead, bool *selectForCompleteWrite,
-                            bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+    bool waitAnyEvent(int msecs, bool *timedOut,
+                      AbstractOverlappedEventNotifier **triggeredNotifier);
 #else
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,

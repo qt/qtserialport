@@ -43,15 +43,16 @@
 
 #include "serialport_win_p.h"
 
+#ifndef Q_OS_WINCE
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qvector.h>
+#endif
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #include <QtCore/qwineventnotifier.h>
 #else
 #include "qt4support/qwineventnotifier_p.h"
 #endif
-
-#include <QDebug>
 
 #ifndef CTL_CODE
 #  define CTL_CODE(DeviceType, Function, Method, Access) ( \
@@ -88,117 +89,115 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 #ifndef Q_OS_WINCE
 
-class CommEventNotifier : public QWinEventNotifier
+class AbstractOverlappedEventNotifier : public QWinEventNotifier
 {
 public:
-    CommEventNotifier(SerialPortPrivate *d, QObject *parent)
-        : QWinEventNotifier(d->eventOverlapped.hEvent, parent)
-        , dptr(d)
-    {
-    }
+    enum Type { CommEvent, ReadCompletionEvent, WriteCompletionEvent };
 
-protected:
-    virtual bool event(QEvent *e) {
-        const bool ret = QWinEventNotifier::event(e);
-        if (ret) {
-            if (EV_ERR & dptr->eventMask)
-                dptr->processIoErrors();
-            if (EV_RXCHAR & dptr->eventMask) {
-                if (!dptr->readSequenceStarted)
-                    dptr->startAsyncRead();
-            }
-            ::WaitCommEvent(dptr->descriptor, &dptr->eventMask, &dptr->eventOverlapped);
-        }
-        return ret;
-    }
-
-private:
-    SerialPortPrivate *dptr;
-};
-
-class ReadCompletionNotifier : public QWinEventNotifier
-{
-public:
-    ReadCompletionNotifier(SerialPortPrivate *d, QObject *parent)
-        : QWinEventNotifier(d->readOverlapped.hEvent, parent)
-        , dptr(d)
-    {}
-
-protected:
-    virtual bool event(QEvent *e) {
-        bool ret = QWinEventNotifier::event(e);
-        if (ret) {
-            DWORD numberOfBytesTransferred = 0;
-            BOOL success = ::GetOverlappedResult(dptr->descriptor,
-                                                 &dptr->readOverlapped,
-                                                 &numberOfBytesTransferred,
-                                                 FALSE);
-            if (success)
-                dptr->completeAsyncRead(numberOfBytesTransferred);
-        }
-        return ret;
-    }
-
-private:
-    SerialPortPrivate *dptr;
-};
-
-class WriteCompletionNotifier : public QWinEventNotifier
-{
-public:
-    WriteCompletionNotifier(SerialPortPrivate *d, QObject *parent)
-        : QWinEventNotifier(parent)
-        , dptr(d) {
-
+    AbstractOverlappedEventNotifier(SerialPortPrivate *d, Type type, bool manual, QObject *parent)
+        : QWinEventNotifier(parent), dptr(d), t(type) {
         ::memset(&o, 0, sizeof(o));
-        o.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+        o.hEvent = ::CreateEvent(NULL, manual, FALSE, NULL);
         setHandle(o.hEvent);
+        dptr->notifiers[o.hEvent] = this;
     }
 
-    OVERLAPPED *overlapped() {
-        return &o;
-    }
+    virtual bool processCompletionRoutine() = 0;
 
-    virtual ~WriteCompletionNotifier() {
+    virtual ~AbstractOverlappedEventNotifier() {
         setEnabled(false);
         ::CancelIo(o.hEvent);
         ::CloseHandle(o.hEvent);
     }
 
+    Type type() const { return t; }
+    OVERLAPPED *overlappedPointer() { return &o; }
+
 protected:
     virtual bool event(QEvent *e) {
-        bool ret = QWinEventNotifier::event(e);
-        if (ret) {
-            DWORD numberOfBytesTransferred = 0;
-            BOOL success = ::GetOverlappedResult(dptr->descriptor,
-                                                 &o,
-                                                 &numberOfBytesTransferred,
-                                                 FALSE);
-            if (success)
-                dptr->completeAsyncWrite(numberOfBytesTransferred);
+        const bool ret = QWinEventNotifier::event(e);
+        processCompletionRoutine();
+        return ret;
+    }
 
-            setEnabled(false);
-        }
+    SerialPortPrivate *dptr;
+    Type t;
+    OVERLAPPED o;
+};
+
+class CommOverlappedEventNotifier : public AbstractOverlappedEventNotifier
+{
+public:
+    CommOverlappedEventNotifier(SerialPortPrivate *d, DWORD eventMask, QObject *parent)
+        : AbstractOverlappedEventNotifier(d, CommEvent, true, parent)
+        , originalEventMask(eventMask), triggeredEventMask(0) {
+        ::SetCommMask(dptr->descriptor, originalEventMask);
+        startWaitCommEvent();
+    }
+
+    void startWaitCommEvent() { ::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o); }
+
+    virtual bool processCompletionRoutine() {
+        bool ret = false;
+        if (EV_ERR & triggeredEventMask)
+            ret = dptr->processIoErrors();
+        if (EV_RXCHAR & triggeredEventMask)
+            ret = dptr->startAsyncRead();
         return ret;
     }
 
 private:
-    SerialPortPrivate *dptr;
-    OVERLAPPED o;
+    DWORD originalEventMask;
+    DWORD triggeredEventMask;
+};
+
+class ReadOverlappedCompletionNotifier : public AbstractOverlappedEventNotifier
+{
+public:
+    ReadOverlappedCompletionNotifier(SerialPortPrivate *d, QObject *parent)
+        : AbstractOverlappedEventNotifier(d, ReadCompletionEvent, false, parent) {}
+
+    virtual bool processCompletionRoutine() {
+        DWORD numberOfBytesTransferred = 0;
+        ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
+        bool ret = dptr->completeAsyncRead(numberOfBytesTransferred);
+
+        // start async read for possible remainder into driver queue
+        if (ret && numberOfBytesTransferred > 0) {
+            dptr->startAsyncRead();
+        } else { // driver queue is emplty, so startup wait comm event
+            CommOverlappedEventNotifier *n =
+                    reinterpret_cast<CommOverlappedEventNotifier *>(dptr->lookupCommEventNotifier());
+            if (n)
+                n->startWaitCommEvent();
+        }
+
+        return ret;
+    }
+};
+
+class WriteOverlappedCompletionNotifier : public AbstractOverlappedEventNotifier
+{
+public:
+    WriteOverlappedCompletionNotifier(SerialPortPrivate *d, QObject *parent)
+        : AbstractOverlappedEventNotifier(d, WriteCompletionEvent, false, parent) {}
+
+    virtual bool processCompletionRoutine() {
+        setEnabled(false);
+        DWORD numberOfBytesTransferred = 0;
+        ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
+        return dptr->completeAsyncWrite(numberOfBytesTransferred);
+    }
 };
 
 SerialPortPrivate::SerialPortPrivate(SerialPort *q)
     : SerialPortPrivateData(q)
     , descriptor(INVALID_HANDLE_VALUE)
     , flagErrorFromCommEvent(false)
-    , eventMask(EV_ERR)
-    , eventNotifier(0)
-    , readCompletionNotifier(0)
     , actualReadBufferSize(0)
     , actualWriteBufferSize(0)
     , acyncWritePosition(0)
     , readyReadEmitted(0)
-    , readSequenceStarted(false)
     , writeSequenceStarted(false)
 {
 }
@@ -206,15 +205,14 @@ SerialPortPrivate::SerialPortPrivate(SerialPort *q)
 bool SerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    eventMask = EV_ERR;
+    DWORD originalEventMask = EV_ERR;
 
     if (mode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
-        eventMask |= EV_RXCHAR;
+        originalEventMask |= EV_RXCHAR;
     }
-    if (mode & QIODevice::WriteOnly) {
+    if (mode & QIODevice::WriteOnly)
         desiredAccess |= GENERIC_WRITE;
-    }
 
     descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
                               desiredAccess, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
@@ -251,22 +249,13 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateCommTimeouts())
         return false;
 
-    ::memset(&selectOverlapped, 0, sizeof(selectOverlapped));
-    selectOverlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-
-    if (eventMask & EV_RXCHAR) {
-        ::memset(&readOverlapped, 0, sizeof(readOverlapped));
-        readOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-        readCompletionNotifier = new ReadCompletionNotifier(this, q_ptr);
-        readCompletionNotifier->setEnabled(true);
+    if (originalEventMask & EV_RXCHAR) {
+        QWinEventNotifier *n = new ReadOverlappedCompletionNotifier(this, q_ptr);
+        n->setEnabled(true);
     }
 
-    ::SetCommMask(descriptor, eventMask);
-    ::memset(&eventOverlapped, 0, sizeof(eventOverlapped));
-    eventOverlapped.hEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-    eventNotifier = new CommEventNotifier(this, q_ptr);
-    eventNotifier->setEnabled(true);
-    ::WaitCommEvent(descriptor, &eventMask, &eventOverlapped);
+    QWinEventNotifier *n = new CommOverlappedEventNotifier(this, originalEventMask, q_ptr);
+    n->setEnabled(true);
 
     detectDefaultSettings();
     return true;
@@ -276,34 +265,13 @@ void SerialPortPrivate::close()
 {
     ::CancelIo(descriptor);
 
-    if (eventNotifier) {
-        eventNotifier->setEnabled(false);
-        ::CancelIo(eventOverlapped.hEvent);
-        ::CloseHandle(eventOverlapped.hEvent);
-        eventNotifier->deleteLater();
-        eventNotifier = 0;
-    }
-
-    if (readCompletionNotifier) {
-        readCompletionNotifier->setEnabled(false);
-        ::CancelIo(readOverlapped.hEvent);
-        ::CloseHandle(readOverlapped.hEvent);
-        readCompletionNotifier->deleteLater();
-        readCompletionNotifier = 0;
-    }
-
-    if (readSequenceStarted)
-        readSequenceStarted = false;
+    qDeleteAll(notifiers);
+    notifiers.clear();
 
     readBuffer.clear();
     actualReadBufferSize = 0;
 
-    qDeleteAll(writeCompletionNotifiers);
-    writeCompletionNotifiers.clear();
-
-    if (writeSequenceStarted)
-        writeSequenceStarted = false;
-
+    writeSequenceStarted = false;
     writeBuffer.clear();
     actualWriteBufferSize = 0;
     acyncWritePosition = 0;
@@ -444,9 +412,6 @@ qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
         }
     }
 
-    if (!readSequenceStarted)
-        startAsyncRead();
-
     return readSoFar;
 }
 
@@ -470,52 +435,33 @@ qint64 SerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 bool SerialPortPrivate::waitForReadyRead(int msecs)
 {
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     do {
-        bool readyToStartRead = false;
-        bool readyToStartWrite = false;
-        bool readyToCompleteRead = false;
-        bool readyToCompleteWrite = false;
         bool timedOut = false;
-        if (!waitForReadOrWrite(&readyToStartRead, &readyToStartWrite,
-                                &readyToCompleteRead, &readyToCompleteWrite,
-                                true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
+        AbstractOverlappedEventNotifier *n = 0;
+
+        if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &n) || !n) {
             // This is occur timeout or another error
             // TODO: set error ?
             return false;
         }
 
-        if (readyToStartRead) {
-            if (!startAsyncRead())
+        switch (n->type()) {
+        case AbstractOverlappedEventNotifier::CommEvent:
+            if (!n->processCompletionRoutine())
                 return false;
+            break;
+        case AbstractOverlappedEventNotifier::ReadCompletionEvent:
+            return n->processCompletionRoutine();
+        case AbstractOverlappedEventNotifier::WriteCompletionEvent:
+            n->processCompletionRoutine();
+            break;
+        default: // newer called
+            return false;
         }
-
-        if (readyToStartWrite) {
-            if (!startAsyncWrite(WriteChunkSize))
-                return false;
-        }
-
-        DWORD bytesTransferred = 0;
-
-        if (readyToCompleteRead) {
-            if (!::GetOverlappedResult(descriptor, &readOverlapped,
-                                       &bytesTransferred, FALSE)) {
-                return false;
-            }
-            return completeAsyncRead(bytesTransferred);
-        }
-
-        if (readyToCompleteWrite) {
-            if (::GetOverlappedResult(descriptor, &readOverlapped,
-                                      &bytesTransferred, FALSE)) {
-                completeAsyncWrite(bytesTransferred);
-            }
-        }
-
     } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
+
     return false;
 }
 
@@ -525,53 +471,31 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
         return false;
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     forever {
-        bool readyToStartRead = false;
-        bool readyToStartWrite = false;
-        bool readyToCompleteRead = false;
-        bool readyToCompleteWrite = false;
         bool timedOut = false;
-        if (!waitForReadOrWrite(&readyToStartRead, &readyToStartWrite,
-                                &readyToCompleteRead, &readyToCompleteWrite,
-                                true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
+        AbstractOverlappedEventNotifier *n = 0;
+
+        if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &n) || !n) {
             // This is occur timeout or another error
             // TODO: set error ?
             return false;
         }
 
-        if (readyToStartRead) {
-            if (!startAsyncRead())
-                return false;
+        switch (n->type()) {
+        case AbstractOverlappedEventNotifier::CommEvent:
+            // do nothing, jump to ReadCompletionEvent case
+        case AbstractOverlappedEventNotifier::ReadCompletionEvent:
+            n->processCompletionRoutine();
+            break;
+        case AbstractOverlappedEventNotifier::WriteCompletionEvent:
+            return n->processCompletionRoutine();
+        default: // newer called
+            return false;
         }
-
-        if (readyToStartWrite) {
-            startAsyncWrite(WriteChunkSize);
-        }
-
-        DWORD bytesTransferred = 0;
-
-        if (readyToCompleteRead) {
-            if (!::GetOverlappedResult(descriptor, &readOverlapped,
-                                       &bytesTransferred, FALSE)) {
-                return false;
-            }
-            if (!completeAsyncRead(bytesTransferred))
-                return false;
-        }
-
-        if (readyToCompleteWrite) {
-            if (::GetOverlappedResult(descriptor, &readOverlapped,
-                                      &bytesTransferred, FALSE)) {
-                if (completeAsyncWrite(bytesTransferred))
-                    return true;
-            }
-        }
-
     }
+
     return false;
 }
 
@@ -686,24 +610,25 @@ bool SerialPortPrivate::startAsyncRead()
 
     char *ptr = readBuffer.reserve(bytesToRead);
 
-    readSequenceStarted = true;
-    if (::ReadFile(descriptor, ptr, bytesToRead, NULL, &readOverlapped))
+    AbstractOverlappedEventNotifier *n = lookupReadCompletionNotifier();
+    if (!n)
+        return false;
+
+    if (::ReadFile(descriptor, ptr, bytesToRead, NULL, n->overlappedPointer()))
         return true;
 
     switch (::GetLastError()) {
     case ERROR_IO_PENDING:
         // This is not an error. We're getting notified, when data arrives.
-        return true;
     case ERROR_MORE_DATA:
         // This is not an error. The synchronous read succeeded.
-        break;
+        return true;
     default:
         // error
-        readSequenceStarted = false;
-        return false;
+        break;
     }
 
-    return true;
+    return false;
 }
 
 bool SerialPortPrivate::startAsyncWrite(int maxSize)
@@ -720,13 +645,14 @@ bool SerialPortPrivate::startAsyncWrite(int maxSize)
 
     writeSequenceStarted = true;
 
-    QWinEventNotifier *writeCompletionNotifier = notUsedWriteCompletionNotifier();
-    writeCompletionNotifier->setEnabled(true);
+    AbstractOverlappedEventNotifier *n = lookupFreeWriteCompletionNotifier();
+    if (!n)
+        return false;
 
-    if (::WriteFile(descriptor, ptr, nextSize, NULL,
-                    (reinterpret_cast<WriteCompletionNotifier *>(writeCompletionNotifier))->overlapped())) {
+    n->setEnabled(true);
+
+    if (::WriteFile(descriptor, ptr, nextSize, NULL, n->overlappedPointer()))
         return true;
-    }
 
     switch (::GetLastError()) {
     case ERROR_IO_PENDING:
@@ -780,7 +706,6 @@ bool SerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
 
             // Ignore received character, remove it from buffer
             if (policy == SerialPort::SkipPolicy) {
-                readSequenceStarted = false;
                 readBuffer.getChar();
                 startAsyncRead();
                 return true;
@@ -788,7 +713,6 @@ bool SerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
 
             // Abort receiving
             if (policy == SerialPort::StopReceivingPolicy) {
-                readSequenceStarted = false;
                 readyReadEmitted = true;
                 emit q_ptr->readyRead();
                 return true;
@@ -804,9 +728,6 @@ bool SerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
 
         readyReadEmitted = true;
         emit q_ptr->readyRead();
-        startAsyncRead();
-    } else {
-        readSequenceStarted = false;
     }
     return true;
 }
@@ -828,24 +749,35 @@ bool SerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
     return true;
 }
 
-QWinEventNotifier *SerialPortPrivate::notUsedWriteCompletionNotifier()
+AbstractOverlappedEventNotifier *SerialPortPrivate::lookupFreeWriteCompletionNotifier()
 {
-    if (writeCompletionNotifiers.isEmpty()) {
-        QWinEventNotifier *writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
-        writeCompletionNotifiers.append(writeCompletionNotifier);
-        return writeCompletionNotifier;
+    // find first free not running write notifier
+    foreach (AbstractOverlappedEventNotifier *n, notifiers) {
+        if ((n->type() == AbstractOverlappedEventNotifier::WriteCompletionEvent)
+                && !n->isEnabled()) {
+            return n;
+        }
     }
+    // if all write notifiers in use, then create new write notifier
+    return new WriteOverlappedCompletionNotifier(this, q_ptr);
+}
 
-    // find first free not running notifier
-    foreach (QWinEventNotifier *writeCompletionNotifier, writeCompletionNotifiers) {
-        if (!writeCompletionNotifier->isEnabled())
-            return writeCompletionNotifier;
+AbstractOverlappedEventNotifier *SerialPortPrivate::lookupCommEventNotifier()
+{
+    foreach (AbstractOverlappedEventNotifier *n, notifiers) {
+        if (n->type() == AbstractOverlappedEventNotifier::CommEvent)
+            return n;
     }
+    return 0;
+}
 
-    // if all notifiers in use, then create new notifier
-    QWinEventNotifier *writeCompletionNotifier = new WriteCompletionNotifier(this, q_ptr);
-    writeCompletionNotifiers.append(writeCompletionNotifier);
-    return writeCompletionNotifier;
+AbstractOverlappedEventNotifier *SerialPortPrivate::lookupReadCompletionNotifier()
+{
+    foreach (AbstractOverlappedEventNotifier *n, notifiers) {
+        if (n->type() == AbstractOverlappedEventNotifier::ReadCompletionEvent)
+            return n;
+    }
+    return 0;
 }
 
 bool SerialPortPrivate::updateDcb()
@@ -962,61 +894,26 @@ SerialPort::PortError SerialPortPrivate::decodeSystemError() const
 
 #ifndef Q_OS_WINCE
 
-bool SerialPortPrivate::waitForReadOrWrite(bool *selectForStartRead, bool *selectForStartWrite,
-                                           bool *selectForCompleteRead, bool *selectForCompleteWrite,
-                                           bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut)
+bool SerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
+                                     AbstractOverlappedEventNotifier **triggeredNotifier)
 {
-    Q_ASSERT(selectForStartRead);
-    Q_ASSERT(selectForStartWrite);
-    Q_ASSERT(selectForCompleteRead);
-    Q_ASSERT(selectForCompleteWrite);
+    Q_ASSERT(timedOut);
 
-    DWORD eventMask = 0;
-
-    if (!::WaitCommEvent(descriptor, &eventMask, &selectOverlapped)
-            && ::GetLastError() != ERROR_IO_PENDING) {
-        return false;
-    }
-
-    QVector<HANDLE> handles;
-    handles.append(selectOverlapped.hEvent);
-    handles.append(readOverlapped.hEvent);
-
-    foreach (QWinEventNotifier *n, writeCompletionNotifiers) {
-        handles.append((reinterpret_cast<WriteCompletionNotifier *>(n))->overlapped()->hEvent);
-    }
-
+    QVector<HANDLE> handles =  notifiers.keys().toVector();
     DWORD waitResult = ::WaitForMultipleObjects(handles.count(),
                                                 handles.constData(),
                                                 FALSE, // wait any event
                                                 qMax(msecs, 0));
-
-    switch (waitResult) {
-    case WAIT_OBJECT_0 + 0: { // select event
-        if (checkRead && (eventMask == EV_RXCHAR))
-            *selectForStartRead = true;
-    }
-        break;
-    case WAIT_OBJECT_0 + 1: { // read completion event
-        if (checkRead)
-            *selectForCompleteRead = true;
-    }
-        break;
-    case WAIT_OBJECT_0 + WAIT_TIMEOUT: { // timeout
+    if (waitResult == WAIT_TIMEOUT) {
         *timedOut = true;
         return false;
     }
-    default: {
-        if (waitResult < MAXIMUM_WAIT_OBJECTS) { // any write completion event
-            if (checkWrite)
-                *selectForCompleteWrite = true;
-        } else { // error, another event
-            return false;
-        }
-    }
-    }
 
+    if (int(waitResult) > (handles.count() - 1))
+        return false;
+
+    HANDLE h = handles.at(waitResult - WAIT_OBJECT_0);
+    *triggeredNotifier = notifiers.value(h);
     return true;
 }
 
