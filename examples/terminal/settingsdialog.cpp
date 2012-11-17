@@ -154,7 +154,7 @@ void SettingsDialog::fillPortsInfo()
              << info.manufacturer() << info.systemLocation()
              << info.vendorIdentifier() << info.productIdentifier();
 
-        ui->portsBox->addItem(list.at(0), list);
+        ui->portsBox->addItem(list.first(), list);
     }
 }
 

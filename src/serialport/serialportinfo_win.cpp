@@ -169,7 +169,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             info.d_ptr->manufacturer =
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
 
-            s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().at(0).toUpper();
+            s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().first().toUpper();
             info.d_ptr->vendorIdentifier = s.mid(s.indexOf(QLatin1String("VID_")) + 4, 4);
             info.d_ptr->productIdentifier = s.mid(s.indexOf(QLatin1String("PID_")) + 4, 4);
 
