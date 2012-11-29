@@ -48,7 +48,7 @@
 #include <QPushButton>
 #include <QGridLayout>
 
-#include "serialportinfo.h"
+#include <QtAddOnSerialPort/serialportinfo.h>
 
 QT_USE_NAMESPACE_SERIALPORT
 
@@ -100,9 +100,9 @@ void BlockingMasterWidget::runMaster()
     setControlsEnabled(false);
     statusLabel->setText(tr("Status: Running, connected to port %1.")
                          .arg(serialPortComboBox->currentText()));
-    thread.startNewMaster(serialPortComboBox->currentText(),
-                          waitResponseSpinBox->value(),
-                          requestLineEdit->text());
+    thread.startNewTransaction(serialPortComboBox->currentText(),
+                               waitResponseSpinBox->value(),
+                               requestLineEdit->text());
 }
 
 void BlockingMasterWidget::showResponse(const QString &s)

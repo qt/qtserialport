@@ -41,7 +41,7 @@
 
 #include "transactionthread.h"
 
-#include <serialport.h>
+#include <QtAddOnSerialPort/serialport.h>
 
 #include <QTime>
 
@@ -61,7 +61,7 @@ TransactionThread::~TransactionThread()
     wait();
 }
 
-void TransactionThread::startNewMaster(const QString &port, int transactionWaitTimeout, const QString &request)
+void TransactionThread::startNewTransaction(const QString &port, int transactionWaitTimeout, const QString &request)
 {
     QMutexLocker locker(&mutex);
     portName = port;

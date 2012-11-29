@@ -54,7 +54,7 @@ public:
     TransactionThread(QObject *parent = 0);
     ~TransactionThread();
 
-    void startNewMaster(const QString &port, int transactionWaitTimeout, const QString &request);
+    void startNewTransaction(const QString &port, int transactionWaitTimeout, const QString &request);
     void run();
 
 signals:

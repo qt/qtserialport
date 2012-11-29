@@ -54,7 +54,7 @@ public:
     TransactionThread(QObject *parent = 0);
     ~TransactionThread();
 
-    void startNewSlave(const QString &port, int transactionWaitTimeout, const QString &response);
+    void startSlave(const QString &port, int transactionWaitTimeout, const QString &response);
     void run();
 
 signals:
