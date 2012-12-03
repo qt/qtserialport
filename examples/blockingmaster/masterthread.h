@@ -39,46 +39,36 @@
 **
 ****************************************************************************/
 
-#ifndef BLOCKINGSLAVEWIDGET_H
-#define BLOCKINGSLAVEWIDGET_H
+#ifndef MASTERTHREAD_H
+#define MASTERTHREAD_H
 
-#include <QWidget>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
 
-#include "transactionthread.h"
-
-class QLabel;
-class QLineEdit;
-class QComboBox;
-class QSpinBox;
-class QPushButton;
-
-class BlockingSlaveWidget : public QWidget
+class MasterThread : public QThread
 {
     Q_OBJECT
 
 public:
-    BlockingSlaveWidget(QWidget *parent = 0);
+    MasterThread(QObject *parent = 0);
+    ~MasterThread();
 
-private slots:
-    void runSlave();
-    void showRequest(const QString &s);
-    void processError(const QString &s);
-    void processTimeout(const QString &s);
-    void activateRunButton();
+    void transaction(const QString &portName, int waitTimeout, const QString &request);
+    void run();
+
+signals:
+    void response(const QString &s);
+    void error(const QString &s);
+    void timeout(const QString &s);
 
 private:
-    int transactionCount;
-    QLabel *serialPortLabel;
-    QComboBox *serialPortComboBox;
-    QLabel *waitRequestLabel;
-    QSpinBox *waitRequestSpinBox;
-    QLabel *responseLabel;
-    QLineEdit *responseLineEdit;
-    QLabel *trafficLabel;
-    QLabel *statusLabel;
-    QPushButton *runButton;
-
-    TransactionThread thread;
+    QString portName;
+    QString request;
+    int waitTimeout;
+    QMutex mutex;
+    QWaitCondition cond;
+    bool quit;
 };
 
-#endif // BLOCKINGSLAVEWIDGET_H
+#endif // MASTERTHREAD_H

@@ -8,10 +8,10 @@ TARGET = blockingmaster
 TEMPLATE = app
 
 HEADERS += \
-    blockingmasterwidget.h \
-    transactionthread.h
+    dialog.h \
+    masterthread.h
 
 SOURCES += \
     main.cpp \
-    blockingmasterwidget.cpp \
-    transactionthread.cpp
+    dialog.cpp \
+    masterthread.cpp

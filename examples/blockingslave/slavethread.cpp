@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "transactionthread.h"
+#include "slavethread.h"
 
 #include <QtAddOnSerialPort/serialport.h>
 
@@ -47,55 +47,52 @@
 
 QT_USE_NAMESPACE_SERIALPORT
 
-TransactionThread::TransactionThread(QObject *parent)
+SlaveThread::SlaveThread(QObject *parent)
     : QThread(parent), waitTimeout(0), quit(false)
 {
 }
 
-TransactionThread::~TransactionThread()
+SlaveThread::~SlaveThread()
 {
     mutex.lock();
     quit = true;
-    cond.wakeOne();
     mutex.unlock();
     wait();
 }
 
-void TransactionThread::startNewTransaction(const QString &port, int transactionWaitTimeout, const QString &request)
+void SlaveThread::startSlave(const QString &portName, int waitTimeout, const QString &response)
 {
     QMutexLocker locker(&mutex);
-    portName = port;
-    waitTimeout = transactionWaitTimeout;
-    requestText = request;
+    this->portName = portName;
+    this->waitTimeout = waitTimeout;
+    this->response = response;
 
     if (!isRunning())
         start();
-    else
-        cond.wakeOne();
 }
 
-void TransactionThread::run()
+void SlaveThread::run()
 {
-    bool currentSerialPortNameChanged = false;
+    bool currentPortNameChanged = false;
 
     mutex.lock();
-    QString currentSerialPortName;
-    if (currentSerialPortName != portName) {
-        currentSerialPortName = portName;
-        currentSerialPortNameChanged = true;
+    QString currentPortName;
+    if (currentPortName != portName) {
+        currentPortName = portName;
+        currentPortNameChanged = true;
     }
 
-    int currentTransactionWaitTimeout = waitTimeout;
-    QString currentRequestText = requestText;
+    int currentWaitTimeout = waitTimeout;
+    QString currentRespone = response;
     mutex.unlock();
 
     SerialPort serial;
 
     while (!quit) {
 
-        if (currentSerialPortNameChanged) {
+        if (currentPortNameChanged) {
             serial.close();
-            serial.setPort(currentSerialPortName);
+            serial.setPort(currentPortName);
 
             if (!serial.open(QIODevice::ReadWrite)) {
                 emit error(tr("Can't open %1, error code %2")
@@ -134,38 +131,37 @@ void TransactionThread::run()
             }
         }
 
-        // write request
-        QByteArray requestData = currentRequestText.toLocal8Bit();
-        serial.write(requestData);
-        if (serial.waitForBytesWritten(waitTimeout)) {
+        if (serial.waitForReadyRead(currentWaitTimeout)) {
 
-            // read response
-            if (serial.waitForReadyRead(currentTransactionWaitTimeout)) {
-                QByteArray responseData = serial.readAll();
-                while (serial.waitForReadyRead(10))
-                    responseData += serial.readAll();
+            // read all request
+            QByteArray requestData = serial.readAll();
+            while (serial.waitForReadyRead(10))
+                requestData += serial.readAll();
 
-                QString responseText(responseData);
-                emit response(responseText);
+            // write all response
+            QByteArray responseData = currentRespone.toLocal8Bit();
+            serial.write(responseData);
+            if (serial.waitForBytesWritten(waitTimeout)) {
+                QString request(requestData);
+                emit this->request(request);
             } else {
-                emit timeout(tr("Wait read response timeout %1")
+                emit timeout(tr("Wait write response timeout %1")
                              .arg(QTime::currentTime().toString()));
             }
         } else {
-            emit timeout(tr("Wait write request timeout %1")
+            emit timeout(tr("Wait read request timeout %1")
                          .arg(QTime::currentTime().toString()));
         }
 
         mutex.lock();
-        cond.wait(&mutex);
-        if (currentSerialPortName != portName) {
-            currentSerialPortName = portName;
-            currentSerialPortNameChanged = true;
+        if (currentPortName != portName) {
+            currentPortName = portName;
+            currentPortNameChanged = true;
         } else {
-            currentSerialPortNameChanged = false;
+            currentPortNameChanged = false;
         }
-        currentTransactionWaitTimeout = waitTimeout;
-        currentRequestText = requestText;
+        currentWaitTimeout = waitTimeout;
+        currentRespone = response;
         mutex.unlock();
     }
 }

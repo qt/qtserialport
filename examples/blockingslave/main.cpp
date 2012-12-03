@@ -41,12 +41,12 @@
 
 #include <QApplication>
 
-#include "blockingslavewidget.h"
+#include "dialog.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    BlockingSlaveWidget w;
-    w.show();
+    Dialog dialog;
+    dialog.show();
     return app.exec();
 }

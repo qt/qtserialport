@@ -39,36 +39,46 @@
 **
 ****************************************************************************/
 
-#ifndef TRANSACTIONTHREAD_H
-#define TRANSACTIONTHREAD_H
+#ifndef DIALOG_H
+#define DIALOG_H
 
-#include <QThread>
-#include <QMutex>
-#include <QWaitCondition>
+#include <QDialog>
 
-class TransactionThread : public QThread
+#include "slavethread.h"
+
+class QLabel;
+class QLineEdit;
+class QComboBox;
+class QSpinBox;
+class QPushButton;
+
+class Dialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    TransactionThread(QObject *parent = 0);
-    ~TransactionThread();
+    Dialog(QWidget *parent = 0);
 
-    void startNewTransaction(const QString &port, int transactionWaitTimeout, const QString &request);
-    void run();
-
-signals:
-    void response(const QString &s);
-    void error(const QString &s);
-    void timeout(const QString &s);
+private slots:
+    void startSlave();
+    void showRequest(const QString &s);
+    void processError(const QString &s);
+    void processTimeout(const QString &s);
+    void activateRunButton();
 
 private:
-    QString portName;
-    QString requestText;
-    int waitTimeout;
-    QMutex mutex;
-    QWaitCondition cond;
-    bool quit;
+    int transactionCount;
+    QLabel *serialPortLabel;
+    QComboBox *serialPortComboBox;
+    QLabel *waitRequestLabel;
+    QSpinBox *waitRequestSpinBox;
+    QLabel *responseLabel;
+    QLineEdit *responseLineEdit;
+    QLabel *trafficLabel;
+    QLabel *statusLabel;
+    QPushButton *runButton;
+
+    SlaveThread thread;
 };
 
-#endif // TRANSACTIONTHREAD_H
+#endif // DIALOG_H

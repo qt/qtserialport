@@ -8,10 +8,10 @@ TARGET = blockingslave
 TEMPLATE = app
 
 HEADERS += \
-    blockingslavewidget.h \
-    transactionthread.h
+    dialog.h \
+    slavethread.h
 
 SOURCES += \
     main.cpp \
-    blockingslavewidget.cpp \
-    transactionthread.cpp
+    dialog.cpp \
+    slavethread.cpp

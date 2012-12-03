@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "blockingslavewidget.h"
+#include "dialog.h"
 
 #include <QLabel>
 #include <QLineEdit>
@@ -52,87 +52,87 @@
 
 QT_USE_NAMESPACE_SERIALPORT
 
-BlockingSlaveWidget::BlockingSlaveWidget(QWidget *parent)
-    : QWidget(parent), transactionCount(0)
+Dialog::Dialog(QWidget *parent)
+    : QDialog(parent)
+    , transactionCount(0)
     , serialPortLabel(new QLabel(tr("Serial port:")))
     , serialPortComboBox(new QComboBox())
-    , waitRequestLabel(new QLabel(tr("Wait request, msec:")))
-    , waitRequestSpinBox(new QSpinBox())
-    , responseLabel(new QLabel(tr("Response:")))
-    , responseLineEdit(new QLineEdit(tr("Hello, I'm Slave.")))
+    , waitResponseLabel(new QLabel(tr("Wait response, msec:")))
+    , waitResponseSpinBox(new QSpinBox())
+    , requestLabel(new QLabel(tr("Request:")))
+    , requestLineEdit(new QLineEdit(tr("Who are you?")))
     , trafficLabel(new QLabel(tr("No traffic.")))
     , statusLabel(new QLabel(tr("Status: Not running.")))
     , runButton(new QPushButton(tr("Start")))
 {
-    waitRequestSpinBox->setRange(0, 10000);
-    waitRequestSpinBox->setValue(10000);
-
     foreach (const SerialPortInfo &info, SerialPortInfo::availablePorts())
         serialPortComboBox->addItem(info.portName());
+
+    waitResponseSpinBox->setRange(0, 10000);
+    waitResponseSpinBox->setValue(1000);
 
     QGridLayout *mainLayout = new QGridLayout;
     mainLayout->addWidget(serialPortLabel, 0, 0);
     mainLayout->addWidget(serialPortComboBox, 0, 1);
-    mainLayout->addWidget(waitRequestLabel, 1, 0);
-    mainLayout->addWidget(waitRequestSpinBox, 1, 1);
+    mainLayout->addWidget(waitResponseLabel, 1, 0);
+    mainLayout->addWidget(waitResponseSpinBox, 1, 1);
     mainLayout->addWidget(runButton, 0, 2, 2, 1);
-    mainLayout->addWidget(responseLabel, 2, 0);
-    mainLayout->addWidget(responseLineEdit, 2, 1, 1, 3);
+    mainLayout->addWidget(requestLabel, 2, 0);
+    mainLayout->addWidget(requestLineEdit, 2, 1, 1, 3);
     mainLayout->addWidget(trafficLabel, 3, 0, 1, 4);
     mainLayout->addWidget(statusLabel, 4, 0, 1, 5);
     setLayout(mainLayout);
 
-    setWindowTitle(tr("Blocking Slave"));
+    setWindowTitle(tr("Blocking Master"));
     serialPortComboBox->setFocus();
 
     connect(runButton, SIGNAL(clicked()),
-            this, SLOT(runSlave()));
-    connect(&thread, SIGNAL(request(QString)),
-            this, SLOT(showRequest(QString)));
+            this, SLOT(transaction()));
+    connect(&thread, SIGNAL(response(QString)),
+            this, SLOT(showResponse(QString)));
     connect(&thread, SIGNAL(error(QString)),
             this, SLOT(processError(QString)));
     connect(&thread, SIGNAL(timeout(QString)),
             this, SLOT(processTimeout(QString)));
-
-    connect(serialPortComboBox, SIGNAL(currentIndexChanged(QString)),
-            this, SLOT(activateRunButton()));
-    connect(waitRequestSpinBox, SIGNAL(valueChanged(int)),
-            this, SLOT(activateRunButton()));
-    connect(responseLineEdit, SIGNAL(textChanged(QString)),
-            this, SLOT(activateRunButton()));
 }
 
-void BlockingSlaveWidget::runSlave()
+void Dialog::transaction()
 {
-    runButton->setEnabled(false);
+    setControlsEnabled(false);
     statusLabel->setText(tr("Status: Running, connected to port %1.")
                          .arg(serialPortComboBox->currentText()));
-    thread.startSlave(serialPortComboBox->currentText(),
-                      waitRequestSpinBox->value(),
-                      responseLineEdit->text());
+    thread.transaction(serialPortComboBox->currentText(),
+                       waitResponseSpinBox->value(),
+                       requestLineEdit->text());
 }
 
-void BlockingSlaveWidget::showRequest(const QString &s)
+void Dialog::showResponse(const QString &s)
 {
+    setControlsEnabled(true);
     trafficLabel->setText(tr("Traffic, transaction #%1:"
                              "\n\r-request: %2"
                              "\n\r-response: %3")
-                          .arg(++transactionCount).arg(s).arg(responseLineEdit->text()));
+                          .arg(++transactionCount).arg(requestLineEdit->text()).arg(s));
 }
 
-void BlockingSlaveWidget::processError(const QString &s)
+void Dialog::processError(const QString &s)
 {
-    activateRunButton();
+    setControlsEnabled(true);
     statusLabel->setText(tr("Status: Not running, %1.").arg(s));
     trafficLabel->setText(tr("No traffic."));
 }
 
-void BlockingSlaveWidget::processTimeout(const QString &s)
+void Dialog::processTimeout(const QString &s)
 {
+    setControlsEnabled(true);
     statusLabel->setText(tr("Status: Running, %1.").arg(s));
     trafficLabel->setText(tr("No traffic."));
 }
-void BlockingSlaveWidget::activateRunButton()
+
+void Dialog::setControlsEnabled(bool enable)
 {
-    runButton->setEnabled(true);
+    runButton->setEnabled(enable);
+    serialPortComboBox->setEnabled(enable);
+    waitResponseSpinBox->setEnabled(enable);
+    requestLineEdit->setEnabled(enable);
 }
