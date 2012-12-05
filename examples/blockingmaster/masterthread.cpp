@@ -52,6 +52,7 @@ MasterThread::MasterThread(QObject *parent)
 {
 }
 
+//! [0]
 MasterThread::~MasterThread()
 {
     mutex.lock();
@@ -60,25 +61,31 @@ MasterThread::~MasterThread()
     mutex.unlock();
     wait();
 }
+//! [0]
 
+//! [1] //! [2]
 void MasterThread::transaction(const QString &portName, int waitTimeout, const QString &request)
 {
+    //! [1]
     QMutexLocker locker(&mutex);
     this->portName = portName;
     this->waitTimeout = waitTimeout;
     this->request = request;
-
+    //! [3]
     if (!isRunning())
         start();
     else
         cond.wakeOne();
 }
+//! [2] //! [3]
 
+//! [4]
 void MasterThread::run()
 {
     bool currentPortNameChanged = false;
 
     mutex.lock();
+    //! [4] //! [5]
     QString currentPortName;
     if (currentPortName != portName) {
         currentPortName = portName;
@@ -88,11 +95,11 @@ void MasterThread::run()
     int currentWaitTimeout = waitTimeout;
     QString currentRequest = request;
     mutex.unlock();
-
+    //! [5] //! [6]
     SerialPort serial;
 
     while (!quit) {
-
+        //![6] //! [7]
         if (currentPortNameChanged) {
             serial.close();
             serial.setPort(currentPortName);
@@ -133,12 +140,12 @@ void MasterThread::run()
                 return;
             }
         }
-
+        //! [7] //! [8]
         // write request
         QByteArray requestData = currentRequest.toLocal8Bit();
         serial.write(requestData);
         if (serial.waitForBytesWritten(waitTimeout)) {
-
+            //! [8] //! [10]
             // read response
             if (serial.waitForReadyRead(currentWaitTimeout)) {
                 QByteArray responseData = serial.readAll();
@@ -146,16 +153,19 @@ void MasterThread::run()
                     responseData += serial.readAll();
 
                 QString response(responseData);
+                //! [12]
                 emit this->response(response);
+                //! [10] //! [11] //! [12]
             } else {
                 emit timeout(tr("Wait read response timeout %1")
                              .arg(QTime::currentTime().toString()));
             }
+            //! [9] //! [11]
         } else {
             emit timeout(tr("Wait write request timeout %1")
                          .arg(QTime::currentTime().toString()));
         }
-
+        //! [9]  //! [13]
         mutex.lock();
         cond.wait(&mutex);
         if (currentPortName != portName) {
@@ -168,4 +178,5 @@ void MasterThread::run()
         currentRequest = request;
         mutex.unlock();
     }
+    //! [13]
 }

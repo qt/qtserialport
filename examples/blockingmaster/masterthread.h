@@ -46,6 +46,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+//! [0]
 class MasterThread : public QThread
 {
     Q_OBJECT
@@ -70,5 +71,6 @@ private:
     QWaitCondition cond;
     bool quit;
 };
+//! [0]
 
 #endif // MASTERTHREAD_H

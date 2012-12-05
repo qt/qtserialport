@@ -1,0 +1,162 @@
+/****************************************************************************
+**
+** Copyright (C) 2011-2012 Denis Shienkov <scapig2@yandex.ru>
+** Contact: http://www.qt-project.org/
+**
+** This file is part of the QtSerialPort module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** GNU Free Documentation License
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file.
+**
+** Other Usage
+** Alternatively, this file may be used in accordance with the terms
+** and conditions contained in a signed written agreement between you
+** and Nokia.
+**
+**
+**
+**
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \module QtAddonSerialPort
+    \title Blocking Master example
+    \example examples/blockingmaster
+
+    The Blocking Master example shows how to create a application for a
+    serial interface using SerialPort's synchronous API in a non-GUI thread.
+
+    \image blockingmaster-example.png Screenshot of the Blocking Master example
+
+    SerialPort supports two general programming approaches:
+
+    \list
+
+    \o \i{The asynchronous (non-blocking) approach.} Operations are scheduled
+    and performed when the control returns to Qt's event loop. SerialPort emits
+    a signal when the operation is finished. For example, SerialPort::write()
+    returns immediately. When the data is sent to the serial port, SerialPort
+    emits \l{SerialPort::bytesWritten()}{bytesWritten()}.
+
+    \o \i{The synchronous (blocking) approach.} In non-GUI and multithreaded
+    applications, the \c waitFor...() functions can be called (i.e.
+    SerialPort::waitReadyRead()) to suspend the calling thread until the
+    operation has completed.
+
+    \endlist
+
+    In this example, the synchronous approach is demonstrated. The
+    \l{examples/terminal}{Simple Terminal} example illustrates the
+    asynchronous approach.
+
+    The purpose of this example is to demonstrate a pattern that you can use
+    to simplify your serial programming code, without losing responsiveness
+    in your user interface. Use of Qt's blocking serial programming API often
+    leads to simpler code, but because of its blocking behavior, it should only
+    be used in non-GUI threads to prevent the user interface from freezing.
+    But contrary to what many think, using threads with QThread does not
+    necessarily add unmanagable complexity to your application.
+
+    This application is a Master, that demonstrate the work paired with Slave
+    application \l{examples/blockingslave}{Blocking Slave Example}.
+
+    The Master application is initiate the transfer request via serial port to
+    the Slave application and wait for a response from it.
+
+    We will start with the MasterThread class, which handles the serial
+    programming code.
+
+    \snippet examples/blockingmaster/masterthread.h 0
+
+    MasterThread is a QThread subclass that provides an API for scheduling
+    requests to Slave, and it has signals for delivering responses and reporting
+    errors. You can call transaction() to startup new master transaction with
+    desired request data and other parameters, and the result is delivered by
+    the response() signal. If any error occurs, the error() or timeout() signals
+    is emitted.
+
+    It's important to notice that transaction() is called from the main, GUI
+    thread, but the request data and other parameters will be accessed from
+    MasterThread's thread. Because we will be reading and writing MasterThread's
+    data members from different threads concurrently, we use QMutex to
+    synchronize access.
+
+    \snippet examples/blockingmaster/masterthread.cpp 2
+
+    The transaction() function stores the serial port name, timeout and request
+    data, and we lock the mutex with QMutexLocker to protect this data. We then
+    start the thread, unless it is already running. We will come back to the
+    QWaitCondition::wakeOne() call later.
+
+    \snippet examples/blockingmaster/masterthread.cpp 4
+    \snippet examples/blockingmaster/masterthread.cpp 5
+
+    In the run() function, we start by acquiring the mutex lock, fetching the
+    serial port name, timeout and request data from the member data, and then
+    releasing the lock again. The case that we are protecting ourselves against
+    is that \c transaction() could be called at the same time as we are fetching
+    this data. QString is \l reentrant but \e not \l{thread-safe}, and we must
+    also avoid the unlikely risk of reading the serial port name from one request,
+    and timeout or request data of another. And as you might have guessed,
+    MasterThread can only handle one request at a time.
+
+    The SerialPort object we construct on stack into run() function before loop
+    enter:
+
+    \snippet examples/blockingmaster/masterthread.cpp 6
+
+    This allows us once to create an object, while running loop, and also means
+    that all the methods of the object will be executed in the context of the
+    run() thread.
+
+    In the loop, we check for changed or not the name of serial port for the
+    current transaction. And if the name is changed then re-open and re-configure
+    the serial port.
+
+    \snippet examples/blockingmaster/masterthread.cpp 7
+
+    The loop will continue creating request data, write to serial port and wait
+    until all data is transferred.
+
+    \snippet examples/blockingmaster/masterthread.cpp 8
+
+    \warning The method waitForBytesWritten() should be used after each write()
+    call for the blocking approach, because it processes all the I/O routines
+    instead of Qt event-loop.
+
+    The timeout() signal is emitted if error occurs when transferring data.
+
+    \snippet examples/blockingmaster/masterthread.cpp 9
+
+    After a successful request, we start wait until response and try read it.
+
+    \snippet examples/blockingmaster/masterthread.cpp 10
+
+    \warning The method waitForReadyRead() should be used before each read()
+    call for the blocking approach, because it processes all the I/O routines
+    instead of Qt event-loop.
+
+    The timeout() signal is emitted if error occurs when receiving data.
+
+    \snippet examples/blockingmaster/masterthread.cpp 11
+
+    After a successful transaction is emitted response() signal containing the
+    data received from the Slave application:
+
+    \snippet examples/blockingmaster/masterthread.cpp 12
+
+    Next, the thread goes to sleep until the next transaction is appear. On
+    waking, the thread re-reads the new data of members and run loop from the
+    beginning.
+
+    \snippet examples/blockingmaster/masterthread.cpp 13
+
+    \sa {Simple Terminal Example}, {Blocking Slave Example}
+*/
