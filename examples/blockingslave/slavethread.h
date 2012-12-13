@@ -46,6 +46,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+//! [0]
 class SlaveThread : public QThread
 {
     Q_OBJECT
@@ -69,5 +70,6 @@ private:
     QMutex mutex;
     bool quit;
 };
+//! [0]
 
 #endif // SLAVETHREAD_H
