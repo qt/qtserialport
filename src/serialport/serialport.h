@@ -63,7 +63,7 @@ class Q_SERIALPORT_EXPORT SerialPort : public QIODevice
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
     Q_PROPERTY(bool dtr READ dtr WRITE setDtr NOTIFY dtrChanged)
     Q_PROPERTY(bool rts READ rts WRITE setRts NOTIFY rtsChanged)
-    Q_PROPERTY(PortError error READ error RESET unsetError NOTIFY errorChanged)
+    Q_PROPERTY(PortError error READ error RESET clearError NOTIFY errorChanged)
     Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
 
     Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError )
@@ -198,7 +198,7 @@ public:
     DataErrorPolicy dataErrorPolicy() const;
 
     PortError error() const;
-    void unsetError();
+    void clearError();
 
     qint64 readBufferSize() const;
     void setReadBufferSize(qint64 size);

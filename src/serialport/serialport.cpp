@@ -371,7 +371,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
            not supported or prohibited by the running operating system.
     \value UnknownPortError An unidentified error occurred.
 
-    \sa error(), unsetError()
+    \sa error(), clearError()
 */
 
 
@@ -513,7 +513,7 @@ bool SerialPort::open(OpenMode mode)
         return false;
     }
 
-    unsetError();
+    clearError();
     if (d->open(mode)) {
         QIODevice::open(mode);
         return true;
@@ -957,7 +957,7 @@ SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
     be used to figure out the reason why the operation failed.
 
     The error code is set to the default SerialPort::NoError after a call to
-    unsetError()
+    clearError()
 */
 SerialPort::PortError SerialPort::error() const
 {
@@ -965,7 +965,7 @@ SerialPort::PortError SerialPort::error() const
     return d->portError;
 }
 
-void SerialPort::unsetError()
+void SerialPort::clearError()
 {
     Q_D(SerialPort);
     d->portError = SerialPort::NoError;
