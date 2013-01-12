@@ -164,17 +164,17 @@ SerialPort::Lines SerialPortPrivate::lines() const
     descriptor.Signals(signalMask);
 
     if (signalMask & KSignalCTS)
-        ret |= SerialPort::Cts;
+        ret |= SerialPort::CtsLine;
     if (signalMask & KSignalDSR)
-        ret |= SerialPort::Dsr;
+        ret |= SerialPort::DsrLine;
     if (signalMask & KSignalDCD)
-        ret |= SerialPort::Dcd;
+        ret |= SerialPort::DcdLine;
     if (signalMask & KSignalRNG)
-        ret |= SerialPort::Ri;
+        ret |= SerialPort::RiLine;
     if (signalMask & KSignalRTS)
-        ret |= SerialPort::Rts;
+        ret |= SerialPort::RtsLine;
     if (signalMask & KSignalDTR)
-        ret |= SerialPort::Dtr;
+        ret |= SerialPort::DtrLine;
 
     //if (signalMask & KSignalBreak)
     //  ret |=

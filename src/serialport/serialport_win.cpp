@@ -299,13 +299,13 @@ SerialPort::Lines SerialPortPrivate::lines() const
         return ret;
 
     if (modemStat & MS_CTS_ON)
-        ret |= SerialPort::Cts;
+        ret |= SerialPort::CtsLine;
     if (modemStat & MS_DSR_ON)
-        ret |= SerialPort::Dsr;
+        ret |= SerialPort::DsrLine;
     if (modemStat & MS_RING_ON)
-        ret |= SerialPort::Ri;
+        ret |= SerialPort::RiLine;
     if (modemStat & MS_RLSD_ON)
-        ret |= SerialPort::Dcd;
+        ret |= SerialPort::DcdLine;
 
     DWORD bytesReturned = 0;
     if (::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
@@ -313,9 +313,9 @@ SerialPort::Lines SerialPortPrivate::lines() const
                           &bytesReturned, NULL)) {
 
         if (modemStat & SERIAL_DTR_STATE)
-            ret |= SerialPort::Dtr;
+            ret |= SerialPort::DtrLine;
         if (modemStat & SERIAL_RTS_STATE)
-            ret |= SerialPort::Rts;
+            ret |= SerialPort::RtsLine;
     }
 
     return ret;
