@@ -45,8 +45,6 @@
 //#include <e32test.h>
 #include <f32file.h>
 
-#include <QtCore/qregexp.h>
-
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Physical device driver.

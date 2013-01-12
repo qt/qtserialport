@@ -45,7 +45,6 @@
 #include "serialportinfo_p.h"
 #include "serialport_win_p.h"
 
-#include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 
 QT_BEGIN_NAMESPACE_SERIALPORT
