@@ -540,9 +540,11 @@ void SerialPort::close()
 }
 
 /*!
-    Sets or clears the flag \a restore, which allows to restore the
-    previous settings while closing the serial port. If this flag
-    is true, the settings will be restored; otherwise not.
+    \property SerialPort::restoreSettingsOnClose
+    \brief the flag which allows to restore the previous settings while closing
+    the serial port.
+
+    If this flag is true, the settings will be restored; otherwise not.
     The default state of the SerialPort class is configured to restore the
     settings.
 
@@ -568,15 +570,18 @@ bool SerialPort::restoreSettingsOnClose() const
 }
 
 /*!
-    Sets the desired data rate \a rate for a given direction \a dir. If
-    successful, returns true; otherwise returns false and sets an error code
-    which can be obtained by calling error(). To set the baud rate, use the
-    enumeration SerialPort::Rate or any positive qint32 value.
+    \property SerialPort::rate
+    \brief the data rate for the desired direction
 
-    \warning For OS Windows, Windows CE, Symbian supported only
-    AllDirections flag.
+    If the setting is successful, returns true; otherwise returns false and sets
+    an error code which can be obtained by calling error(). To set the baud
+    rate, use the enumeration SerialPort::Rate or any positive qint32 value.
 
-    \sa rate()
+    \warning Only the AllDirections flag is support for setting this property on
+    Windows, Windows CE, and Symbian.
+
+    \warning Returns equal rate in any direction on Windows, Windows CE, and
+    Symbian.
 */
 bool SerialPort::setRate(qint32 rate, Directions dir)
 {
@@ -591,14 +596,6 @@ bool SerialPort::setRate(qint32 rate, Directions dir)
     return false;
 }
 
-/*!
-    Returns the current baud rate of the chosen direction \a dir.
-
-    \warning Returns equal rate in any direction for Operating Systems as
-    Windows, Windows CE, and Symbian.
-
-    \sa setRate()
-*/
 qint32 SerialPort::rate(Directions dir) const
 {
     Q_D(const SerialPort);
@@ -609,11 +606,11 @@ qint32 SerialPort::rate(Directions dir) const
 }
 
 /*!
-    Sets the desired number of data bits \a dataBits in a frame.
-    If successful, returns true; otherwise returns false and sets an error
-    code which can be obtained by calling the error() method.
+    \property SerialPort::dataBits
+    \brief the data bits in a frame
 
-    \sa dataBits()
+    If the setting is successful, returns true; otherwise returns false and sets
+    an error code which can be obtained by calling the error() method.
 */
 bool SerialPort::setDataBits(DataBits dataBits)
 {
@@ -625,11 +622,6 @@ bool SerialPort::setDataBits(DataBits dataBits)
     return false;
 }
 
-/*!
-    Returns the current number of data bits in a frame.
-
-    \sa setDataBits()
-*/
 SerialPort::DataBits SerialPort::dataBits() const
 {
     Q_D(const SerialPort);
@@ -637,11 +629,11 @@ SerialPort::DataBits SerialPort::dataBits() const
 }
 
 /*!
-    Sets the desired parity \a parity checking mode.
-    If successful, returns true; otherwise returns false and sets an error
-    code which can be obtained by calling the error() method.
+    \property SerialPort::parity
+    \brief the parity checking mode
 
-    \sa parity()
+    If the setting is successful, returns true; otherwise returns false and sets
+    an error code which can be obtained by calling the error() method.
 */
 bool SerialPort::setParity(Parity parity)
 {
@@ -653,11 +645,6 @@ bool SerialPort::setParity(Parity parity)
     return false;
 }
 
-/*!
-    Returns the current parity checking mode.
-
-    \sa setParity()
-*/
 SerialPort::Parity SerialPort::parity() const
 {
     Q_D(const SerialPort);
@@ -665,11 +652,11 @@ SerialPort::Parity SerialPort::parity() const
 }
 
 /*!
-    Sets the desired number of stop bits \a stopBits in a frame. If successful,
-    returns true; otherwise returns false and sets an error code which can be
-    obtained by calling the error() method.
+    \property SerialPort::stopBits
+    \brief the number of stop bits in a frame
 
-    \sa stopBits()
+    If the setting is successful, returns true; otherwise returns false and
+    sets an error code which can be obtained by calling the error() method.
 */
 bool SerialPort::setStopBits(StopBits stopBits)
 {
@@ -681,11 +668,6 @@ bool SerialPort::setStopBits(StopBits stopBits)
     return false;
 }
 
-/*!
-    Returns the current number of stop bits.
-
-    \sa setStopBits()
-*/
 SerialPort::StopBits SerialPort::stopBits() const
 {
     Q_D(const SerialPort);
@@ -693,11 +675,11 @@ SerialPort::StopBits SerialPort::stopBits() const
 }
 
 /*!
-    Sets the desired number flow control mode \a flow.
-    If successful, returns true; otherwise returns false and sets an error
-    code which can be obtained by calling the error() method.
+    \property SerialPort::flowControl
+    \brief the desired flow control mode
 
-    \sa flowControl()
+    If the setting is successful, returns true; otherwise returns false and sets
+    an error code which can be obtained by calling the error() method.
 */
 bool SerialPort::setFlowControl(FlowControl flow)
 {
@@ -709,11 +691,6 @@ bool SerialPort::setFlowControl(FlowControl flow)
     return false;
 }
 
-/*!
-    Returns the current flow control mode.
-
-    \sa setFlowControl()
-*/
 SerialPort::FlowControl SerialPort::flowControl() const
 {
     Q_D(const SerialPort);
@@ -721,11 +698,20 @@ SerialPort::FlowControl SerialPort::flowControl() const
 }
 
 /*!
-    Returns the current state of the line signal DTR.
-    If the signal state high, the return true; otherwise returns false;
+    \property SerialPort::dtr
+    \brief the state (high or low) of the line signal DTR
+
+    If the setting is successful, returns true; otherwise returns false.
+    If the flag is true then the DTR signal is set to high; otherwise low.
 
     \sa lines()
 */
+bool SerialPort::setDtr(bool set)
+{
+    Q_D(SerialPort);
+    return d->setDtr(set);
+}
+
 bool SerialPort::dtr() const
 {
     Q_D(const SerialPort);
@@ -733,11 +719,20 @@ bool SerialPort::dtr() const
 }
 
 /*!
-    Returns the current state of the line signal RTS.
-    If the signal state high, the return true; otherwise returns false;
+    \property SerialPort::rts
+    \brief the state (high or low) of the line signal RTS
+
+    If the setting is successful, returns true; otherwise returns false.
+    If the flag is true then the RTS signal is set to high; otherwise low.
 
     \sa lines()
 */
+bool SerialPort::setRts(bool set)
+{
+    Q_D(SerialPort);
+    return d->setRts(set);
+}
+
 bool SerialPort::rts() const
 {
     Q_D(const SerialPort);
@@ -822,11 +817,12 @@ bool SerialPort::atEnd() const
 }
 
 /*!
-    Sets the error policy \a policy process received character in
-    the case of parity error detection. If successful, returns
-    true; otherwise returns false. The default policy set is IgnorePolicy.
+    \property SerialPort::dataErrorPolicy
+    \brief the error policy how the process receives the character in case of
+    parity error detection.
 
-    \sa dataErrorPolicy()
+    If the setting is successful, returns true; otherwise returns false. The
+    default policy set is IgnorePolicy.
 */
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
@@ -837,11 +833,6 @@ bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
     return ret;
 }
 
-/*!
-    Returns current error policy.
-
-    \sa setDataErrorPolicy()
-*/
 SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 {
     Q_D(const SerialPort);
@@ -849,13 +840,15 @@ SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
 }
 
 /*!
-    Returns the serial port's error status.
+    \property SerialPort::error
+    \brief the error status of the serial port
 
     The I/O device status returns an error code. For example, if open()
-    returns false, or a read/write operation returns -1, this function can
-    be called to find out the reason why the operation failed.
+    returns false, or a read/write operation returns -1, this property can
+    be used to figure out the reason why the operation failed.
 
-    \sa unsetError()
+    The error code is set to the default SerialPort::NoError after a call to
+    unsetError()
 */
 SerialPort::PortError SerialPort::error() const
 {
@@ -863,11 +856,6 @@ SerialPort::PortError SerialPort::error() const
     return d->portError;
 }
 
-/*!
-    Clears the error code to SerialPort::NoError.
-
-    \sa error()
-*/
 void SerialPort::unsetError()
 {
     Q_D(SerialPort);
@@ -983,36 +971,6 @@ bool SerialPort::waitForBytesWritten(int msecs)
 {
     Q_D(SerialPort);
     return d->waitForBytesWritten(msecs);
-}
-
-/*!
-    Sets the desired state of the line signal DTR,
-    depending on the flag \a set. If successful, returns true;
-    otherwise returns false.
-
-    If the flag is true then the DTR signal is set to high; otherwise low.
-
-    \sa lines(), dtr()
-*/
-bool SerialPort::setDtr(bool set)
-{
-    Q_D(SerialPort);
-    return d->setDtr(set);
-}
-
-/*!
-    Sets the desired state of the line signal RTS,
-    depending on the flag \a set. If successful, returns true;
-    otherwise returns false.
-
-    If the flag is true then the RTS signal is set to high; otherwise low.
-
-    \sa lines(), rts()
-*/
-bool SerialPort::setRts(bool set)
-{
-    Q_D(SerialPort);
-    return d->setRts(set);
 }
 
 /*!
