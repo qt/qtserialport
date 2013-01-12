@@ -55,16 +55,16 @@ class Q_SERIALPORT_EXPORT SerialPort : public QIODevice
 {
     Q_OBJECT
 
-    Q_PROPERTY(qint32 rate READ rate WRITE setRate)
-    Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits)
-    Q_PROPERTY(Parity parity READ parity WRITE setParity)
-    Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits)
-    Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl)
-    Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy)
-    Q_PROPERTY(bool dtr READ dtr WRITE setDtr)
-    Q_PROPERTY(bool rts READ rts WRITE setRts)
-    Q_PROPERTY(PortError error READ error RESET unsetError)
-    Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose)
+    Q_PROPERTY(qint32 rate READ rate WRITE setRate NOTIFY rateChanged)
+    Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits NOTIFY dataBitsChanged)
+    Q_PROPERTY(Parity parity READ parity WRITE setParity NOTIFY parityChanged)
+    Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
+    Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
+    Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
+    Q_PROPERTY(bool dtr READ dtr WRITE setDtr NOTIFY dtrChanged)
+    Q_PROPERTY(bool rts READ rts WRITE setRts NOTIFY rtsChanged)
+    Q_PROPERTY(PortError error READ error RESET unsetError NOTIFY errorChanged)
+    Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
 
     Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError )
 
@@ -218,6 +218,18 @@ public Q_SLOTS:
     bool sendBreak(int duration = 0);
     bool setBreak(bool set = true);
     bool clearBreak(bool clear = true);
+
+Q_SIGNALS:
+    void rateChanged(qint32 rate, Directions dir);
+    void dataBitsChanged(DataBits dataBits);
+    void parityChanged(Parity parity);
+    void stopBitsChanged(StopBits stopBits);
+    void flowControlChanged(FlowControl flow);
+    void dataErrorPolicyChanged(DataErrorPolicy policy);
+    void dtrChanged(bool set);
+    void rtsChanged(bool set);
+    void errorChanged(PortError error);
+    void restoreSettingsOnCloseChanged(bool restore);
 
 protected:
     virtual qint64 readData(char *data, qint64 maxSize);

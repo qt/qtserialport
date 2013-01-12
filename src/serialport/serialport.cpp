@@ -553,7 +553,9 @@ void SerialPort::close()
 void SerialPort::setRestoreSettingsOnClose(bool restore)
 {
     Q_D( SerialPort);
+
     d->restoreSettingsOnClose = restore;
+    emit restoreSettingsOnCloseChanged(d->restoreSettingsOnClose);
 }
 
 /*!
@@ -568,6 +570,17 @@ bool SerialPort::restoreSettingsOnClose() const
     Q_D(const SerialPort);
     return d->restoreSettingsOnClose;
 }
+
+/*!
+    \fn void SerialPort::restoreSettingsOnCloseChanged(bool restore)
+
+    This signal is emitted after the flag which allows to restore the
+    previous settings while closing the serial port has been changed. The new
+    flag which allows to restore the previous settings while closing the serial
+    port is passed as \restore.
+
+    \sa SerialPort::restoreSettingsOnClose
+*/
 
 /*!
     \property SerialPort::rate
@@ -591,6 +604,7 @@ bool SerialPort::setRate(qint32 rate, Directions dir)
             d->inputRate = rate;
         if (dir & SerialPort::Output)
             d->outputRate = rate;
+        emit rateChanged(rate, dir);
         return true;
     }
     return false;
@@ -606,6 +620,15 @@ qint32 SerialPort::rate(Directions dir) const
 }
 
 /*!
+    \fn void SerialPort::rateChanged(qint32 rate, Directions dir)
+
+    This signal is emitted after the rate has been changed. The new rate is
+    passed as \a rate and directions as \a dir.
+
+    \sa SerialPort::rate
+*/
+
+/*!
     \property SerialPort::dataBits
     \brief the data bits in a frame
 
@@ -617,6 +640,7 @@ bool SerialPort::setDataBits(DataBits dataBits)
     Q_D(SerialPort);
     if (d->setDataBits(dataBits)) {
         d->dataBits = dataBits;
+        emit dataBitsChanged(d->dataBits);
         return true;
     }
     return false;
@@ -627,6 +651,16 @@ SerialPort::DataBits SerialPort::dataBits() const
     Q_D(const SerialPort);
     return d->dataBits;
 }
+
+/*!
+    \fn void SerialPort::dataBitsChanged(DataBits dataBits)
+
+    This signal is emitted after the data bits in a frame has been changed. The
+    new data bits in a frame is passed as \dataBits.
+
+    \sa SerialPort::dataBits
+*/
+
 
 /*!
     \property SerialPort::parity
@@ -640,6 +674,7 @@ bool SerialPort::setParity(Parity parity)
     Q_D(SerialPort);
     if (d->setParity(parity)) {
         d->parity = parity;
+        emit parityChanged(d->parity);
         return true;
     }
     return false;
@@ -650,6 +685,15 @@ SerialPort::Parity SerialPort::parity() const
     Q_D(const SerialPort);
     return d->parity;
 }
+
+/*!
+    \fn void SerialPort::parityChanged(Parity parity)
+
+    This signal is emitted after the parity checking mode has been changed. The
+    new parity checking mode is passed as \a parity.
+
+    \sa SerialPort::parity
+*/
 
 /*!
     \property SerialPort::stopBits
@@ -663,6 +707,7 @@ bool SerialPort::setStopBits(StopBits stopBits)
     Q_D(SerialPort);
     if (d->setStopBits(stopBits)) {
         d->stopBits = stopBits;
+        stopBitsChanged(d->stopBits);
         return true;
     }
     return false;
@@ -673,6 +718,15 @@ SerialPort::StopBits SerialPort::stopBits() const
     Q_D(const SerialPort);
     return d->stopBits;
 }
+
+/*!
+    \fn void SerialPort::stopBitsChanged(StopBits stopBits)
+
+    This signal is emitted after the number of stop bits in a frame has been
+    changed. The new number of stop bits in a frame is passed as \a stopBits.
+
+    \sa SerialPort::stopBits
+*/
 
 /*!
     \property SerialPort::flowControl
@@ -686,6 +740,7 @@ bool SerialPort::setFlowControl(FlowControl flow)
     Q_D(SerialPort);
     if (d->setFlowControl(flow)) {
         d->flow = flow;
+        flowControlChanged(d->flow);
         return true;
     }
     return false;
@@ -696,6 +751,15 @@ SerialPort::FlowControl SerialPort::flowControl() const
     Q_D(const SerialPort);
     return d->flow;
 }
+
+/*!
+    \fn void SerialPort::flowControlChanged(FlowControl flow)
+
+    This signal is emitted after the flow control mode has been changed. The
+    new flow control mode is passed as \a flow.
+
+    \sa SerialPort::flowControl
+*/
 
 /*!
     \property SerialPort::dtr
@@ -709,7 +773,12 @@ SerialPort::FlowControl SerialPort::flowControl() const
 bool SerialPort::setDtr(bool set)
 {
     Q_D(SerialPort);
-    return d->setDtr(set);
+
+    bool retval = d->setDtr(set);
+    if (retval)
+        emit dtrChanged(set);
+
+    return retval;
 }
 
 bool SerialPort::dtr() const
@@ -717,6 +786,16 @@ bool SerialPort::dtr() const
     Q_D(const SerialPort);
     return d->lines() & SerialPort::DtrLine;
 }
+
+/*!
+    \fn void SerialPort::dtrChanged(bool set)
+
+    This signal is emitted after the state (high or low) of the line signal DTR
+    has been changed. The new the state (high or low) of the line signal DTR is
+    passed as \a set.
+
+    \sa SerialPort::dtr
+*/
 
 /*!
     \property SerialPort::rts
@@ -730,7 +809,12 @@ bool SerialPort::dtr() const
 bool SerialPort::setRts(bool set)
 {
     Q_D(SerialPort);
-    return d->setRts(set);
+
+    bool retval = d->setRts(set);
+    if (retval)
+        emit rtsChanged(set);
+
+    return retval;
 }
 
 bool SerialPort::rts() const
@@ -738,6 +822,16 @@ bool SerialPort::rts() const
     Q_D(const SerialPort);
     return d->lines() & SerialPort::RtsLine;
 }
+
+/*!
+    \fn void SerialPort::rtsChanged(bool set)
+
+    This signal is emitted after the state (high or low) of the line signal RTS
+    has been changed. The new the state (high or low) of the line signal RTS is
+    passed as \a set.
+
+    \sa SerialPort::rts
+*/
 
 /*!
     Returns the bitmap states of the line signals.
@@ -827,9 +921,13 @@ bool SerialPort::atEnd() const
 bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(SerialPort);
+
     const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
-    if (ret)
+    if (ret) {
         d->policy = policy;
+        emit dataErrorPolicyChanged(d->policy);
+    }
+
     return ret;
 }
 
@@ -838,6 +936,17 @@ SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
     Q_D(const SerialPort);
     return d->policy;
 }
+
+/*!
+    \fn void SerialPort::errorPolicyChanged(DataErrorPolicy policy)
+
+    This signal is emitted after the error policy how the process receives the
+    character in case of parity error detection has been changed. The new error
+    policy how the process receives the character in case of parity error
+    detection is passed as \a policy.
+
+    \sa SerialPort::dataErrorPolicy
+*/
 
 /*!
     \property SerialPort::error
@@ -861,6 +970,15 @@ void SerialPort::unsetError()
     Q_D(SerialPort);
     d->portError = SerialPort::NoError;
 }
+
+/*!
+    \fn void SerialPort::errorChanged(PortError error)
+
+    This signal is emitted after the error has been changed. The new erroris
+    passed as \a error.
+
+    \sa SerialPort::error
+*/
 
 /*!
     Returns the size of the internal read buffer. This limits the
