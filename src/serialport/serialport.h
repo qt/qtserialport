@@ -121,15 +121,15 @@ public:
     };
 
     enum Line {
-        Le = 0x01,
-        Dtr = 0x02,
-        Rts = 0x04,
-        St = 0x08,
-        Sr = 0x10,
-        Cts = 0x20,
-        Dcd = 0x40,
-        Ri = 0x80,
-        Dsr = Le
+        LeLine = 0x01,
+        DtrLine = 0x02,
+        RtsLine = 0x04,
+        StLine = 0x08,
+        SrLine = 0x10,
+        CtsLine = 0x20,
+        DcdLine = 0x40,
+        RiLine = 0x80,
+        DsrLine = LeLine
     };
     Q_DECLARE_FLAGS(Lines, Line)
 

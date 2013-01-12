@@ -262,45 +262,45 @@ SerialPort::Lines SerialPortPrivate::lines() const
 
 #ifdef TIOCM_LE
     if (arg & TIOCM_LE)
-        ret |= SerialPort::Le;
+        ret |= SerialPort::LeLine;
 #endif
 #ifdef TIOCM_DTR
     if (arg & TIOCM_DTR)
-        ret |= SerialPort::Dtr;
+        ret |= SerialPort::DtrLine;
 #endif
 #ifdef TIOCM_RTS
     if (arg & TIOCM_RTS)
-        ret |= SerialPort::Rts;
+        ret |= SerialPort::RtsLine;
 #endif
 #ifdef TIOCM_ST
     if (arg & TIOCM_ST)
-        ret |= SerialPort::St;
+        ret |= SerialPort::StLine;
 #endif
 #ifdef TIOCM_SR
     if (arg & TIOCM_SR)
-        ret |= SerialPort::Sr;
+        ret |= SerialPort::SrLine;
 #endif
 #ifdef TIOCM_CTS
     if (arg & TIOCM_CTS)
-        ret |= SerialPort::Cts;
+        ret |= SerialPort::CtsLine;
 #endif
 #ifdef TIOCM_CAR
     if (arg & TIOCM_CAR)
-        ret |= SerialPort::Dcd;
+        ret |= SerialPort::DcdLine;
 #elif defined TIOCM_CD
     if (arg & TIOCM_CD)
-        ret |= SerialPort::Dcd;
+        ret |= SerialPort::DcdLine;
 #endif
 #ifdef TIOCM_RNG
     if (arg & TIOCM_RNG)
-        ret |= SerialPort::Ri;
+        ret |= SerialPort::RiLine;
 #elif defined TIOCM_RI
     if (arg & TIOCM_RI)
-        ret |= SerialPort::Ri;
+        ret |= SerialPort::RiLine;
 #endif
 #ifdef TIOCM_DSR
     if (arg & TIOCM_DSR)
-        ret |= SerialPort::Dsr;
+        ret |= SerialPort::DsrLine;
 #endif
 
     return ret;

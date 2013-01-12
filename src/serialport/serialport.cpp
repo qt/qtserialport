@@ -729,7 +729,7 @@ SerialPort::FlowControl SerialPort::flowControl() const
 bool SerialPort::dtr() const
 {
     Q_D(const SerialPort);
-    return d->lines() & SerialPort::Dtr;
+    return d->lines() & SerialPort::DtrLine;
 }
 
 /*!
@@ -741,7 +741,7 @@ bool SerialPort::dtr() const
 bool SerialPort::rts() const
 {
     Q_D(const SerialPort);
-    return d->lines() & SerialPort::Rts;
+    return d->lines() & SerialPort::RtsLine;
 }
 
 /*!
