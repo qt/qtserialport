@@ -233,12 +233,12 @@ bool SerialPortPrivate::setBreak(bool set)
     return false;
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 SerialPortPrivate::systemInputQueueSize () const
 {
     return descriptor.QueryReceiveBuffer();
 }
 
-qint64 SerialPortPrivate::bytesToWrite() const
+qint64 SerialPortPrivate::systemOutputQueueSize () const
 {
     // TODO: Implement me
     return 0;

@@ -368,7 +368,7 @@ bool SerialPortPrivate::setBreak(bool set)
     return ::ClearCommBreak(descriptor);
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 SerialPortPrivate::systemInputQueueSize () const
 {
     COMSTAT cs;
     ::memset(&cs, 0, sizeof(cs));
@@ -377,7 +377,7 @@ qint64 SerialPortPrivate::bytesAvailable() const
     return cs.cbInQue;
 }
 
-qint64 SerialPortPrivate::bytesToWrite() const
+qint64 SerialPortPrivate::systemOutputQueueSize () const
 {
     COMSTAT cs;
     ::memset(&cs, 0, sizeof(cs));

@@ -339,7 +339,7 @@ bool SerialPortPrivate::setBreak(bool set)
     return ::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) != -1;
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 SerialPortPrivate::systemInputQueueSize () const
 {
     int nbytes = 0;
 #ifdef TIOCINQ
@@ -349,7 +349,7 @@ qint64 SerialPortPrivate::bytesAvailable() const
     return nbytes;
 }
 
-qint64 SerialPortPrivate::bytesToWrite() const
+qint64 SerialPortPrivate::systemOutputQueueSize () const
 {
     int nbytes = 0;
 #ifdef TIOCOUTQ
