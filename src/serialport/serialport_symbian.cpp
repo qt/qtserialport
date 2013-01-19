@@ -244,6 +244,11 @@ qint64 SerialPortPrivate::systemOutputQueueSize () const
     return 0;
 }
 
+qint64 SerialPortPrivate::bytesAvailable() const
+{
+    return readBuffer.size();
+}
+
 qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
 {
     // TODO: Implement me

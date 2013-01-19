@@ -388,6 +388,11 @@ qint64 SerialPortPrivate::systemOutputQueueSize () const
 
 #ifndef Q_OS_WINCE
 
+qint64 SerialPortPrivate::bytesAvailable() const
+{
+    return actualReadBufferSize;
+}
+
 qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
 {
     if (actualReadBufferSize == 0)

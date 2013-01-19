@@ -1037,7 +1037,7 @@ bool SerialPort::isSequential() const
 qint64 SerialPort::bytesAvailable() const
 {
     Q_D(const SerialPort);
-    return d->readBuffer.size() + QIODevice::bytesAvailable();
+    return d->bytesAvailable() + QIODevice::bytesAvailable();
 }
 
 /*! \reimp

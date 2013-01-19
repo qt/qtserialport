@@ -228,6 +228,11 @@ bool SerialPortPrivate::flush()
     return notifyWrite() && ::FlushFileBuffers(descriptor);
 }
 
+qint64 SerialPortPrivate::bytesAvailable() const
+{
+    return readBuffer.size();
+}
+
 qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
 {
     if (readBuffer.isEmpty())
