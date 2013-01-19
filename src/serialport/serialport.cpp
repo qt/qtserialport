@@ -907,7 +907,7 @@ bool SerialPort::clear(Directions dir)
 bool SerialPort::atEnd() const
 {
     Q_D(const SerialPort);
-    return QIODevice::atEnd() && (!isOpen() || d->readBuffer.isEmpty());
+    return QIODevice::atEnd() && (!isOpen() || (d->bytesAvailable() == 0));
 }
 
 /*!
@@ -1062,7 +1062,7 @@ qint64 SerialPort::bytesToWrite() const
 bool SerialPort::canReadLine() const
 {
     Q_D(const SerialPort);
-    const bool hasLine = d->readBuffer.canReadLine();
+    const bool hasLine = (d->bytesAvailable() > 0) && d->readBuffer.canReadLine();
     return hasLine || QIODevice::canReadLine();
 }
 
