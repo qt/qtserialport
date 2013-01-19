@@ -338,17 +338,23 @@ bool SerialPortPrivate::flush()
     return startAsyncWrite() && ::FlushFileBuffers(descriptor);
 }
 
-#endif
-
 bool SerialPortPrivate::clear(SerialPort::Directions dir)
 {
     DWORD flags = 0;
-    if (dir & SerialPort::Input)
+    if (dir & SerialPort::Input) {
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-    if (dir & SerialPort::Output)
+        actualReadBufferSize = 0;
+    }
+    if (dir & SerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
+        actualWriteBufferSize = 0;
+        acyncWritePosition = 0;
+        writeSequenceStarted = false;
+    }
     return ::PurgeComm(descriptor, flags);
 }
+
+#endif
 
 bool SerialPortPrivate::sendBreak(int duration)
 {

@@ -228,6 +228,16 @@ bool SerialPortPrivate::flush()
     return notifyWrite() && ::FlushFileBuffers(descriptor);
 }
 
+bool SerialPortPrivate::clear(SerialPort::Directions dir)
+{
+    DWORD flags = 0;
+    if (dir & SerialPort::Input)
+        flags |= PURGE_RXABORT | PURGE_RXCLEAR;
+    if (dir & SerialPort::Output)
+        flags |= PURGE_TXABORT | PURGE_TXCLEAR;
+    return ::PurgeComm(descriptor, flags);
+}
+
 qint64 SerialPortPrivate::bytesAvailable() const
 {
     return readBuffer.size();
