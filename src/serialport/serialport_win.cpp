@@ -512,13 +512,13 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
 
 #endif // #ifndef Q_OS_WINCE
 
-bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
+bool SerialPortPrivate::setBaudRate(qint32 baudRate, SerialPort::Directions dir)
 {
     if (dir != SerialPort::AllDirections) {
         portError = SerialPort::UnsupportedPortOperationError;
         return false;
     }
-    currentDcb.BaudRate = rate;
+    currentDcb.BaudRate = baudRate;
     return updateDcb();
 }
 
@@ -813,9 +813,9 @@ bool SerialPortPrivate::updateCommTimeouts()
 
 void SerialPortPrivate::detectDefaultSettings()
 {
-    // Detect rate.
-    inputRate = quint32(currentDcb.BaudRate);
-    outputRate = inputRate;
+    // Detect baud rate.
+    inputBaudRate = quint32(currentDcb.BaudRate);
+    outputBaudRate = inputBaudRate;
 
     // Detect databits.
     switch (currentDcb.ByteSize) {
@@ -950,7 +950,7 @@ QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
 
 // This table contains standard values of baud rates that
 // are defined in MSDN and/or in Win SDK file winbase.h
-static const qint32 standardRatesTable[] =
+static const qint32 standardBaudRatesTable[] =
 {
     #ifdef CBR_110
     CBR_110,
@@ -999,25 +999,25 @@ static const qint32 standardRatesTable[] =
     #endif
 };
 
-static const qint32 *standardRatesTable_end =
-        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+static const qint32 *standardBaudRatesTable_end =
+        standardBaudRatesTable + sizeof(standardBaudRatesTable)/sizeof(*standardBaudRatesTable);
 
-qint32 SerialPortPrivate::rateFromSetting(qint32 setting)
+qint32 SerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
-    const qint32 *ret = qFind(standardRatesTable, standardRatesTable_end, setting);
-    return ret != standardRatesTable_end ? *ret : 0;
+    const qint32 *ret = qFind(standardBaudRatesTable, standardBaudRatesTable_end, setting);
+    return ret != standardBaudRatesTable_end ? *ret : 0;
 }
 
-qint32 SerialPortPrivate::settingFromRate(qint32 rate)
+qint32 SerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
-    const qint32 *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rate);
-    return ret != standardRatesTable_end ? *ret : 0;
+    const qint32 *ret = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, baudRate);
+    return ret != standardBaudRatesTable_end ? *ret : 0;
 }
 
-QList<qint32> SerialPortPrivate::standardRates()
+QList<qint32> SerialPortPrivate::standardBaudRates()
 {
     QList<qint32> l;
-    for (const qint32 *it = standardRatesTable; it != standardRatesTable_end; ++it)
+    for (const qint32 *it = standardBaudRatesTable; it != standardBaudRatesTable_end; ++it)
         l.append(*it);
     return l;
 }

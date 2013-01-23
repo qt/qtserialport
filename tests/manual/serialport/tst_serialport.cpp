@@ -54,7 +54,7 @@ class tst_SerialPort : public QObject
 private slots:
     void initTestCase();
     void open();
-    void rate();
+    void baudRate();
     void dataBits();
     void parity();
     void stopBits();
@@ -112,7 +112,7 @@ void tst_SerialPort::open()
     }
 }
 
-void tst_SerialPort::rate()
+void tst_SerialPort::baudRate()
 {
     foreach (const SerialPortInfo &info, ports) {
 
@@ -120,22 +120,22 @@ void tst_SerialPort::rate()
         object1.setPort(info.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
-        QCOMPARE(object1.setRate(SerialPort::Rate1200), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate1200));
-        QCOMPARE(object1.setRate(SerialPort::Rate2400), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate2400));
-        QCOMPARE(object1.setRate(SerialPort::Rate4800), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate4800));
-        QCOMPARE(object1.setRate(SerialPort::Rate9600), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate9600));
-        QCOMPARE(object1.setRate(SerialPort::Rate19200), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate19200));
-        QCOMPARE(object1.setRate(SerialPort::Rate38400), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate38400));
-        QCOMPARE(object1.setRate(SerialPort::Rate57600), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate57600));
-        QCOMPARE(object1.setRate(SerialPort::Rate115200), true);
-        QCOMPARE(object1.rate(), static_cast<qint32>(SerialPort::Rate115200));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud1200), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud1200));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud2400), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud2400));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud4800), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud4800));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud9600), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud9600));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud19200), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud19200));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud38400), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud38400));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud57600), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud57600));
+        QCOMPARE(object1.setBaudRate(SerialPort::Baud115200), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud115200));
 
         object1.close();
     }

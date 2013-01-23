@@ -71,8 +71,8 @@ public:
     QRingBuffer writeBuffer;
     SerialPort::PortError portError;
     QString systemLocation;
-    qint32 inputRate;
-    qint32 outputRate;
+    qint32 inputBaudRate;
+    qint32 outputBaudRate;
     SerialPort::DataBits dataBits;
     SerialPort::Parity parity;
     SerialPort::StopBits stopBits;

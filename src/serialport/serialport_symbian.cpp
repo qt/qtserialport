@@ -273,16 +273,16 @@ bool SerialPortPrivate::waitForBytesWritten(int msec)
     return false;
 }
 
-bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
+bool SerialPortPrivate::setBaudRate(qint32 baudRate, SerialPort::Directions dir)
 {
     if (dir != SerialPort::AllDirections) {
         portError = SerialPort::UnsupportedPortOperationError;
         return false;
     }
 
-    rate = settingFromRate(rate);
-    if (rate)
-        currentSettings().iRate = static_cast<TBps>(rate);
+    baudRate = settingFromBaudRate(baudRate);
+    if (baudRate)
+        currentSettings().iRate = static_cast<TBps>(baudRate);
     else {
         portError = SerialPort::UnsupportedPortOperationError;
         return false;
@@ -406,9 +406,9 @@ bool SerialPortPrivate::updateCommConfig()
 
 void SerialPortPrivate::detectDefaultSettings()
 {
-    // Detect rate.
-    inputRate = rateFromSetting(currentSettings().iRate);
-    outputRate = inputRate;
+    // Detect baud rate.
+    inputBaudRate = baudRateFromSetting(currentSettings().iRate);
+    outputBaudRate = inputBaudRate;
 
     // Detect databits.
     switch (currentSettings().iDataBits) {
@@ -578,19 +578,19 @@ QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
     return location;
 }
 
-struct RatePair
+struct BaudRatePair
 {
-    qint32 rate;    // The numerical value of baud rate.
+    qint32 baudRate;    // The numerical value of baud rate.
     qint32 setting; // The OS-specific code of baud rate.
-    bool operator<(const RatePair &other) const { return rate < other.rate; }
-    bool operator==(const RatePair &other) const { return setting == other.setting; }
+    bool operator<(const BaudRatePair &other) const { return baudRate < other.baudRate; }
+    bool operator==(const BaudRatePair &other) const { return setting == other.setting; }
 };
 
 // This table contains correspondences standard pairs values of
 // baud rates that are defined in files
 // - d32comm.h for Symbian^3
 // - d32public.h for Symbian SR1
-static const RatePair standardRatesTable[] =
+static const BaudRatePair standardBaudRatesTable[] =
 {
     { 50, EBps50 },
     { 75, EBps75 },
@@ -620,28 +620,28 @@ static const RatePair standardRatesTable[] =
     { 4000000, EBps4000000 }
 };
 
-static const RatePair *standardRatesTable_end =
-        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+static const BaudRatePair *standardBaudRatesTable_end =
+        standardBaudRatesTable + sizeof(standardBaudRatesTable)/sizeof(*standardBaudRatesTable);
 
-qint32 SerialPortPrivate::rateFromSetting(qint32 setting)
+qint32 SerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
-    const RatePair rp = { 0, setting };
-    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->rate : 0;
+    const BaudRatePair rp = { 0, setting };
+    const BaudRatePair *ret = qFind(standardaBaudRatesTable, standardBaudRatesTable_end, rp);
+    return ret != standardBaudRatesTable_end ? ret->baudRate : 0;
 }
 
-qint32 SerialPortPrivate::settingFromRate(qint32 rate)
+qint32 SerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
-    const RatePair rp = { rate, 0 };
-    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->setting : 0;
+    const BaudRatePair rp = { baudRate, 0 };
+    const BaudRatePair *ret = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
+    return ret != standardBaudRatesTable_end ? ret->setting : 0;
 }
 
-QList<qint32> SerialPortPrivate::standardRates()
+QList<qint32> SerialPortPrivate::standardBaudRates()
 {
     QList<qint32> ret;
-    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
-        ret.append(it->rate);
+    for (const BaudRatePair *it = standardBaudRatesTable; it != standardBaudRatesTable_end; ++it)
+        ret.append(it->baudRate);
     return ret;
 }
 

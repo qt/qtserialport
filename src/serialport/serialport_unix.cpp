@@ -125,7 +125,7 @@ private:
 SerialPortPrivate::SerialPortPrivate(SerialPort *q)
     : SerialPortPrivateData(q)
     , descriptor(-1)
-    , isCustomRateSupported(false)
+    , isCustomBaudRateSupported(false)
     , readNotifier(0)
     , writeNotifier(0)
     , exceptionNotifier(0)
@@ -212,7 +212,7 @@ void SerialPortPrivate::close()
     if (restoreSettingsOnClose) {
         ::tcsetattr(descriptor, TCSANOW, &restoredTermios);
 #ifdef Q_OS_LINUX
-        if (isCustomRateSupported)
+        if (isCustomBaudRateSupported)
             ::ioctl(descriptor, TIOCSSERIAL, &restoredSerialInfo);
 #endif
     }
@@ -249,7 +249,7 @@ void SerialPortPrivate::close()
         TtyLocker::unlock(ptr);
 
     descriptor = -1;
-    isCustomRateSupported = false;
+    isCustomBaudRateSupported = false;
 }
 
 SerialPort::Lines SerialPortPrivate::lines() const
@@ -471,38 +471,38 @@ bool SerialPortPrivate::waitForBytesWritten(int msecs)
     return false;
 }
 
-bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
+bool SerialPortPrivate::setBaudRate(qint32 baudRate, SerialPort::Directions dir)
 {
-    bool ret = rate > 0;
+    bool ret = baudRate > 0;
 
     // prepare section
 
     if (ret) {
-        const qint32 unixRate = SerialPortPrivate::settingFromRate(rate);
-        if (unixRate > 0) {
+        const qint32 unixBaudRate = SerialPortPrivate::settingFromBaudRate(baudRate);
+        if (unixBaudRate > 0) {
             // try prepate to set standard baud rate
 #ifdef Q_OS_LINUX
             // prepare to forcefully reset the custom mode
-            if (isCustomRateSupported) {
+            if (isCustomBaudRateSupported) {
                 //currentSerialInfo.flags |= ASYNC_SPD_MASK;
                 currentSerialInfo.flags &= ~(ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
                 currentSerialInfo.custom_divisor = 0;
             }
 #endif
-            // prepare to set standard rate
-            ret = !(((dir & SerialPort::Input) && ::cfsetispeed(&currentTermios, unixRate) < 0)
-                    || ((dir & SerialPort::Output) && ::cfsetospeed(&currentTermios, unixRate) < 0));
+            // prepare to set standard baud rate
+            ret = !(((dir & SerialPort::Input) && ::cfsetispeed(&currentTermios, unixBaudRate) < 0)
+                    || ((dir & SerialPort::Output) && ::cfsetospeed(&currentTermios, unixBaudRate) < 0));
         } else {
             // try prepate to set custom baud rate
 #ifdef Q_OS_LINUX
             // prepare to forcefully set the custom mode
-            if (isCustomRateSupported) {
+            if (isCustomBaudRateSupported) {
                 currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
                 currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-                currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / rate;
+                currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
                 if (currentSerialInfo.custom_divisor == 0)
                     currentSerialInfo.custom_divisor = 1;
-                // for custom mode needed prepare to set B38400 rate
+                // for custom mode needed prepare to set B38400 baud rate
                 ret = (::cfsetspeed(&currentTermios, B38400) != -1);
             } else {
                 ret = false;
@@ -514,14 +514,14 @@ bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
             // other than those specified by POSIX. The driver for the underlying serial hardware
             // ultimately determines which baud rates can be used. This ioctl sets both the input
             // and output speed.
-            ret = ::ioctl(descriptor, IOSSIOSPEED, &rate) != -1;
+            ret = ::ioctl(descriptor, IOSSIOSPEED, &baudRate) != -1;
 #  else
-            // others MacOSX version, can't prepare to set custom rate
+            // others MacOSX version, can't prepare to set custom baud rate
             ret = false;
 #  endif
 
 #else
-            // others *nix OS, can't prepare to set custom rate
+            // others *nix OS, can't prepare to set custom baud rate
             ret = false;
 #endif
         }
@@ -530,11 +530,11 @@ bool SerialPortPrivate::setRate(qint32 rate, SerialPort::Directions dir)
     // finally section
 
 #ifdef Q_OS_LINUX
-    if (ret && isCustomRateSupported) // finally, set or reset the custom mode
+    if (ret && isCustomBaudRateSupported) // finally, set or reset the custom mode
         ret = ::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) != -1;
 #endif
 
-    if (ret) // finally, set rate
+    if (ret) // finally, set baud rate
         ret = updateTermios();
     else
         portError = decodeSystemError();
@@ -790,41 +790,41 @@ bool SerialPortPrivate::updateTermios()
 
 void SerialPortPrivate::detectDefaultSettings()
 {
-    // Detect rate.
-    const speed_t inputUnixRate = ::cfgetispeed(&currentTermios);
-    const speed_t outputUnixRate = ::cfgetospeed(&currentTermios);
-    bool isCustomRateCurrentSet = false;
+    // Detect baud rate.
+    const speed_t inputUnixBaudRate = ::cfgetispeed(&currentTermios);
+    const speed_t outputUnixBaudRate = ::cfgetospeed(&currentTermios);
+    bool isCustomBaudRateCurrentSet = false;
 
 #ifdef Q_OS_LINUX
-    // try detect the ability to support custom rate
-    isCustomRateSupported = ::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1
+    // try detect the ability to support custom baud rate
+    isCustomBaudRateSupported = ::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1
             && ::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) != -1;
 
-    if (isCustomRateSupported) {
+    if (isCustomBaudRateSupported) {
         restoredSerialInfo = currentSerialInfo;
 
         // assume that the baud rate is a custom
-        isCustomRateCurrentSet = inputUnixRate == B38400 && outputUnixRate == B38400;
+        isCustomBaudRateCurrentSet = inputUnixBaudRate == B38400 && outputUnixBaudRate == B38400;
 
-        if (isCustomRateCurrentSet) {
+        if (isCustomBaudRateCurrentSet) {
             if ((currentSerialInfo.flags & ASYNC_SPD_CUST)
                     && currentSerialInfo.custom_divisor > 0) {
 
                 // yes, speed is really custom
-                inputRate = currentSerialInfo.baud_base / currentSerialInfo.custom_divisor;
-                outputRate = inputRate;
+                inputBaudRate = currentSerialInfo.baud_base / currentSerialInfo.custom_divisor;
+                outputBaudRate = inputBaudRate;
             } else {
                 // no, we were wrong and the speed is a standard 38400 baud
-                isCustomRateCurrentSet = false;
+                isCustomBaudRateCurrentSet = false;
             }
         }
     }
 #else
     // other *nix
 #endif
-    if (!isCustomRateSupported || !isCustomRateCurrentSet) {
-        inputRate = SerialPortPrivate::rateFromSetting(inputUnixRate);
-        outputRate = SerialPortPrivate::rateFromSetting(outputUnixRate);
+    if (!isCustomBaudRateSupported || !isCustomBaudRateCurrentSet) {
+        inputBaudRate = SerialPortPrivate::baudRateFromSetting(inputUnixBaudRate);
+        outputBaudRate = SerialPortPrivate::baudRateFromSetting(outputUnixBaudRate);
     }
 
     // Detect databits.
@@ -1200,17 +1200,17 @@ QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
     return ret;
 }
 
-struct RatePair
+struct BaudRatePair
 {
-    qint32 rate;    // The numerical value of baud rate.
+    qint32 baudRate;
     qint32 setting; // The OS-specific code of baud rate.
-    bool operator<(const RatePair &other) const { return rate < other.rate; }
-    bool operator==(const RatePair &other) const { return setting == other.setting; }
+    bool operator<(const BaudRatePair &other) const { return baudRate < other.baudRate; }
+    bool operator==(const BaudRatePair &other) const { return setting == other.setting; }
 };
 
 // This table contains correspondences standard pairs values of
 // baud rates that are defined in file termios.h
-static const RatePair standardRatesTable[] =
+static const BaudRatePair standardBaudRatesTable[] =
 {
     #ifdef B50
     { 50, B50 },
@@ -1304,28 +1304,28 @@ static const RatePair standardRatesTable[] =
     #endif
 };
 
-static const RatePair *standardRatesTable_end =
-        standardRatesTable + sizeof(standardRatesTable)/sizeof(*standardRatesTable);
+static const BaudRatePair *standardBaudRatesTable_end =
+        standardBaudRatesTable + sizeof(standardBaudRatesTable)/sizeof(*standardBaudRatesTable);
 
-qint32 SerialPortPrivate::rateFromSetting(qint32 setting)
+qint32 SerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
-    const RatePair rp = { 0, setting };
-    const RatePair *ret = qFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->rate : 0;
+    const BaudRatePair rp = { 0, setting };
+    const BaudRatePair *ret = qFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
+    return ret != standardBaudRatesTable_end ? ret->baudRate : 0;
 }
 
-qint32 SerialPortPrivate::settingFromRate(qint32 rate)
+qint32 SerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
-    const RatePair rp = { rate, 0 };
-    const RatePair *ret = qBinaryFind(standardRatesTable, standardRatesTable_end, rp);
-    return ret != standardRatesTable_end ? ret->setting : 0;
+    const BaudRatePair rp = { baudRate, 0 };
+    const BaudRatePair *ret = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
+    return ret != standardBaudRatesTable_end ? ret->setting : 0;
 }
 
-QList<qint32> SerialPortPrivate::standardRates()
+QList<qint32> SerialPortPrivate::standardBaudRates()
 {
     QList<qint32> ret;
-    for (const RatePair *it = standardRatesTable; it != standardRatesTable_end; ++it)
-        ret.append(it->rate);
+    for (const BaudRatePair *it = standardBaudRatesTable; it != standardBaudRatesTable_end; ++it)
+        ret.append(it->baudRate);
     return ret;
 }
 

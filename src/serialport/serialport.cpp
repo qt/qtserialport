@@ -66,8 +66,8 @@ SerialPortPrivateData::SerialPortPrivateData(SerialPort *q)
     , readBuffer(SERIALPORT_BUFFERSIZE)
     , writeBuffer(SERIALPORT_BUFFERSIZE)
     , portError(SerialPort::NoError)
-    , inputRate(0)
-    , outputRate(0)
+    , inputBaudRate(0)
+    , outputBaudRate(0)
     , dataBits(SerialPort::UnknownDataBits)
     , parity(SerialPort::UnknownParity)
     , stopBits(SerialPort::UnknownStopBits)
@@ -141,12 +141,12 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     Having successfully opened, the SerialPort determines its current
     configuration and initializes itself to that. To access the current
-    configuration use the rate(), dataBits(), parity(), stopBits(), and
+    configuration use the baudRate(), dataBits(), parity(), stopBits(), and
     flowControl() methods.
 
     If these settings are satisfying, the I/O operation can be proceed with.
     Otherwise the port can be reconfigured to the desired setting using the
-    setRate(), setDataBits(), setParity(), setStopBits(), and setFlowControl()
+    setBaudRate(), setDataBits(), setParity(), setStopBits(), and setFlowControl()
     methods.
 
     Read or write the data by calling read() or write(). Alternatively the
@@ -240,22 +240,23 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::Rate
+    \enum SerialPort::BaudRate
 
     This enum describes the baud rate which the communication device operates
-    with. Note: only the most common standard rates are listed in this enum.
+    with. Note: only the most common standard baud rates are listed in this
+    enum.
 
-    \value Rate1200     1200 baud.
-    \value Rate2400     2400 baud.
-    \value Rate4800     4800 baud.
-    \value Rate9600     9600 baud.
-    \value Rate19200    19200 baud.
-    \value Rate38400    38400 baud.
-    \value Rate57600    57600 baud.
-    \value Rate115200   115200 baud.
+    \value Baud1200     1200 baud.
+    \value Baud2400     2400 baud.
+    \value Baud4800     4800 baud.
+    \value Baud9600     9600 baud.
+    \value Baud19200    19200 baud.
+    \value Baud38400    38400 baud.
+    \value Baud57600    57600 baud.
+    \value Baud115200   115200 baud.
     \value UnknownRate  Unknown baud.
 
-    \sa setRate(), rate()
+    \sa setBaudRate(), baudRate()
 */
 
 /*!
@@ -583,8 +584,8 @@ bool SerialPort::restoreSettingsOnClose() const
 */
 
 /*!
-    \property SerialPort::rate
-    \brief the data rate for the desired direction
+    \property SerialPort::baudRate
+    \brief the data baud rate for the desired direction
 
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by calling error(). To set the baud
@@ -593,39 +594,39 @@ bool SerialPort::restoreSettingsOnClose() const
     \warning Only the AllDirections flag is support for setting this property on
     Windows, Windows CE, and Symbian.
 
-    \warning Returns equal rate in any direction on Windows, Windows CE, and
+    \warning Returns equal baud rate in any direction on Windows, Windows CE, and
     Symbian.
 */
-bool SerialPort::setRate(qint32 rate, Directions dir)
+bool SerialPort::setBaudRate(qint32 baudRate, Directions dir)
 {
     Q_D(SerialPort);
-    if (d->setRate(rate, dir)) {
+    if (d->setBaudRate(baudRate, dir)) {
         if (dir & SerialPort::Input)
-            d->inputRate = rate;
+            d->inputBaudRate = baudRate;
         if (dir & SerialPort::Output)
-            d->outputRate = rate;
-        emit rateChanged(rate, dir);
+            d->outputBaudRate = baudRate;
+        emit baudRateChanged(baudRate, dir);
         return true;
     }
     return false;
 }
 
-qint32 SerialPort::rate(Directions dir) const
+qint32 SerialPort::baudRate(Directions dir) const
 {
     Q_D(const SerialPort);
     if (dir == SerialPort::AllDirections)
-        return d->inputRate == d->outputRate ?
-                    d->inputRate : SerialPort::UnknownRate;
-    return dir & SerialPort::Input ? d->inputRate : d->outputRate;
+        return d->inputBaudRate == d->outputBaudRate ?
+                    d->inputBaudRate : SerialPort::UnknownBaud;
+    return dir & SerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
 }
 
 /*!
-    \fn void SerialPort::rateChanged(qint32 rate, Directions dir)
+    \fn void SerialPort::baudRateChanged(qint32 baudRate, Directions dir)
 
-    This signal is emitted after the rate has been changed. The new rate is
-    passed as \a rate and directions as \a dir.
+    This signal is emitted after the baud rate has been changed. The new baud
+    rate is passed as \a baudRate and directions as \a dir.
 
-    \sa SerialPort::rate
+    \sa SerialPort::baudRate
 */
 
 /*!

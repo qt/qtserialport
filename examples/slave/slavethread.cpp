@@ -100,8 +100,8 @@ void SlaveThread::run()
                 return;
             }
 
-            if (!serial.setRate(9600)) {
-                emit error(tr("Can't set rate 9600 baud to port %1, error code %2")
+            if (!serial.setBaudRate(9600)) {
+                emit error(tr("Can't set baud rate 9600 baud to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;
             }

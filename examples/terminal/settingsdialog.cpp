@@ -55,14 +55,14 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     intValidator = new QIntValidator(0, 4000000, this);
 
-    ui->rateBox->setInsertPolicy(QComboBox::NoInsert);
+    ui->baudRateBox->setInsertPolicy(QComboBox::NoInsert);
 
     connect(ui->applyButton, SIGNAL(clicked()),
             this, SLOT(apply()));
     connect(ui->portsBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(showPortInfo(int)));
-    connect(ui->rateBox, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(checkCustomRatePolicy(int)));
+    connect(ui->baudRateBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(checkCustomBaudRatePolicy(int)));
 
     fillPortsParameters();
     fillPortsInfo();
@@ -98,12 +98,12 @@ void SettingsDialog::apply()
     hide();
 }
 
-void SettingsDialog::checkCustomRatePolicy(int idx)
+void SettingsDialog::checkCustomBaudRatePolicy(int idx)
 {
-    ui->rateBox->setEditable(idx == 4);
+    ui->baudRateBox->setEditable(idx == 4);
     if (idx == 4) {
-        ui->rateBox->clearEditText();
-        QLineEdit *edit = ui->rateBox->lineEdit();
+        ui->baudRateBox->clearEditText();
+        QLineEdit *edit = ui->baudRateBox->lineEdit();
         edit->setValidator(intValidator);
     }
 }
@@ -112,11 +112,11 @@ void SettingsDialog::fillPortsParameters()
 {
     // fill baud rate (is not the entire list of available values,
     // desired values??, add your independently)
-    ui->rateBox->addItem(QLatin1String("9600"), SerialPort::Rate9600);
-    ui->rateBox->addItem(QLatin1String("19200"), SerialPort::Rate19200);
-    ui->rateBox->addItem(QLatin1String("38400"), SerialPort::Rate38400);
-    ui->rateBox->addItem(QLatin1String("115200"), SerialPort::Rate115200);
-    ui->rateBox->addItem(QLatin1String("Custom"));
+    ui->baudRateBox->addItem(QLatin1String("9600"), SerialPort::Baud9600);
+    ui->baudRateBox->addItem(QLatin1String("19200"), SerialPort::Baud19200);
+    ui->baudRateBox->addItem(QLatin1String("38400"), SerialPort::Baud38400);
+    ui->baudRateBox->addItem(QLatin1String("115200"), SerialPort::Baud115200);
+    ui->baudRateBox->addItem(QLatin1String("Custom"));
 
     // fill data bits
     ui->dataBitsBox->addItem(QLatin1String("5"), SerialPort::Data5);
@@ -162,16 +162,16 @@ void SettingsDialog::updateSettings()
 {
     currentSettings.name = ui->portsBox->currentText();
 
-    // Rate
-    if (ui->rateBox->currentIndex() == 4) {
-        // custom rate
-        currentSettings.rate = ui->rateBox->currentText().toInt();
+    // Baud Rate
+    if (ui->baudRateBox->currentIndex() == 4) {
+        // custom baud rate
+        currentSettings.baudRate = ui->baudRateBox->currentText().toInt();
     } else {
-        // standard rate
-        currentSettings.rate = static_cast<SerialPort::Rate>(
-                    ui->rateBox->itemData(ui->rateBox->currentIndex()).toInt());
+        // standard baud rate
+        currentSettings.baudRate = static_cast<SerialPort::BaudRate>(
+                    ui->baudRateBox->itemData(ui->baudRateBox->currentIndex()).toInt());
     }
-    currentSettings.stringRate = QString::number(currentSettings.rate);
+    currentSettings.stringBaudRate = QString::number(currentSettings.baudRate);
 
     // Data bits
     currentSettings.dataBits = static_cast<SerialPort::DataBits>(

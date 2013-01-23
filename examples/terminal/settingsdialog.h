@@ -61,8 +61,8 @@ class SettingsDialog : public QDialog
 public:
     struct Settings {
         QString name;
-        qint32 rate;
-        QString stringRate;
+        qint32 baudRate;
+        QString stringBaudRate;
         SerialPort::DataBits dataBits;
         QString stringDataBits;
         SerialPort::Parity parity;
@@ -81,7 +81,7 @@ public:
 private slots:
     void showPortInfo(int idx);
     void apply();
-    void checkCustomRatePolicy(int idx);
+    void checkCustomBaudRatePolicy(int idx);
 
 private:
     void fillPortsParameters();

@@ -184,9 +184,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 // common part
 
-QList<qint32> SerialPortInfo::standardRates()
+QList<qint32> SerialPortInfo::standardBaudRates()
 {
-    return SerialPortPrivate::standardRates();
+    return SerialPortPrivate::standardBaudRates();
 }
 
 bool SerialPortInfo::isBusy() const

@@ -84,7 +84,7 @@ public:
     bool waitForReadyRead(int msecs);
     bool waitForBytesWritten(int msecs);
 
-    bool setRate(qint32 rate, SerialPort::Directions dir);
+    bool setBaudRate(qint32 baudRate, SerialPort::Directions dir);
     bool setDataBits(SerialPort::DataBits dataBits);
     bool setParity(SerialPort::Parity parity);
     bool setStopBits(SerialPort::StopBits stopBits);
@@ -98,10 +98,10 @@ public:
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
 
-    static qint32 rateFromSetting(qint32 setting);
-    static qint32 settingFromRate(qint32 rate);
+    static qint32 baudRateFromSetting(qint32 setting);
+    static qint32 settingFromBaudRate(qint32 baudRate);
 
-    static QList<qint32> standardRates();
+    static QList<qint32> standardBaudRates();
 
     struct termios currentTermios;
     struct termios restoredTermios;
@@ -110,7 +110,7 @@ public:
     struct serial_struct restoredSerialInfo;
 #endif
     int descriptor;
-    bool isCustomRateSupported;
+    bool isCustomBaudRateSupported;
 
     QSocketNotifier *readNotifier;
     QSocketNotifier *writeNotifier;

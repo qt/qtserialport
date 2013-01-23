@@ -55,7 +55,7 @@ class Q_SERIALPORT_EXPORT SerialPort : public QIODevice
 {
     Q_OBJECT
 
-    Q_PROPERTY(qint32 rate READ rate WRITE setRate NOTIFY rateChanged)
+    Q_PROPERTY(qint32 baudRate READ baudRate WRITE setBaudRate NOTIFY baudRateChanged)
     Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits NOTIFY dataBitsChanged)
     Q_PROPERTY(Parity parity READ parity WRITE setParity NOTIFY parityChanged)
     Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
@@ -77,16 +77,16 @@ public:
     };
     Q_DECLARE_FLAGS(Directions, Direction)
 
-    enum Rate {
-        Rate1200 = 1200,
-        Rate2400 = 2400,
-        Rate4800 = 4800,
-        Rate9600 = 9600,
-        Rate19200 = 19200,
-        Rate38400 = 38400,
-        Rate57600 = 57600,
-        Rate115200 = 115200,
-        UnknownRate = -1
+    enum BaudRate {
+        Baud1200 = 1200,
+        Baud2400 = 2400,
+        Baud4800 = 4800,
+        Baud9600 = 9600,
+        Baud19200 = 19200,
+        Baud38400 = 38400,
+        Baud57600 = 57600,
+        Baud115200 = 115200,
+        UnknownBaud = -1
     };
 
     enum DataBits {
@@ -170,8 +170,8 @@ public:
     void setRestoreSettingsOnClose(bool restore);
     bool restoreSettingsOnClose() const;
 
-    bool setRate(qint32 rate, Directions dir = AllDirections);
-    qint32 rate(Directions dir = AllDirections) const;
+    bool setBaudRate(qint32 baudRate, Directions dir = AllDirections);
+    qint32 baudRate(Directions dir = AllDirections) const;
 
     bool setDataBits(DataBits dataBits);
     DataBits dataBits() const;
@@ -220,7 +220,7 @@ public Q_SLOTS:
     bool clearBreak(bool clear = true);
 
 Q_SIGNALS:
-    void rateChanged(qint32 rate, Directions dir);
+    void baudRateChanged(qint32 baudRate, Directions dir);
     void dataBitsChanged(DataBits dataBits);
     void parityChanged(Parity parity);
     void stopBitsChanged(StopBits stopBits);
