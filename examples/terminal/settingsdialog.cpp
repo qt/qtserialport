@@ -100,12 +100,13 @@ void SettingsDialog::apply()
 
 void SettingsDialog::checkCustomBaudRatePolicy(int idx)
 {
-    ui->baudRateBox->setEditable(idx == 4);
-    if (idx == 4) {
+    bool isCustomBaudRate = !ui->baudRateBox->itemData(idx).isValid();
+    if (isCustomBaudRate) {
         ui->baudRateBox->clearEditText();
         QLineEdit *edit = ui->baudRateBox->lineEdit();
         edit->setValidator(intValidator);
     }
+    ui->baudRateBox->setEditable(isCustomBaudRate);
 }
 
 void SettingsDialog::fillPortsParameters()
