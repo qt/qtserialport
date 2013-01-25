@@ -52,15 +52,15 @@
 #endif
 
 #if defined(QT_NAMESPACE)
-#  define QT_BEGIN_NAMESPACE_SERIALPORT namespace QT_NAMESPACE { namespace QtAddOn { namespace SerialPort {
-#  define QT_END_NAMESPACE_SERIALPORT } } }
-#  define QT_USE_NAMESPACE_SERIALPORT using namespace QT_NAMESPACE::QtAddOn::SerialPort;
-#  define QT_PREPEND_NAMESPACE_SERIALPORT(name) ::QT_NAMESPACE::QtAddOn::SerialPort::name
-#else
-#  define QT_BEGIN_NAMESPACE_SERIALPORT namespace QtAddOn { namespace SerialPort {
+#  define QT_BEGIN_NAMESPACE_SERIALPORT namespace QT_NAMESPACE { namespace QtSerialPort {
 #  define QT_END_NAMESPACE_SERIALPORT } }
-#  define QT_USE_NAMESPACE_SERIALPORT using namespace QtAddOn::SerialPort;
-#  define QT_PREPEND_NAMESPACE_SERIALPORT(name) ::QtAddOn::SerialPort::name
+#  define QT_USE_NAMESPACE_SERIALPORT using namespace QT_NAMESPACE::QtSerialPort;
+#  define QT_PREPEND_NAMESPACE_SERIALPORT(name) ::QT_NAMESPACE::QtSerialPort::name
+#else
+#  define QT_BEGIN_NAMESPACE_SERIALPORT namespace QtSerialPort {
+#  define QT_END_NAMESPACE_SERIALPORT }
+#  define QT_USE_NAMESPACE_SERIALPORT using namespace QtSerialPort;
+#  define QT_PREPEND_NAMESPACE_SERIALPORT(name) ::QtSerialPort::name
 #endif
 
 // a workaround for moc - if there is a header file that doesn't use serialport
