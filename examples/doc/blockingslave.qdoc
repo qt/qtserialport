@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \module QtAddonSerialPort
+    \module QtSerialPort
     \title Blocking Slave example
     \example examples/blockingslave
 

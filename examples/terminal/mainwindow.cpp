@@ -46,7 +46,7 @@
 #include "settingsdialog.h"
 
 #include <QMessageBox>
-#include <QtAddOnSerialPort/serialport.h>
+#include <QtSerialPort/serialport.h>
 
 //! [0]
 MainWindow::MainWindow(QWidget *parent) :

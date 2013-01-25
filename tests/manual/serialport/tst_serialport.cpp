@@ -42,8 +42,8 @@
 #include <QtTest/QtTest>
 #include <QtCore/QDebug>
 
-#include <QtAddOnSerialPort/serialportinfo.h>
-#include <QtAddOnSerialPort/serialport.h>
+#include <QtSerialPort/serialportinfo.h>
+#include <QtSerialPort/serialport.h>
 
 QT_USE_NAMESPACE_SERIALPORT
 

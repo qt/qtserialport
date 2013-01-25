@@ -48,7 +48,7 @@
 #include <QPushButton>
 #include <QGridLayout>
 
-#include <QtAddOnSerialPort/serialportinfo.h>
+#include <QtSerialPort/serialportinfo.h>
 
 QT_USE_NAMESPACE_SERIALPORT
 

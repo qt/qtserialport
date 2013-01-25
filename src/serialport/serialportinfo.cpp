@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
     existing serial ports.
 
     \ingroup serialport-main
-    \inmodule QtAddOnSerialPort
+    \inmodule QtSerialPort
     \since 5.0
 
     Use the static functions to generate a list of SerialPortInfo

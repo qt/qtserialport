@@ -1,29 +1,26 @@
-!exists($$[QT_INSTALL_HEADERS]/QtAddOnSerialPort) {
-    INCLUDEPATH += $$SERIALPORT_BUILD_ROOT/include $$SERIALPORT_BUILD_ROOT/include/QtAddOnSerialPort
+!exists($$[QT_INSTALL_HEADERS]/QtSerialPort) {
+    INCLUDEPATH += $$QTSERIALPORT_BUILD_ROOT/include $$QTSERIALPORT_BUILD_ROOT/include/QtSerialPort
 
-    SERIALPORT_BUILD_SUBDIR = src/serialport
+    QTSERIALPORT_BUILD_SUBDIR = src/serialport
     win32 {
         CONFIG(debug, debug|release) {
-            SERIALPORT_BUILD_SUBDIR = $$SERIALPORT_BUILD_SUBDIR/debug
+            QTSERIALPORT_BUILD_SUBDIR = $$QTSERIALPORT_BUILD_SUBDIR/debug
         } else {
-            SERIALPORT_BUILD_SUBDIR = $$SERIALPORT_BUILD_SUBDIR/release
+            QTSERIALPORT_BUILD_SUBDIR = $$QTSERIALPORT_BUILD_SUBDIR/release
         }
     }
 
-    LIBS += -L$$SERIALPORT_BUILD_ROOT/$$SERIALPORT_BUILD_SUBDIR
+    LIBS += -L$$QTSERIALPORT_BUILD_ROOT/$$QTSERIALPORT_BUILD_SUBDIR
 }
 
-qtAddLibrary(SerialPort)
+qtAddLibrary(QtSerialPort)
 
 mac {
-    LIBS -= -framework SerialPort$${QT_LIBINFIX}
+    LIBS -= -framework QtSerialPort$${QT_LIBINFIX}
 
    if(!debug_and_release|build_pass):CONFIG(debug, debug|release) {
-       LIBS += -lSerialPort$${QT_LIBINFIX}_debug
+       LIBS += -lQtSerialPort$${QT_LIBINFIX}_debug
    } else {
-       LIBS += -lSerialPort$${QT_LIBINFIX}
+       LIBS += -lQtSerialPort$${QT_LIBINFIX}
    }
 }
-
-INCLUDEPATH -= $$[QT_INSTALL_HEADERS]/SerialPort
-INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtAddOnSerialPort

@@ -8,11 +8,11 @@ include($$PWD/serialport-lib.pri)
 greaterThan(QT_MAJOR_VERSION, 4) {
     load(qt_build_config)
     QT += core-private
-    TARGET = QtAddOnSerialPort
+    TARGET = QtSerialPort
     load(qt_module)
 } else {
     TEMPLATE = lib
-    TARGET = $$qtLibraryTarget(SerialPort$$QT_LIBINFIX)
+    TARGET = $$qtLibraryTarget(QtSerialPort$$QT_LIBINFIX)
     include($$PWD/qt4support/install-helper.pri)
     CONFIG += module create_prl
     win32|mac:CONFIG += debug_and_release build_all

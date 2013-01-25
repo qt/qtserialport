@@ -1,5 +1,5 @@
 %modules = (
-    "QtAddOnSerialPort" => "$basedir/src/serialport",
+    "QtSerialPort" => "$basedir/src/serialport",
 );
 
 %moduleheaders = (

@@ -94,7 +94,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     \reentrant
     \ingroup serialport-main
-    \inmodule QtAddOnSerialPort
+    \inmodule QtSerialPort
     \since 5.0
 
     This class resembles the functionality and behavior of the QAbstractSocket

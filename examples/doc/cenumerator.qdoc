@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \module QtAddonSerialPort
+    \module QtSerialPort
     \title Command Line Enumerator example
     \example examples/cenumerator
 

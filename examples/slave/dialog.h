@@ -45,7 +45,7 @@
 #include <QDialog>
 #include <QTimer>
 
-#include <QtAddOnSerialPort/serialport.h>
+#include <QtSerialPort/serialport.h>
 
 QT_USE_NAMESPACE_SERIALPORT
 

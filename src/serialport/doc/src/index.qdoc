@@ -26,18 +26,18 @@
 ****************************************************************************/
 
 /*!
-    \module QtAddonSerialPort
-    \title Qt Addon SerialPort Reference Documentation
+    \module QtSerialPort
+    \title QtSerialPort Reference Documentation
     \page index.html
 
-    \brief The QtAddonSerialPort module provides classes to make serial programming
+    \brief The QtSerialPort module provides classes to make serial programming
     easier and portable.
 
     To include the definitions of the module's classes, use the
     following directive:
 
     \code
-    #include <QtAddOnSerialPort/QtAddOnSerialPort>
+    #include <QtSerialPort/QtSerialPort>
     \endcode
 
     To link against the module, add this line to your \l qmake \c

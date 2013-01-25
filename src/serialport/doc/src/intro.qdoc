@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \module QtAddonSerialPort
+    \module QtSerialPort
     \title Introduction
     \page intro.html
     \contentspage {Introduction} {Contents}

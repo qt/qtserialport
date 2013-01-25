@@ -44,7 +44,7 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QtAddOnSerialPort/serialport.h>
+#include <QtSerialPort/serialport.h>
 
 namespace Ui {
 class SettingsDialog;

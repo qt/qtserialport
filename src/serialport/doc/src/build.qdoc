@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \module QtAddonSerialPort
+    \module QtSerialPort
     \title Building and usage
     \page build.html
     \previouspage Get source

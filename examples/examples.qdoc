@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 /*!
-    \module QtAddonSerialPort
+    \module QtSerialPort
     \title Examples
     \page examples.html
     \previouspage Building and usage

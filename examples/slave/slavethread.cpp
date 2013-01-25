@@ -41,7 +41,7 @@
 
 #include "slavethread.h"
 
-#include <QtAddOnSerialPort/serialport.h>
+#include <QtSerialPort/serialport.h>
 
 #include <QTime>
 

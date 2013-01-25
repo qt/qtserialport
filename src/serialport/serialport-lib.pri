@@ -38,7 +38,7 @@ symbian {
     TARGET.UID3 = 0xE7E62DFD
     TARGET.CAPABILITY =
     TARGET.EPOCALLOWDLLDATA = 1
-    addFiles.sources = SerialPort.dll
+    addFiles.sources = QtSerialPort.dll
     addFiles.path = !:/sys/bin
     DEPLOYMENT += addFiles
 
