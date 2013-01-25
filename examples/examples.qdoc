@@ -34,8 +34,8 @@
     \contentspage {Examples} {Contents}
 
     \list
-    \o \l examples/cenumerator
-    \o \l examples/enumerator
-    \o \l examples/terminal
+    \o \l doc/cenumerator
+    \o \l doc/enumerator
+    \o \l doc/terminal
     \endlist
 */

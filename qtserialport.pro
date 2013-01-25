@@ -1,5 +1,3 @@
-include(doc/doc.pri)
-
 lessThan(QT_MAJOR_VERSION, 5) {
     TEMPLATE = subdirs
     SUBDIRS = src examples tests

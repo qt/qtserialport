@@ -2,6 +2,7 @@ QT = core
 DEFINES += QT_SERIALPORT_LIB
 VERSION = 0.1.0
 
+include($$PWD/doc/doc.pri)
 include($$PWD/serialport-lib.pri)
 
 greaterThan(QT_MAJOR_VERSION, 4) {
