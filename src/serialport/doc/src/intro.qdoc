@@ -34,7 +34,7 @@
 
     \section1 History
 
-    QtSerialPort originated from the third-party library
+    Qt Serial Port originated from the third-party library
     \l{http://gitorious.org/qserialdevice/qserialdevice/trees/2.0}{QSerialDevice 2.0}.
 
     \section1 Overviews

@@ -139,7 +139,7 @@ void MainWindow::about()
 {
     QMessageBox::about(this, tr("About Simple Terminal"),
                        tr("The <b>Simple Terminal</b> example demonstrates how to "
-                          "use the QtSerialPort module in modern GUI applications "
+                          "use the Qt Serial Port module in modern GUI applications "
                           "using Qt, with a menu bar, toolbars, and a status bar."));
 }
 
