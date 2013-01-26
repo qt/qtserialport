@@ -45,6 +45,7 @@
 
 #include "serialport_p.h"
 
+#include <limits.h>
 #include <termios.h>
 #ifdef Q_OS_LINUX
 #  include <linux/serial.h>
