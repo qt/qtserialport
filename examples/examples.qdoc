@@ -34,6 +34,8 @@
     \contentspage {Examples} {Contents}
 
     \list
+    \o \l doc/blockingmaster
+    \o \l doc/blockingslave
     \o \l doc/cenumerator
     \o \l doc/enumerator
     \o \l doc/terminal
