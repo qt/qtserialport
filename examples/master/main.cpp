@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <scapig@yandex.ru>
+** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtCore module of the Qt Toolkit.

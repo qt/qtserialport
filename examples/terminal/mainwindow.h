@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <scapig@yandex.ru>
+** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
 ** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
