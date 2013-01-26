@@ -108,7 +108,7 @@ void Dialog::sendRequest()
             return;
         }
 
-        if (!serial.setBaudRate(9600)) {
+        if (!serial.setBaudRate(SerialPort::Baud9600)) {
             processError(tr("Can't set rate 9600 baud to port %1, error code %2")
                          .arg(serial.portName()).arg(serial.error()));
             return;
