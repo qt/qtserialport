@@ -411,7 +411,7 @@ QSerialPort::QSerialPort(const QSerialPortInfo &info, QObject *parent)
 }
 
 /*!
-    Closes the serial port, if neccessary, and then destroys object.
+    Closes the serial port, if necessary, and then destroys object.
 */
 QSerialPort::~QSerialPort()
 {

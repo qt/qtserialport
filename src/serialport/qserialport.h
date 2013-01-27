@@ -40,8 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORT_H
-#define SERIALPORT_H
+#ifndef QSERIALPORT_H
+#define QSERIALPORT_H
 
 #include <QtCore/qiodevice.h>
 
@@ -252,4 +252,4 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Lines)
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORT_H
+#endif // QSERIALPORT_H
