@@ -41,8 +41,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORT_P_H
-#define SERIALPORT_P_H
+#ifndef QSERIALPORT_P_H
+#define QSERIALPORT_P_H
 
 #include "serialport.h"
 
@@ -54,34 +54,34 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPortPrivateData
+class QSerialPortPrivateData
 {
-    Q_DECLARE_PUBLIC(SerialPort)
+    Q_DECLARE_PUBLIC(QSerialPort)
 public:
     enum IoConstants {
         ReadChunkSize = 512,
         WriteChunkSize = 512
     };
 
-    SerialPortPrivateData(SerialPort *q);
+    QSerialPortPrivateData(QSerialPort *q);
     int timeoutValue(int msecs, int elapsed);
 
     qint64 readBufferMaxSize;
     QRingBuffer readBuffer;
     QRingBuffer writeBuffer;
-    SerialPort::PortError portError;
+    QSerialPort::PortError portError;
     QString systemLocation;
     qint32 inputBaudRate;
     qint32 outputBaudRate;
-    SerialPort::DataBits dataBits;
-    SerialPort::Parity parity;
-    SerialPort::StopBits stopBits;
-    SerialPort::FlowControl flow;
-    SerialPort::DataErrorPolicy policy;
+    QSerialPort::DataBits dataBits;
+    QSerialPort::Parity parity;
+    QSerialPort::StopBits stopBits;
+    QSerialPort::FlowControl flow;
+    QSerialPort::DataErrorPolicy policy;
     bool restoreSettingsOnClose;
-    SerialPort * const q_ptr;
+    QSerialPort * const q_ptr;
 };
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORT_P_H
+#endif // QSERIALPORT_P_H

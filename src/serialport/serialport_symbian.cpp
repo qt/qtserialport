@@ -92,19 +92,19 @@ static bool loadDevices()
     return true;
 }
 
-SerialPortPrivate::SerialPortPrivate(SerialPort *q)
-    : SerialPortPrivateData(q)
+QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
+    : QSerialPortPrivateData(q)
     , errnum(KErrNone)
 {
 }
 
-bool SerialPortPrivate::open(QIODevice::OpenMode mode)
+bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     // FIXME: Maybe need added check an ReadWrite open mode?
     Q_UNUSED(mode)
 
     if (!loadDevices()) {
-        portError = SerialPort::UnknownPortError;
+        portError = QSerialPort::UnknownPortError;
         return false;
     }
 
@@ -149,39 +149,39 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     return true;
 }
 
-void SerialPortPrivate::close()
+void QSerialPortPrivate::close()
 {
     if (restoreSettingsOnClose)
         descriptor.SetConfig(restoredSettings);
     descriptor.Close();
 }
 
-SerialPort::Lines SerialPortPrivate::lines() const
+QSerialPort::Lines QSerialPortPrivate::lines() const
 {
-    SerialPort::Lines ret = 0;
+    QSerialPort::Lines ret = 0;
 
     TUint signalMask = 0;
     descriptor.Signals(signalMask);
 
     if (signalMask & KSignalCTS)
-        ret |= SerialPort::CtsLine;
+        ret |= QSerialPort::CtsLine;
     if (signalMask & KSignalDSR)
-        ret |= SerialPort::DsrLine;
+        ret |= QSerialPort::DsrLine;
     if (signalMask & KSignalDCD)
-        ret |= SerialPort::DcdLine;
+        ret |= QSerialPort::DcdLine;
     if (signalMask & KSignalRNG)
-        ret |= SerialPort::RiLine;
+        ret |= QSerialPort::RiLine;
     if (signalMask & KSignalRTS)
-        ret |= SerialPort::RtsLine;
+        ret |= QSerialPort::RtsLine;
     if (signalMask & KSignalDTR)
-        ret |= SerialPort::DtrLine;
+        ret |= QSerialPort::DtrLine;
 
     //if (signalMask & KSignalBreak)
     //  ret |=
     return ret;
 }
 
-bool SerialPortPrivate::setDtr(bool set)
+bool QSerialPortPrivate::setDtr(bool set)
 {
     TInt r;
     if (set)
@@ -192,7 +192,7 @@ bool SerialPortPrivate::setDtr(bool set)
     return r == KErrNone;
 }
 
-bool SerialPortPrivate::setRts(bool set)
+bool QSerialPortPrivate::setRts(bool set)
 {
     TInt r;
     if (set)
@@ -203,80 +203,80 @@ bool SerialPortPrivate::setRts(bool set)
     return r == KErrNone;
 }
 
-bool SerialPortPrivate::flush()
+bool QSerialPortPrivate::flush()
 {
     // TODO: Implement me
     return false;
 }
 
-bool SerialPortPrivate::clear(SerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
 {
     TUint flags = 0;
-    if (dir & SerialPort::Input)
+    if (dir & QSerialPort::Input)
         flags |= KCommResetRx;
-    if (dir & SerialPort::Output)
+    if (dir & QSerialPort::Output)
         flags |= KCommResetTx;
     TInt r = descriptor.ResetBuffers(flags);
     return r == KErrNone;
 }
 
-bool SerialPortPrivate::sendBreak(int duration)
+bool QSerialPortPrivate::sendBreak(int duration)
 {
     TRequestStatus status;
     descriptor.Break(status, TTimeIntervalMicroSeconds32(duration * 1000));
     return false;
 }
 
-bool SerialPortPrivate::setBreak(bool set)
+bool QSerialPortPrivate::setBreak(bool set)
 {
     // TODO: Implement me
     return false;
 }
 
-qint64 SerialPortPrivate::systemInputQueueSize () const
+qint64 QSerialPortPrivate::systemInputQueueSize () const
 {
     return descriptor.QueryReceiveBuffer();
 }
 
-qint64 SerialPortPrivate::systemOutputQueueSize () const
+qint64 QSerialPortPrivate::systemOutputQueueSize () const
 {
     // TODO: Implement me
     return 0;
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 QSerialPortPrivate::bytesAvailable() const
 {
     return readBuffer.size();
 }
 
-qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
+qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
 {
     // TODO: Implement me
     return -1;
 }
 
-qint64 SerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
     // TODO: Implement me
     return -1;
 }
 
-bool SerialPortPrivate::waitForReadyRead(int msec)
+bool QSerialPortPrivate::waitForReadyRead(int msec)
 {
     // TODO: Implement me
     return false;
 }
 
-bool SerialPortPrivate::waitForBytesWritten(int msec)
+bool QSerialPortPrivate::waitForBytesWritten(int msec)
 {
     // TODO: Implement me
     return false;
 }
 
-bool SerialPortPrivate::setBaudRate(qint32 baudRate, SerialPort::Directions dir)
+bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
 {
-    if (dir != SerialPort::AllDirections) {
-        portError = SerialPort::UnsupportedPortOperationError;
+    if (dir != QSerialPort::AllDirections) {
+        portError = QSerialPort::UnsupportedPortOperationError;
         return false;
     }
 
@@ -284,26 +284,26 @@ bool SerialPortPrivate::setBaudRate(qint32 baudRate, SerialPort::Directions dir)
     if (baudRate)
         currentSettings().iRate = static_cast<TBps>(baudRate);
     else {
-        portError = SerialPort::UnsupportedPortOperationError;
+        portError = QSerialPort::UnsupportedPortOperationError;
         return false;
     }
 
     return updateCommConfig();
 }
 
-bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
+bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
 {
     switch (dataBits) {
-    case SerialPort::Data5:
+    case QSerialPort::Data5:
         currentSettings().iDataBits = EData5;
         break;
-    case SerialPort::Data6:
+    case QSerialPort::Data6:
         currentSettings().iDataBits = EData6;
         break;
-    case SerialPort::Data7:
+    case QSerialPort::Data7:
         currentSettings().iDataBits = EData7;
         break;
-    case SerialPort::Data8:
+    case QSerialPort::Data8:
         currentSettings().iDataBits = EData8;
         break;
     default:
@@ -314,22 +314,22 @@ bool SerialPortPrivate::setDataBits(SerialPort::DataBits dataBits)
     return updateCommConfig();
 }
 
-bool SerialPortPrivate::setParity(SerialPort::Parity parity)
+bool QSerialPortPrivate::setParity(QSerialPort::Parity parity)
 {
     switch (parity) {
-    case SerialPort::NoParity:
+    case QSerialPort::NoParity:
         currentSettings().iParity = EParityNone;
         break;
-    case SerialPort::EvenParity:
+    case QSerialPort::EvenParity:
         currentSettings().iParity = EParityEven;
         break;
-    case SerialPort::OddParity:
+    case QSerialPort::OddParity:
         currentSettings().iParity = EParityOdd;
         break;
-    case SerialPort::MarkParity:
+    case QSerialPort::MarkParity:
         currentSettings().iParity = EParityMark;
         break;
-    case SerialPort::SpaceParity:
+    case QSerialPort::SpaceParity:
         currentSettings().iParity = EParitySpace;
         break;
     default:
@@ -340,13 +340,13 @@ bool SerialPortPrivate::setParity(SerialPort::Parity parity)
     return updateCommConfig();
 }
 
-bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
+bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
 {
     switch (stopBits) {
-    case SerialPort::OneStop:
+    case QSerialPort::OneStop:
         currentSettings().iStopBits = EStop1;
         break;
-    case SerialPort::TwoStop:
+    case QSerialPort::TwoStop:
         currentSettings().iStopBits = EStop2;
         break;
     default:
@@ -357,16 +357,16 @@ bool SerialPortPrivate::setStopBits(SerialPort::StopBits stopBits)
     return updateCommConfig();
 }
 
-bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
+bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flow)
 {
     switch (flow) {
-    case SerialPort::NoFlowControl:
+    case QSerialPort::NoFlowControl:
         currentSettings().iHandshake = KConfigFailDSR;
         break;
-    case SerialPort::HardwareControl:
+    case QSerialPort::HardwareControl:
         currentSettings().iHandshake = KConfigObeyCTS | KConfigFreeRTS;
         break;
-    case SerialPort::SoftwareControl:
+    case QSerialPort::SoftwareControl:
         currentSettings().iHandshake = KConfigObeyXoff | KConfigSendXoff;
         break;
     default:
@@ -377,34 +377,34 @@ bool SerialPortPrivate::setFlowControl(SerialPort::FlowControl flow)
     return updateCommConfig();
 }
 
-bool SerialPortPrivate::setDataErrorPolicy(SerialPort::DataErrorPolicy policy)
+bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
 {
     // TODO: Implement me
     return false;
 }
 
-bool SerialPortPrivate::notifyRead()
+bool QSerialPortPrivate::notifyRead()
 {
     // TODO: Implement me
     return false;
 }
 
-bool SerialPortPrivate::notifyWrite()
+bool QSerialPortPrivate::notifyWrite()
 {
     // TODO: Implement me
     return false;
 }
 
-bool SerialPortPrivate::updateCommConfig()
+bool QSerialPortPrivate::updateCommConfig()
 {
     if (descriptor.SetConfig(currentSettings) != KErrNone) {
-        portError = SerialPort::UnsupportedPortOperationError;
+        portError = QSerialPort::UnsupportedPortOperationError;
         return false;
     }
     return true;
 }
 
-void SerialPortPrivate::detectDefaultSettings()
+void QSerialPortPrivate::detectDefaultSettings()
 {
     // Detect baud rate.
     inputBaudRate = baudRateFromSetting(currentSettings().iRate);
@@ -413,91 +413,91 @@ void SerialPortPrivate::detectDefaultSettings()
     // Detect databits.
     switch (currentSettings().iDataBits) {
     case EData5:
-        dataBits = SerialPort::Data5;
+        dataBits = QSerialPort::Data5;
         break;
     case EData6:
-        dataBits = SerialPort::Data6;
+        dataBits = QSerialPort::Data6;
         break;
     case EData7:
-        dataBits = SerialPort::Data7;
+        dataBits = QSerialPort::Data7;
         break;
     case EData8:
-        dataBits = SerialPort::Data8;
+        dataBits = QSerialPort::Data8;
         break;
     default:
-        dataBits = SerialPort::UnknownDataBits;
+        dataBits = QSerialPort::UnknownDataBits;
         break;
     }
 
     // Detect parity.
     switch (currentSettings().iParity) {
     case EParityNone:
-        parity = SerialPort::NoParity;
+        parity = QSerialPort::NoParity;
         break;
     case EParityEven:
-        parity = SerialPort::EvenParity;
+        parity = QSerialPort::EvenParity;
         break;
     case EParityOdd:
-        parity = SerialPort::OddParity;
+        parity = QSerialPort::OddParity;
         break;
     case EParityMark:
-        parity = SerialPort::MarkParity;
+        parity = QSerialPort::MarkParity;
         break;
     case EParitySpace:
-        parity = SerialPort::SpaceParity;
+        parity = QSerialPort::SpaceParity;
         break;
     default:
-        parity = SerialPort::UnknownParity;
+        parity = QSerialPort::UnknownParity;
         break;
     }
 
     // Detect stopbits.
     switch (currentSettings().iStopBits) {
     case EStop1:
-        stopBits = SerialPort::OneStop;
+        stopBits = QSerialPort::OneStop;
         break;
     case EStop2:
-        stopBits = SerialPort::TwoStop;
+        stopBits = QSerialPort::TwoStop;
         break;
     default:
-        stopBits = SerialPort::UnknownStopBits;
+        stopBits = QSerialPort::UnknownStopBits;
         break;
     }
 
     // Detect flow control.
     if ((currentSettings().iHandshake & (KConfigObeyXoff | KConfigSendXoff))
             == (KConfigObeyXoff | KConfigSendXoff))
-        flow = SerialPort::SoftwareControl;
+        flow = QSerialPort::SoftwareControl;
     else if ((currentSettings().iHandshake & (KConfigObeyCTS | KConfigFreeRTS))
              == (KConfigObeyCTS | KConfigFreeRTS))
-        flow = SerialPort::HardwareControl;
+        flow = QSerialPort::HardwareControl;
     else if (currentSettings().iHandshake & KConfigFailDSR)
-        flow = SerialPort::NoFlowControl;
+        flow = QSerialPort::NoFlowControl;
     else
-        flow = SerialPort::UnknownFlowControl;
+        flow = QSerialPort::UnknownFlowControl;
 }
 
-SerialPort::PortError SerialPortPrivate::decodeSystemError() const
+QSerialPort::PortError QSerialPortPrivate::decodeSystemError() const
 {
-    SerialPort::PortError error;
+    QSerialPort::PortError error;
     switch (errnum) {
     case KErrPermissionDenied:
-        error = SerialPort::NoSuchDeviceError;
+        error = QSerialPort::NoSuchDeviceError;
         break;
     case KErrLocked:
-        error = SerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionDeniedError;
         break;
     case KErrAccessDenied:
-        error = SerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionDeniedError;
         break;
     default:
-        error = SerialPort::UnknownPortError;
+        error = QSerialPort::UnknownPortError;
         break;
     }
     return error;
 }
 
-bool SerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
+bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                                            bool checkRead, bool checkWrite,
                                            int msecs, bool *timedOut)
 {
@@ -566,13 +566,13 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForW
     return result;
 }
 
-QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
+QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
 {
     // Port name is equval to port systemLocation.
     return port;
 }
 
-QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
+QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
 {
     // Port name is equval to port systemLocation.
     return location;
@@ -623,21 +623,21 @@ static const BaudRatePair standardBaudRatesTable[] =
 static const BaudRatePair *standardBaudRatesTable_end =
         standardBaudRatesTable + sizeof(standardBaudRatesTable)/sizeof(*standardBaudRatesTable);
 
-qint32 SerialPortPrivate::baudRateFromSetting(qint32 setting)
+qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
     const BaudRatePair rp = { 0, setting };
     const BaudRatePair *ret = qFind(standardaBaudRatesTable, standardBaudRatesTable_end, rp);
     return ret != standardBaudRatesTable_end ? ret->baudRate : 0;
 }
 
-qint32 SerialPortPrivate::settingFromBaudRate(qint32 baudRate)
+qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
     const BaudRatePair rp = { baudRate, 0 };
     const BaudRatePair *ret = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
     return ret != standardBaudRatesTable_end ? ret->setting : 0;
 }
 
-QList<qint32> SerialPortPrivate::standardBaudRates()
+QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
     QList<qint32> ret;
     for (const BaudRatePair *it = standardBaudRatesTable; it != standardBaudRatesTable_end; ++it)

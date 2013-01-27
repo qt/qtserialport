@@ -30,14 +30,14 @@
     \title Enumerator example
     \example examples/enumerator
 
-    The Enumerator example shows how to use the class SerialPortInfo for
+    The Enumerator example shows how to use the class QSerialPortInfo for
     getting information about serial devices that are present in the system.
 
     \image enumerator-example.png Screenshot of the Enumerator example
 
     This GUI example displays information about serial ports in a widget,
-    provided by the class SerialPortInfo.
+    provided by the class QSerialPortInfo.
 
     For getting information about the available ports, use the static method
-    \l{SerialPortInfo::availablePorts()}{availablePorts()}.
+    \l{QSerialPortInfo::availablePorts()}{availablePorts()}.
 */

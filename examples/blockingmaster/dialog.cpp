@@ -65,7 +65,7 @@ Dialog::Dialog(QWidget *parent)
     , statusLabel(new QLabel(tr("Status: Not running.")))
     , runButton(new QPushButton(tr("Start")))
 {
-    foreach (const SerialPortInfo &info, SerialPortInfo::availablePorts())
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
         serialPortComboBox->addItem(info.portName());
 
     waitResponseSpinBox->setRange(0, 10000);

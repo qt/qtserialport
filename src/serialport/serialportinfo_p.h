@@ -41,8 +41,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORTINFO_P_H
-#define SERIALPORTINFO_P_H
+#ifndef QSERIALPORTINFO_P_H
+#define QSERIALPORTINFO_P_H
 
 #include "serialport-global.h"
 
@@ -50,11 +50,11 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPortInfoPrivate
+class QSerialPortInfoPrivate
 {
 public:
-    SerialPortInfoPrivate() {}
-    ~SerialPortInfoPrivate() {}
+    QSerialPortInfoPrivate() {}
+    ~QSerialPortInfoPrivate() {}
 
     QString portName;
     QString device;
@@ -64,14 +64,14 @@ public:
     QString productIdentifier;
 };
 
-class SerialInfoPrivateDeleter
+class QSerialInfoPrivateDeleter
 {
 public:
-    static void cleanup(SerialPortInfoPrivate *p) {
+    static void cleanup(QSerialPortInfoPrivate *p) {
         delete p;
     }
 };
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORTINFO_P_H
+#endif // QSERIALPORTINFO_P_H

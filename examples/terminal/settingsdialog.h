@@ -63,13 +63,13 @@ public:
         QString name;
         qint32 baudRate;
         QString stringBaudRate;
-        SerialPort::DataBits dataBits;
+        QSerialPort::DataBits dataBits;
         QString stringDataBits;
-        SerialPort::Parity parity;
+        QSerialPort::Parity parity;
         QString stringParity;
-        SerialPort::StopBits stopBits;
+        QSerialPort::StopBits stopBits;
         QString stringStopBits;
-        SerialPort::FlowControl flowControl;
+        QSerialPort::FlowControl flowControl;
         QString stringFlowControl;
     };
 

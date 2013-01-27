@@ -31,23 +31,23 @@
     \example examples/blockingmaster
 
     The Blocking Master example shows how to create a application for a
-    serial interface using SerialPort's synchronous API in a non-GUI thread.
+    serial interface using QSerialPort's synchronous API in a non-GUI thread.
 
     \image blockingmaster-example.png Screenshot of the Blocking Master example
 
-    SerialPort supports two general programming approaches:
+    QSerialPort supports two general programming approaches:
 
     \list
 
     \o \i{The asynchronous (non-blocking) approach.} Operations are scheduled
-    and performed when the control returns to Qt's event loop. SerialPort emits
-    a signal when the operation is finished. For example, SerialPort::write()
-    returns immediately. When the data is sent to the serial port, SerialPort
-    emits \l{SerialPort::bytesWritten()}{bytesWritten()}.
+    and performed when the control returns to Qt's event loop. QSerialPort emits
+    a signal when the operation is finished. For example, QSerialPort::write()
+    returns immediately. When the data is sent to the serial port, QSerialPort
+    emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
 
     \o \i{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
-    SerialPort::waitReadyRead()) to suspend the calling thread until the
+    QSerialPort::waitReadyRead()) to suspend the calling thread until the
     operation has completed.
 
     \endlist
@@ -107,7 +107,7 @@
     and timeout or request data of another. And as you might have guessed,
     MasterThread can only handle one request at a time.
 
-    The SerialPort object we construct on stack into run() function before loop
+    The QSerialPort object we construct on stack into run() function before loop
     enter:
 
     \snippet examples/blockingmaster/masterthread.cpp 6

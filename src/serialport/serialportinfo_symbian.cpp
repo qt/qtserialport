@@ -99,9 +99,9 @@ static bool loadDevices()
     return true;
 }
 
-QList<SerialPortInfo> SerialPortInfo::availablePorts()
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<SerialPortInfo> ports;
+    QList<QSerialPortInfo> ports;
 
     if (!loadDevices())
         return ports;
@@ -123,7 +123,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             //
             for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
-                SerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo info; // My (desired) info class.
 
                 info.d_ptr->device = s
                         .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
@@ -146,7 +146,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             //
             for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
-                SerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo info; // My (desired) info class.
 
                 info.d_ptr->device = s
                         .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
@@ -169,7 +169,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             //
             for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
-                SerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo info; // My (desired) info class.
 
                 info.d_ptr->device = s
                         .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
@@ -192,12 +192,12 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             //
             for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
 
-                SerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo info; // My (desired) info class.
 
                 info.d_ptr->device = s
                         .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
                         .arg(i);
-                info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
+                info.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
                 info.d_ptr->description =
                         QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
                 info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
@@ -209,12 +209,12 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     return ports;
 }
 
-QList<qint32> SerialPortInfo::standardRates()
+QList<qint32> QSerialPortInfo::standardRates()
 {
-    return SerialPortPrivate::standardRates();
+    return QSerialPortPrivate::standardRates();
 }
 
-bool SerialPortInfo::isBusy() const
+bool QSerialPortInfo::isBusy() const
 {
     if (!loadDevices())
         return false;
@@ -232,7 +232,7 @@ bool SerialPortInfo::isBusy() const
     return r == KErrLocked;
 }
 
-bool SerialPortInfo::isValid() const
+bool QSerialPortInfo::isValid() const
 {
     if (!loadDevices())
         return false;

@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
     console->setEnabled(false);
     setCentralWidget(console);
 //! [1]
-    serial = new SerialPort(this);
+    serial = new QSerialPort(this);
 //! [1]
     settings = new SettingsDialog;
 

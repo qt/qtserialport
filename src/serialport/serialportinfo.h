@@ -50,22 +50,22 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPort;
-class SerialPortInfoPrivate;
-class SerialInfoPrivateDeleter;
+class QSerialPort;
+class QSerialPortInfoPrivate;
+class QSerialInfoPrivateDeleter;
 
-class Q_SERIALPORT_EXPORT SerialPortInfo
+class Q_SERIALPORT_EXPORT QSerialPortInfo
 {
-    Q_DECLARE_PRIVATE(SerialPortInfo)
+    Q_DECLARE_PRIVATE(QSerialPortInfo)
 public:
-    SerialPortInfo();
-    SerialPortInfo(const SerialPortInfo &other);
-    SerialPortInfo(const SerialPort &port);
-    SerialPortInfo(const QString &name);
-    ~SerialPortInfo();
+    QSerialPortInfo();
+    QSerialPortInfo(const QSerialPortInfo &other);
+    QSerialPortInfo(const QSerialPort &port);
+    QSerialPortInfo(const QString &name);
+    ~QSerialPortInfo();
 
-    SerialPortInfo& operator=(const SerialPortInfo &other);
-    void swap(SerialPortInfo &other);
+    QSerialPortInfo& operator=(const QSerialPortInfo &other);
+    void swap(QSerialPortInfo &other);
 
     QString portName() const;
     QString systemLocation() const;
@@ -79,13 +79,13 @@ public:
     bool isValid() const;
 
     static QList<qint32> standardBaudRates();
-    static QList<SerialPortInfo> availablePorts();
+    static QList<QSerialPortInfo> availablePorts();
 
 private:
-    QScopedPointer<SerialPortInfoPrivate, SerialInfoPrivateDeleter> d_ptr;
+    QScopedPointer<QSerialPortInfoPrivate, QSerialInfoPrivateDeleter> d_ptr;
 };
 
-inline bool SerialPortInfo::isNull() const
+inline bool QSerialPortInfo::isNull() const
 { return !d_ptr; }
 
 QT_END_NAMESPACE_SERIALPORT

@@ -31,28 +31,28 @@
     \example examples/terminal
 
     The Terminal example shows how to create a terminal for a simple serial
-    interface by using SerialPort.
+    interface by using Qt Serial Port.
 
     \image terminal-example.png Screenshot of the Terminal example
 
-    This example shows the main features of the SerialPort class, like
+    This example shows the main features of the QSerialPort class, like
     configuration, I/O implementation and so forth. Also, the class
-    SerialPortInfo is invoked to display information about the serial ports
+    QSerialPortInfo is invoked to display information about the serial ports
     available in the system.
 
-    SerialPort supports two general programming approaches:
+    QSerialPort supports two general programming approaches:
 
     \list
 
     \o \i{The asynchronous (non-blocking) approach.} Operations are scheduled
-    and performed when the control returns to Qt's event loop. SerialPort emits
-    a signal when the operation is finished. For example, SerialPort::write()
-    returns immediately. When the data is sent to the serial port, SerialPort
-    emits \l{SerialPort::bytesWritten()}{bytesWritten()}.
+    and performed when the control returns to Qt's event loop. QSerialPort emits
+    a signal when the operation is finished. For example, QSerialPort::write()
+    returns immediately. When the data is sent to the serial port, QSerialPort
+    emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
 
     \o \i{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
-    SerialPort::waitReadyRead()) to suspend the calling thread until the
+    QSerialPort::waitReadyRead()) to suspend the calling thread until the
     operation has completed.
 
     \endlist
@@ -88,8 +88,8 @@
     \dots
     \snippet examples/terminal/mainwindow.cpp 1
 
-    The only SerialPort signal invoked in this example is
-    SerialPort::readyRead(), which shows that new data has been received and
+    The only QSerialPort signal invoked in this example is
+    QSerialPort::readyRead(), which shows that new data has been received and
     hence available:
 
     \dots

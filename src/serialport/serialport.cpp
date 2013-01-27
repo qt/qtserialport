@@ -61,24 +61,24 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-SerialPortPrivateData::SerialPortPrivateData(SerialPort *q)
+QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     : readBufferMaxSize(0)
     , readBuffer(SERIALPORT_BUFFERSIZE)
     , writeBuffer(SERIALPORT_BUFFERSIZE)
-    , portError(SerialPort::NoError)
+    , portError(QSerialPort::NoError)
     , inputBaudRate(0)
     , outputBaudRate(0)
-    , dataBits(SerialPort::UnknownDataBits)
-    , parity(SerialPort::UnknownParity)
-    , stopBits(SerialPort::UnknownStopBits)
-    , flow(SerialPort::UnknownFlowControl)
-    , policy(SerialPort::IgnorePolicy)
+    , dataBits(QSerialPort::UnknownDataBits)
+    , parity(QSerialPort::UnknownParity)
+    , stopBits(QSerialPort::UnknownStopBits)
+    , flow(QSerialPort::UnknownFlowControl)
+    , policy(QSerialPort::IgnorePolicy)
     , restoreSettingsOnClose(true)
     , q_ptr(q)
 {
 }
 
-int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
+int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 {
     if (msecs == -1)
         return msecs;
@@ -87,9 +87,9 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 }
 
 /*!
-    \class SerialPort
+    \class QSerialPort
 
-    \brief The SerialPort class provides functions to access
+    \brief The QSerialPort class provides functions to access
     serial ports.
 
     \reentrant
@@ -100,7 +100,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This class resembles the functionality and behavior of the QAbstractSocket
     class in many aspects, for instance the I/O operations, the implementation
     of the wait methods, the internal architecture and so forth. Certain
-    SerialPort method implementations were taken directly from QAbstractSocket
+    QSerialPort method implementations were taken directly from QAbstractSocket
     with only minor changes.
 
     The features of the implementation and the conduct of the class are
@@ -119,17 +119,17 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     of RS-232 lines was changed.
     \endlist
 
-    To get started with the SerialPort class, first create an object of
+    To get started with the QSerialPort class, first create an object of
     that.
 
     Then, call the setPort() method in order to assign the object with the name
     of the desired serial port (which has to be present in the system).
     The name has to follow a certain format, which is platform dependent.
 
-    The helper class SerialPortInfo allows the enumeration of all the serial
+    The helper class QSerialPortInfo allows the enumeration of all the serial
     ports in the system. This is useful to obtain the correct serial port name.
 
-    The SerialPortInfo class can also be used as an input parameter for the
+    The QSerialPortInfo class can also be used as an input parameter for the
     setPort() method (to retrieve the currently assigned name, use the
     portName() method).
 
@@ -139,7 +139,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     Note: The serial port is always opened with exclusive access
     (i.e. no other process or thread can access an already opened serial port).
 
-    Having successfully opened, the SerialPort determines its current
+    Having successfully opened, the QSerialPort determines its current
     configuration and initializes itself to that. To access the current
     configuration use the baudRate(), dataBits(), parity(), stopBits(), and
     flowControl() methods.
@@ -151,7 +151,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     Read or write the data by calling read() or write(). Alternatively the
     readLine() and readAll() convenience methods can also be invoked. The
-    SerialPort class also inherits the getChar(), putChar(), and ungetChar()
+    QSerialPort class also inherits the getChar(), putChar(), and ungetChar()
     methods from the QIODevice class. Those methods work on single bytes. The
     bytesWritten() signal is emitted when data has been written to the serial
     port. Note that, Qt does not limit the write buffer size, which can be
@@ -164,7 +164,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     If not all the data is read at once, the remaining data will
     still be available later. Any new incoming data will be
-    appended to the SerialPort's internal read buffer. In order to limit the
+    appended to the QSerialPort's internal read buffer. In order to limit the
     size of the read buffer, call setReadBufferSize().
 
     The status of the control lines is determined with the dtr(), rts(), and
@@ -172,10 +172,10 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     setRts() methods.
 
     To close the serial port, call the close() method. After all the pending data
-    has been written to the serial port, the SerialPort class actually closes
+    has been written to the serial port, the QSerialPort class actually closes
     the descriptor.
 
-    SerialPort provides a set of functions that suspend the calling
+    QSerialPort provides a set of functions that suspend the calling
     thread until certain signals are emitted. These functions can be
     used to implement blocking serial ports:
 
@@ -219,16 +219,16 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     The use of blocking functions is discouraged together with signals. One of
     the two possibilities should be used.
 
-    The SerialPort class can be used with QTextStream and QDataStream's stream
+    The QSerialPort class can be used with QTextStream and QDataStream's stream
     operators (operator<<() and operator>>()). There is one issue to be aware
     of, though: make sure that enough data is available before attempting to
     read by using the operator>>() overloaded operator.
 
-    \sa SerialPortInfo
+    \sa QSerialPortInfo
 */
 
 /*!
-    \enum SerialPort::Direction
+    \enum QSerialPort::Direction
 
     This enum describes the possible directions of the data transmission.
     Note: This enumeration is used for setting the baud rate of the device
@@ -240,7 +240,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::BaudRate
+    \enum QSerialPort::BaudRate
 
     This enum describes the baud rate which the communication device operates
     with. Note: only the most common standard baud rates are listed in this
@@ -260,7 +260,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::DataBits
+    \enum QSerialPort::DataBits
 
     This enum describes the number of data bits used.
 
@@ -274,7 +274,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::Parity
+    \enum QSerialPort::Parity
 
     This enum describes the parity scheme used.
 
@@ -289,7 +289,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::StopBits
+    \enum QSerialPort::StopBits
 
     This enum describes the number of stop bits used.
 
@@ -302,7 +302,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::FlowControl
+    \enum QSerialPort::FlowControl
 
     This enum describes the flow control used.
 
@@ -315,7 +315,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::Line
+    \enum QSerialPort::Line
 
     This enum describes the possible RS-232 pinout signals.
 
@@ -333,7 +333,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::DataErrorPolicy
+    \enum QSerialPort::DataErrorPolicy
 
     This enum describes the policies for the received symbols
     while parity errors were detected.
@@ -348,7 +348,7 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum SerialPort::PortError
+    \enum QSerialPort::PortError
 
     This enum describes the errors that may be returned by the error()
     method.
@@ -380,9 +380,9 @@ int SerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 /*!
     Constructs a new serial port object with the given \a parent.
 */
-SerialPort::SerialPort(QObject *parent)
+QSerialPort::QSerialPort(QObject *parent)
     : QIODevice(parent)
-    , d_ptr(new SerialPortPrivate(this))
+    , d_ptr(new QSerialPortPrivate(this))
 {}
 
 /*!
@@ -391,9 +391,9 @@ SerialPort::SerialPort(QObject *parent)
 
     The name should have a specific format; see the setPort() method.
 */
-SerialPort::SerialPort(const QString &name, QObject *parent)
+QSerialPort::QSerialPort(const QString &name, QObject *parent)
     : QIODevice(parent)
-    , d_ptr(new SerialPortPrivate(this))
+    , d_ptr(new QSerialPortPrivate(this))
 {
     setPort(name);
 }
@@ -403,9 +403,9 @@ SerialPort::SerialPort(const QString &name, QObject *parent)
     to represent the serial port with the specified a helper
     class \a info.
 */
-SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
+QSerialPort::QSerialPort(const QSerialPortInfo &info, QObject *parent)
     : QIODevice(parent)
-    , d_ptr(new SerialPortPrivate(this))
+    , d_ptr(new QSerialPortPrivate(this))
 {
     setPort(info);
 }
@@ -413,7 +413,7 @@ SerialPort::SerialPort(const SerialPortInfo &info, QObject *parent)
 /*!
     Closes the serial port, if neccessary, and then destroys object.
 */
-SerialPort::~SerialPort()
+QSerialPort::~QSerialPort()
 {
     /**/
     close();
@@ -426,27 +426,27 @@ SerialPort::~SerialPort()
     postfixed). As a result, this name will be automatically written
     and converted into an internal variable as system location.
 
-    \sa portName(), SerialPortInfo
+    \sa portName(), QSerialPortInfo
 */
-void SerialPort::setPort(const QString &name)
+void QSerialPort::setPort(const QString &name)
 {
-    Q_D(SerialPort);
-    d->systemLocation = SerialPortPrivate::portNameToSystemLocation(name);
+    Q_D(QSerialPort);
+    d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(name);
 }
 
 /*!
     Sets the port stored in the serial port info instance \a info.
 
-    \sa portName(), SerialPortInfo
+    \sa portName(), QSerialPortInfo
 */
-void SerialPort::setPort(const SerialPortInfo &info)
+void QSerialPort::setPort(const QSerialPortInfo &info)
 {
-    Q_D(SerialPort);
-    d->systemLocation = SerialPortPrivate::portNameToSystemLocation(info.systemLocation());
+    Q_D(QSerialPort);
+    d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(info.systemLocation());
 }
 
 /*!
-    Returns the name set by setPort() or to the SerialPort constructors.
+    Returns the name set by setPort() or to the QSerialPort constructors.
     This name is short, i.e. it extract and convert out from the internal
     variable system location of the device. Conversion algorithm is
     platform specific:
@@ -479,12 +479,12 @@ void SerialPort::setPort(const SerialPortInfo &info)
         \o The same as for GNU/Linux.
     \endtable
 
-    \sa setPort(), SerialPortInfo::portName()
+    \sa setPort(), QSerialPortInfo::portName()
 */
-QString SerialPort::portName() const
+QString QSerialPort::portName() const
 {
-    Q_D(const SerialPort);
-    return SerialPortPrivate::portNameFromSystemLocation(d->systemLocation);
+    Q_D(const QSerialPort);
+    return QSerialPortPrivate::portNameFromSystemLocation(d->systemLocation);
 }
 
 /*! \reimp
@@ -498,19 +498,19 @@ QString SerialPort::portName() const
 
     \sa QIODevice::OpenMode, setPort()
 */
-bool SerialPort::open(OpenMode mode)
+bool QSerialPort::open(OpenMode mode)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
 
     if (isOpen()) {
-        d->portError = SerialPort::DeviceAlreadyOpenedError;
+        d->portError = QSerialPort::DeviceAlreadyOpenedError;
         return false;
     }
 
     // Define while not supported modes.
     static const OpenMode unsupportedModes = Append | Truncate | Text | Unbuffered;
     if ((mode & unsupportedModes) || mode == NotOpen) {
-        d->portError = SerialPort::UnsupportedPortOperationError;
+        d->portError = QSerialPort::UnsupportedPortOperationError;
         return false;
     }
 
@@ -523,16 +523,16 @@ bool SerialPort::open(OpenMode mode)
 }
 
 /*! \reimp
-    Calls SerialPort::flush() and closes the serial port.
+    Calls QSerialPort::flush() and closes the serial port.
     Errors from flush are ignored.
 
     \sa QIODevice::close()
 */
-void SerialPort::close()
+void QSerialPort::close()
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (!isOpen()) {
-        d->portError = SerialPort::DeviceIsNotOpenedError;
+        d->portError = QSerialPort::DeviceIsNotOpenedError;
         return;
     }
 
@@ -541,19 +541,19 @@ void SerialPort::close()
 }
 
 /*!
-    \property SerialPort::restoreSettingsOnClose
+    \property QSerialPort::restoreSettingsOnClose
     \brief the flag which allows to restore the previous settings while closing
     the serial port.
 
     If this flag is true, the settings will be restored; otherwise not.
-    The default state of the SerialPort class is configured to restore the
+    The default state of the QSerialPort class is configured to restore the
     settings.
 
     \sa restoreSettingsOnClose()
 */
-void SerialPort::setRestoreSettingsOnClose(bool restore)
+void QSerialPort::setRestoreSettingsOnClose(bool restore)
 {
-    Q_D( SerialPort);
+    Q_D(QSerialPort);
 
     d->restoreSettingsOnClose = restore;
     emit restoreSettingsOnCloseChanged(d->restoreSettingsOnClose);
@@ -561,35 +561,35 @@ void SerialPort::setRestoreSettingsOnClose(bool restore)
 
 /*!
     Returns the current status of the restore flag settings on
-    closing the port. The default SerialPort is configured to
+    closing the port. The default QSerialPort is configured to
     restore the settings.
 
     \sa setRestoreSettingsOnClose()
 */
-bool SerialPort::restoreSettingsOnClose() const
+bool QSerialPort::restoreSettingsOnClose() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->restoreSettingsOnClose;
 }
 
 /*!
-    \fn void SerialPort::restoreSettingsOnCloseChanged(bool restore)
+    \fn void QSerialPort::restoreSettingsOnCloseChanged(bool restore)
 
     This signal is emitted after the flag which allows to restore the
     previous settings while closing the serial port has been changed. The new
     flag which allows to restore the previous settings while closing the serial
     port is passed as \restore.
 
-    \sa SerialPort::restoreSettingsOnClose
+    \sa QSerialPort::restoreSettingsOnClose
 */
 
 /*!
-    \property SerialPort::baudRate
+    \property QSerialPort::baudRate
     \brief the data baud rate for the desired direction
 
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by calling error(). To set the baud
-    rate, use the enumeration SerialPort::Rate or any positive qint32 value.
+    rate, use the enumeration QSerialPort::Rate or any positive qint32 value.
 
     \warning Only the AllDirections flag is support for setting this property on
     Windows, Windows CE, and Symbian.
@@ -597,13 +597,13 @@ bool SerialPort::restoreSettingsOnClose() const
     \warning Returns equal baud rate in any direction on Windows, Windows CE, and
     Symbian.
 */
-bool SerialPort::setBaudRate(qint32 baudRate, Directions dir)
+bool QSerialPort::setBaudRate(qint32 baudRate, Directions dir)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (d->setBaudRate(baudRate, dir)) {
-        if (dir & SerialPort::Input)
+        if (dir & QSerialPort::Input)
             d->inputBaudRate = baudRate;
-        if (dir & SerialPort::Output)
+        if (dir & QSerialPort::Output)
             d->outputBaudRate = baudRate;
         emit baudRateChanged(baudRate, dir);
         return true;
@@ -611,34 +611,34 @@ bool SerialPort::setBaudRate(qint32 baudRate, Directions dir)
     return false;
 }
 
-qint32 SerialPort::baudRate(Directions dir) const
+qint32 QSerialPort::baudRate(Directions dir) const
 {
-    Q_D(const SerialPort);
-    if (dir == SerialPort::AllDirections)
+    Q_D(const QSerialPort);
+    if (dir == QSerialPort::AllDirections)
         return d->inputBaudRate == d->outputBaudRate ?
-                    d->inputBaudRate : SerialPort::UnknownBaud;
-    return dir & SerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
+                    d->inputBaudRate : QSerialPort::UnknownBaud;
+    return dir & QSerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
 }
 
 /*!
-    \fn void SerialPort::baudRateChanged(qint32 baudRate, Directions dir)
+    \fn void QSerialPort::baudRateChanged(qint32 baudRate, Directions dir)
 
     This signal is emitted after the baud rate has been changed. The new baud
     rate is passed as \a baudRate and directions as \a dir.
 
-    \sa SerialPort::baudRate
+    \sa QSerialPort::baudRate
 */
 
 /*!
-    \property SerialPort::dataBits
+    \property QSerialPort::dataBits
     \brief the data bits in a frame
 
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by calling the error() method.
 */
-bool SerialPort::setDataBits(DataBits dataBits)
+bool QSerialPort::setDataBits(DataBits dataBits)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (d->setDataBits(dataBits)) {
         d->dataBits = dataBits;
         emit dataBitsChanged(d->dataBits);
@@ -647,32 +647,32 @@ bool SerialPort::setDataBits(DataBits dataBits)
     return false;
 }
 
-SerialPort::DataBits SerialPort::dataBits() const
+QSerialPort::DataBits QSerialPort::dataBits() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->dataBits;
 }
 
 /*!
-    \fn void SerialPort::dataBitsChanged(DataBits dataBits)
+    \fn void QSerialPort::dataBitsChanged(DataBits dataBits)
 
     This signal is emitted after the data bits in a frame has been changed. The
     new data bits in a frame is passed as \dataBits.
 
-    \sa SerialPort::dataBits
+    \sa QSerialPort::dataBits
 */
 
 
 /*!
-    \property SerialPort::parity
+    \property QSerialPort::parity
     \brief the parity checking mode
 
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by calling the error() method.
 */
-bool SerialPort::setParity(Parity parity)
+bool QSerialPort::setParity(Parity parity)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (d->setParity(parity)) {
         d->parity = parity;
         emit parityChanged(d->parity);
@@ -681,31 +681,31 @@ bool SerialPort::setParity(Parity parity)
     return false;
 }
 
-SerialPort::Parity SerialPort::parity() const
+QSerialPort::Parity QSerialPort::parity() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->parity;
 }
 
 /*!
-    \fn void SerialPort::parityChanged(Parity parity)
+    \fn void QSerialPort::parityChanged(Parity parity)
 
     This signal is emitted after the parity checking mode has been changed. The
     new parity checking mode is passed as \a parity.
 
-    \sa SerialPort::parity
+    \sa QSerialPort::parity
 */
 
 /*!
-    \property SerialPort::stopBits
+    \property QSerialPort::stopBits
     \brief the number of stop bits in a frame
 
     If the setting is successful, returns true; otherwise returns false and
     sets an error code which can be obtained by calling the error() method.
 */
-bool SerialPort::setStopBits(StopBits stopBits)
+bool QSerialPort::setStopBits(StopBits stopBits)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (d->setStopBits(stopBits)) {
         d->stopBits = stopBits;
         stopBitsChanged(d->stopBits);
@@ -714,31 +714,31 @@ bool SerialPort::setStopBits(StopBits stopBits)
     return false;
 }
 
-SerialPort::StopBits SerialPort::stopBits() const
+QSerialPort::StopBits QSerialPort::stopBits() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->stopBits;
 }
 
 /*!
-    \fn void SerialPort::stopBitsChanged(StopBits stopBits)
+    \fn void QSerialPort::stopBitsChanged(StopBits stopBits)
 
     This signal is emitted after the number of stop bits in a frame has been
     changed. The new number of stop bits in a frame is passed as \a stopBits.
 
-    \sa SerialPort::stopBits
+    \sa QSerialPort::stopBits
 */
 
 /*!
-    \property SerialPort::flowControl
+    \property QSerialPort::flowControl
     \brief the desired flow control mode
 
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by calling the error() method.
 */
-bool SerialPort::setFlowControl(FlowControl flow)
+bool QSerialPort::setFlowControl(FlowControl flow)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (d->setFlowControl(flow)) {
         d->flow = flow;
         flowControlChanged(d->flow);
@@ -747,23 +747,23 @@ bool SerialPort::setFlowControl(FlowControl flow)
     return false;
 }
 
-SerialPort::FlowControl SerialPort::flowControl() const
+QSerialPort::FlowControl QSerialPort::flowControl() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->flow;
 }
 
 /*!
-    \fn void SerialPort::flowControlChanged(FlowControl flow)
+    \fn void QSerialPort::flowControlChanged(FlowControl flow)
 
     This signal is emitted after the flow control mode has been changed. The
     new flow control mode is passed as \a flow.
 
-    \sa SerialPort::flowControl
+    \sa QSerialPort::flowControl
 */
 
 /*!
-    \property SerialPort::dtr
+    \property QSerialPort::dtr
     \brief the state (high or low) of the line signal DTR
 
     If the setting is successful, returns true; otherwise returns false.
@@ -771,9 +771,9 @@ SerialPort::FlowControl SerialPort::flowControl() const
 
     \sa lines()
 */
-bool SerialPort::setDtr(bool set)
+bool QSerialPort::setDtr(bool set)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
 
     bool retval = d->setDtr(set);
     if (retval)
@@ -782,24 +782,24 @@ bool SerialPort::setDtr(bool set)
     return retval;
 }
 
-bool SerialPort::dtr() const
+bool QSerialPort::dtr() const
 {
-    Q_D(const SerialPort);
-    return d->lines() & SerialPort::DtrLine;
+    Q_D(const QSerialPort);
+    return d->lines() & QSerialPort::DtrLine;
 }
 
 /*!
-    \fn void SerialPort::dtrChanged(bool set)
+    \fn void QSerialPort::dtrChanged(bool set)
 
     This signal is emitted after the state (high or low) of the line signal DTR
     has been changed. The new the state (high or low) of the line signal DTR is
     passed as \a set.
 
-    \sa SerialPort::dtr
+    \sa QSerialPort::dtr
 */
 
 /*!
-    \property SerialPort::rts
+    \property QSerialPort::rts
     \brief the state (high or low) of the line signal RTS
 
     If the setting is successful, returns true; otherwise returns false.
@@ -807,9 +807,9 @@ bool SerialPort::dtr() const
 
     \sa lines()
 */
-bool SerialPort::setRts(bool set)
+bool QSerialPort::setRts(bool set)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
 
     bool retval = d->setRts(set);
     if (retval)
@@ -818,33 +818,33 @@ bool SerialPort::setRts(bool set)
     return retval;
 }
 
-bool SerialPort::rts() const
+bool QSerialPort::rts() const
 {
-    Q_D(const SerialPort);
-    return d->lines() & SerialPort::RtsLine;
+    Q_D(const QSerialPort);
+    return d->lines() & QSerialPort::RtsLine;
 }
 
 /*!
-    \fn void SerialPort::rtsChanged(bool set)
+    \fn void QSerialPort::rtsChanged(bool set)
 
     This signal is emitted after the state (high or low) of the line signal RTS
     has been changed. The new the state (high or low) of the line signal RTS is
     passed as \a set.
 
-    \sa SerialPort::rts
+    \sa QSerialPort::rts
 */
 
 /*!
     Returns the bitmap states of the line signals.
     From this result, it is possible to allocate the state of the
     desired signal by applying a mask "AND", where the mask is
-    the desired enumeration value from SerialPort::Lines.
+    the desired enumeration value from QSerialPort::Lines.
 
     \sa dtr(), rts(), setDtr(), setRts()
 */
-SerialPort::Lines SerialPort::lines() const
+QSerialPort::Lines QSerialPort::lines() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->lines();
 }
 
@@ -856,15 +856,15 @@ SerialPort::Lines SerialPort::lines() const
     Call this function for sending the buffered data immediately to the serial
     port. The number of bytes successfully written depends on the operating
     system. In most cases, this function does not need to be called, because the
-    SerialPort class will start sending data automatically once control is
+    QSerialPort class will start sending data automatically once control is
     returned to the event loop. In the absence of an event loop, call
     waitForBytesWritten() instead.
 
     \sa write(), waitForBytesWritten()
 */
-bool SerialPort::flush()
+bool QSerialPort::flush()
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->flush();
 }
 
@@ -874,9 +874,9 @@ bool SerialPort::flush()
     the UART (driver) buffers. Also terminate pending read or write operations.
     If successful, returns true; otherwise returns false.
 */
-bool SerialPort::clear(Directions dir)
+bool QSerialPort::clear(Directions dir)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     if (dir & Input)
         d->readBuffer.clear();
     if (dir & Output)
@@ -893,8 +893,8 @@ bool SerialPort::clear(Directions dir)
     serial port in a loop. For example:
 
     \code
-    // This slot is connected to SerialPort::readyRead()
-    void SerialPortClass::readyReadSlot()
+    // This slot is connected to QSerialPort::readyRead()
+    void QSerialPortClass::readyReadSlot()
     {
         while (!port.atEnd()) {
             QByteArray data = port.read(100);
@@ -905,23 +905,23 @@ bool SerialPort::clear(Directions dir)
 
      \sa bytesAvailable(), readyRead()
  */
-bool SerialPort::atEnd() const
+bool QSerialPort::atEnd() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return QIODevice::atEnd() && (!isOpen() || (d->bytesAvailable() == 0));
 }
 
 /*!
-    \property SerialPort::dataErrorPolicy
+    \property QSerialPort::dataErrorPolicy
     \brief the error policy how the process receives the character in case of
     parity error detection.
 
     If the setting is successful, returns true; otherwise returns false. The
     default policy set is IgnorePolicy.
 */
-bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
+bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
 
     const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
     if (ret) {
@@ -932,53 +932,53 @@ bool SerialPort::setDataErrorPolicy(DataErrorPolicy policy)
     return ret;
 }
 
-SerialPort::DataErrorPolicy SerialPort::dataErrorPolicy() const
+QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->policy;
 }
 
 /*!
-    \fn void SerialPort::errorPolicyChanged(DataErrorPolicy policy)
+    \fn void QSerialPort::errorPolicyChanged(DataErrorPolicy policy)
 
     This signal is emitted after the error policy how the process receives the
     character in case of parity error detection has been changed. The new error
     policy how the process receives the character in case of parity error
     detection is passed as \a policy.
 
-    \sa SerialPort::dataErrorPolicy
+    \sa QSerialPort::dataErrorPolicy
 */
 
 /*!
-    \property SerialPort::error
+    \property QSerialPort::error
     \brief the error status of the serial port
 
     The I/O device status returns an error code. For example, if open()
     returns false, or a read/write operation returns -1, this property can
     be used to figure out the reason why the operation failed.
 
-    The error code is set to the default SerialPort::NoError after a call to
+    The error code is set to the default QSerialPort::NoError after a call to
     clearError()
 */
-SerialPort::PortError SerialPort::error() const
+QSerialPort::PortError QSerialPort::error() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->portError;
 }
 
-void SerialPort::clearError()
+void QSerialPort::clearError()
 {
-    Q_D(SerialPort);
-    d->portError = SerialPort::NoError;
+    Q_D(QSerialPort);
+    d->portError = QSerialPort::NoError;
 }
 
 /*!
-    \fn void SerialPort::errorChanged(PortError error)
+    \fn void QSerialPort::errorChanged(PortError error)
 
     This signal is emitted after the error has been changed. The new erroris
     passed as \a error.
 
-    \sa SerialPort::error
+    \sa QSerialPort::error
 */
 
 /*!
@@ -991,17 +991,17 @@ void SerialPort::clearError()
 
     \sa setReadBufferSize(), read()
 */
-qint64 SerialPort::readBufferSize() const
+qint64 QSerialPort::readBufferSize() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->readBufferMaxSize;
 }
 
 /*!
-    Sets the size of SerialPort's internal read buffer to be \a
+    Sets the size of QSerialPort's internal read buffer to be \a
     size bytes.
 
-    If the buffer size is limited to a certain size, SerialPort
+    If the buffer size is limited to a certain size, QSerialPort
     will not buffer more than this size of data. Exceptionally, a buffer
     size of 0 means that the read buffer is unlimited and all
     incoming data is buffered. This is the default.
@@ -1013,9 +1013,9 @@ qint64 SerialPort::readBufferSize() const
 
     \sa readBufferSize(), read()
 */
-void SerialPort::setReadBufferSize(qint64 size)
+void QSerialPort::setReadBufferSize(qint64 size)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
 
     if (d->readBufferMaxSize == size)
         return;
@@ -1025,7 +1025,7 @@ void SerialPort::setReadBufferSize(qint64 size)
 /*! \reimp
     Always returns true. The serial port is a sequential device.
 */
-bool SerialPort::isSequential() const
+bool QSerialPort::isSequential() const
 {
     return true;
 }
@@ -1035,9 +1035,9 @@ bool SerialPort::isSequential() const
 
     \sa bytesToWrite(), read()
 */
-qint64 SerialPort::bytesAvailable() const
+qint64 QSerialPort::bytesAvailable() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->bytesAvailable() + QIODevice::bytesAvailable();
 }
 
@@ -1048,9 +1048,9 @@ qint64 SerialPort::bytesAvailable() const
 
     \sa bytesAvailable(), flush()
 */
-qint64 SerialPort::bytesToWrite() const
+qint64 QSerialPort::bytesToWrite() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     return d->writeBuffer.size() + QIODevice::bytesToWrite();
 }
 
@@ -1060,9 +1060,9 @@ qint64 SerialPort::bytesToWrite() const
 
     \sa readLine()
 */
-bool SerialPort::canReadLine() const
+bool QSerialPort::canReadLine() const
 {
-    Q_D(const SerialPort);
+    Q_D(const QSerialPort);
     const bool hasLine = (d->bytesAvailable() > 0) && d->readBuffer.canReadLine();
     return hasLine || QIODevice::canReadLine();
 }
@@ -1078,17 +1078,17 @@ bool SerialPort::canReadLine() const
 
     \sa waitForBytesWritten()
 */
-bool SerialPort::waitForReadyRead(int msecs)
+bool QSerialPort::waitForReadyRead(int msecs)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->waitForReadyRead(msecs);
 }
 
 /*! \reimp
 */
-bool SerialPort::waitForBytesWritten(int msecs)
+bool QSerialPort::waitForBytesWritten(int msecs)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->waitForBytesWritten(msecs);
 }
 
@@ -1105,9 +1105,9 @@ bool SerialPort::waitForBytesWritten(int msecs)
 
     \sa setBreak(), clearBreak()
 */
-bool SerialPort::sendBreak(int duration)
+bool QSerialPort::sendBreak(int duration)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->sendBreak(duration);
 }
 
@@ -1119,37 +1119,37 @@ bool SerialPort::sendBreak(int duration)
 
     \sa clearBreak(), sendBreak()
 */
-bool SerialPort::setBreak(bool set)
+bool QSerialPort::setBreak(bool set)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->setBreak(set);
 }
 
 /*! \reimp
 */
-qint64 SerialPort::readData(char *data, qint64 maxSize)
+qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->readFromBuffer(data, maxSize);
 }
 
 /*! \reimp
 */
-qint64 SerialPort::readLineData(char *data, qint64 maxSize)
+qint64 QSerialPort::readLineData(char *data, qint64 maxSize)
 {
     return QIODevice::readLineData(data, maxSize);
 }
 
 /*! \reimp
 */
-qint64 SerialPort::writeData(const char *data, qint64 maxSize)
+qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
 {
-    Q_D(SerialPort);
+    Q_D(QSerialPort);
     return d->writeToBuffer(data, maxSize);
 }
 
 /*!
-    \fn bool SerialPort::clearBreak(bool clear)
+    \fn bool QSerialPort::clearBreak(bool clear)
 
     Controls the signal break, depending on the flag \a clear.
     If successful, returns true; otherwise returns false.

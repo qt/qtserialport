@@ -47,7 +47,7 @@
 
 QT_USE_NAMESPACE_SERIALPORT
 
-class tst_SerialPort : public QObject
+class tst_QSerialPort : public QObject
 {
     Q_OBJECT
 
@@ -61,12 +61,12 @@ private slots:
     void flowControl();
 
 private:
-    QList<SerialPortInfo> ports;
+    QList<QSerialPortInfo> ports;
 };
 
-void tst_SerialPort::initTestCase()
+void tst_QSerialPort::initTestCase()
 {
-    ports = SerialPortInfo::availablePorts();
+    ports = QSerialPortInfo::availablePorts();
 
     if (ports.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
@@ -77,14 +77,14 @@ void tst_SerialPort::initTestCase()
     }
 }
 
-void tst_SerialPort::open()
+void tst_QSerialPort::open()
 {
-    foreach (const SerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &info, ports) {
 
         if (info.isBusy())
             continue;
 
-        SerialPort object1;
+        QSerialPort object1;
 
         // Try open and check access to port by Info
         object1.setPort(info);
@@ -112,109 +112,109 @@ void tst_SerialPort::open()
     }
 }
 
-void tst_SerialPort::baudRate()
+void tst_QSerialPort::baudRate()
 {
-    foreach (const SerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &info, ports) {
 
-        SerialPort object1;
+        QSerialPort object1;
         object1.setPort(info.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud1200), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud1200));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud2400), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud2400));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud4800), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud4800));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud9600), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud9600));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud19200), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud19200));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud38400), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud38400));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud57600), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud57600));
-        QCOMPARE(object1.setBaudRate(SerialPort::Baud115200), true);
-        QCOMPARE(object1.baudRate(), static_cast<qint32>(SerialPort::Baud115200));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud1200), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud1200));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud2400), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud2400));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud4800), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud4800));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud9600), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud9600));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud19200), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud19200));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud38400), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud38400));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud57600), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud57600));
+        QCOMPARE(object1.setBaudRate(QSerialPort::Baud115200), true);
+        QCOMPARE(object1.baudRate(), static_cast<qint32>(QSerialPort::Baud115200));
 
         object1.close();
     }
 }
 
-void tst_SerialPort::dataBits()
+void tst_QSerialPort::dataBits()
 {
-    foreach (const SerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &info, ports) {
 
-        SerialPort object1;
+        QSerialPort object1;
         object1.setPort(info.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
-        QCOMPARE(object1.setDataBits(SerialPort::Data8), true);
-        QCOMPARE(object1.dataBits(), SerialPort::Data8);
+        QCOMPARE(object1.setDataBits(QSerialPort::Data8), true);
+        QCOMPARE(object1.dataBits(), QSerialPort::Data8);
 
         object1.close();
     }
 }
 
-void tst_SerialPort::parity()
+void tst_QSerialPort::parity()
 {
-    foreach (const SerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &info, ports) {
 
-        SerialPort object1;
+        QSerialPort object1;
         object1.setPort(info.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
-        QCOMPARE(object1.setParity(SerialPort::NoParity), true);
-        QCOMPARE(object1.parity(), SerialPort::NoParity);
-        QCOMPARE(object1.setParity(SerialPort::EvenParity), true);
-        QCOMPARE(object1.parity(), SerialPort::EvenParity);
-        QCOMPARE(object1.setParity(SerialPort::OddParity), true);
-        QCOMPARE(object1.parity(), SerialPort::OddParity);
-        QCOMPARE(object1.setParity(SerialPort::MarkParity), true);
-        QCOMPARE(object1.parity(), SerialPort::MarkParity);
-        QCOMPARE(object1.setParity(SerialPort::SpaceParity), true);
-        QCOMPARE(object1.parity(), SerialPort::SpaceParity);
+        QCOMPARE(object1.setParity(QSerialPort::NoParity), true);
+        QCOMPARE(object1.parity(), QSerialPort::NoParity);
+        QCOMPARE(object1.setParity(QSerialPort::EvenParity), true);
+        QCOMPARE(object1.parity(), QSerialPort::EvenParity);
+        QCOMPARE(object1.setParity(QSerialPort::OddParity), true);
+        QCOMPARE(object1.parity(), QSerialPort::OddParity);
+        QCOMPARE(object1.setParity(QSerialPort::MarkParity), true);
+        QCOMPARE(object1.parity(), QSerialPort::MarkParity);
+        QCOMPARE(object1.setParity(QSerialPort::SpaceParity), true);
+        QCOMPARE(object1.parity(), QSerialPort::SpaceParity);
 
         object1.close();
     }
 }
 
-void tst_SerialPort::stopBits()
+void tst_QSerialPort::stopBits()
 {
-    foreach (const SerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &info, ports) {
 
-        SerialPort object1;
+        QSerialPort object1;
         object1.setPort(info.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
-        QCOMPARE(object1.setStopBits(SerialPort::OneStop), true);
-        QCOMPARE(object1.stopBits(), SerialPort::OneStop);
+        QCOMPARE(object1.setStopBits(QSerialPort::OneStop), true);
+        QCOMPARE(object1.stopBits(), QSerialPort::OneStop);
         // skip 1.5 stop bits
-        QCOMPARE(object1.setStopBits(SerialPort::TwoStop), true);
-        QCOMPARE(object1.stopBits(), SerialPort::TwoStop);
+        QCOMPARE(object1.setStopBits(QSerialPort::TwoStop), true);
+        QCOMPARE(object1.stopBits(), QSerialPort::TwoStop);
 
         object1.close();
     }
 }
 
-void tst_SerialPort::flowControl()
+void tst_QSerialPort::flowControl()
 {
-    foreach (const SerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &info, ports) {
 
-        SerialPort object1;
+        QSerialPort object1;
         object1.setPort(info.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
-        QCOMPARE(object1.setFlowControl(SerialPort::NoFlowControl), true);
-        QCOMPARE(object1.flowControl(), SerialPort::NoFlowControl);
-        QCOMPARE(object1.setFlowControl(SerialPort::HardwareControl), true);
-        QCOMPARE(object1.flowControl(), SerialPort::HardwareControl);
-        QCOMPARE(object1.setFlowControl(SerialPort::SoftwareControl), true);
-        QCOMPARE(object1.flowControl(), SerialPort::SoftwareControl);
+        QCOMPARE(object1.setFlowControl(QSerialPort::NoFlowControl), true);
+        QCOMPARE(object1.flowControl(), QSerialPort::NoFlowControl);
+        QCOMPARE(object1.setFlowControl(QSerialPort::HardwareControl), true);
+        QCOMPARE(object1.flowControl(), QSerialPort::HardwareControl);
+        QCOMPARE(object1.setFlowControl(QSerialPort::SoftwareControl), true);
+        QCOMPARE(object1.flowControl(), QSerialPort::SoftwareControl);
 
         object1.close();
     }
 }
 
-QTEST_MAIN(tst_SerialPort)
+QTEST_MAIN(tst_QSerialPort)
 #include "tst_serialport.moc"

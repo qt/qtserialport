@@ -49,50 +49,50 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 
 /*!
-    \class SerialPortInfo
+    \class QSerialPortInfo
 
-    \brief The SerialPortInfo class provides information about
+    \brief The QSerialPortInfo class provides information about
     existing serial ports.
 
     \ingroup serialport-main
     \inmodule QtSerialPort
     \since 5.0
 
-    Use the static functions to generate a list of SerialPortInfo
-    objects. Each SerialPortInfo object in the list represents a single
+    Use the static functions to generate a list of QSerialPortInfo
+    objects. Each QSerialPortInfo object in the list represents a single
     serial port and can be queried for the port name, system location,
-    description, and manufacturer. The SerialPortInfo class can also be
-    used as an input parameter for the setPort() method of the SerialPort
+    description, and manufacturer. The QSerialPortInfo class can also be
+    used as an input parameter for the setPort() method of the QSerialPort
     class.
 
-    \sa SerialPort
+    \sa QSerialPort
 */
 
 /*!
-    Constructs an empty SerialPortInfo object.
+    Constructs an empty QSerialPortInfo object.
 
     \sa isNull()
 */
-SerialPortInfo::SerialPortInfo()
-    : d_ptr(new SerialPortInfoPrivate)
+QSerialPortInfo::QSerialPortInfo()
+    : d_ptr(new QSerialPortInfoPrivate)
 {
 }
 
 /*!
     Constructs a copy of \a other.
 */
-SerialPortInfo::SerialPortInfo(const SerialPortInfo &other)
-    : d_ptr(other.d_ptr ? new SerialPortInfoPrivate(*other.d_ptr) : 0)
+QSerialPortInfo::QSerialPortInfo(const QSerialPortInfo &other)
+    : d_ptr(other.d_ptr ? new QSerialPortInfoPrivate(*other.d_ptr) : 0)
 {
 }
 
 /*!
-    Constructs a SerialPortInfo object from serial \a port.
+    Constructs a QSerialPortInfo object from serial \a port.
 */
-SerialPortInfo::SerialPortInfo(const SerialPort &port)
-    : d_ptr(new SerialPortInfoPrivate)
+QSerialPortInfo::QSerialPortInfo(const QSerialPort &port)
+    : d_ptr(new QSerialPortInfoPrivate)
 {
-    foreach (const SerialPortInfo &info, availablePorts()) {
+    foreach (const QSerialPortInfo &info, availablePorts()) {
         if (port.portName() == info.portName()) {
             *this = info;
             break;
@@ -101,16 +101,16 @@ SerialPortInfo::SerialPortInfo(const SerialPort &port)
 }
 
 /*!
-    Constructs a SerialPortInfo object from serial port \a name.
+    Constructs a QSerialPortInfo object from serial port \a name.
 
     This constructor finds the relevant serial port among the available ones
     according to the port name \a name, and constructs the serial port info
     instance for that port.
 */
-SerialPortInfo::SerialPortInfo(const QString &name)
-    : d_ptr(new SerialPortInfoPrivate)
+QSerialPortInfo::QSerialPortInfo(const QString &name)
+    : d_ptr(new QSerialPortInfoPrivate)
 {
-    foreach (const SerialPortInfo &info, availablePorts()) {
+    foreach (const QSerialPortInfo &info, availablePorts()) {
         if (name == info.portName()) {
             *this = info;
             break;
@@ -119,47 +119,47 @@ SerialPortInfo::SerialPortInfo(const QString &name)
 }
 
 /*!
-    Destroys the SerialPortInfo object. References to the values in the
+    Destroys the QSerialPortInfo object. References to the values in the
     object become invalid.
 */
-SerialPortInfo::~SerialPortInfo()
+QSerialPortInfo::~QSerialPortInfo()
 {
 }
 
-/*! \fn void SerialPortInfo::swap(SerialPortInfo &other)
+/*! \fn void QSerialPortInfo::swap(QSerialPortInfo &other)
 
-    Swaps SerialPortInfo \a other with this SerialPortInfo. This operation is
+    Swaps QSerialPortInfo \a other with this QSerialPortInfo. This operation is
     very fast and never fails.
 */
-void SerialPortInfo::swap(SerialPortInfo &other)
+void QSerialPortInfo::swap(QSerialPortInfo &other)
 {
     d_ptr.swap(other.d_ptr);
 }
 
 /*!
-    Sets the SerialPortInfo object to be equal to \a other.
+    Sets the QSerialPortInfo object to be equal to \a other.
 */
-SerialPortInfo& SerialPortInfo::operator=(const SerialPortInfo &other)
+QSerialPortInfo& QSerialPortInfo::operator=(const QSerialPortInfo &other)
 {
-    SerialPortInfo(other).swap(*this);
+    QSerialPortInfo(other).swap(*this);
     return *this;
 }
 
 /*!
     Returns the name of the serial port.
 */
-QString SerialPortInfo::portName() const
+QString QSerialPortInfo::portName() const
 {
-    Q_D(const SerialPortInfo);
+    Q_D(const QSerialPortInfo);
     return !d ? QString() : d->portName;
 }
 
 /*!
     Returns the system location of the serial port.
 */
-QString SerialPortInfo::systemLocation() const
+QString QSerialPortInfo::systemLocation() const
 {
-    Q_D(const SerialPortInfo);
+    Q_D(const QSerialPortInfo);
     return !d ? QString() : d->device;
 }
 
@@ -167,9 +167,9 @@ QString SerialPortInfo::systemLocation() const
     Returns the description string of the serial port,
     if available; otherwise returns an empty string.
 */
-QString SerialPortInfo::description() const
+QString QSerialPortInfo::description() const
 {
-    Q_D(const SerialPortInfo);
+    Q_D(const QSerialPortInfo);
     return !d ? QString() : d->description;
 }
 
@@ -177,9 +177,9 @@ QString SerialPortInfo::description() const
     Returns the manufacturer string of the serial port,
     if available; otherwise returns an empty string.
 */
-QString SerialPortInfo::manufacturer() const
+QString QSerialPortInfo::manufacturer() const
 {
-    Q_D(const SerialPortInfo);
+    Q_D(const QSerialPortInfo);
     return !d ? QString() : d->manufacturer;
 }
 
@@ -188,9 +188,9 @@ QString SerialPortInfo::manufacturer() const
     port in hexadecimal format, if available; otherwise
     returns an empty string.
 */
-QString SerialPortInfo::vendorIdentifier() const
+QString QSerialPortInfo::vendorIdentifier() const
 {
-    Q_D(const SerialPortInfo);
+    Q_D(const QSerialPortInfo);
     return !d ? QString() : d->vendorIdentifier;
 }
 
@@ -199,42 +199,42 @@ QString SerialPortInfo::vendorIdentifier() const
     port in hexadecimal format, if available; otherwise
     returns an empty string.
 */
-QString SerialPortInfo::productIdentifier() const
+QString QSerialPortInfo::productIdentifier() const
 {
-    Q_D(const SerialPortInfo);
+    Q_D(const QSerialPortInfo);
     return !d ? QString() : d->productIdentifier;
 }
 
 /*!
-    \fn bool SerialPortInfo::isNull() const
+    \fn bool QSerialPortInfo::isNull() const
 
-    Returns whether this SerialPortInfo object holds a
+    Returns whether this QSerialPortInfo object holds a
     serial port definition.
 */
 
 /*!
-    \fn bool SerialPortInfo::isBusy() const
+    \fn bool QSerialPortInfo::isBusy() const
 
     Returns true if serial port is busy;
     otherwise returns false.
 */
 
 /*!
-    \fn bool SerialPortInfo::isValid() const
+    \fn bool QSerialPortInfo::isValid() const
 
     Returns true if serial port is present on system;
     otherwise returns false.
 */
 
 /*!
-    \fn QList<qint32> SerialPortInfo::standardRates()
+    \fn QList<qint32> QSerialPortInfo::standardRates()
 
     Returns a list of available standard baud rates supported by
     the current serial port.
 */
 
 /*!
-    \fn QList<SerialPortInfo> SerialPortInfo::availablePorts()
+    \fn QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     Returns a list of available serial ports on the system.
 */

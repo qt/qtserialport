@@ -40,8 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORT_WIN_P_H
-#define SERIALPORT_WIN_P_H
+#ifndef QSERIALPORT_WIN_P_H
+#define QSERIALPORT_WIN_P_H
 
 #include "serialport_p.h"
 
@@ -61,21 +61,21 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 class AbstractOverlappedEventNotifier;
 #endif
 
-class SerialPortPrivate : public SerialPortPrivateData
+class QSerialPortPrivate : public QSerialPortPrivateData
 {
 public:
-    SerialPortPrivate(SerialPort *q);
+    QSerialPortPrivate(QSerialPort *q);
 
     bool open(QIODevice::OpenMode mode);
     void close();
 
-    SerialPort::Lines lines() const;
+    QSerialPort::Lines lines() const;
 
     bool setDtr(bool set);
     bool setRts(bool set);
 
     bool flush();
-    bool clear(SerialPort::Directions dir);
+    bool clear(QSerialPort::Directions dir);
 
     bool sendBreak(int duration);
     bool setBreak(bool set);
@@ -91,12 +91,12 @@ public:
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);
 
-    bool setBaudRate(qint32 baudRate, SerialPort::Directions dir);
-    bool setDataBits(SerialPort::DataBits dataBits);
-    bool setParity(SerialPort::Parity parity);
-    bool setStopBits(SerialPort::StopBits stopBits);
-    bool setFlowControl(SerialPort::FlowControl flowControl);
-    bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy);
+    bool setBaudRate(qint32 baudRate, QSerialPort::Directions dir);
+    bool setDataBits(QSerialPort::DataBits dataBits);
+    bool setParity(QSerialPort::Parity parity);
+    bool setStopBits(QSerialPort::StopBits stopBits);
+    bool setFlowControl(QSerialPort::FlowControl flowControl);
+    bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     bool processIoErrors();
 #ifndef Q_OS_WINCE
@@ -144,7 +144,7 @@ private:
     bool updateCommTimeouts();
 
     void detectDefaultSettings();
-    SerialPort::PortError decodeSystemError() const;
+    QSerialPort::PortError decodeSystemError() const;
 
 #ifndef Q_OS_WINCE
     bool waitAnyEvent(int msecs, bool *timedOut,

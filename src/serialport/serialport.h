@@ -40,8 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORT_H
-#define SERIALPORT_H
+#ifndef QSERIALPORT_H
+#define QSERIALPORT_H
 
 #include <QtCore/qiodevice.h>
 
@@ -49,10 +49,10 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPortInfo;
-class SerialPortPrivate;
+class QSerialPortInfo;
+class QSerialPortPrivate;
 
-class Q_SERIALPORT_EXPORT SerialPort : public QIODevice
+class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
 {
     Q_OBJECT
 
@@ -156,13 +156,13 @@ public:
         UnknownPortError
     };
 
-    explicit SerialPort(QObject *parent = 0);
-    explicit SerialPort(const QString &name, QObject *parent = 0);
-    explicit SerialPort(const SerialPortInfo &info, QObject *parent = 0);
-    virtual ~SerialPort();
+    explicit QSerialPort(QObject *parent = 0);
+    explicit QSerialPort(const QString &name, QObject *parent = 0);
+    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = 0);
+    virtual ~QSerialPort();
 
     void setPort(const QString &port);
-    void setPort(const SerialPortInfo &info);
+    void setPort(const QSerialPortInfo &info);
     QString portName() const;
 
     virtual bool open(OpenMode mode);
@@ -238,18 +238,18 @@ protected:
     virtual qint64 writeData(const char *data, qint64 maxSize);
 
 private:
-    SerialPortPrivate * const d_ptr;
+    QSerialPortPrivate * const d_ptr;
 
-    Q_DECLARE_PRIVATE(SerialPort)
-    Q_DISABLE_COPY(SerialPort)
+    Q_DECLARE_PRIVATE(QSerialPort)
+    Q_DISABLE_COPY(QSerialPort)
 };
 
-inline bool SerialPort::clearBreak(bool clear)
+inline bool QSerialPort::clearBreak(bool clear)
 { return setBreak(!clear); }
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(SerialPort::Directions)
-Q_DECLARE_OPERATORS_FOR_FLAGS(SerialPort::Lines)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Directions)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Lines)
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORT_H
+#endif // QSERIALPORT_H

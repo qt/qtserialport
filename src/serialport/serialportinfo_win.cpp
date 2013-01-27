@@ -140,9 +140,9 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
     return QString::fromWCharArray(((const wchar_t *)data.constData()));
 }
 
-QList<SerialPortInfo> SerialPortInfo::availablePorts()
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<SerialPortInfo> ports;
+    QList<QSerialPortInfo> ports;
     static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
     for (int i = 0; i < guidCount; ++i) {
@@ -156,14 +156,14 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
         DWORD index = 0;
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
-            SerialPortInfo info;
+            QSerialPortInfo info;
 
             QString s = devicePortName(deviceInfoSet, &deviceInfoData);
             if (s.isEmpty() || s.contains(QLatin1String("LPT")))
                 continue;
 
             info.d_ptr->portName = s;
-            info.d_ptr->device = SerialPortPrivate::portNameToSystemLocation(s);
+            info.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
             info.d_ptr->description =
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
             info.d_ptr->manufacturer =
@@ -184,12 +184,12 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 // common part
 
-QList<qint32> SerialPortInfo::standardBaudRates()
+QList<qint32> QSerialPortInfo::standardBaudRates()
 {
-    return SerialPortPrivate::standardBaudRates();
+    return QSerialPortPrivate::standardBaudRates();
 }
 
-bool SerialPortInfo::isBusy() const
+bool QSerialPortInfo::isBusy() const
 {
     const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
                                            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -203,7 +203,7 @@ bool SerialPortInfo::isBusy() const
     return false;
 }
 
-bool SerialPortInfo::isValid() const
+bool QSerialPortInfo::isValid() const
 {
     const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
                                            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);

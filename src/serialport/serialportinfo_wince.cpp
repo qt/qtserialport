@@ -101,9 +101,9 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
     return result;
 }
 
-QList<SerialPortInfo> SerialPortInfo::availablePorts()
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<SerialPortInfo> ports;
+    QList<QSerialPortInfo> ports;
 
     DEVMGR_DEVICE_INFORMATION di;
     di.dwSize = sizeof(di);
@@ -112,9 +112,9 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
                                              &di);
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
-            SerialPortInfo info;
+            QSerialPortInfo info;
             info.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
-            info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
+            info.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
             info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
                                                       QString::fromWCharArray(di.szDeviceKey));
 

@@ -83,7 +83,7 @@ private:
     QLabel *statusLabel;
     QPushButton *runButton;
 
-    SerialPort serial;
+    QSerialPort serial;
     QByteArray response;
     QTimer timer;
 };

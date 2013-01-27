@@ -100,9 +100,9 @@ inline QStringList& filtersOfDevices()
 
 #endif
 
-QList<SerialPortInfo> SerialPortInfo::availablePorts()
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<SerialPortInfo> ports;
+    QList<QSerialPortInfo> ports;
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 
@@ -129,7 +129,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
                 if (dev) {
 
-                    SerialPortInfo info;
+                    QSerialPortInfo info;
 
                     info.d_ptr->device =
                             QLatin1String(::udev_device_get_devnode(dev));
@@ -221,10 +221,10 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
             if (!foundDevices.contains(s)) {
                 foundDevices.append(s);
 
-                SerialPortInfo info;
+                QSerialPortInfo info;
 
                 info.d_ptr->device = s;
-                info.d_ptr->portName = SerialPortPrivate::portNameFromSystemLocation(s);
+                info.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(s);
 
                 // Get description, manufacturer, vendor identifier, product
                 // identifier are not supported.
@@ -244,18 +244,18 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
 // common part
 
-QList<qint32> SerialPortInfo::standardBaudRates()
+QList<qint32> QSerialPortInfo::standardBaudRates()
 {
-    return SerialPortPrivate::standardBaudRates();
+    return QSerialPortPrivate::standardBaudRates();
 }
 
-bool SerialPortInfo::isBusy() const
+bool QSerialPortInfo::isBusy() const
 {
     bool currentPid = false;
     return TtyLocker::isLocked(portName().toLocal8Bit().constData(), &currentPid);
 }
 
-bool SerialPortInfo::isValid() const
+bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();

@@ -61,9 +61,9 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 enum { MATCHING_PROPERTIES_COUNT = 6 };
 
-QList<SerialPortInfo> SerialPortInfo::availablePorts()
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<SerialPortInfo> ports;
+    QList<QSerialPortInfo> ports;
 
     int matchingPropertiesCounter = 0;
 
@@ -187,7 +187,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
         // Convert from MacOSX-specific properties to Qt4-specific.
         if (matchingPropertiesCounter > 0) {
 
-            SerialPortInfo info;
+            QSerialPortInfo info;
             QByteArray buffer(MAXPATHLEN, 0);
 
             if (device) {

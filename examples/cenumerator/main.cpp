@@ -49,11 +49,11 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     QTextStream out(stdout);
-    QList<SerialPortInfo> serialPortInfoList = SerialPortInfo::availablePorts();
+    QList<QSerialPortInfo> serialPortInfoList = QSerialPortInfo::availablePorts();
 
     out << QObject::tr("Total number of ports available: ") << serialPortInfoList.count() << endl;
 
-    foreach (const SerialPortInfo &serialPortInfo, serialPortInfoList) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
         out << endl
             << QObject::tr("Port: ") << serialPortInfo.portName() << endl
             << QObject::tr("Location: ") << serialPortInfo.systemLocation() << endl

@@ -50,7 +50,7 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPortPrivate;
+class QSerialPortPrivate;
 
 class CommEventNotifier : public QThread
 {
@@ -59,7 +59,7 @@ signals:
     void eventMask(quint32 mask);
 
 public:
-    CommEventNotifier(DWORD mask, SerialPortPrivate *d, QObject *parent)
+    CommEventNotifier(DWORD mask, QSerialPortPrivate *d, QObject *parent)
         : QThread(parent), dptr(d), running(true) {
         connect(this, SIGNAL(eventMask(quint32)), this, SLOT(processNotification(quint32)));
         ::SetCommMask(dptr->descriptor, mask);
@@ -92,11 +92,11 @@ private slots:
         if (EV_RXCHAR &eventMask)
             dptr->notifyRead();
         if (EV_TXEMPTY & eventMask)
-            dptr->notifyWrite(SerialPortPrivateData::WriteChunkSize);
+            dptr->notifyWrite(QSerialPortPrivateData::WriteChunkSize);
     }
 
 private:
-    SerialPortPrivate *dptr;
+    QSerialPortPrivate *dptr;
     mutable bool running;
 };
 
@@ -143,15 +143,15 @@ private:
     mutable bool worked;
 };
 
-SerialPortPrivate::SerialPortPrivate(SerialPort *q)
-    : SerialPortPrivateData(q)
+QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
+    : QSerialPortPrivateData(q)
     , descriptor(INVALID_HANDLE_VALUE)
     , flagErrorFromCommEvent(0)
     , eventNotifier(0)
 {
 }
 
-bool SerialPortPrivate::open(QIODevice::OpenMode mode)
+bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
     DWORD eventMask = EV_ERR;
@@ -200,14 +200,14 @@ bool SerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateCommTimeouts())
         return false;
 
-    eventNotifier = new QtAddOn::SerialPort::CommEventNotifier(eventMask, this, q_ptr);
+    eventNotifier = new QtAddOn::QSerialPort::CommEventNotifier(eventMask, this, q_ptr);
     eventNotifier->start();
 
     detectDefaultSettings();
     return true;
 }
 
-void SerialPortPrivate::close()
+void QSerialPortPrivate::close()
 {
     if (eventNotifier) {
         eventNotifier->deleteLater();
@@ -223,27 +223,27 @@ void SerialPortPrivate::close()
     descriptor = INVALID_HANDLE_VALUE;
 }
 
-bool SerialPortPrivate::flush()
+bool QSerialPortPrivate::flush()
 {
     return notifyWrite() && ::FlushFileBuffers(descriptor);
 }
 
-bool SerialPortPrivate::clear(SerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
 {
     DWORD flags = 0;
-    if (dir & SerialPort::Input)
+    if (dir & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-    if (dir & SerialPort::Output)
+    if (dir & QSerialPort::Output)
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
     return ::PurgeComm(descriptor, flags);
 }
 
-qint64 SerialPortPrivate::bytesAvailable() const
+qint64 QSerialPortPrivate::bytesAvailable() const
 {
     return readBuffer.size();
 }
 
-qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
+qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
 {
     if (readBuffer.isEmpty())
         return 0;
@@ -267,7 +267,7 @@ qint64 SerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
     return readSoFar;
 }
 
-qint64 SerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
     char *ptr = writeBuffer.reserve(maxSize);
     if (maxSize == 1)
@@ -278,7 +278,7 @@ qint64 SerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
     return maxSize;
 }
 
-bool SerialPortPrivate::waitForReadyRead(int msec)
+bool QSerialPortPrivate::waitForReadyRead(int msec)
 {
     if (!readBuffer.isEmpty())
         return true;
@@ -307,7 +307,7 @@ bool SerialPortPrivate::waitForReadyRead(int msec)
     return false;
 }
 
-bool SerialPortPrivate::waitForBytesWritten(int msec)
+bool QSerialPortPrivate::waitForBytesWritten(int msec)
 {
     if (writeBuffer.isEmpty())
         return false;
@@ -338,9 +338,9 @@ bool SerialPortPrivate::waitForBytesWritten(int msec)
     return false;
 }
 
-bool SerialPortPrivate::notifyRead()
+bool QSerialPortPrivate::notifyRead()
 {
-    DWORD bytesToRead = (policy == SerialPort::IgnorePolicy) ? ReadChunkSize : 1;
+    DWORD bytesToRead = (policy == QSerialPort::IgnorePolicy) ? ReadChunkSize : 1;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
         bytesToRead = readBufferMaxSize - readBuffer.size();
@@ -368,14 +368,14 @@ bool SerialPortPrivate::notifyRead()
         flagErrorFromCommEvent = false;
 
         switch (policy) {
-        case SerialPort::SkipPolicy:
+        case QSerialPort::SkipPolicy:
             readBuffer.getChar();
             return true;
-        case SerialPort::PassZeroPolicy:
+        case QSerialPort::PassZeroPolicy:
             readBuffer.getChar();
             readBuffer.putChar('\0');
             break;
-        case SerialPort::StopReceivingPolicy:
+        case QSerialPort::StopReceivingPolicy:
             // FIXME: Maybe need disable read notifier?
             break;
         default:
@@ -389,7 +389,7 @@ bool SerialPortPrivate::notifyRead()
     return true;
 }
 
-bool SerialPortPrivate::notifyWrite(int maxSize)
+bool QSerialPortPrivate::notifyWrite(int maxSize)
 {
     int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
 
@@ -407,7 +407,7 @@ bool SerialPortPrivate::notifyWrite(int maxSize)
     return true;
 }
 
-bool SerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
+bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                                            bool checkRead, bool checkWrite,
                                            int msecs, bool *timedOut)
 {
@@ -437,7 +437,7 @@ bool SerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForW
     return false;
 }
 
-bool SerialPortPrivate::updateDcb()
+bool QSerialPortPrivate::updateDcb()
 {
     QMutexLocker locker(&settingsChangeMutex);
 
@@ -458,7 +458,7 @@ bool SerialPortPrivate::updateDcb()
     return ret;
 }
 
-bool SerialPortPrivate::updateCommTimeouts()
+bool QSerialPortPrivate::updateCommTimeouts()
 {
     if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
         portError = decodeSystemError();
@@ -469,7 +469,7 @@ bool SerialPortPrivate::updateCommTimeouts()
 
 static const QLatin1String defaultPathPostfix(":");
 
-QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
+QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
 {
     QString ret = port;
     if (!ret.contains(defaultPathPostfix))
@@ -477,7 +477,7 @@ QString SerialPortPrivate::portNameToSystemLocation(const QString &port)
     return ret;
 }
 
-QString SerialPortPrivate::portNameFromSystemLocation(const QString &location)
+QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
 {
     QString ret = location;
     if (ret.contains(defaultPathPostfix))

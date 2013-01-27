@@ -47,7 +47,7 @@
 
 QT_USE_NAMESPACE_SERIALPORT
 
-class tst_SerialPortInfo : public QObject
+class tst_QSerialPortInfo : public QObject
 {
     Q_OBJECT
 
@@ -57,23 +57,23 @@ private slots:
     void assignment();
 };
 
-void tst_SerialPortInfo::ports()
+void tst_QSerialPortInfo::ports()
 {
-    QList<SerialPortInfo> list(SerialPortInfo::availablePorts());
+    QList<QSerialPortInfo> list(QSerialPortInfo::availablePorts());
     QCOMPARE(list.isEmpty(), false);
 }
 
-void tst_SerialPortInfo::constructors()
+void tst_QSerialPortInfo::constructors()
 {
     // FIXME
 }
 
-void tst_SerialPortInfo::assignment()
+void tst_QSerialPortInfo::assignment()
 {
-    QList<SerialPortInfo> list(SerialPortInfo::availablePorts());
+    QList<QSerialPortInfo> list(QSerialPortInfo::availablePorts());
 
     for (int c = 0; c < list.size(); ++c) {
-        SerialPortInfo info = list[c];
+        QSerialPortInfo info = list[c];
         QCOMPARE(info.portName(), list[c].portName());
         QCOMPARE(info.systemLocation(), list[c].systemLocation());
         QCOMPARE(info.description(), list[c].description());
@@ -83,5 +83,5 @@ void tst_SerialPortInfo::assignment()
     }
 }
 
-QTEST_MAIN(tst_SerialPortInfo)
+QTEST_MAIN(tst_QSerialPortInfo)
 #include "tst_serialportinfo.moc"

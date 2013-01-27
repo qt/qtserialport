@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     w.setWindowTitle(QObject::tr("Info about all available serial ports."));
     QVBoxLayout *layout = new QVBoxLayout;
 
-    foreach (const SerialPortInfo &info, SerialPortInfo::availablePorts()) {
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         QString s(QObject::tr("Port: %1\n"
                               "Location: %2\n"
                               "Description: %3\n"

@@ -86,7 +86,7 @@ void SlaveThread::run()
     QString currentRespone = response;
     mutex.unlock();
 
-    SerialPort serial;
+    QSerialPort serial;
 
     while (!quit) {
 
@@ -100,31 +100,31 @@ void SlaveThread::run()
                 return;
             }
 
-            if (!serial.setBaudRate(SerialPort::Baud9600)) {
+            if (!serial.setBaudRate(QSerialPort::Baud9600)) {
                 emit error(tr("Can't set baud rate 9600 baud to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;
             }
 
-            if (!serial.setDataBits(SerialPort::Data8)) {
+            if (!serial.setDataBits(QSerialPort::Data8)) {
                 emit error(tr("Can't set 8 data bits to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;
             }
 
-            if (!serial.setParity(SerialPort::NoParity)) {
+            if (!serial.setParity(QSerialPort::NoParity)) {
                 emit error(tr("Can't set no patity to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;
             }
 
-            if (!serial.setStopBits(SerialPort::OneStop)) {
+            if (!serial.setStopBits(QSerialPort::OneStop)) {
                 emit error(tr("Can't set 1 stop bit to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;
             }
 
-            if (!serial.setFlowControl(SerialPort::NoFlowControl)) {
+            if (!serial.setFlowControl(QSerialPort::NoFlowControl)) {
                 emit error(tr("Can't set no flow control to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;

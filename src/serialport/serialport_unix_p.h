@@ -40,8 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORT_UNIX_P_H
-#define SERIALPORT_UNIX_P_H
+#ifndef QSERIALPORT_UNIX_P_H
+#define QSERIALPORT_UNIX_P_H
 
 #include "serialport_p.h"
 
@@ -55,21 +55,21 @@ class QSocketNotifier;
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-class SerialPortPrivate : public SerialPortPrivateData
+class QSerialPortPrivate : public QSerialPortPrivateData
 {
 public:
-    SerialPortPrivate(SerialPort *q);
+    QSerialPortPrivate(QSerialPort *q);
 
     bool open(QIODevice::OpenMode mode);
     void close();
 
-    SerialPort::Lines lines() const;
+    QSerialPort::Lines lines() const;
 
     bool setDtr(bool set);
     bool setRts(bool set);
 
     bool flush();
-    bool clear(SerialPort::Directions dir);
+    bool clear(QSerialPort::Directions dir);
 
     bool sendBreak(int duration);
     bool setBreak(bool set);
@@ -85,12 +85,12 @@ public:
     bool waitForReadyRead(int msecs);
     bool waitForBytesWritten(int msecs);
 
-    bool setBaudRate(qint32 baudRate, SerialPort::Directions dir);
-    bool setDataBits(SerialPort::DataBits dataBits);
-    bool setParity(SerialPort::Parity parity);
-    bool setStopBits(SerialPort::StopBits stopBits);
-    bool setFlowControl(SerialPort::FlowControl flow);
-    bool setDataErrorPolicy(SerialPort::DataErrorPolicy policy);
+    bool setBaudRate(qint32 baudRate, QSerialPort::Directions dir);
+    bool setDataBits(QSerialPort::DataBits dataBits);
+    bool setParity(QSerialPort::Parity parity);
+    bool setStopBits(QSerialPort::StopBits stopBits);
+    bool setFlowControl(QSerialPort::FlowControl flow);
+    bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     bool readNotification();
     bool writeNotification(int maxSize = INT_MAX);
@@ -128,7 +128,7 @@ private:
     bool updateTermios();
 
     void detectDefaultSettings();
-    SerialPort::PortError decodeSystemError() const;
+    QSerialPort::PortError decodeSystemError() const;
 
     bool isReadNotificationEnabled() const;
     void setReadNotificationEnabled(bool enable);
@@ -153,4 +153,4 @@ private:
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORT_UNIX_P_H
+#endif // QSERIALPORT_UNIX_P_H
