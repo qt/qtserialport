@@ -200,7 +200,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateCommTimeouts())
         return false;
 
-    eventNotifier = new QtAddOn::QSerialPort::CommEventNotifier(eventMask, this, q_ptr);
+    eventNotifier = new QSerialPort::CommEventNotifier(eventMask, this, q_ptr);
     eventNotifier->start();
 
     detectDefaultSettings();
