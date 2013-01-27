@@ -41,9 +41,9 @@
 **
 ****************************************************************************/
 
-#include "serialportinfo.h"
-#include "serialportinfo_p.h"
-#include "serialport_win_p.h"
+#include "qserialportinfo.h"
+#include "qserialportinfo_p.h"
+#include "qserialport_win_p.h"
 
 #ifndef Q_OS_WINCE
 #include <initguid.h>

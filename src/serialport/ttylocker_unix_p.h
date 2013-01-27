@@ -42,7 +42,7 @@
 #ifndef TTYLOCKER_UNIX_P_H
 #define TTYLOCKER_UNIX_P_H
 
-#include "serialport-global.h"
+#include "qserialport-global.h"
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 

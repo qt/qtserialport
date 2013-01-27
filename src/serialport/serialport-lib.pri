@@ -3,32 +3,32 @@ INCLUDEPATH += $$PWD
 linux*:DEFINES += HAVE_LIBUDEV
 
 PUBLIC_HEADERS += \
-    $$PWD/serialport-global.h \
-    $$PWD/serialport.h \
-    $$PWD/serialportinfo.h
+    $$PWD/qserialport-global.h \
+    $$PWD/qserialport.h \
+    $$PWD/qserialportinfo.h
 
 PRIVATE_HEADERS += \
-    $$PWD/serialport_p.h \
-    $$PWD/serialportinfo_p.h
+    $$PWD/qserialport_p.h \
+    $$PWD/qserialportinfo_p.h
 
 SOURCES += \
-    $$PWD/serialport.cpp \
-    $$PWD/serialportinfo.cpp
+    $$PWD/qserialport.cpp \
+    $$PWD/qserialportinfo.cpp
 
 win32 {
     PRIVATE_HEADERS += \
-        $$PWD/serialport_win_p.h
+        $$PWD/qserialport_win_p.h
 
     SOURCES += \
-        $$PWD/serialport_win.cpp \
-        $$PWD/serialportinfo_win.cpp
+        $$PWD/qserialport_win.cpp \
+        $$PWD/qserialportinfo_win.cpp
 
     !wince*: {
         LIBS += -lsetupapi -ladvapi32
     } else {
         SOURCES += \
-            $$PWD/serialport_wince.cpp \
-            $$PWD/serialportinfo_wince.cpp
+            $$PWD/qserialport_wince.cpp \
+            $$PWD/qserialportinfo_wince.cpp
     }
 }
 
@@ -47,11 +47,11 @@ symbian {
     INCLUDEPATH += c:/QtSDK/Symbian/SDKs/Symbian3Qt473/epoc32/include/platform
 
     PRIVATE_HEADERS += \
-        $$PWD/serialport_symbian_p.h
+        $$PWD/qserialport_symbian_p.h
 
     SOURCES += \
-        $$PWD/serialport_symbian.cpp \
-        $$PWD/serialportinfo_symbian.cpp
+        $$PWD/qserialport_symbian.cpp \
+        $$PWD/qserialportinfo_symbian.cpp
 
     LIBS += -leuser -lefsrv -lc32
 }
@@ -59,15 +59,15 @@ symbian {
 unix:!symbian {
     PRIVATE_HEADERS += \
         $$PWD/ttylocker_unix_p.h \
-        $$PWD/serialport_unix_p.h
+        $$PWD/qserialport_unix_p.h
 
     SOURCES += \
         $$PWD/ttylocker_unix.cpp \
-        $$PWD/serialport_unix.cpp \
-        $$PWD/serialportinfo_unix.cpp
+        $$PWD/qserialport_unix.cpp \
+        $$PWD/qserialportinfo_unix.cpp
 
     macx {
-        SOURCES += $$PWD/serialportinfo_mac.cpp
+        SOURCES += $$PWD/qserialportinfo_mac.cpp
 
         LIBS += -framework IOKit -framework CoreFoundation
     } else {

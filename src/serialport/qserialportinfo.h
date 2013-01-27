@@ -40,13 +40,13 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORTINFO_H
-#define SERIALPORTINFO_H
+#ifndef QSERIALPORTINFO_H
+#define QSERIALPORTINFO_H
 
 #include <QtCore/qlist.h>
 #include <QtCore/qscopedpointer.h>
 
-#include "serialport-global.h"
+#include "qserialport-global.h"
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
@@ -90,4 +90,4 @@ inline bool QSerialPortInfo::isNull() const
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORTINFO_H
+#endif // QSERIALPORTINFO_H

@@ -44,7 +44,7 @@
 #ifndef QSERIALPORTINFO_P_H
 #define QSERIALPORTINFO_P_H
 
-#include "serialport-global.h"
+#include "qserialport-global.h"
 
 #include <QtCore/qstring.h>
 

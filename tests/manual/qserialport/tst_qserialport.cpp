@@ -42,8 +42,8 @@
 #include <QtTest/QtTest>
 #include <QtCore/QDebug>
 
-#include <QtSerialPort/serialportinfo.h>
-#include <QtSerialPort/serialport.h>
+#include <QtSerialPort/qserialportinfo.h>
+#include <QtSerialPort/qserialport.h>
 
 QT_USE_NAMESPACE_SERIALPORT
 
@@ -217,4 +217,4 @@ void tst_QSerialPort::flowControl()
 }
 
 QTEST_MAIN(tst_QSerialPort)
-#include "tst_serialport.moc"
+#include "tst_qserialport.moc"

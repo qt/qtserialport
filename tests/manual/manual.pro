@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
 CONFIG = ordered
-SUBDIRS += serialportinfo serialport
+SUBDIRS += qserialportinfo qserialport

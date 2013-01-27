@@ -41,9 +41,9 @@
 **
 ****************************************************************************/
 
-#include "serialportinfo.h"
-#include "serialportinfo_p.h"
-#include "serialport.h"
+#include "qserialportinfo.h"
+#include "qserialportinfo_p.h"
+#include "qserialport.h"
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 

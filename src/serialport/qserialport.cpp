@@ -42,15 +42,15 @@
 **
 ****************************************************************************/
 
-#include "serialport.h"
-#include "serialportinfo.h"
+#include "qserialport.h"
+#include "qserialportinfo.h"
 
 #ifdef Q_OS_WIN
-#include "serialport_win_p.h"
+#include "qserialport_win_p.h"
 #elif defined (Q_OS_SYMBIAN)
-#include "serialport_symbian_p.h"
+#include "qserialport_symbian_p.h"
 #elif defined (Q_OS_UNIX)
-#include "serialport_unix_p.h"
+#include "qserialport_unix_p.h"
 #else
 #error Unsupported OS
 #endif
@@ -1159,6 +1159,6 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
     \sa setBreak(), sendBreak()
 */
 
-#include "moc_serialport.cpp"
+#include "moc_qserialport.cpp"
 
 QT_END_NAMESPACE_SERIALPORT

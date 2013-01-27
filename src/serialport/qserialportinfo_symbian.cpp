@@ -41,9 +41,9 @@
 **
 ****************************************************************************/
 
-#include "serialportinfo.h"
-#include "serialportinfo_p.h"
-#include "serialport_symbian_p.h"
+#include "qserialportinfo.h"
+#include "qserialportinfo_p.h"
+#include "qserialport_symbian_p.h"
 
 #include <e32base.h>
 //#include <e32test.h>

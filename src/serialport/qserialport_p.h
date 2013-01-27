@@ -1,6 +1,8 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2011-2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2011 Sergey Belyashov <Sergey.Belyashov@gmail.com>
+** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
@@ -39,49 +41,47 @@
 **
 ****************************************************************************/
 
-#include <QtTest/QtTest>
-#include <QtCore/QDebug>
+#ifndef QSERIALPORT_P_H
+#define QSERIALPORT_P_H
 
-#include <QtSerialPort/serialportinfo.h>
-#include <QtSerialPort/serialport.h>
+#include "qserialport.h"
 
-QT_USE_NAMESPACE_SERIALPORT
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#include <private/qringbuffer_p.h>
+#else
+#include "qt4support/qringbuffer_p.h"
+#endif
 
-class tst_QSerialPortInfo : public QObject
+QT_BEGIN_NAMESPACE_SERIALPORT
+
+class QSerialPortPrivateData
 {
-    Q_OBJECT
+    Q_DECLARE_PUBLIC(QSerialPort)
+public:
+    enum IoConstants {
+        ReadChunkSize = 512,
+        WriteChunkSize = 512
+    };
 
-private slots:
-    void ports();
-    void constructors();
-    void assignment();
+    QSerialPortPrivateData(QSerialPort *q);
+    int timeoutValue(int msecs, int elapsed);
+
+    qint64 readBufferMaxSize;
+    QRingBuffer readBuffer;
+    QRingBuffer writeBuffer;
+    QSerialPort::PortError portError;
+    QString systemLocation;
+    qint32 inputBaudRate;
+    qint32 outputBaudRate;
+    QSerialPort::DataBits dataBits;
+    QSerialPort::Parity parity;
+    QSerialPort::StopBits stopBits;
+    QSerialPort::FlowControl flow;
+    QSerialPort::DataErrorPolicy policy;
+    bool restoreSettingsOnClose;
+    QSerialPort * const q_ptr;
 };
 
-void tst_QSerialPortInfo::ports()
-{
-    QList<QSerialPortInfo> list(QSerialPortInfo::availablePorts());
-    QCOMPARE(list.isEmpty(), false);
-}
+QT_END_NAMESPACE_SERIALPORT
 
-void tst_QSerialPortInfo::constructors()
-{
-    // FIXME
-}
-
-void tst_QSerialPortInfo::assignment()
-{
-    QList<QSerialPortInfo> list(QSerialPortInfo::availablePorts());
-
-    for (int c = 0; c < list.size(); ++c) {
-        QSerialPortInfo info = list[c];
-        QCOMPARE(info.portName(), list[c].portName());
-        QCOMPARE(info.systemLocation(), list[c].systemLocation());
-        QCOMPARE(info.description(), list[c].description());
-        QCOMPARE(info.manufacturer(), list[c].manufacturer());
-        QCOMPARE(info.vendorIdentifier(), list[c].vendorIdentifier());
-        QCOMPARE(info.productIdentifier(), list[c].productIdentifier());
-    }
-}
-
-QTEST_MAIN(tst_QSerialPortInfo)
-#include "tst_serialportinfo.moc"
+#endif // QSERIALPORT_P_H

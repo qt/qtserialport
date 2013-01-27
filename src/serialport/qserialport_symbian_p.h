@@ -1,7 +1,6 @@
 /****************************************************************************
 **
 ** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
-** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
@@ -40,18 +39,12 @@
 **
 ****************************************************************************/
 
-#ifndef QSERIALPORT_UNIX_P_H
-#define QSERIALPORT_UNIX_P_H
+#ifndef QSERIALPORT_SYMBIAN_P_H
+#define QSERIALPORT_SYMBIAN_P_H
 
-#include "serialport_p.h"
+#include "qserialport_p.h"
 
-#include <limits.h>
-#include <termios.h>
-#ifdef Q_OS_LINUX
-#  include <linux/serial.h>
-#endif
-
-class QSocketNotifier;
+#include <c32comm.h>
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
@@ -82,19 +75,18 @@ public:
     qint64 readFromBuffer(char *data, qint64 maxSize);
     qint64 writeToBuffer(const char *data, qint64 maxSize);
 
-    bool waitForReadyRead(int msecs);
-    bool waitForBytesWritten(int msecs);
+    bool waitForReadyRead(int msec);
+    bool waitForBytesWritten(int msec);
 
     bool setBaudRate(qint32 baudRate, QSerialPort::Directions dir);
     bool setDataBits(QSerialPort::DataBits dataBits);
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);
-    bool setFlowControl(QSerialPort::FlowControl flow);
+    bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    bool readNotification();
-    bool writeNotification(int maxSize = INT_MAX);
-    bool exceptionNotification();
+    bool notifyRead();
+    bool notifyWrite();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -104,53 +96,23 @@ public:
 
     static QList<qint32> standardBaudRates();
 
-    struct termios currentTermios;
-    struct termios restoredTermios;
-#ifdef Q_OS_LINUX
-    struct serial_struct currentSerialInfo;
-    struct serial_struct restoredSerialInfo;
-#endif
-    int descriptor;
-    bool isCustomBaudRateSupported;
-
-    QSocketNotifier *readNotifier;
-    QSocketNotifier *writeNotifier;
-    QSocketNotifier *exceptionNotifier;
-
-    bool readPortNotifierCalled;
-    bool readPortNotifierState;
-    bool readPortNotifierStateSet;
-
-    bool emittedReadyRead;
-    bool emittedBytesWritten;
+    TCommConfig currentSettings;
+    TCommConfig restoredSettings;
+    RComm descriptor;
+    mutable RTimer selectTimer;
+    TInt errnum;
 
 private:
-    bool updateTermios();
+    bool updateCommConfig();
 
     void detectDefaultSettings();
     QSerialPort::PortError decodeSystemError() const;
 
-    bool isReadNotificationEnabled() const;
-    void setReadNotificationEnabled(bool enable);
-    bool isWriteNotificationEnabled() const;
-    void setWriteNotificationEnabled(bool enable);
-    bool isExceptionNotificationEnabled() const;
-    void setExceptionNotificationEnabled(bool enable);
-
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
                             int msecs, bool *timedOut);
-
-    qint64 readFromPort(char *data, qint64 maxSize);
-    qint64 writeToPort(const char *data, qint64 maxSize);
-
-#ifndef CMSPAR
-    qint64 writePerChar(const char *data, qint64 maxSize);
-#endif
-    qint64 readPerChar(char *data, qint64 maxSize);
-
 };
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // QSERIALPORT_UNIX_P_H
+#endif // QSERIALPORT_SYMBIAN_P_H

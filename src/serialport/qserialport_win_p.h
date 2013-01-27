@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
@@ -39,14 +40,26 @@
 **
 ****************************************************************************/
 
-#ifndef QSERIALPORT_SYMBIAN_P_H
-#define QSERIALPORT_SYMBIAN_P_H
+#ifndef QSERIALPORT_WIN_P_H
+#define QSERIALPORT_WIN_P_H
 
-#include "serialport_p.h"
+#include "qserialport_p.h"
 
-#include <c32comm.h>
+#include <qt_windows.h>
+
+#ifndef Q_OS_WINCE
+class QWinEventNotifier;
+#include <QtCore/qhash.h>
+#else
+class QThread;
+#include <QtCore/qmutex.h>
+#endif
 
 QT_BEGIN_NAMESPACE_SERIALPORT
+
+#ifndef Q_OS_WINCE
+class AbstractOverlappedEventNotifier;
+#endif
 
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
@@ -85,8 +98,19 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
+    bool processIoErrors();
+#ifndef Q_OS_WINCE
+    bool startAsyncRead();
+    bool startAsyncWrite(int maxSize = INT_MAX);
+    bool completeAsyncRead(DWORD numberOfBytes);
+    bool completeAsyncWrite(DWORD numberOfBytes);
+    AbstractOverlappedEventNotifier *lookupFreeWriteCompletionNotifier();
+    AbstractOverlappedEventNotifier *lookupCommEventNotifier();
+    AbstractOverlappedEventNotifier *lookupReadCompletionNotifier();
+#else
     bool notifyRead();
-    bool notifyWrite();
+    bool notifyWrite(int maxSize = INT_MAX);
+#endif
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -96,23 +120,43 @@ public:
 
     static QList<qint32> standardBaudRates();
 
-    TCommConfig currentSettings;
-    TCommConfig restoredSettings;
-    RComm descriptor;
-    mutable RTimer selectTimer;
-    TInt errnum;
+    DCB currentDcb;
+    DCB restoredDcb;
+    COMMTIMEOUTS currentCommTimeouts;
+    COMMTIMEOUTS restoredCommTimeouts;
+    HANDLE descriptor;
+    bool flagErrorFromCommEvent;
+
+#ifndef Q_OS_WINCE
+    QHash<HANDLE, AbstractOverlappedEventNotifier *> notifiers;
+    qint64 actualReadBufferSize;
+    qint64 actualWriteBufferSize;
+    qint64 acyncWritePosition;
+    bool readyReadEmitted;
+    bool writeSequenceStarted;
+#else
+    QThread *eventNotifier;
+    QMutex settingsChangeMutex;
+#endif
 
 private:
-    bool updateCommConfig();
+    bool updateDcb();
+    bool updateCommTimeouts();
 
     void detectDefaultSettings();
     QSerialPort::PortError decodeSystemError() const;
 
+#ifndef Q_OS_WINCE
+    bool waitAnyEvent(int msecs, bool *timedOut,
+                      AbstractOverlappedEventNotifier **triggeredNotifier);
+#else
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
                             int msecs, bool *timedOut);
+#endif
+
 };
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // QSERIALPORT_SYMBIAN_P_H
+#endif // QSERIALPORT_WIN_P_H

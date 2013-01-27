@@ -41,8 +41,8 @@
 **
 ****************************************************************************/
 
-#include "serialportinfo.h"
-#include "serialportinfo_p.h"
+#include "qserialportinfo.h"
+#include "qserialportinfo_p.h"
 
 #include <sys/param.h>
 

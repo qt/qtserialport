@@ -1,5 +1,5 @@
 CONFIG += testcase
-TARGET = tst_serialport
+TARGET = tst_qserialport
 
 QT = core testlib
 greaterThan(QT_MAJOR_VERSION, 4) {
@@ -8,4 +8,4 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     include($$QTSERIALPORT_PROJECT_ROOT/src/serialport/qt4support/serialport.prf)
 }
 
-SOURCES += tst_serialport.cpp
+SOURCES += tst_qserialport.cpp

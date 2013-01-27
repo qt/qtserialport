@@ -41,7 +41,7 @@
 **
 ****************************************************************************/
 
-#include "serialport_win_p.h"
+#include "qserialport_win_p.h"
 
 #ifndef Q_OS_WINCE
 #include <QtCore/qelapsedtimer.h>

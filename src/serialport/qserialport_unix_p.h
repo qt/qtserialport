@@ -40,26 +40,20 @@
 **
 ****************************************************************************/
 
-#ifndef QSERIALPORT_WIN_P_H
-#define QSERIALPORT_WIN_P_H
+#ifndef QSERIALPORT_UNIX_P_H
+#define QSERIALPORT_UNIX_P_H
 
-#include "serialport_p.h"
+#include "qserialport_p.h"
 
-#include <qt_windows.h>
-
-#ifndef Q_OS_WINCE
-class QWinEventNotifier;
-#include <QtCore/qhash.h>
-#else
-class QThread;
-#include <QtCore/qmutex.h>
+#include <limits.h>
+#include <termios.h>
+#ifdef Q_OS_LINUX
+#  include <linux/serial.h>
 #endif
+
+class QSocketNotifier;
 
 QT_BEGIN_NAMESPACE_SERIALPORT
-
-#ifndef Q_OS_WINCE
-class AbstractOverlappedEventNotifier;
-#endif
 
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
@@ -88,29 +82,19 @@ public:
     qint64 readFromBuffer(char *data, qint64 maxSize);
     qint64 writeToBuffer(const char *data, qint64 maxSize);
 
-    bool waitForReadyRead(int msec);
-    bool waitForBytesWritten(int msec);
+    bool waitForReadyRead(int msecs);
+    bool waitForBytesWritten(int msecs);
 
     bool setBaudRate(qint32 baudRate, QSerialPort::Directions dir);
     bool setDataBits(QSerialPort::DataBits dataBits);
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);
-    bool setFlowControl(QSerialPort::FlowControl flowControl);
+    bool setFlowControl(QSerialPort::FlowControl flow);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    bool processIoErrors();
-#ifndef Q_OS_WINCE
-    bool startAsyncRead();
-    bool startAsyncWrite(int maxSize = INT_MAX);
-    bool completeAsyncRead(DWORD numberOfBytes);
-    bool completeAsyncWrite(DWORD numberOfBytes);
-    AbstractOverlappedEventNotifier *lookupFreeWriteCompletionNotifier();
-    AbstractOverlappedEventNotifier *lookupCommEventNotifier();
-    AbstractOverlappedEventNotifier *lookupReadCompletionNotifier();
-#else
-    bool notifyRead();
-    bool notifyWrite(int maxSize = INT_MAX);
-#endif
+    bool readNotification();
+    bool writeNotification(int maxSize = INT_MAX);
+    bool exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -120,43 +104,53 @@ public:
 
     static QList<qint32> standardBaudRates();
 
-    DCB currentDcb;
-    DCB restoredDcb;
-    COMMTIMEOUTS currentCommTimeouts;
-    COMMTIMEOUTS restoredCommTimeouts;
-    HANDLE descriptor;
-    bool flagErrorFromCommEvent;
-
-#ifndef Q_OS_WINCE
-    QHash<HANDLE, AbstractOverlappedEventNotifier *> notifiers;
-    qint64 actualReadBufferSize;
-    qint64 actualWriteBufferSize;
-    qint64 acyncWritePosition;
-    bool readyReadEmitted;
-    bool writeSequenceStarted;
-#else
-    QThread *eventNotifier;
-    QMutex settingsChangeMutex;
+    struct termios currentTermios;
+    struct termios restoredTermios;
+#ifdef Q_OS_LINUX
+    struct serial_struct currentSerialInfo;
+    struct serial_struct restoredSerialInfo;
 #endif
+    int descriptor;
+    bool isCustomBaudRateSupported;
+
+    QSocketNotifier *readNotifier;
+    QSocketNotifier *writeNotifier;
+    QSocketNotifier *exceptionNotifier;
+
+    bool readPortNotifierCalled;
+    bool readPortNotifierState;
+    bool readPortNotifierStateSet;
+
+    bool emittedReadyRead;
+    bool emittedBytesWritten;
 
 private:
-    bool updateDcb();
-    bool updateCommTimeouts();
+    bool updateTermios();
 
     void detectDefaultSettings();
     QSerialPort::PortError decodeSystemError() const;
 
-#ifndef Q_OS_WINCE
-    bool waitAnyEvent(int msecs, bool *timedOut,
-                      AbstractOverlappedEventNotifier **triggeredNotifier);
-#else
+    bool isReadNotificationEnabled() const;
+    void setReadNotificationEnabled(bool enable);
+    bool isWriteNotificationEnabled() const;
+    void setWriteNotificationEnabled(bool enable);
+    bool isExceptionNotificationEnabled() const;
+    void setExceptionNotificationEnabled(bool enable);
+
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
                             int msecs, bool *timedOut);
+
+    qint64 readFromPort(char *data, qint64 maxSize);
+    qint64 writeToPort(const char *data, qint64 maxSize);
+
+#ifndef CMSPAR
+    qint64 writePerChar(const char *data, qint64 maxSize);
 #endif
+    qint64 readPerChar(char *data, qint64 maxSize);
 
 };
 
 QT_END_NAMESPACE_SERIALPORT
 
-#endif // SERIALPORT_WIN_P_H
+#endif // QSERIALPORT_UNIX_P_H

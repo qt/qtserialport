@@ -41,7 +41,7 @@
 **
 ****************************************************************************/
 
-#include "serialport_unix_p.h"
+#include "qserialport_unix_p.h"
 #include "ttylocker_unix_p.h"
 
 #include <errno.h>

@@ -41,10 +41,10 @@
 **
 ****************************************************************************/
 
-#include "serialportinfo.h"
-#include "serialportinfo_p.h"
+#include "qserialportinfo.h"
+#include "qserialportinfo_p.h"
 #include "ttylocker_unix_p.h"
-#include "serialport_unix_p.h"
+#include "qserialport_unix_p.h"
 #include <QtCore/qfile.h>
 
 #ifndef Q_OS_MAC

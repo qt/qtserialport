@@ -41,7 +41,7 @@
 **
 ****************************************************************************/
 
-#include "serialport_win_p.h"
+#include "qserialport_win_p.h"
 
 #include <QtCore/qelapsedtimer.h>
 
@@ -485,6 +485,6 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
     return ret;
 }
 
-#include "serialport_wince.moc"
+#include "qserialport_wince.moc"
 
 QT_END_NAMESPACE_SERIALPORT
