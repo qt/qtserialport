@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPort;
 class QSerialPortInfoPrivate;
-class QSerialInfoPrivateDeleter;
+class QSerialPortInfoPrivateDeleter;
 
 class Q_SERIALPORT_EXPORT QSerialPortInfo
 {
@@ -82,7 +82,7 @@ public:
     static QList<QSerialPortInfo> availablePorts();
 
 private:
-    QScopedPointer<QSerialPortInfoPrivate, QSerialInfoPrivateDeleter> d_ptr;
+    QScopedPointer<QSerialPortInfoPrivate, QSerialPortInfoPrivateDeleter> d_ptr;
 };
 
 inline bool QSerialPortInfo::isNull() const

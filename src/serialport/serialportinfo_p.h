@@ -64,7 +64,7 @@ public:
     QString productIdentifier;
 };
 
-class QSerialInfoPrivateDeleter
+class QSerialPortInfoPrivateDeleter
 {
 public:
     static void cleanup(QSerialPortInfoPrivate *p) {
