@@ -5,7 +5,7 @@
 ** Copyright (C) 2012 Andre Hartmann <aha_1980@gmx.de>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtCore module of the Qt Toolkit.
+** This file is part of the QtSerialPort module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
