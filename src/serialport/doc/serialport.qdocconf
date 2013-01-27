@@ -1,5 +1,5 @@
-project     = SerialPort
-description = SerialPort Documentation
+project     = QtSerialPort
+description = Qt Serial Port Documentation
 
 exampledirs = ../../../examples ..
 headerdirs  = ./src ../src
@@ -29,32 +29,32 @@ Cpp.ignoredirectives = \
 # Defines the name of the project. You cannot use operators (+, =, -) in
 # the name. Properties for this project are set using a qhp.<projectname>.property
 # format.
-qhp.projects = SerialPort
+qhp.projects = QtSerialPort
 
 # Sets the name of the output qhp file.
-qhp.SerialPort.file = SerialPort.qhp
+qhp.QtSerialPort.file = QtSerialPort.qhp
 
 # Namespace for the output file. This namespace is used to distinguish between
 # different documentation files in Creator/Assistant. The namespace ends with
 # a version being a number containing a major, minor and revision element.
 # E.g. version 1.0 becomes 100.
-qhp.SerialPort.namespace = com.nokia.SerialPort.100
+qhp.QtSerialPort.namespace = com.nokia.QtSerialPort.100
 
 # Title for the package, will be the main title for the package in
 # Assistant/Creator.
-qhp.SerialPort.indexTitle = SerialPort Reference Documentation
+qhp.QtSerialPort.indexTitle = Qt Serial Port Reference Documentation
 
 # Extra files to add to the output which are not linked to from anywhere
 # using a qdoc \l command.
-qhp.SerialPort.extraFiles = style/style.css \
+qhp.QtSerialPort.extraFiles = style/style.css \
                             index.html
 
 # Only update the name of the project for the next variables.
-qhp.SerialPort.virtualFolder = qdoc
-qhp.SerialPort.subprojects = classes
-qhp.SerialPort.subprojects.classes.title = Classes
-qhp.SerialPort.subprojects.classes.selectors = class fake:headerfile
-qhp.SerialPort.subprojects.classes.sortPages = true
+qhp.QtSerialPort.virtualFolder = qdoc
+qhp.QtSerialPort.subprojects = classes
+qhp.QtSerialPort.subprojects.classes.title = Classes
+qhp.QtSerialPort.subprojects.classes.selectors = class fake:headerfile
+qhp.QtSerialPort.subprojects.classes.sortPages = true
 
 
 # Do NOT change the variables after this line unless you know what you are doing.
@@ -78,6 +78,6 @@ HTML.endheader = "</head>\n"
 HTML.postheader = \
   " <div class=\"header\">\n" \
   "   <div id=\"nav-logo\">\n" \
-  "     <a href=\"index.html\">SerialPort Reference</a>" \
+  "     <a href=\"index.html\">Qt Serial Port Reference</a>" \
   "   </div>\n" \
   " </div>\n"

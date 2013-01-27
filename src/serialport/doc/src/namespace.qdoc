@@ -28,5 +28,5 @@
 /*!
     \namespace QtSerialPort
     \brief The QtSerialPort namespace contains miscellaneous identifiers
-    used throughout the SerialPort library.
+    used throughout the Qt Serial Port library.
 */
