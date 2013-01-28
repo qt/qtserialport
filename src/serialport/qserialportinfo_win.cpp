@@ -73,6 +73,11 @@ static const GUID guidsArray[] =
 
 static const wchar_t portKeyName[] = L"PortName";
 
+static const QString vendorIdentifierPrefix(QLatin1String("VID_"));
+static const int vendorIdentifierSize = 4;
+static const QString productIdentifierPrefix(QLatin1String("PID_"));
+static const int productIdentifierSize = 4;
+
 static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
                                           DWORD property)
@@ -170,12 +175,14 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
 
             s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().first().toUpper();
-            int index = s.indexOf(QLatin1String("VID_"));
+
+            int index = s.indexOf(vendorIdentifierPrefix);
             if (index != -1)
-                info.d_ptr->vendorIdentifier = s.mid(index + 4, 4);
-            index = s.indexOf(QLatin1String("PID_"));
+                info.d_ptr->vendorIdentifier = s.mid(index + vendorIdentifierPrefix.size(), vendorIdentifierSize);
+
+            index = s.indexOf(productIdentifierPrefix);
             if (index != -1)
-                info.d_ptr->productIdentifier = s.mid(index + 4, 4);
+                info.d_ptr->productIdentifier = s.mid(index + productIdentifierPrefix.size(), productIdentifierSize);
 
             ports.append(info);
         }
