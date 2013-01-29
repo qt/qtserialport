@@ -72,30 +72,24 @@ static const QString rfcommDeviceName(QLatin1String("rfcomm"));
 
 #else
 
-static QStringList generateFiltersOfDevices()
+static inline const QStringList& filtersOfDevices()
 {
-    QStringList l;
+    static const QStringList deviceFileNameFilterList = QStringList()
 
 #  ifdef Q_OS_LINUX
-    l << QLatin1String("ttyS*")    // Standart UART 8250 and etc.
-      << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
-      << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
-      << QLatin1String("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
-      << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
-      << QLatin1String("rfcomm*"); // Bluetooth serial device.
+    << QLatin1String("ttyS*")    // Standart UART 8250 and etc.
+    << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
+    << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
+    << QLatin1String("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
+    << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
+    << QLatin1String("rfcomm*"); // Bluetooth serial device.
 #  elif defined (Q_OS_FREEBSD)
-    l << QLatin1String("cu*");
+    << QLatin1String("cu*");
 #  else
-    // Here for other *nix OS.
+    ; // Here for other *nix OS.
 #  endif
 
-    return l;
-}
-
-inline QStringList& filtersOfDevices()
-{
-    static QStringList l = generateFiltersOfDevices();
-    return l;
+    return deviceFileNameFilterList;
 }
 
 #endif
