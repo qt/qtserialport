@@ -104,14 +104,14 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     Q_UNUSED(mode)
 
     if (!loadDevices()) {
-        portError = QSerialPort::UnknownPortError;
+        q_ptr->setError(QSerialPort::UnknownPortError);
         return false;
     }
 
     RCommServ server;
     errnum = server.Connect();
     if (errnum != KErrNone) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -125,7 +125,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         errnum = server.LoadCommModule(KRS232ModuleName);
 
     if (errnum != KErrNone) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -134,14 +134,14 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     errnum = descriptor.Open(server, portName, ECommExclusive);
 
     if (errnum != KErrNone) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
     // Save current port settings.
     errnum = descriptor.Config(restoredSettings);
     if (errnum != KErrNone) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -276,7 +276,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
 {
     if (dir != QSerialPort::AllDirections) {
-        portError = QSerialPort::UnsupportedPortOperationError;
+        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -284,7 +284,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
     if (baudRate)
         currentSettings().iRate = static_cast<TBps>(baudRate);
     else {
-        portError = QSerialPort::UnsupportedPortOperationError;
+        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -398,7 +398,7 @@ bool QSerialPortPrivate::notifyWrite()
 bool QSerialPortPrivate::updateCommConfig()
 {
     if (descriptor.SetConfig(currentSettings) != KErrNone) {
-        portError = QSerialPort::UnsupportedPortOperationError;
+        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
         return false;
     }
     return true;

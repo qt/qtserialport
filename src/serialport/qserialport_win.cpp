@@ -218,12 +218,12 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
                               desiredAccess, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
     if (!::GetCommState(descriptor, &restoredDcb)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -239,7 +239,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
 
     if (!::GetCommTimeouts(descriptor, &restoredCommTimeouts)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -515,7 +515,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
 {
     if (dir != QSerialPort::AllDirections) {
-        portError = QSerialPort::UnsupportedPortOperationError;
+        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
         return false;
     }
     currentDcb.BaudRate = baudRate;
@@ -688,13 +688,13 @@ bool QSerialPortPrivate::processIoErrors()
     const bool ret = ::ClearCommError(descriptor, &error, NULL);
     if (ret && error) {
         if (error & CE_FRAME)
-            portError = QSerialPort::FramingError;
+            q_ptr->setError(QSerialPort::FramingError);
         else if (error & CE_RXPARITY)
-            portError = QSerialPort::ParityError;
+            q_ptr->setError(QSerialPort::ParityError);
         else if (error & CE_BREAK)
-            portError = QSerialPort::BreakConditionError;
+            q_ptr->setError(QSerialPort::BreakConditionError);
         else
-            portError = QSerialPort::UnknownPortError;
+            q_ptr->setError(QSerialPort::UnknownPortError);
 
         flagErrorFromCommEvent = true;
     }
@@ -794,7 +794,7 @@ AbstractOverlappedEventNotifier *QSerialPortPrivate::lookupReadCompletionNotifie
 bool QSerialPortPrivate::updateDcb()
 {
     if (!::SetCommState(descriptor, &currentDcb)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
     return true;
@@ -803,7 +803,7 @@ bool QSerialPortPrivate::updateDcb()
 bool QSerialPortPrivate::updateCommTimeouts()
 {
     if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
     return true;

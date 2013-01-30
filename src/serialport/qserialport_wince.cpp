@@ -169,12 +169,12 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
                               desiredAccess, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
     if (!::GetCommState(descriptor, &restoredDcb)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -190,7 +190,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
 
     if (!::GetCommTimeouts(descriptor, &restoredCommTimeouts)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -451,7 +451,7 @@ bool QSerialPortPrivate::updateDcb()
     // Change parameters
     bool ret = ::SetCommState(descriptor, &currentDcb);
     if (!ret)
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
     // Restore the event mask
     ::SetCommMask(descriptor, eventMask);
 
@@ -461,7 +461,7 @@ bool QSerialPortPrivate::updateDcb()
 bool QSerialPortPrivate::updateCommTimeouts()
 {
     if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
     return true;

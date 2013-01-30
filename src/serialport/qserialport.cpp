@@ -503,14 +503,14 @@ bool QSerialPort::open(OpenMode mode)
     Q_D(QSerialPort);
 
     if (isOpen()) {
-        d->portError = QSerialPort::DeviceAlreadyOpenedError;
+        setError(QSerialPort::DeviceAlreadyOpenedError);
         return false;
     }
 
     // Define while not supported modes.
     static const OpenMode unsupportedModes = Append | Truncate | Text | Unbuffered;
     if ((mode & unsupportedModes) || mode == NotOpen) {
-        d->portError = QSerialPort::UnsupportedPortOperationError;
+        setError(QSerialPort::UnsupportedPortOperationError);
         return false;
     }
 
@@ -532,7 +532,7 @@ void QSerialPort::close()
 {
     Q_D(QSerialPort);
     if (!isOpen()) {
-        d->portError = QSerialPort::DeviceIsNotOpenedError;
+        setError(QSerialPort::DeviceIsNotOpenedError);
         return;
     }
 
@@ -968,8 +968,7 @@ QSerialPort::PortError QSerialPort::error() const
 
 void QSerialPort::clearError()
 {
-    Q_D(QSerialPort);
-    d->portError = QSerialPort::NoError;
+    setError(QSerialPort::NoError);
 }
 
 /*!
@@ -1146,6 +1145,13 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
     return d->writeToBuffer(data, maxSize);
+}
+
+void QSerialPort::setError(QSerialPort::PortError error)
+{
+    Q_D(QSerialPort);
+    d->portError = error;
+    emit errorChanged(error);
 }
 
 /*!

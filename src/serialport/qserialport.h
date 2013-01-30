@@ -238,6 +238,8 @@ protected:
     virtual qint64 writeData(const char *data, qint64 maxSize);
 
 private:
+    void setError(QSerialPort::PortError error);
+
     QSerialPortPrivate * const d_ptr;
 
     Q_DECLARE_PRIVATE(QSerialPort)

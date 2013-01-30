@@ -144,7 +144,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     bool byCurrPid = false;
     if (TtyLocker::isLocked(ptr, &byCurrPid)) {
-        portError = QSerialPort::PermissionDeniedError;
+        q_ptr->setError(QSerialPort::PermissionDeniedError);
         return false;
     }
 
@@ -165,7 +165,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     descriptor = ::open(systemLocation.toLocal8Bit().constData(), flags);
 
     if (descriptor == -1) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -173,7 +173,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     TtyLocker::lock(ptr);
     if (!TtyLocker::isLocked(ptr, &byCurrPid)) {
-        portError = QSerialPort::PermissionDeniedError;
+        q_ptr->setError(QSerialPort::PermissionDeniedError);
         return false;
     }
 
@@ -182,7 +182,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 #endif
 
     if (::tcgetattr(descriptor, &restoredTermios) == -1) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
@@ -537,7 +537,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
     if (ret) // finally, set baud rate
         ret = updateTermios();
     else
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError();
     return ret;
 }
 
@@ -782,7 +782,7 @@ bool QSerialPortPrivate::exceptionNotification()
 bool QSerialPortPrivate::updateTermios()
 {
     if (::tcsetattr(descriptor, TCSANOW, &currentTermios) == -1) {
-        portError = decodeSystemError();
+        q_ptr->setError(decodeSystemError());
         return false;
     }
     return true;
@@ -1147,10 +1147,10 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
                 continue;       //ignore received character
             case QSerialPort::StopReceivingPolicy:
                 if (parity != QSerialPort::NoParity)
-                    portError = QSerialPort::ParityError;
+                    q_ptr->setError(QSerialPort::ParityError);
                 else
-                    portError = *data == '\0' ?
-                                QSerialPort::BreakConditionError : QSerialPort::FramingError;
+                    q_ptr->setError(*data == '\0' ?
+                                QSerialPort::BreakConditionError : QSerialPort::FramingError);
                 return ++ret;   //abort receiving
                 break;
             case QSerialPort::UnknownPolicy:
