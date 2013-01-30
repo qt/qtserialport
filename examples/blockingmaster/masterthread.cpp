@@ -41,7 +41,7 @@
 
 #include "masterthread.h"
 
-#include <QtSerialPort/qserialport.h>
+#include <QtSerialPort/QSerialPort>
 
 #include <QTime>
 

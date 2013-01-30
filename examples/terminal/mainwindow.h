@@ -47,7 +47,7 @@
 
 #include <QMainWindow>
 
-#include <QtSerialPort/qserialport-global.h>
+#include <QtSerialPort/QSerialPortGlobal>
 
 namespace Ui {
 class MainWindow;

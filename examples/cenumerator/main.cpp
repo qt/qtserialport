@@ -41,7 +41,7 @@
 
 #include <QTextStream>
 #include <QCoreApplication>
-#include <QtSerialPort/qserialportinfo.h>
+#include <QtSerialPort/QSerialPortInfo>
 
 QT_USE_NAMESPACE_SERIALPORT
 
