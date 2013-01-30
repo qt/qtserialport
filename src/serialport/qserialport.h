@@ -221,15 +221,15 @@ public Q_SLOTS:
     bool clearBreak(bool clear = true);
 
 Q_SIGNALS:
-    void baudRateChanged(qint32 baudRate, Directions dir);
-    void dataBitsChanged(DataBits dataBits);
-    void parityChanged(Parity parity);
-    void stopBitsChanged(StopBits stopBits);
-    void flowControlChanged(FlowControl flow);
-    void dataErrorPolicyChanged(DataErrorPolicy policy);
+    void baudRateChanged(qint32 baudRate, QSerialPort::Directions dir);
+    void dataBitsChanged(QSerialPort::DataBits dataBits);
+    void parityChanged(QSerialPort::Parity parity);
+    void stopBitsChanged(QSerialPort::StopBits stopBits);
+    void flowControlChanged(QSerialPort::FlowControl flow);
+    void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
     void dtrChanged(bool set);
     void rtsChanged(bool set);
-    void errorChanged(PortError error);
+    void errorChanged(QSerialPort::PortError error);
     void restoreSettingsOnCloseChanged(bool restore);
 
 protected:
