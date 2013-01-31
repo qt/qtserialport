@@ -63,7 +63,7 @@ enum { MATCHING_PROPERTIES_COUNT = 6 };
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> ports;
+    QList<QSerialPortInfo> serialPortInfoList;
 
     int matchingPropertiesCounter = 0;
 
@@ -80,7 +80,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                                       &iter);
 
     if (kr != kIOReturnSuccess)
-        return ports;
+        return serialPortInfoList;
 
     io_registry_entry_t service;
 
@@ -187,7 +187,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         // Convert from MacOSX-specific properties to Qt4-specific.
         if (matchingPropertiesCounter > 0) {
 
-            QSerialPortInfo info;
+            QSerialPortInfo serialPortInfo;
             QByteArray buffer(MAXPATHLEN, 0);
 
             if (device) {
@@ -195,7 +195,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                          buffer.data(),
                                          buffer.size(),
                                          kCFStringEncodingUTF8)) {
-                    info.d_ptr->device = QString::fromUtf8(buffer);
+                    serialPortInfo.d_ptr->device = QString(buffer);
                 }
                 ::CFRelease(device);
             }
@@ -205,7 +205,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                          buffer.data(),
                                          buffer.size(),
                                          kCFStringEncodingUTF8)) {
-                    info.d_ptr->portName = QString::fromUtf8(buffer);
+                    serialPortInfo.d_ptr->portName = QString(buffer);
                 }
                 ::CFRelease(portName);
             }
@@ -216,7 +216,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                      buffer.size(),
                                      kCFStringEncodingUTF8);
 
-                info.d_ptr->description = QString::fromUtf8(buffer);
+                serialPortInfo.d_ptr->description = QString(buffer);
                 ::CFRelease(description);
             }
 
@@ -226,7 +226,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                      buffer.size(),
                                      kCFStringEncodingUTF8);
 
-                info.d_ptr->manufacturer = QString::fromUtf8(buffer);
+                serialPortInfo.d_ptr->manufacturer = QString(buffer);
                 ::CFRelease(manufacturer);
             }
 
@@ -237,7 +237,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                    kCFNumberIntType,
                                    &value);
 
-                info.d_ptr->vendorIdentifier = QString::number(value, 16);
+                serialPortInfo.d_ptr->vendorIdentifier = QString::number(value, 16);
                 ::CFRelease(vendorIdentifier);
             }
 
@@ -246,11 +246,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                    kCFNumberIntType,
                                    &value);
 
-                info.d_ptr->productIdentifier = QString::number(value, 16);
+                serialPortInfo.d_ptr->productIdentifier = QString::number(value, 16);
                 ::CFRelease(productIdentifier);
             }
 
-            ports.append(info);
+            serialPortInfoList.append(serialPortInfo);
         }
 
         (void) ::IOObjectRelease(service);
@@ -258,7 +258,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     (void) ::IOObjectRelease(iter);
 
-    return ports;
+    return serialPortInfoList;
 }
 
 QT_END_NAMESPACE_SERIALPORT

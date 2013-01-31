@@ -52,12 +52,12 @@ class tst_QSerialPortInfo : public QObject
     Q_OBJECT
 
 private slots:
-    void ports();
+    void serialPortInfoList();
     void constructors();
     void assignment();
 };
 
-void tst_QSerialPortInfo::ports()
+void tst_QSerialPortInfo::serialPortInfoList()
 {
     QList<QSerialPortInfo> list(QSerialPortInfo::availablePorts());
     QCOMPARE(list.isEmpty(), false);

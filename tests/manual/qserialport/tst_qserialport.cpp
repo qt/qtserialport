@@ -61,14 +61,14 @@ private slots:
     void flowControl();
 
 private:
-    QList<QSerialPortInfo> ports;
+    QList<QSerialPortInfo> serialPortInfoList;
 };
 
 void tst_QSerialPort::initTestCase()
 {
-    ports = QSerialPortInfo::availablePorts();
+    serialPortInfoList = QSerialPortInfo::availablePorts();
 
-    if (ports.isEmpty()) {
+    if (serialPortInfoList.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         QSKIP("Test doesn't work because the serial ports are not detected.");
 #else
@@ -79,32 +79,32 @@ void tst_QSerialPort::initTestCase()
 
 void tst_QSerialPort::open()
 {
-    foreach (const QSerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
 
-        if (info.isBusy())
+        if (serialPortInfo.isBusy())
             continue;
 
         QSerialPort object1;
 
         // Try open and check access to port by Info
-        object1.setPort(info);
-        QCOMPARE(object1.portName(), info.portName());
+        object1.setPort(serialPortInfo);
+        QCOMPARE(object1.portName(), serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
         QCOMPARE(object1.isOpen(), true);
         object1.close();
         QCOMPARE(object1.isOpen(), false);
 
         // Try open and check access to port by Name
-        object1.setPort(info.portName());
-        QCOMPARE(object1.portName(), info.portName());
+        object1.setPort(serialPortInfo.portName());
+        QCOMPARE(object1.portName(), serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
         QCOMPARE(object1.isOpen(), true);
         object1.close();
         QCOMPARE(object1.isOpen(), false);
 
         // Try open and check access to port by Location
-        object1.setPort(info.systemLocation());
-        QCOMPARE(object1.portName(), info.portName());
+        object1.setPort(serialPortInfo.systemLocation());
+        QCOMPARE(object1.portName(), serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
         QCOMPARE(object1.isOpen(), true);
         object1.close();
@@ -114,10 +114,10 @@ void tst_QSerialPort::open()
 
 void tst_QSerialPort::baudRate()
 {
-    foreach (const QSerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
 
         QSerialPort object1;
-        object1.setPort(info.portName());
+        object1.setPort(serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
         QCOMPARE(object1.setBaudRate(QSerialPort::Baud1200), true);
@@ -143,10 +143,10 @@ void tst_QSerialPort::baudRate()
 
 void tst_QSerialPort::dataBits()
 {
-    foreach (const QSerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
 
         QSerialPort object1;
-        object1.setPort(info.portName());
+        object1.setPort(serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
         QCOMPARE(object1.setDataBits(QSerialPort::Data8), true);
@@ -158,10 +158,10 @@ void tst_QSerialPort::dataBits()
 
 void tst_QSerialPort::parity()
 {
-    foreach (const QSerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
 
         QSerialPort object1;
-        object1.setPort(info.portName());
+        object1.setPort(serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
         QCOMPARE(object1.setParity(QSerialPort::NoParity), true);
@@ -181,10 +181,10 @@ void tst_QSerialPort::parity()
 
 void tst_QSerialPort::stopBits()
 {
-    foreach (const QSerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
 
         QSerialPort object1;
-        object1.setPort(info.portName());
+        object1.setPort(serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
         QCOMPARE(object1.setStopBits(QSerialPort::OneStop), true);
@@ -199,10 +199,10 @@ void tst_QSerialPort::stopBits()
 
 void tst_QSerialPort::flowControl()
 {
-    foreach (const QSerialPortInfo &info, ports) {
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
 
         QSerialPort object1;
-        object1.setPort(info.portName());
+        object1.setPort(serialPortInfo.portName());
         QCOMPARE(object1.open(QIODevice::ReadWrite), true);
 
         QCOMPARE(object1.setFlowControl(QSerialPort::NoFlowControl), true);

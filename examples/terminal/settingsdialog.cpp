@@ -59,7 +59,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 
     connect(ui->applyButton, SIGNAL(clicked()),
             this, SLOT(apply()));
-    connect(ui->portsBox, SIGNAL(currentIndexChanged(int)),
+    connect(ui->serialPortInfoListBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(showPortInfo(int)));
     connect(ui->baudRateBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(checkCustomBaudRatePolicy(int)));
@@ -83,7 +83,7 @@ SettingsDialog::Settings SettingsDialog::settings() const
 void SettingsDialog::showPortInfo(int idx)
 {
     if (idx != -1) {
-        QStringList list = ui->portsBox->itemData(idx).toStringList();
+        QStringList list = ui->serialPortInfoListBox->itemData(idx).toStringList();
         ui->descriptionLabel->setText(tr("Description: %1").arg(list.at(1)));
         ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.at(2)));
         ui->locationLabel->setText(tr("Location: %1").arg(list.at(3)));
@@ -148,20 +148,20 @@ void SettingsDialog::fillPortsParameters()
 
 void SettingsDialog::fillPortsInfo()
 {
-    ui->portsBox->clear();
+    ui->serialPortInfoListBox->clear();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         QStringList list;
         list << info.portName() << info.description()
              << info.manufacturer() << info.systemLocation()
              << info.vendorIdentifier() << info.productIdentifier();
 
-        ui->portsBox->addItem(list.first(), list);
+        ui->serialPortInfoListBox->addItem(list.first(), list);
     }
 }
 
 void SettingsDialog::updateSettings()
 {
-    currentSettings.name = ui->portsBox->currentText();
+    currentSettings.name = ui->serialPortInfoListBox->currentText();
 
     // Baud Rate
     if (ui->baudRateBox->currentIndex() == 4) {

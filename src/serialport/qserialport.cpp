@@ -400,14 +400,14 @@ QSerialPort::QSerialPort(const QString &name, QObject *parent)
 
 /*!
     Constructs a new serial port object with the given \a parent
-    to represent the serial port with the specified a helper
-    class \a info.
+    to represent the serial port with the specified helper class
+    \a serialPortInfo.
 */
-QSerialPort::QSerialPort(const QSerialPortInfo &info, QObject *parent)
+QSerialPort::QSerialPort(const QSerialPortInfo &serialPortInfo, QObject *parent)
     : QIODevice(parent)
     , d_ptr(new QSerialPortPrivate(this))
 {
-    setPort(info);
+    setPort(serialPortInfo);
 }
 
 /*!
@@ -435,14 +435,14 @@ void QSerialPort::setPort(const QString &name)
 }
 
 /*!
-    Sets the port stored in the serial port info instance \a info.
+    Sets the port stored in the serial port info instance \a serialPortInfo.
 
     \sa portName(), QSerialPortInfo
 */
-void QSerialPort::setPort(const QSerialPortInfo &info)
+void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
 {
     Q_D(QSerialPort);
-    d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(info.systemLocation());
+    d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.systemLocation());
 }
 
 /*!

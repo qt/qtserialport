@@ -101,38 +101,37 @@ static bool loadDevices()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> ports;
+    QList<QSerialPortInfo> serialPortInfoList;
 
     if (!loadDevices())
-        return ports;
+        return serialPortInfoList;
 
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone)
-        return ports; //User::LeaveIfError(r);
+        return serialPortInfoList; //User::LeaveIfError(r);
 
-    TSerialInfo nativeInfo; // Native Symbian OS port info class.
+    TSerialInfo nativeSerialInfo; // Native Symbian OS port info class.
     QString s("%1::%2");
 
     // FIXME: Get info about RS232 ports.
     r = server.LoadCommModule(KRS232ModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
-        r = server.GetPortInfo(KRS232ModuleName, nativeInfo);
+        r = server.GetPortInfo(KRS232ModuleName, nativeSerialInfo);
         if (r == KErrNone) {
-            //
-            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeSerialInfo.iLowUnit; i < nativeSerialInfo.iHighUnit + 1; ++i) {
 
-                QSerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo serialPortInfo;
 
-                info.d_ptr->device = s
-                        .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
+                serialPortInfo.d_ptr->device = s
+                        .arg(QString::fromUtf16(nativeSerialInfo.iName.Ptr(), nativeSerialInfo.iName.Length()))
                         .arg(i);
-                info.d_ptr->portName = info.d_ptr->device;
-                info.d_ptr->description =
-                        QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
-                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
-                ports.append(info);
+                serialPortInfo.d_ptr->portName = serialPortInfo.d_ptr->device;
+                serialPortInfo.d_ptr->description =
+                        QString::fromUtf16(nativeSerialInfo.iDescription.Ptr(), nativeSerialInfo.iDescription.Length());
+                serialPortInfo.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                serialPortInfoList.append(serialPortInfo);
             }
         }
     }
@@ -141,21 +140,20 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     r = server.LoadCommModule(KBluetoothModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
-        r = server.GetPortInfo(KBluetoothModuleName, nativeInfo);
+        r = server.GetPortInfo(KBluetoothModuleName, nativeSerialInfo);
         if (r == KErrNone) {
-            //
-            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeSerialInfo.iLowUnit; i < nativeSerialInfo.iHighUnit + 1; ++i) {
 
-                QSerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo serialPortInfo;
 
-                info.d_ptr->device = s
-                        .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
+                serialPortInfo.d_ptr->device = s
+                        .arg(QString::fromUtf16(nativeSerialInfo.iName.Ptr(), nativeSerialInfo.iName.Length()))
                         .arg(i);
-                info.d_ptr->portName = info.d_ptr->device;
-                info.d_ptr->description =
-                        QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
-                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
-                ports.append(info);
+                serialPortInfo.d_ptr->portName = serialPortInfo.d_ptr->device;
+                serialPortInfo.d_ptr->description =
+                        QString::fromUtf16(nativeSerialInfo.iDescription.Ptr(), nativeSerialInfo.iDescription.Length());
+                serialPortInfo.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                serialPortInfoList.append(serialPortInfo);
             }
         }
     }
@@ -164,21 +162,20 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     r = server.LoadCommModule(KInfraRedModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
-        r = server.GetPortInfo(KInfraRedModuleName, nativeInfo);
+        r = server.GetPortInfo(KInfraRedModuleName, nativeSerialInfo);
         if (r == KErrNone) {
-            //
-            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeSerialInfo.iLowUnit; i < nativeSerialInfo.iHighUnit + 1; ++i) {
 
-                QSerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo serialPortInfo;
 
-                info.d_ptr->device = s
-                        .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
+                serialPortInfo.d_ptr->device = s
+                        .arg(QString::fromUtf16(nativeSerialInfo.iName.Ptr(), nativeSerialInfo.iName.Length()))
                         .arg(i);
-                info.d_ptr->portName = info.d_ptr->device;
-                info.d_ptr->description =
-                        QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
-                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
-                ports.append(info);
+                serialPortInfo.d_ptr->portName = serialPortInfo.d_ptr->device;
+                serialPortInfo.d_ptr->description =
+                        QString::fromUtf16(nativeSerialInfo.iDescription.Ptr(), nativeSerialInfo.iDescription.Length());
+                serialPortInfo.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                serialPortInfoList.append(serialPortInfo);
             }
         }
     }
@@ -187,26 +184,25 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     r = server.LoadCommModule(KACMModuleName);
     //User::LeaveIfError(r);
     if (r == KErrNone) {
-        r = server.GetPortInfo(KACMModuleName, nativeInfo);
+        r = server.GetPortInfo(KACMModuleName, nativeSerialInfo);
         if (r == KErrNone) {
-            //
-            for (quint32 i = nativeInfo.iLowUnit; i < nativeInfo.iHighUnit + 1; ++i) {
+            for (quint32 i = nativeSerialInfo.iLowUnit; i < nativeSerialInfo.iHighUnit + 1; ++i) {
 
-                QSerialPortInfo info; // My (desired) info class.
+                QSerialPortInfo serialPortInfo;
 
-                info.d_ptr->device = s
-                        .arg(QString::fromUtf16(nativeInfo.iName.Ptr(), nativeInfo.iName.Length()))
+                serialPortInfo.d_ptr->device = s
+                        .arg(QString::fromUtf16(nativeSerialInfo.iName.Ptr(), nativeSerialInfo.iName.Length()))
                         .arg(i);
-                info.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
-                info.d_ptr->description =
-                        QString::fromUtf16(nativeInfo.iDescription.Ptr(), nativeInfo.iDescription.Length());
-                info.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
-                ports.append(info);
+                serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(serialPortInfo.d_ptr->device);
+                serialPortInfo.d_ptr->description =
+                        QString::fromUtf16(nativeSerialInfo.iDescription.Ptr(), nativeSerialInfo.iDescription.Length());
+                serialPortInfo.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                serialPortInfoList.append(serialPortInfo);
             }
         }
     }
 
-    return ports;
+    return serialPortInfoList;
 }
 
 QList<qint32> QSerialPortInfo::standardRates()

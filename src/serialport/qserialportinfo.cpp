@@ -92,9 +92,9 @@ QSerialPortInfo::QSerialPortInfo(const QSerialPortInfo &other)
 QSerialPortInfo::QSerialPortInfo(const QSerialPort &port)
     : d_ptr(new QSerialPortInfoPrivate)
 {
-    foreach (const QSerialPortInfo &info, availablePorts()) {
-        if (port.portName() == info.portName()) {
-            *this = info;
+    foreach (const QSerialPortInfo &serialPortInfo, availablePorts()) {
+        if (port.portName() == serialPortInfo.portName()) {
+            *this = serialPortInfo;
             break;
         }
     }
@@ -110,9 +110,9 @@ QSerialPortInfo::QSerialPortInfo(const QSerialPort &port)
 QSerialPortInfo::QSerialPortInfo(const QString &name)
     : d_ptr(new QSerialPortInfoPrivate)
 {
-    foreach (const QSerialPortInfo &info, availablePorts()) {
-        if (name == info.portName()) {
-            *this = info;
+    foreach (const QSerialPortInfo &serialPortInfo, availablePorts()) {
+        if (name == serialPortInfo.portName()) {
+            *this = serialPortInfo;
             break;
         }
     }

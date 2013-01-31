@@ -91,7 +91,7 @@ static inline const QStringList& filtersOfDevices()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> ports;
+    QList<QSerialPortInfo> serialPortInfoList;
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
 
@@ -121,11 +121,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                 if (dev) {
 
-                    QSerialPortInfo info;
+                    QSerialPortInfo serialPortInfo;
 
-                    info.d_ptr->device =
+                    serialPortInfo.d_ptr->device =
                             QLatin1String(::udev_device_get_devnode(dev));
-                    info.d_ptr->portName =
+                    serialPortInfo.d_ptr->portName =
                             QLatin1String(::udev_device_get_sysname(dev));
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
@@ -139,16 +139,16 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                         if (subsys == QLatin1String("usb-serial")
                                 || subsys == QLatin1String("usb")) { // USB bus type
                             // Append this devices and try get additional information about them.
-                            info.d_ptr->description = QString(
+                            serialPortInfo.d_ptr->description = QString(
                                     QLatin1String(::udev_device_get_property_value(dev,
                                                                                    "ID_MODEL"))).replace('_', ' ');
-                            info.d_ptr->manufacturer = QString(
+                            serialPortInfo.d_ptr->manufacturer = QString(
                                     QLatin1String(::udev_device_get_property_value(dev,
                                                                                    "ID_VENDOR"))).replace('_', ' ');
-                            info.d_ptr->vendorIdentifier =
+                            serialPortInfo.d_ptr->vendorIdentifier =
                                     QLatin1String(::udev_device_get_property_value(dev,
                                                                                    "ID_VENDOR_ID"));
-                            info.d_ptr->productIdentifier =
+                            serialPortInfo.d_ptr->productIdentifier =
                                     QLatin1String(::udev_device_get_property_value(dev,
                                                                                    "ID_MODEL_ID"));
                         } else if (subsys == QLatin1String("pnp")) { // PNP bus type
@@ -168,11 +168,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                             // with this subsystems?
                         }
                     } else { // Devices without a parent
-                        if (info.d_ptr->portName.startsWith(rfcommDeviceName)) { // Bluetooth device
+                        if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) { // Bluetooth device
                             bool ok;
                             // Check for an unsigned decimal integer at the end of the device name: "rfcomm0", "rfcomm15"
                             // devices with negative and invalid numbers in the name are rejected
-                            int portNumber = info.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
+                            int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
 
                             if (!ok || (portNumber < 0) || (portNumber > 255)) {
                                 canAppendToList = false;
@@ -183,7 +183,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     }
 
                     if (canAppendToList)
-                        ports.append(info);
+                        serialPortInfoList.append(serialPortInfo);
 
                     ::udev_device_unref(dev);
                 }
@@ -208,20 +208,20 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
         QStringList foundDevices; // Found devices list.
 
-        foreach (const QFileInfo &fi, devDir.entryInfoList()) {
-            QString s = fi.absoluteFilePath();
-            if (!foundDevices.contains(s)) {
-                foundDevices.append(s);
+        foreach (const QFileInfo &deviceFileInfo, devDir.entryInfoList()) {
+            QString deviceFilePath = deviceFileInfo.absoluteFilePath();
+            if (!foundDevices.contains(deviceFilePath)) {
+                foundDevices.append(deviceFilePath);
 
-                QSerialPortInfo info;
+                QSerialPortInfo serialPortInfo;
 
-                info.d_ptr->device = s;
-                info.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(s);
+                serialPortInfo.d_ptr->device = deviceFilePath;
+                serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
 
                 // Get description, manufacturer, vendor identifier, product
                 // identifier are not supported.
 
-                ports.append(info);
+                serialPortInfoList.append(serialPortInfo);
 
             }
         }
@@ -229,7 +229,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
 #endif
 
-    return ports;
+    return serialPortInfoList;
 }
 
 #endif // Q_OS_MAC

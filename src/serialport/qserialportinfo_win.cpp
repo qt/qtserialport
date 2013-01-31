@@ -147,13 +147,13 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     static const QString productIdentifierPrefix(QLatin1String("PID_"));
     static const int productIdentifierSize = 4;
 
-    QList<QSerialPortInfo> ports;
+    QList<QSerialPortInfo> serialPortInfoList;
     static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
     for (int i = 0; i < guidCount; ++i) {
         const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], NULL, 0, DIGCF_PRESENT);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
-            return ports;
+            return serialPortInfoList;
 
         SP_DEVINFO_DATA deviceInfoData;
         ::memset(&deviceInfoData, 0, sizeof(deviceInfoData));
@@ -161,34 +161,34 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
         DWORD index = 0;
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
-            QSerialPortInfo info;
+            QSerialPortInfo serialPortInfo;
 
             QString s = devicePortName(deviceInfoSet, &deviceInfoData);
             if (s.isEmpty() || s.contains(QLatin1String("LPT")))
                 continue;
 
-            info.d_ptr->portName = s;
-            info.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
-            info.d_ptr->description =
+            serialPortInfo.d_ptr->portName = s;
+            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
+            serialPortInfo.d_ptr->description =
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
-            info.d_ptr->manufacturer =
+            serialPortInfo.d_ptr->manufacturer =
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
 
             s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().first().toUpper();
 
             int index = s.indexOf(vendorIdentifierPrefix);
             if (index != -1)
-                info.d_ptr->vendorIdentifier = s.mid(index + vendorIdentifierPrefix.size(), vendorIdentifierSize);
+                serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + vendorIdentifierPrefix.size(), vendorIdentifierSize);
 
             index = s.indexOf(productIdentifierPrefix);
             if (index != -1)
-                info.d_ptr->productIdentifier = s.mid(index + productIdentifierPrefix.size(), productIdentifierSize);
+                serialPortInfo.d_ptr->productIdentifier = s.mid(index + productIdentifierPrefix.size(), productIdentifierSize);
 
-            ports.append(info);
+            serialPortInfoList.append(serialPortInfo);
         }
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
-    return ports;
+    return serialPortInfoList;
 }
 
 #endif

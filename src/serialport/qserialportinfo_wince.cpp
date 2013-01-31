@@ -104,7 +104,7 @@ static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> ports;
+    QList<QSerialPortInfo> serialPortInfoList;
 
     DEVMGR_DEVICE_INFORMATION di;
     di.dwSize = sizeof(di);
@@ -113,22 +113,22 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                              &di);
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
-            QSerialPortInfo info;
-            info.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
-            info.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(info.d_ptr->device);
-            info.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
+            QSerialPortInfo serialPortInfo;
+            serialPortInfo.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
+            serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(serialPortInfo.d_ptr->device);
+            serialPortInfo.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
                                                       QString::fromWCharArray(di.szDeviceKey));
 
             // Get manufacturer, vendor identifier, product identifier are not
             // possible.
 
-            ports.append(info);
+            serialPortInfoList.append(serialPortInfo);
 
         } while (::FindNextDevice(hSearch, &di));
         ::FindClose(hSearch);
     }
 
-    return ports;
+    return serialPortInfoList;
 }
 
 QT_END_NAMESPACE_SERIALPORT

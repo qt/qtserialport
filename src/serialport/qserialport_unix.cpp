@@ -1169,10 +1169,10 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
 }
 
 #ifdef Q_OS_MAC
-static const QLatin1String defaultPathPrefix("/dev/cu.");
-static const QLatin1String notUsedPathPrefix("/dev/tty.");
+static const QLatin1String defaultFilePathPrefix("/dev/cu.");
+static const QLatin1String unusedFilePathPrefix("/dev/tty.");
 #else
-static const QLatin1String defaultPathPrefix("/dev/");
+static const QLatin1String defaultFilePathPrefix("/dev/");
 #endif
 
 QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
@@ -1180,11 +1180,11 @@ QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
     QString ret = port;
 
 #ifdef Q_OS_MAC
-    ret.remove(notUsedPathPrefix);
+    ret.remove(unusedFilePathPrefix);
 #endif
 
-    if (!ret.contains(defaultPathPrefix))
-        ret.prepend(defaultPathPrefix);
+    if (!ret.contains(defaultFilePathPrefix))
+        ret.prepend(defaultFilePathPrefix);
     return ret;
 }
 
@@ -1193,10 +1193,10 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
     QString ret = location;
 
 #ifdef Q_OS_MAC
-    ret.remove(notUsedPathPrefix);
+    ret.remove(unusedFilePathPrefix);
 #endif
 
-    ret.remove(defaultPathPrefix);
+    ret.remove(defaultFilePathPrefix);
     return ret;
 }
 
