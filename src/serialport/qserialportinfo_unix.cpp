@@ -65,12 +65,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
 #ifndef Q_OS_MAC
 
-#if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
-
-// White list for devices without a parent
-static const QString rfcommDeviceName(QLatin1String("rfcomm"));
-
-#else
+#if !(defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV))
 
 static inline const QStringList& filtersOfDevices()
 {
@@ -99,6 +94,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     QList<QSerialPortInfo> ports;
 
 #if defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV)
+
+    // White list for devices without a parent
+    static const QString rfcommDeviceName(QLatin1String("rfcomm"));
 
     struct ::udev *udev = ::udev_new();
     if (udev) {

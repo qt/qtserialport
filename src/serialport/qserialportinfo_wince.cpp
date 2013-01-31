@@ -49,9 +49,10 @@
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
-const static QString valueName(QLatin1String("FriendlyName"));
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 {
+    const static QString valueName(QLatin1String("FriendlyName"));
+
     QString result;
     HKEY hSubKey = 0;
     LONG res = ::RegOpenKeyEx(parentKeyHandle, reinterpret_cast<const wchar_t *>(subKey.utf16()),
