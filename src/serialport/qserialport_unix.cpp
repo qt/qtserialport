@@ -427,7 +427,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
                                 timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
-            // TODO: set error ?
+            q_ptr->setError(decodeSystemError());
             return false;
         }
 
@@ -458,7 +458,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
                                 timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
-            // TODO: set error ?
+            q_ptr->setError(decodeSystemError());
             return false;
         }
 
@@ -537,7 +537,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
     if (ret) // finally, set baud rate
         ret = updateTermios();
     else
-        q_ptr->setError(decodeSystemError();
+        q_ptr->setError(decodeSystemError());
     return ret;
 }
 
@@ -752,7 +752,7 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
     // Attempt to write it chunk.
     qint64 written = writeToPort(ptr, nextSize);
     if (written < 0) {
-        // TODO: set error?
+        q_ptr->setError(decodeSystemError());
         return false;
     }
 
