@@ -70,16 +70,16 @@ void tst_QSerialPortInfo::constructors()
 
 void tst_QSerialPortInfo::assignment()
 {
-    QList<QSerialPortInfo> list(QSerialPortInfo::availablePorts());
+    QList<QSerialPortInfo> serialPortInfoList(QSerialPortInfo::availablePorts());
 
-    for (int c = 0; c < list.size(); ++c) {
-        QSerialPortInfo info = list[c];
-        QCOMPARE(info.portName(), list[c].portName());
-        QCOMPARE(info.systemLocation(), list[c].systemLocation());
-        QCOMPARE(info.description(), list[c].description());
-        QCOMPARE(info.manufacturer(), list[c].manufacturer());
-        QCOMPARE(info.vendorIdentifier(), list[c].vendorIdentifier());
-        QCOMPARE(info.productIdentifier(), list[c].productIdentifier());
+    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
+        QSerialPortInfo otherSerialPortInfo = serialPortInfo;
+        QCOMPARE(otherSerialPortInfo.portName(), serialPortInfo.portName());
+        QCOMPARE(otherSerialPortInfo.systemLocation(), serialPortInfo.systemLocation());
+        QCOMPARE(otherSerialPortInfo.description(), serialPortInfo.description());
+        QCOMPARE(otherSerialPortInfo.manufacturer(), serialPortInfo.manufacturer());
+        QCOMPARE(otherSerialPortInfo.vendorIdentifier(), serialPortInfo.vendorIdentifier());
+        QCOMPARE(otherSerialPortInfo.productIdentifier(), serialPortInfo.productIdentifier());
     }
 }
 
