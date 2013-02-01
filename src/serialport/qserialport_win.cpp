@@ -489,7 +489,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         AbstractOverlappedEventNotifier *n = 0;
 
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &n) || !n) {
-            q_ptr->etError(decodeSystemError());
+            q_ptr->setError(decodeSystemError());
             return false;
         }
 
