@@ -717,7 +717,7 @@ bool QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
             // Ignore received character, remove it from buffer
             if (policy == QSerialPort::SkipPolicy) {
                 readBuffer.getChar();
-                startAsyncRead();
+                // Force returning without emitting a readyRead() signal
                 return true;
             }
 
