@@ -167,9 +167,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     appended to the QSerialPort's internal read buffer. In order to limit the
     size of the read buffer, call setReadBufferSize().
 
-    The status of the control lines is determined with the dtr(), rts(), and
-    lines() methods. To change the control line status, use the setDtr(), and
-    setRts() methods.
+    The status of the control lines is determined with the dataTerminalReady(),
+    requestToSend(), and lines() methods. To change the control line status, use
+    the setDataTerminalReady(), and setRequestToSend() methods.
 
     To close the serial port, call the close() method. After all the pending data
     has been written to the serial port, the QSerialPort class actually closes
@@ -329,7 +329,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Ri RNG (ring).
     \value Dsr DSR (data set ready).
 
-    \sa lines(), setDtr(), setRts(), dtr(), rts()
+    \sa lines(), setDataTerminalReady(), setRequestToSend(), dataTerminalReady(), requestToSend()
 */
 
 /*!
@@ -763,7 +763,7 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
 */
 
 /*!
-    \property QSerialPort::dtr
+    \property QSerialPort::dataTerminalReady
     \brief the state (high or low) of the line signal DTR
 
     If the setting is successful, returns true; otherwise returns false.
@@ -771,35 +771,35 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
 
     \sa lines()
 */
-bool QSerialPort::setDtr(bool set)
+bool QSerialPort::setDataTerminalReady(bool set)
 {
     Q_D(QSerialPort);
 
-    bool retval = d->setDtr(set);
+    bool retval = d->setDataTerminalReady(set);
     if (retval)
-        emit dtrChanged(set);
+        emit dataTerminalReadyChanged(set);
 
     return retval;
 }
 
-bool QSerialPort::dtr() const
+bool QSerialPort::dataTerminalReady() const
 {
     Q_D(const QSerialPort);
     return d->lines() & QSerialPort::DtrLine;
 }
 
 /*!
-    \fn void QSerialPort::dtrChanged(bool set)
+    \fn void QSerialPort::dataTerminalReadyChanged(bool set)
 
     This signal is emitted after the state (high or low) of the line signal DTR
     has been changed. The new the state (high or low) of the line signal DTR is
     passed as \a set.
 
-    \sa QSerialPort::dtr
+    \sa QSerialPort::dataTerminalReady
 */
 
 /*!
-    \property QSerialPort::rts
+    \property QSerialPort::requestToSend
     \brief the state (high or low) of the line signal RTS
 
     If the setting is successful, returns true; otherwise returns false.
@@ -807,31 +807,31 @@ bool QSerialPort::dtr() const
 
     \sa lines()
 */
-bool QSerialPort::setRts(bool set)
+bool QSerialPort::setRequestToSend(bool set)
 {
     Q_D(QSerialPort);
 
-    bool retval = d->setRts(set);
+    bool retval = d->setRequestToSend(set);
     if (retval)
-        emit rtsChanged(set);
+        emit requestToSendChanged(set);
 
     return retval;
 }
 
-bool QSerialPort::rts() const
+bool QSerialPort::requestToSend() const
 {
     Q_D(const QSerialPort);
     return d->lines() & QSerialPort::RtsLine;
 }
 
 /*!
-    \fn void QSerialPort::rtsChanged(bool set)
+    \fn void QSerialPort::requestToSendChanged(bool set)
 
     This signal is emitted after the state (high or low) of the line signal RTS
     has been changed. The new the state (high or low) of the line signal RTS is
     passed as \a set.
 
-    \sa QSerialPort::rts
+    \sa QSerialPort::requestToSend
 */
 
 /*!
@@ -840,7 +840,8 @@ bool QSerialPort::rts() const
     desired signal by applying a mask "AND", where the mask is
     the desired enumeration value from QSerialPort::Lines.
 
-    \sa dtr(), rts(), setDtr(), setRts()
+    \sa dataTerminalReady(), requestToSend(), setDataTerminalReady(),
+    setRequestToSend()
 */
 QSerialPort::Lines QSerialPort::lines() const
 {

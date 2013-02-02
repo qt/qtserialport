@@ -181,7 +181,7 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
     return ret;
 }
 
-bool QSerialPortPrivate::setDtr(bool set)
+bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
     TInt r;
     if (set)
@@ -192,7 +192,7 @@ bool QSerialPortPrivate::setDtr(bool set)
     return r == KErrNone;
 }
 
-bool QSerialPortPrivate::setRts(bool set)
+bool QSerialPortPrivate::setRequestToSend(bool set)
 {
     TInt r;
     if (set)

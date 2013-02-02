@@ -306,13 +306,13 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
     return ret;
 }
 
-bool QSerialPortPrivate::setDtr(bool set)
+bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
     int status = TIOCM_DTR;
     return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
 }
 
-bool QSerialPortPrivate::setRts(bool set)
+bool QSerialPortPrivate::setRequestToSend(bool set)
 {
     int status = TIOCM_RTS;
     return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;

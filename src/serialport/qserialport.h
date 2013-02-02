@@ -62,8 +62,8 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
     Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
-    Q_PROPERTY(bool dtr READ dtr WRITE setDtr NOTIFY dtrChanged)
-    Q_PROPERTY(bool rts READ rts WRITE setRts NOTIFY rtsChanged)
+    Q_PROPERTY(bool dataTerminalReady READ dataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
+    Q_PROPERTY(bool requestToSend READ requestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY errorChanged)
     Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
 
@@ -186,8 +186,8 @@ public:
     bool setFlowControl(FlowControl flow);
     FlowControl flowControl() const;
 
-    bool dtr() const;
-    bool rts() const;
+    bool dataTerminalReady() const;
+    bool requestToSend() const;
 
     Lines lines() const;
 
@@ -214,8 +214,8 @@ public:
     virtual bool waitForBytesWritten(int msecs);
 
 public Q_SLOTS:
-    bool setDtr(bool set);
-    bool setRts(bool set);
+    bool setDataTerminalReady(bool set);
+    bool setRequestToSend(bool set);
     bool sendBreak(int duration = 0);
     bool setBreak(bool set = true);
     bool clearBreak(bool clear = true);
@@ -227,8 +227,8 @@ Q_SIGNALS:
     void stopBitsChanged(QSerialPort::StopBits stopBits);
     void flowControlChanged(QSerialPort::FlowControl flow);
     void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
-    void dtrChanged(bool set);
-    void rtsChanged(bool set);
+    void dataTerminalReadyChanged(bool set);
+    void requestToSendChanged(bool set);
     void errorChanged(QSerialPort::SerialPortError error);
     void restoreSettingsOnCloseChanged(bool restore);
 

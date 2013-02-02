@@ -58,8 +58,8 @@ public:
 
     QSerialPort::Lines lines() const;
 
-    bool setDtr(bool set);
-    bool setRts(bool set);
+    bool setDataTerminalReady(bool set);
+    bool setRequestToSend(bool set);
 
     bool flush();
     bool clear(QSerialPort::Directions dir);

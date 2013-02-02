@@ -321,12 +321,12 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
     return ret;
 }
 
-bool QSerialPortPrivate::setDtr(bool set)
+bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
     return ::EscapeCommFunction(descriptor, set ? SETDTR : CLRDTR);
 }
 
-bool QSerialPortPrivate::setRts(bool set)
+bool QSerialPortPrivate::setRequestToSend(bool set)
 {
     return ::EscapeCommFunction(descriptor, set ? SETRTS : CLRRTS);
 }
