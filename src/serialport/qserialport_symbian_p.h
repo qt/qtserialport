@@ -106,7 +106,7 @@ private:
     bool updateCommConfig();
 
     void detectDefaultSettings();
-    QSerialPort::PortError decodeSystemError() const;
+    QSerialPort::SerialPortError decodeSystemError() const;
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,

@@ -69,7 +69,7 @@ public:
     qint64 readBufferMaxSize;
     QRingBuffer readBuffer;
     QRingBuffer writeBuffer;
-    QSerialPort::PortError portError;
+    QSerialPort::SerialPortError error;
     QString systemLocation;
     qint32 inputBaudRate;
     qint32 outputBaudRate;

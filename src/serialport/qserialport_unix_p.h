@@ -128,7 +128,7 @@ private:
     bool updateTermios();
 
     void detectDefaultSettings();
-    QSerialPort::PortError decodeSystemError() const;
+    QSerialPort::SerialPortError decodeSystemError() const;
 
     bool isReadNotificationEnabled() const;
     void setReadNotificationEnabled(bool enable);

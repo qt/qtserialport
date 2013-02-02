@@ -65,7 +65,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     : readBufferMaxSize(0)
     , readBuffer(SERIALPORT_BUFFERSIZE)
     , writeBuffer(SERIALPORT_BUFFERSIZE)
-    , portError(QSerialPort::NoError)
+    , error(QSerialPort::NoError)
     , inputBaudRate(0)
     , outputBaudRate(0)
     , dataBits(QSerialPort::UnknownDataBits)
@@ -348,7 +348,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum QSerialPort::PortError
+    \enum QSerialPort::SerialPortError
 
     This enum describes the errors that may be returned by the error()
     method.
@@ -960,10 +960,10 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     The error code is set to the default QSerialPort::NoError after a call to
     clearError()
 */
-QSerialPort::PortError QSerialPort::error() const
+QSerialPort::SerialPortError QSerialPort::error() const
 {
     Q_D(const QSerialPort);
-    return d->portError;
+    return d->error;
 }
 
 void QSerialPort::clearError()
@@ -972,7 +972,7 @@ void QSerialPort::clearError()
 }
 
 /*!
-    \fn void QSerialPort::errorChanged(PortError error)
+    \fn void QSerialPort::errorChanged(SerialPortError error)
 
     This signal is emitted after the error has been changed. The new erroris
     passed as \a error.
@@ -1147,10 +1147,10 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
     return d->writeToBuffer(data, maxSize);
 }
 
-void QSerialPort::setError(QSerialPort::PortError error)
+void QSerialPort::setError(QSerialPort::SerialPortError error)
 {
     Q_D(QSerialPort);
-    d->portError = error;
+    d->error = error;
     emit errorChanged(error);
 }
 

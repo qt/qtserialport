@@ -64,10 +64,10 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
     Q_PROPERTY(bool dtr READ dtr WRITE setDtr NOTIFY dtrChanged)
     Q_PROPERTY(bool rts READ rts WRITE setRts NOTIFY rtsChanged)
-    Q_PROPERTY(PortError error READ error RESET clearError NOTIFY errorChanged)
+    Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY errorChanged)
     Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
 
-    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy PortError )
+    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy SerialPortError )
 
 public:
 
@@ -142,7 +142,7 @@ public:
         UnknownPolicy = -1
     };
 
-    enum PortError {
+    enum SerialPortError {
         NoError,
         NoSuchDeviceError,
         PermissionDeniedError,
@@ -198,7 +198,7 @@ public:
     bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
     DataErrorPolicy dataErrorPolicy() const;
 
-    PortError error() const;
+    SerialPortError error() const;
     void clearError();
 
     qint64 readBufferSize() const;
@@ -229,7 +229,7 @@ Q_SIGNALS:
     void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
     void dtrChanged(bool set);
     void rtsChanged(bool set);
-    void errorChanged(QSerialPort::PortError error);
+    void errorChanged(QSerialPort::SerialPortError error);
     void restoreSettingsOnCloseChanged(bool restore);
 
 protected:
@@ -238,7 +238,7 @@ protected:
     virtual qint64 writeData(const char *data, qint64 maxSize);
 
 private:
-    void setError(QSerialPort::PortError error);
+    void setError(QSerialPort::SerialPortError error);
 
     QSerialPortPrivate * const d_ptr;
 

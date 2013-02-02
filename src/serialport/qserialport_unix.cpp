@@ -878,9 +878,9 @@ void QSerialPortPrivate::detectDefaultSettings()
         flow = QSerialPort::UnknownFlowControl;
 }
 
-QSerialPort::PortError QSerialPortPrivate::decodeSystemError() const
+QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 {
-    QSerialPort::PortError error;
+    QSerialPort::SerialPortError error;
     switch (errno) {
     case ENODEV:
         error = QSerialPort::NoSuchDeviceError;

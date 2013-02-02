@@ -477,9 +477,9 @@ void QSerialPortPrivate::detectDefaultSettings()
         flow = QSerialPort::UnknownFlowControl;
 }
 
-QSerialPort::PortError QSerialPortPrivate::decodeSystemError() const
+QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 {
-    QSerialPort::PortError error;
+    QSerialPort::SerialPortError error;
     switch (errnum) {
     case KErrPermissionDenied:
         error = QSerialPort::NoSuchDeviceError;

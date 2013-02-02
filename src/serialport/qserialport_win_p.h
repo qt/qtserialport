@@ -144,7 +144,7 @@ private:
     bool updateCommTimeouts();
 
     void detectDefaultSettings();
-    QSerialPort::PortError decodeSystemError() const;
+    QSerialPort::SerialPortError decodeSystemError() const;
 
 #ifndef Q_OS_WINCE
     bool waitAnyEvent(int msecs, bool *timedOut,
