@@ -144,7 +144,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     bool byCurrPid = false;
     if (TtyLocker::isLocked(ptr, &byCurrPid)) {
-        q_ptr->setError(QSerialPort::PermissionDeniedError);
+        q_ptr->setError(QSerialPort::PermissionError);
         return false;
     }
 
@@ -173,7 +173,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     TtyLocker::lock(ptr);
     if (!TtyLocker::isLocked(ptr, &byCurrPid)) {
-        q_ptr->setError(QSerialPort::PermissionDeniedError);
+        q_ptr->setError(QSerialPort::PermissionError);
         return false;
     }
 
@@ -883,19 +883,19 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     QSerialPort::SerialPortError error;
     switch (errno) {
     case ENODEV:
-        error = QSerialPort::NoSuchDeviceError;
+        error = QSerialPort::DeviceNotFoundError;
         break;
     case EACCES:
-        error = QSerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionError;
         break;
     case EBUSY:
-        error = QSerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionError;
         break;
     case ENOTTY:
         error = QSerialPort::IoError;
         break;
     default:
-        error = QSerialPort::UnknownPortError;
+        error = QSerialPort::UnknownError;
         break;
     }
     return error;

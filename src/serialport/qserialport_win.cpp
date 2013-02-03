@@ -514,7 +514,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
 {
     if (dir != QSerialPort::AllDirections) {
-        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
+        q_ptr->setError(QSerialPort::UnsupportedOperationError);
         return false;
     }
     currentDcb.BaudRate = baudRate;
@@ -693,7 +693,7 @@ bool QSerialPortPrivate::processIoErrors()
         else if (error & CE_BREAK)
             q_ptr->setError(QSerialPort::BreakConditionError);
         else
-            q_ptr->setError(QSerialPort::UnknownPortError);
+            q_ptr->setError(QSerialPort::UnknownError);
 
         flagErrorFromCommEvent = true;
     }
@@ -884,19 +884,19 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     QSerialPort::SerialPortError error;
     switch (::GetLastError()) {
     case ERROR_FILE_NOT_FOUND:
-        error = QSerialPort::NoSuchDeviceError;
+        error = QSerialPort::DeviceNotFoundError;
         break;
     case ERROR_ACCESS_DENIED:
-        error = QSerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionError;
         break;
     case ERROR_INVALID_HANDLE:
         error = QSerialPort::DeviceIsNotOpenedError;
         break;
     case ERROR_INVALID_PARAMETER:
-        error = QSerialPort::UnsupportedPortOperationError;
+        error = QSerialPort::UnsupportedOperationError;
         break;
     default:
-        error = QSerialPort::UnknownPortError;
+        error = QSerialPort::UnknownError;
         break;
     }
     return error;

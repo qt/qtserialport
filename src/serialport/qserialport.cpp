@@ -354,12 +354,12 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     QSerialPort::error property.
 
     \value NoError              No error occurred.
-    \value NoSuchDeviceError    An error occurred while attempting to
+    \value DeviceNotFoundError  An error occurred while attempting to
                                 open an non-existing device.
-    \value PermissionDeniedError An error occurred while attempting to
+    \value PermissionError      An error occurred while attempting to
            open an already opened device by another process or a user not
            having enough permission and credentials to open.
-    \value DeviceAlreadyOpenedError An error occurred while attempting to
+    \value OpenError            An error occurred while attempting to
            open an already opened device in this object.
     \value DeviceIsNotOpenedError An error occurred while attempting to
            control a device still closed.
@@ -368,9 +368,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value BreakConditionError Break condition detected by the hardware on
            the input line.
     \value IoError An I/O error occurred while reading or writing the data.
-    \value UnsupportedPortOperationError The requested device operation is
+    \value UnsupportedOperationError The requested device operation is
            not supported or prohibited by the running operating system.
-    \value UnknownPortError An unidentified error occurred.
+    \value UnknownError         An unidentified error occurred.
 
     \sa QSerialPort::error
 */
@@ -505,14 +505,14 @@ bool QSerialPort::open(OpenMode mode)
     Q_D(QSerialPort);
 
     if (isOpen()) {
-        setError(QSerialPort::DeviceAlreadyOpenedError);
+        setError(QSerialPort::OpenError);
         return false;
     }
 
     // Define while not supported modes.
     static const OpenMode unsupportedModes = Append | Truncate | Text | Unbuffered;
     if ((mode & unsupportedModes) || mode == NotOpen) {
-        setError(QSerialPort::UnsupportedPortOperationError);
+        setError(QSerialPort::UnsupportedOperationError);
         return false;
     }
 

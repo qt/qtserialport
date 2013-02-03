@@ -104,7 +104,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     Q_UNUSED(mode)
 
     if (!loadDevices()) {
-        q_ptr->setError(QSerialPort::UnknownPortError);
+        q_ptr->setError(QSerialPort::UnknownError);
         return false;
     }
 
@@ -276,7 +276,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
 {
     if (dir != QSerialPort::AllDirections) {
-        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
+        q_ptr->setError(QSerialPort::UnsupportedOperationError);
         return false;
     }
 
@@ -284,7 +284,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
     if (baudRate)
         currentSettings().iRate = static_cast<TBps>(baudRate);
     else {
-        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
+        q_ptr->setError(QSerialPort::UnsupportedOperationError);
         return false;
     }
 
@@ -398,7 +398,7 @@ bool QSerialPortPrivate::notifyWrite()
 bool QSerialPortPrivate::updateCommConfig()
 {
     if (descriptor.SetConfig(currentSettings) != KErrNone) {
-        q_ptr->setError(QSerialPort::UnsupportedPortOperationError);
+        q_ptr->setError(QSerialPort::UnsupportedOperationError);
         return false;
     }
     return true;
@@ -482,16 +482,16 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     QSerialPort::SerialPortError error;
     switch (errnum) {
     case KErrPermissionDenied:
-        error = QSerialPort::NoSuchDeviceError;
+        error = QSerialPort::DeviceNotFoundError;
         break;
     case KErrLocked:
-        error = QSerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionError;
         break;
     case KErrAccessDenied:
-        error = QSerialPort::PermissionDeniedError;
+        error = QSerialPort::PermissionError;
         break;
     default:
-        error = QSerialPort::UnknownPortError;
+        error = QSerialPort::UnknownError;
         break;
     }
     return error;

@@ -144,16 +144,16 @@ public:
 
     enum SerialPortError {
         NoError,
-        NoSuchDeviceError,
-        PermissionDeniedError,
-        DeviceAlreadyOpenedError,
+        DeviceNotFoundError,
+        PermissionError,
+        OpenError,
         DeviceIsNotOpenedError,
         ParityError,
         FramingError,
         BreakConditionError,
         IoError,
-        UnsupportedPortOperationError,
-        UnknownPortError
+        UnsupportedOperationError,
+        UnknownError
     };
 
     explicit QSerialPort(QObject *parent = 0);
