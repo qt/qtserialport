@@ -256,7 +256,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Baud115200   115200 baud.
     \value UnknownRate  Unknown baud.
 
-    \sa setBaudRate(), baudRate()
+    \sa QSerialPort::baudRate
 */
 
 /*!
@@ -270,7 +270,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Data8            Eight bits.
     \value UnknownDataBits  Unknown number of bits.
 
-    \sa setDataBits(), dataBits()
+    \sa QSerialPort::dataBits
 */
 
 /*!
@@ -285,7 +285,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value MarkParity Mark parity.
     \value UnknownParity Unknown parity.
 
-    \sa setParity(), parity()
+    \sa QSerialPort::parity
 */
 
 /*!
@@ -298,7 +298,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value TwoStop 2 stop bits.
     \value UnknownStopBits Unknown number of stop bit.
 
-    \sa setStopBits(), stopBits()
+    \sa QSerialPort::stopBits
 */
 
 /*!
@@ -311,7 +311,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value SoftwareControl Software flow control (XON/XOFF).
     \value UnknownFlowControl Unknown flow control.
 
-    \sa setFlowControl(), flowControl()
+    \sa QSerialPort::flowControl
 */
 
 /*!
@@ -329,7 +329,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Ri RNG (ring).
     \value Dsr DSR (data set ready).
 
-    \sa lines(), setDataTerminalReady(), setRequestToSend(), dataTerminalReady(), requestToSend()
+    \sa lines(), QSerialPort::dataTerminalReady, QSerialPort::requestToSend
 */
 
 /*!
@@ -344,14 +344,14 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value StopReceivingPolicy  Stops data reception on error.
     \value UnknownPolicy        Unknown policy.
 
-    \sa setDataErrorPolicy(), dataErrorPolicy()
+    \sa QSerialPort::dataErrorPolicy
 */
 
 /*!
     \enum QSerialPort::SerialPortError
 
-    This enum describes the errors that may be returned by the error()
-    method.
+    This enum describes the errors that may be contained by the
+    QSerialPort::error property.
 
     \value NoError              No error occurred.
     \value NoSuchDeviceError    An error occurred while attempting to
@@ -372,7 +372,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
            not supported or prohibited by the running operating system.
     \value UnknownPortError An unidentified error occurred.
 
-    \sa error(), clearError()
+    \sa QSerialPort::error
 */
 
 
@@ -552,8 +552,6 @@ void QSerialPort::close()
     If this flag is true, the settings will be restored; otherwise not.
     The default state of the QSerialPort class is configured to restore the
     settings.
-
-    \sa restoreSettingsOnClose()
 */
 void QSerialPort::setRestoreSettingsOnClose(bool restore)
 {
@@ -563,13 +561,6 @@ void QSerialPort::setRestoreSettingsOnClose(bool restore)
     emit restoreSettingsOnCloseChanged(d->restoreSettingsOnClose);
 }
 
-/*!
-    Returns the current status of the restore flag settings on
-    closing the port. The default QSerialPort is configured to
-    restore the settings.
-
-    \sa setRestoreSettingsOnClose()
-*/
 bool QSerialPort::restoreSettingsOnClose() const
 {
     Q_D(const QSerialPort);
@@ -592,8 +583,9 @@ bool QSerialPort::restoreSettingsOnClose() const
     \brief the data baud rate for the desired direction
 
     If the setting is successful, returns true; otherwise returns false and sets
-    an error code which can be obtained by calling error(). To set the baud
-    rate, use the enumeration QSerialPort::Rate or any positive qint32 value.
+    an error code which can be obtained by accessing the value of the
+    QSerialPort::error property. To set the baud rate, use the enumeration
+    QSerialPort::BaudRate or any positive qint32 value.
 
     \warning Only the AllDirections flag is support for setting this property on
     Windows, Windows CE, and Symbian.
@@ -638,7 +630,8 @@ qint32 QSerialPort::baudRate(Directions dir) const
     \brief the data bits in a frame
 
     If the setting is successful, returns true; otherwise returns false and sets
-    an error code which can be obtained by calling the error() method.
+    an error code which can be obtained by accessing the value of the
+    QSerialPort::error property.
 */
 bool QSerialPort::setDataBits(DataBits dataBits)
 {
@@ -672,7 +665,8 @@ QSerialPort::DataBits QSerialPort::dataBits() const
     \brief the parity checking mode
 
     If the setting is successful, returns true; otherwise returns false and sets
-    an error code which can be obtained by calling the error() method.
+    an error code which can be obtained by accessing the value of the
+    QSerialPort::error property.
 */
 bool QSerialPort::setParity(Parity parity)
 {
@@ -705,7 +699,8 @@ QSerialPort::Parity QSerialPort::parity() const
     \brief the number of stop bits in a frame
 
     If the setting is successful, returns true; otherwise returns false and
-    sets an error code which can be obtained by calling the error() method.
+    sets an error code which can be obtained by accessing the value of the
+    QSerialPort::error property.
 */
 bool QSerialPort::setStopBits(StopBits stopBits)
 {
@@ -738,7 +733,8 @@ QSerialPort::StopBits QSerialPort::stopBits() const
     \brief the desired flow control mode
 
     If the setting is successful, returns true; otherwise returns false and sets
-    an error code which can be obtained by calling the error() method.
+    an error code which can be obtained by accessing the value of the
+    QSerialPort::error property.
 */
 bool QSerialPort::setFlowControl(FlowControl flow)
 {
