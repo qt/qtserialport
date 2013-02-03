@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE_SERIALPORT
 
     \ingroup serialport-main
     \inmodule QtSerialPort
-    \since 5.0
+    \since 5.1
 
     Use the static functions to generate a list of QSerialPortInfo
     objects. Each QSerialPortInfo object in the list represents a single
