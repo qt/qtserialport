@@ -487,7 +487,9 @@ QString QSerialPort::portName() const
     return QSerialPortPrivate::portNameFromSystemLocation(d->systemLocation);
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     Opens the serial port using OpenMode \a mode, and then returns true if
     successful; otherwise returns false with and sets an error code which can be
     obtained by calling the error() method.
@@ -522,7 +524,9 @@ bool QSerialPort::open(OpenMode mode)
     return false;
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     Calls QSerialPort::flush() and closes the serial port.
     Errors from flush are ignored.
 
@@ -885,7 +889,8 @@ bool QSerialPort::clear(Directions dir)
     return d->clear(dir);
 }
 
-/*! \reimp
+/*!
+    \reimp
 
     Returns true if no more data is currently available for reading; otherwise
     returns false.
@@ -1022,7 +1027,9 @@ void QSerialPort::setReadBufferSize(qint64 size)
     d->readBufferMaxSize = size;
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     Always returns true. The serial port is a sequential device.
 */
 bool QSerialPort::isSequential() const
@@ -1030,7 +1037,9 @@ bool QSerialPort::isSequential() const
     return true;
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     Returns the number of incoming bytes that are waiting to be read.
 
     \sa bytesToWrite(), read()
@@ -1041,7 +1050,9 @@ qint64 QSerialPort::bytesAvailable() const
     return d->bytesAvailable() + QIODevice::bytesAvailable();
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     Returns the number of bytes that are waiting to be written. The
     bytes are written when control goes back to the event loop or
     when flush() is called.
@@ -1054,7 +1065,9 @@ qint64 QSerialPort::bytesToWrite() const
     return d->writeBuffer.size() + QIODevice::bytesToWrite();
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     Returns true if a line of data can be read from the serial port;
     otherwise returns false.
 
@@ -1067,7 +1080,9 @@ bool QSerialPort::canReadLine() const
     return hasLine || QIODevice::canReadLine();
 }
 
-/*! \reimp
+/*!
+    \reimp
+
     This function blocks until new data is available for reading and the
     \l{QIODevice::}{readyRead()} signal has been emitted. The function
     will timeout after \a msecs milliseconds.
@@ -1084,7 +1099,8 @@ bool QSerialPort::waitForReadyRead(int msecs)
     return d->waitForReadyRead(msecs);
 }
 
-/*! \reimp
+/*!
+    \reimp
 */
 bool QSerialPort::waitForBytesWritten(int msecs)
 {
@@ -1125,7 +1141,8 @@ bool QSerialPort::setBreak(bool set)
     return d->setBreak(set);
 }
 
-/*! \reimp
+/*!
+    \reimp
 */
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
@@ -1133,14 +1150,16 @@ qint64 QSerialPort::readData(char *data, qint64 maxSize)
     return d->readFromBuffer(data, maxSize);
 }
 
-/*! \reimp
+/*!
+    \reimp
 */
 qint64 QSerialPort::readLineData(char *data, qint64 maxSize)
 {
     return QIODevice::readLineData(data, maxSize);
 }
 
-/*! \reimp
+/*!
+    \reimp
 */
 qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
 {
