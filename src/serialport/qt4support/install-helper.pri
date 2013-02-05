@@ -11,11 +11,9 @@ for(header_file, PUBLIC_HEADERS) {
 # This is a quick workaround for generating forward header with Qt4.
 
 unix {
-    system("echo \'$${LITERAL_HASH}include \"qserialport-global.h\"\' > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortGlobal\"")
     system("echo \'$${LITERAL_HASH}include \"qserialport.h\"\' > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPort\"")
     system("echo \'$${LITERAL_HASH}include \"qserialportinfo.h\"\' > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortInfo\"")
 } win32 {
-    system("echo $${LITERAL_HASH}include \"qserialport-global.h\" > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortGlobal\"")
     system("echo $${LITERAL_HASH}include \"qserialport.h\" > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPort\"")
     system("echo $${LITERAL_HASH}include \"qserialportinfo.h\" > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortInfo\"")
 }

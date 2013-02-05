@@ -47,7 +47,7 @@
 
 #include <QMainWindow>
 
-#include <QtSerialPort/QSerialPortGlobal>
+#include <QtSerialPort/QSerialPort>
 
 namespace Ui {
 class MainWindow;
@@ -55,10 +55,6 @@ class MainWindow;
 
 class Console;
 class SettingsDialog;
-
-QT_BEGIN_NAMESPACE_SERIALPORT
-class QSerialPort;
-QT_END_NAMESPACE_SERIALPORT
 
 QT_USE_NAMESPACE_SERIALPORT
 
