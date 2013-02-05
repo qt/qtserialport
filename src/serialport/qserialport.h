@@ -151,7 +151,9 @@ public:
         ParityError,
         FramingError,
         BreakConditionError,
-        IoError,
+        WriteError,
+        ReadError,
+        ResourceError,
         UnsupportedOperationError,
         UnknownError
     };

@@ -701,11 +701,17 @@ bool QSerialPortPrivate::readNotification()
 
     char *ptr = readBuffer.reserve(bytesToRead);
     const qint64 readBytes = readFromPort(ptr, bytesToRead);
-    if (readBytes == -2) {
-        // No bytes currently available for reading.
+
+    if (readBytes <= 0) {
         readBuffer.chop(bytesToRead);
-        return true;
+
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::ReadError;
+        q_ptr->setError(error);
+        return false;
     }
+
     readBuffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
 
     newBytes = readBuffer.size() - newBytes;
@@ -752,7 +758,10 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
     // Attempt to write it chunk.
     qint64 written = writeToPort(ptr, nextSize);
     if (written < 0) {
-        q_ptr->setError(decodeSystemError());
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::WriteError;
+        q_ptr->setError(error);
         return false;
     }
 
@@ -775,8 +784,10 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
 
 bool QSerialPortPrivate::exceptionNotification()
 {
-    // FIXME:
-    return false;
+    QSerialPort::SerialPortError error = decodeSystemError();
+    q_ptr->setError(error);
+
+    return true;
 }
 
 bool QSerialPortPrivate::updateTermios()
@@ -891,8 +902,14 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     case EBUSY:
         error = QSerialPort::PermissionError;
         break;
-    case ENOTTY:
-        error = QSerialPort::IoError;
+    case EAGAIN:
+        error = QSerialPort::ResourceError;
+        break;
+    case EIO:
+        error = QSerialPort::ResourceError;
+        break;
+    case EBADF:
+        error = QSerialPort::ResourceError;
         break;
     default:
         error = QSerialPort::UnknownError;
@@ -997,29 +1014,6 @@ qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
         bytesRead = readPerChar(data, maxSize);
     }
 
-    // FIXME: Here 'errno' codes for sockets.
-    // You need to replace the codes for the serial port.
-    if (bytesRead < 0) {
-        bytesRead = -1;
-        switch (errno) {
-#if EWOULDBLOCK-0 && EWOULDBLOCK != EAGAIN
-        case EWOULDBLOCK:
-#endif
-        case EAGAIN:
-            // No data was available for reading.
-            bytesRead = -2;
-            break;
-        case EBADF:
-        case EINVAL:
-        case EIO:
-            break;
-        case ECONNRESET:
-            bytesRead = 0;
-            break;
-        default:
-            break;
-        }
-    }
     return bytesRead;
 }
 
@@ -1037,23 +1031,6 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
     }
 #endif
 
-    // FIXME: Here 'errno' codes for sockets.
-    // You need to replace the codes for the serial port.
-    if (bytesWritten < 0) {
-        switch (errno) {
-        case EPIPE:
-        case ECONNRESET:
-            bytesWritten = -1;
-            break;
-        case EAGAIN:
-            bytesWritten = 0;
-            break;
-        case EMSGSIZE:
-            break;
-        default:
-            break;
-        }
-    }
     return bytesWritten;
 }
 

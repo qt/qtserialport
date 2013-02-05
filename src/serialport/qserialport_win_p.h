@@ -98,7 +98,7 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    bool processIoErrors();
+    bool processIoErrors(bool error);
 #ifndef Q_OS_WINCE
     bool startAsyncRead();
     bool startAsyncWrite(int maxSize = INT_MAX);

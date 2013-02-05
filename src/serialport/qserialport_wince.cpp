@@ -87,9 +87,20 @@ protected:
 
 private slots:
     void processNotification(quint32 eventMask) {
-        if (EV_ERR & eventMask)
-            dptr->processIoErrors();
-        if (EV_RXCHAR &eventMask)
+
+        bool error = false;
+
+        // Check for unexpected event. This event triggered when pulled previously
+        // opened device from the system, when opened as for not to read and not to
+        // write options and so forth.
+        if ((eventMask == 0)
+                || ((eventMask & (EV_ERR | EV_RXCHAR | EV_TXEMPTY)) == 0)) {
+            error = true;
+        }
+
+        if (error || (EV_ERR & eventMask))
+            dptr->processIoErrors(error);
+        if (EV_RXCHAR & eventMask)
             dptr->notifyRead();
         if (EV_TXEMPTY & eventMask)
             dptr->notifyWrite(QSerialPortPrivateData::WriteChunkSize);
@@ -358,6 +369,7 @@ bool QSerialPortPrivate::notifyRead()
 
     if (!sucessResult) {
         readBuffer.truncate(bytesToRead);
+        q_ptr->setError(QSerialPort::ReadError);
         return false;
     }
 
@@ -396,8 +408,10 @@ bool QSerialPortPrivate::notifyWrite(int maxSize)
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
-    if (!::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL))
+    if (!::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL)) {
+        q_ptr->setError(QSerialPort::WriteError);
         return false;
+    }
 
     writeBuffer.free(bytesWritten);
 

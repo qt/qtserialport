@@ -140,10 +140,25 @@ public:
     virtual bool processCompletionRoutine() {
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
-        if (EV_ERR & triggeredEventMask)
-            dptr->processIoErrors();
-        dptr->startAsyncRead();
-        return true;
+
+        bool error = false;
+
+        // Check for unexpected event. This event triggered when pulled previously
+        // opened device from the system, when opened as for not to read and not to
+        // write options and so forth.
+        if ((triggeredEventMask == 0)
+                || ((originalEventMask & triggeredEventMask) == 0)) {
+            error = true;
+        }
+
+        // Start processing a caught error.
+        if (error || (EV_ERR & triggeredEventMask))
+            dptr->processIoErrors(error);
+
+        if (!error)
+            dptr->startAsyncRead();
+
+        return error;
     }
 
 private:
@@ -621,24 +636,22 @@ bool QSerialPortPrivate::startAsyncRead()
     char *ptr = readBuffer.reserve(bytesToRead);
 
     AbstractOverlappedEventNotifier *n = lookupReadCompletionNotifier();
-    if (!n)
+    if (!n) {
+        q_ptr->setError(QSerialPort::ResourceError);
         return false;
+    }
 
     if (::ReadFile(descriptor, ptr, bytesToRead, NULL, n->overlappedPointer()))
         return true;
 
-    switch (::GetLastError()) {
-    case ERROR_IO_PENDING:
-        // This is not an error. We're getting notified, when data arrives.
-    case ERROR_MORE_DATA:
-        // This is not an error. The synchronous read succeeded.
-        return true;
-    default:
-        // error
-        break;
+    QSerialPort::SerialPortError error = decodeSystemError();
+    if (error != QSerialPort::NoError) {
+        error = QSerialPort::ReadError;
+        q_ptr->setError(error);
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 bool QSerialPortPrivate::startAsyncWrite(int maxSize)
@@ -656,41 +669,47 @@ bool QSerialPortPrivate::startAsyncWrite(int maxSize)
     writeSequenceStarted = true;
 
     AbstractOverlappedEventNotifier *n = lookupFreeWriteCompletionNotifier();
-    if (!n)
+    if (!n) {
+        q_ptr->setError(QSerialPort::ResourceError);
         return false;
+    }
 
     n->setEnabled(true);
 
     if (::WriteFile(descriptor, ptr, nextSize, NULL, n->overlappedPointer()))
         return true;
 
-    switch (::GetLastError()) {
-    case ERROR_IO_PENDING:
-        // This is not an error. We're getting notified, when data arrives.
-        return true;
-    case ERROR_MORE_DATA:
-        // This is not an error. The synchronous read succeeded.
-        break;
-    default:
-        // error
-        writeSequenceStarted = false;
-        return false;
+    QSerialPort::SerialPortError error = decodeSystemError();
+    if (error != QSerialPort::NoError) {
+         writeSequenceStarted = false;
+
+         if (error != QSerialPort::ResourceError)
+             error = QSerialPort::WriteError;
+
+         q_ptr->setError(error);
+         return false;
     }
+
     return true;
 }
 
 #endif // #ifndef Q_OS_WINCE
 
-bool QSerialPortPrivate::processIoErrors()
+bool QSerialPortPrivate::processIoErrors(bool error)
 {
-    DWORD error = 0;
-    const bool ret = ::ClearCommError(descriptor, &error, NULL);
-    if (ret && error) {
+    if (error) {
+        q_ptr->setError(QSerialPort::ResourceError);
+        return true;
+    }
+
+    DWORD errors = 0;
+    const bool ret = ::ClearCommError(descriptor, &errors, NULL);
+    if (ret && errors) {
         if (error & CE_FRAME)
             q_ptr->setError(QSerialPort::FramingError);
-        else if (error & CE_RXPARITY)
+        else if (errors & CE_RXPARITY)
             q_ptr->setError(QSerialPort::ParityError);
-        else if (error & CE_BREAK)
+        else if (errors & CE_BREAK)
             q_ptr->setError(QSerialPort::BreakConditionError);
         else
             q_ptr->setError(QSerialPort::UnknownError);
@@ -883,6 +902,12 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 {
     QSerialPort::SerialPortError error;
     switch (::GetLastError()) {
+    case ERROR_IO_PENDING:
+        error = QSerialPort::NoError;
+        break;
+    case ERROR_MORE_DATA:
+        error = QSerialPort::NoError;
+        break;
     case ERROR_FILE_NOT_FOUND:
         error = QSerialPort::DeviceNotFoundError;
         break;
@@ -890,10 +915,13 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
         error = QSerialPort::PermissionError;
         break;
     case ERROR_INVALID_HANDLE:
-        error = QSerialPort::DeviceIsNotOpenedError;
+        error = QSerialPort::ResourceError;
         break;
     case ERROR_INVALID_PARAMETER:
         error = QSerialPort::UnsupportedOperationError;
+        break;
+    case ERROR_BAD_COMMAND:
+        error = QSerialPort::ResourceError;
         break;
     default:
         error = QSerialPort::UnknownError;

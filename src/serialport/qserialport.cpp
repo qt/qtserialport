@@ -367,7 +367,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value FramingError Framing error detected by the hardware while reading data.
     \value BreakConditionError Break condition detected by the hardware on
            the input line.
-    \value IoError An I/O error occurred while reading or writing the data.
+    \value WriteError An I/O error occurred while writing the data.
+    \value ReadError An I/O error occurred while reading the data.
+    \value ResourceError An I/O error occurred when a resource becomes unavailable,
+           e.g. when the device is unexpectedly removed from the system.
     \value UnsupportedOperationError The requested device operation is
            not supported or prohibited by the running operating system.
     \value UnknownError         An unidentified error occurred.
