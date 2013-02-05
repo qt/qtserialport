@@ -57,8 +57,8 @@
 #endif
 
 #include <QtCore/qelapsedtimer.h>
-
 #include <QtCore/qsocketnotifier.h>
+#include <QtCore/qpair.h>
 
 QT_BEGIN_NAMESPACE_SERIALPORT
 
@@ -1177,132 +1177,166 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
     return ret;
 }
 
-struct BaudRatePair
-{
-    qint32 baudRate;
-    qint32 setting; // The OS-specific code of baud rate.
-    bool operator<(const BaudRatePair &other) const { return baudRate < other.baudRate; }
-    bool operator==(const BaudRatePair &other) const { return setting == other.setting; }
-};
+typedef QPair<int, int> BaudRatePair;
 
-// This table contains correspondences standard pairs values of
-// baud rates that are defined in file termios.h
-static const BaudRatePair standardBaudRatesTable[] =
-{
-    #ifdef B50
-    { 50, B50 },
-    #endif
-    #ifdef B75
-    { 75, B75 },
-    #endif
-    #ifdef B110
-    { 110, B110 },
-    #endif
-    #ifdef B134
-    { 134, B134 },
-    #endif
-    #ifdef B150
-    { 150, B150 },
-    #endif
-    #ifdef B200
-    { 200, B200 },
-    #endif
-    #ifdef B300
-    { 300, B300 },
-    #endif
-    #ifdef B600
-    { 600, B600 },
-    #endif
-    #ifdef B1200
-    { 1200, B1200 },
-    #endif
-    #ifdef B1800
-    { 1800, B1800 },
-    #endif
-    #ifdef B2400
-    { 2400, B2400 },
-    #endif
-    #ifdef B4800
-    { 4800, B4800 },
-    #endif
-    #ifdef B9600
-    { 9600, B9600 },
-    #endif
-    #ifdef B19200
-    { 19200, B19200 },
-    #endif
-    #ifdef B38400
-    { 38400, B38400 },
-    #endif
-    #ifdef B57600
-    { 57600, B57600 },
-    #endif
-    #ifdef B115200
-    { 115200, B115200 },
-    #endif
-    #ifdef B230400
-    { 230400, B230400 },
-    #endif
-    #ifdef B460800
-    { 460800, B460800 },
-    #endif
-    #ifdef B500000
-    { 500000, B500000 },
-    #endif
-    #ifdef B576000
-    { 576000, B576000 },
-    #endif
-    #ifdef B921600
-    { 921600, B921600 },
-    #endif
-    #ifdef B1000000
-    { 1000000, B1000000 },
-    #endif
-    #ifdef B1152000
-    { 1152000, B1152000 },
-    #endif
-    #ifdef B1500000
-    { 1500000, B1500000 },
-    #endif
-    #ifdef B2000000
-    { 2000000, B2000000},
-    #endif
-    #ifdef B2500000
-    { 2500000, B2500000 },
-    #endif
-    #ifdef B3000000
-    { 3000000, B3000000 },
-    #endif
-    #ifdef B3500000
-    { 3500000, B3500000 },
-    #endif
-    #ifdef B4000000
-    { 4000000, B4000000 }
-    #endif
-};
+// The OS specific defines can be found in termios.h
 
-static const BaudRatePair *standardBaudRatesTable_end =
-        standardBaudRatesTable + sizeof(standardBaudRatesTable)/sizeof(*standardBaudRatesTable);
+static const QList<BaudRatePair> standardBaudRatePairList()
+{
+    static const QList<BaudRatePair> standardBaudRatesTable = QList<BaudRatePair>()
+
+        #ifdef B50
+            << qMakePair(50, B50)
+        #endif
+
+        #ifdef B75
+            << qMakePair(75, B75)
+        #endif
+
+        #ifdef B110
+            << qMakePair(110, B110)
+        #endif
+
+        #ifdef B134
+            << qMakePair(134, B134)
+        #endif
+
+        #ifdef B150
+            << qMakePair(150, B150)
+        #endif
+
+        #ifdef B200
+            << qMakePair(200, B200)
+        #endif
+
+        #ifdef B300
+            << qMakePair(300, B300)
+        #endif
+
+        #ifdef B600
+            << qMakePair(600, B600)
+        #endif
+
+        #ifdef B1200
+            << qMakePair(1200, B1200)
+        #endif
+
+        #ifdef B1800
+            << qMakePair(1800, B1800)
+        #endif
+
+        #ifdef B2400
+            << qMakePair(2400, B2400)
+        #endif
+
+        #ifdef B4800
+            << qMakePair(4800, B4800)
+        #endif
+
+        #ifdef B9600
+            << qMakePair(9600, B9600)
+        #endif
+
+        #ifdef B19200
+            << qMakePair(19200, B19200)
+        #endif
+
+        #ifdef B38400
+            << qMakePair(38400, B38400)
+        #endif
+
+        #ifdef B57600
+            << qMakePair(57600, B57600)
+        #endif
+
+        #ifdef B115200
+            << qMakePair(115200, B115200)
+        #endif
+
+        #ifdef B230400
+            << qMakePair(230400, B230400)
+        #endif
+
+        #ifdef B460800
+            << qMakePair(460800, B460800)
+        #endif
+
+        #ifdef B500000
+            << qMakePair(500000, B500000)
+        #endif
+
+        #ifdef B576000
+            << qMakePair(576000, B576000)
+        #endif
+
+        #ifdef B921600
+            << qMakePair(921600, B921600)
+        #endif
+
+        #ifdef B1000000
+            << qMakePair(1000000, B1000000)
+        #endif
+
+        #ifdef B1152000
+            << qMakePair(1152000, B1152000)
+        #endif
+
+        #ifdef B1500000
+            << qMakePair(1500000, B1500000)
+        #endif
+
+        #ifdef B2000000
+            << qMakePair(2000000, B2000000)
+        #endif
+
+        #ifdef B2500000
+            << qMakePair(2500000, B2500000)
+        #endif
+
+        #ifdef B3000000
+            << qMakePair(3000000, B3000000)
+        #endif
+
+        #ifdef B3500000
+            << qMakePair(3500000, B3500000)
+        #endif
+
+        #ifdef B4000000
+            << qMakePair(4000000, B4000000)
+        #endif
+
+    ;
+
+    return standardBaudRatesTable;
+}
 
 qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
-    const BaudRatePair rp = { 0, setting };
-    const BaudRatePair *ret = qFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
-    return ret != standardBaudRatesTable_end ? ret->baudRate : 0;
+    const BaudRatePair rp(0, setting);
+    const QList<BaudRatePair> baudRatePairs = standardBaudRatePairList();
+    const QList<BaudRatePair>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairs, rp);
+
+    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? baudRatePairListConstIterator->first : 0;
 }
 
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
-    const BaudRatePair rp = { baudRate, 0 };
-    const BaudRatePair *ret = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
-    return ret != standardBaudRatesTable_end ? ret->setting : 0;
+    const BaudRatePair rp(baudRate, 0);
+    const QList<BaudRatePair> baudRatePairs = standardBaudRatePairList();
+    const QList<BaudRatePair>::const_iterator baudRatePairListConstIterator = qBinaryFind(baudRatePairs, rp);
+
+    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? baudRatePairListConstIterator->second : 0;
 }
 
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
     QList<qint32> ret;
-    for (const BaudRatePair *it = standardBaudRatesTable; it != standardBaudRatesTable_end; ++it)
-        ret.append(it->baudRate);
+    const QList<BaudRatePair> baudRatePairs = standardBaudRatePairList();
+
+    foreach (const BaudRatePair &baudRatePair, baudRatePairs) {
+        ret.append(baudRatePair.first);
+    }
+
     return ret;
 }
 

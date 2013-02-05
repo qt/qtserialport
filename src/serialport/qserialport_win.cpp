@@ -977,76 +977,102 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
 
 // This table contains standard values of baud rates that
 // are defined in MSDN and/or in Win SDK file winbase.h
-static const qint32 standardBaudRatesTable[] =
-{
-    #ifdef CBR_110
-    CBR_110,
-    #endif
-    #ifdef CBR_300
-    CBR_300,
-    #endif
-    #ifdef CBR_600
-    CBR_600,
-    #endif
-    #ifdef CBR_1200
-    CBR_1200,
-    #endif
-    #ifdef CBR_2400
-    CBR_2400,
-    #endif
-    #ifdef CBR_4800
-    CBR_4800,
-    #endif
-    #ifdef CBR_9600
-    CBR_9600,
-    #endif
-    #ifdef CBR_14400
-    CBR_14400,
-    #endif
-    #ifdef CBR_19200
-    CBR_19200,
-    #endif
-    #ifdef CBR_38400
-    CBR_38400,
-    #endif
-    #ifdef CBR_56000
-    CBR_56000,
-    #endif
-    #ifdef CBR_57600
-    CBR_57600,
-    #endif
-    #ifdef CBR_115200
-    CBR_115200,
-    #endif
-    #ifdef CBR_128000
-    CBR_128000,
-    #endif
-    #ifdef CBR_256000
-    CBR_256000
-    #endif
-};
 
-static const qint32 *standardBaudRatesTable_end =
-        standardBaudRatesTable + sizeof(standardBaudRatesTable)/sizeof(*standardBaudRatesTable);
+static const QList<qint32> standardBaudRatePairList()
+{
+
+    static const QList<qint32> standardBaudRatesTable = QList<qint32>()
+
+        #ifdef CBR_110
+            << CBR_110
+        #endif
+
+        #ifdef CBR_300
+            << CBR_300
+        #endif
+
+        #ifdef CBR_600
+            << CBR_600
+        #endif
+
+        #ifdef CBR_1200
+            << CBR_1200
+        #endif
+
+        #ifdef CBR_2400
+            << CBR_2400
+        #endif
+
+        #ifdef CBR_4800
+            << CBR_4800
+        #endif
+
+        #ifdef CBR_9600
+            << CBR_9600
+        #endif
+
+        #ifdef CBR_14400
+            << CBR_14400
+        #endif
+
+        #ifdef CBR_19200
+            << CBR_19200
+        #endif
+
+        #ifdef CBR_38400
+            << CBR_38400
+        #endif
+
+        #ifdef CBR_56000
+            << CBR_56000
+        #endif
+
+        #ifdef CBR_57600
+            << CBR_57600
+        #endif
+
+        #ifdef CBR_115200
+            << CBR_115200
+        #endif
+
+        #ifdef CBR_128000
+            << CBR_128000
+        #endif
+
+        #ifdef CBR_256000
+            << CBR_256000
+        #endif
+    ;
+
+    return standardBaudRatesTable;
+};
 
 qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
-    const qint32 *ret = qFind(standardBaudRatesTable, standardBaudRatesTable_end, setting);
-    return ret != standardBaudRatesTable_end ? *ret : 0;
+    const QList<qint32> baudRatePairs = standardBaudRatePairList();
+    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairs, setting);
+
+    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
 }
 
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
-    const qint32 *ret = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, baudRate);
-    return ret != standardBaudRatesTable_end ? *ret : 0;
+    const QList<qint32> baudRatePairList = standardBaudRatePairList();
+    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairList, setting);
+
+    return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
 }
 
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
-    QList<qint32> l;
-    for (const qint32 *it = standardBaudRatesTable; it != standardBaudRatesTable_end; ++it)
-        l.append(*it);
-    return l;
+    QList<qint32> ret;
+    const QList<qint32> baudRatePairs = standardBaudRatePairList();
+
+    foreach (qint32 baudRatePair, baudRatePairs) {
+        ret.append(baudRatePair);
+    }
+
+    return ret;
 }
 
 QT_END_NAMESPACE_SERIALPORT
