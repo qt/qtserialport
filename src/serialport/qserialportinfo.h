@@ -46,7 +46,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qscopedpointer.h>
 
-#include "qserialport-global.h"
+#include <QtSerialPort/qserialport-global.h>
 
 QT_BEGIN_NAMESPACE
 

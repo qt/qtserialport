@@ -45,7 +45,7 @@
 
 #include <QtCore/qiodevice.h>
 
-#include "qserialport-global.h"
+#include <QtSerialPort/qserialport-global.h>
 
 QT_BEGIN_NAMESPACE
 
