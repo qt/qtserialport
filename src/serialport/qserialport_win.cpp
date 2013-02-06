@@ -1058,7 +1058,7 @@ qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
     const QList<qint32> baudRatePairList = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairList, setting);
+    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairList, baudRate);
 
     return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
 }
