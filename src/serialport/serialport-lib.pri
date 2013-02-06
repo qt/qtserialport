@@ -1,6 +1,11 @@
 INCLUDEPATH += $$PWD
 
-linux*:DEFINES += HAVE_LIBUDEV
+CONFIG += link_pkgconfig
+
+packagesExist(libudev) {
+    DEFINES += HAVE_LIBUDEV
+    PKGCONFIG += libudev
+}
 
 PUBLIC_HEADERS += \
     $$PWD/qserialport-global.h \
