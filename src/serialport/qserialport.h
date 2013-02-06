@@ -64,8 +64,8 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
     Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
-    Q_PROPERTY(bool dataTerminalReady READ dataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
-    Q_PROPERTY(bool requestToSend READ requestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
+    Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
+    Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY errorChanged)
     Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
 
@@ -190,8 +190,8 @@ public:
     bool setFlowControl(FlowControl flow);
     FlowControl flowControl() const;
 
-    bool dataTerminalReady() const;
-    bool requestToSend() const;
+    bool isDataTerminalReady() const;
+    bool isRequestToSend() const;
 
     Lines lines() const;
 

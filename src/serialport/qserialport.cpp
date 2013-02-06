@@ -167,8 +167,8 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     appended to the QSerialPort's internal read buffer. In order to limit the
     size of the read buffer, call setReadBufferSize().
 
-    The status of the control lines is determined with the dataTerminalReady(),
-    requestToSend(), and lines() methods. To change the control line status, use
+    The status of the control lines is determined with the isDataTerminalReady(),
+    isRequestToSend, and lines() methods. To change the control line status, use
     the setDataTerminalReady(), and setRequestToSend() methods.
 
     To close the serial port, call the close() method. After all the pending data
@@ -785,7 +785,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
     return retval;
 }
 
-bool QSerialPort::dataTerminalReady() const
+bool QSerialPort::isDataTerminalReady() const
 {
     Q_D(const QSerialPort);
     return d->lines() & QSerialPort::DtrLine;
@@ -821,7 +821,7 @@ bool QSerialPort::setRequestToSend(bool set)
     return retval;
 }
 
-bool QSerialPort::requestToSend() const
+bool QSerialPort::isRequestToSend() const
 {
     Q_D(const QSerialPort);
     return d->lines() & QSerialPort::RtsLine;
@@ -843,7 +843,7 @@ bool QSerialPort::requestToSend() const
     desired signal by applying a mask "AND", where the mask is
     the desired enumeration value from QSerialPort::Lines.
 
-    \sa dataTerminalReady(), requestToSend(), setDataTerminalReady(),
+    \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
 */
 QSerialPort::Lines QSerialPort::lines() const
