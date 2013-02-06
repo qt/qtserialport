@@ -48,6 +48,8 @@
 
 #include "qserialport-global.h"
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPort;
@@ -89,5 +91,7 @@ inline bool QSerialPortInfo::isNull() const
 { return !d_ptr; }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORTINFO_H

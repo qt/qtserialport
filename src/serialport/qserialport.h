@@ -47,6 +47,8 @@
 
 #include "qserialport-global.h"
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPortInfo;
@@ -255,5 +257,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Directions)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Lines)
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORT_H
