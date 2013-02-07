@@ -39,7 +39,7 @@
 **
 ****************************************************************************/
 
-#include "ttylocker_unix_p.h"
+#include "qttylocker_unix_p.h"
 
 #ifdef HAVE_BAUDBOY_H
 #  include <baudboy.h>
@@ -104,7 +104,7 @@ QString generateLockFileNameAsNamedForm(const char *portName)
 #endif //!(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
 // Try lock serial device. However, other processes can not access it.
-bool TtyLocker::lock(const char *portName)
+bool QTtyLocker::lock(const char *portName)
 {
 #ifdef HAVE_BAUDBOY_H
     if (::ttylock(portName)
@@ -128,7 +128,7 @@ bool TtyLocker::lock(const char *portName)
 }
 
 // Try unlock serial device. However, other processes can access it.
-bool TtyLocker::unlock(const char *portName)
+bool QTtyLocker::unlock(const char *portName)
 {
 #ifdef HAVE_BAUDBOY_H
     return ::ttyunlock(portName != -1;
@@ -142,7 +142,7 @@ bool TtyLocker::unlock(const char *portName)
 
 // Verifies the device is locked or not.
 // If returned currentPid = true - this means that the device is locked the current process.
-bool TtyLocker::isLocked(const char *portName, bool *currentPid)
+bool QTtyLocker::isLocked(const char *portName, bool *currentPid)
 {
     if (!currentPid)
         return true;

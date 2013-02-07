@@ -42,7 +42,7 @@
 ****************************************************************************/
 
 #include "qserialport_unix_p.h"
-#include "ttylocker_unix_p.h"
+#include "qttylocker_unix_p.h"
 
 #include <errno.h>
 #include <sys/time.h>
@@ -145,7 +145,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     const char *ptr = portName.constData();
 
     bool byCurrPid = false;
-    if (TtyLocker::isLocked(ptr, &byCurrPid)) {
+    if (QTtyLocker::isLocked(ptr, &byCurrPid)) {
         q_ptr->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -173,8 +173,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     ::fcntl(descriptor, F_SETFL, FNDELAY);
 
-    TtyLocker::lock(ptr);
-    if (!TtyLocker::isLocked(ptr, &byCurrPid)) {
+    QTtyLocker::lock(ptr);
+    if (!QTtyLocker::isLocked(ptr, &byCurrPid)) {
         q_ptr->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -247,8 +247,8 @@ void QSerialPortPrivate::close()
     const char *ptr = portName.constData();
 
     bool byCurrPid = false;
-    if (TtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
-        TtyLocker::unlock(ptr);
+    if (QTtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
+        QTtyLocker::unlock(ptr);
 
     descriptor = -1;
     isCustomBaudRateSupported = false;

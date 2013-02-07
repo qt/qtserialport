@@ -43,7 +43,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "ttylocker_unix_p.h"
+#include "qttylocker_unix_p.h"
 #include "qserialport_unix_p.h"
 #include <QtCore/qfile.h>
 
@@ -246,7 +246,7 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
 bool QSerialPortInfo::isBusy() const
 {
     bool currentPid = false;
-    return TtyLocker::isLocked(portName().toLocal8Bit().constData(), &currentPid);
+    return QTtyLocker::isLocked(portName().toLocal8Bit().constData(), &currentPid);
 }
 
 bool QSerialPortInfo::isValid() const
