@@ -43,7 +43,7 @@
 #ifndef SERIALPORT_GLOBAL_H
 #define SERIALPORT_GLOBAL_H
 
-#include "qglobal.h"
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
