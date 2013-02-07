@@ -39,3 +39,5 @@ win32 {
 
 target.path = $$[QT_INSTALL_LIBS]
 INSTALLS += target
+
+INCLUDEPATH += $$QTSERIALPORT_BUILD_ROOT/include $$QTSERIALPORT_BUILD_ROOT/include/QtSerialPort
