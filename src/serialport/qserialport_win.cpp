@@ -294,7 +294,7 @@ void QSerialPortPrivate::close()
     readyReadEmitted = false;
     flagErrorFromCommEvent = false;
 
-    if (restoreSettingsOnClose) {
+    if (settingsRestoredOnClose) {
         ::SetCommState(descriptor, &restoredDcb);
         ::SetCommTimeouts(descriptor, &restoredCommTimeouts);
     }

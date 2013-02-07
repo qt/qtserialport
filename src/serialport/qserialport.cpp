@@ -73,7 +73,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , stopBits(QSerialPort::UnknownStopBits)
     , flow(QSerialPort::UnknownFlowControl)
     , policy(QSerialPort::IgnorePolicy)
-    , restoreSettingsOnClose(true)
+    , settingsRestoredOnClose(true)
     , q_ptr(q)
 {
 }
@@ -554,7 +554,7 @@ void QSerialPort::close()
 }
 
 /*!
-    \property QSerialPort::restoreSettingsOnClose
+    \property QSerialPort::settingsRestoredOnClose
     \brief the flag which allows to restore the previous settings while closing
     the serial port.
 
@@ -562,31 +562,31 @@ void QSerialPort::close()
     The default state of the QSerialPort class is configured to restore the
     settings.
 */
-void QSerialPort::setRestoreSettingsOnClose(bool restore)
+void QSerialPort::setSettingsRestoredOnClose(bool restore)
 {
     Q_D(QSerialPort);
 
-    if (d->restoreSettingsOnClose != restore) {
-        d->restoreSettingsOnClose = restore;
-        emit restoreSettingsOnCloseChanged(d->restoreSettingsOnClose);
+    if (d->settingsRestoredOnClose != restore) {
+        d->settingsRestoredOnClose = restore;
+        emit settingsRestoredOnCloseChanged(d->settingsRestoredOnClose);
     }
 }
 
-bool QSerialPort::restoreSettingsOnClose() const
+bool QSerialPort::settingsRestoredOnClose() const
 {
     Q_D(const QSerialPort);
-    return d->restoreSettingsOnClose;
+    return d->settingsRestoredOnClose;
 }
 
 /*!
-    \fn void QSerialPort::restoreSettingsOnCloseChanged(bool restore)
+    \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
 
     This signal is emitted after the flag which allows to restore the
     previous settings while closing the serial port has been changed. The new
     flag which allows to restore the previous settings while closing the serial
     port is passed as \restore.
 
-    \sa QSerialPort::restoreSettingsOnClose
+    \sa QSerialPort::settingsRestoredOnClose
 */
 
 /*!

@@ -65,7 +65,7 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
-    Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
+    Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 
     Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy SerialPortError )
 
@@ -170,8 +170,8 @@ public:
     virtual bool open(OpenMode mode);
     virtual void close();
 
-    void setRestoreSettingsOnClose(bool restore);
-    bool restoreSettingsOnClose() const;
+    void setSettingsRestoredOnClose(bool restore);
+    bool settingsRestoredOnClose() const;
 
     bool setBaudRate(qint32 baudRate, Directions dir = AllDirections);
     qint32 baudRate(Directions dir = AllDirections) const;
@@ -232,7 +232,7 @@ Q_SIGNALS:
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
-    void restoreSettingsOnCloseChanged(bool restore);
+    void settingsRestoredOnCloseChanged(bool restore);
 
 protected:
     virtual qint64 readData(char *data, qint64 maxSize);

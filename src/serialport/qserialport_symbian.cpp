@@ -153,7 +153,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    if (restoreSettingsOnClose)
+    if (settingsRestoredOnClose)
         descriptor.SetConfig(restoredSettings);
     descriptor.Close();
 }

@@ -80,7 +80,7 @@ public:
     QSerialPort::DataErrorPolicy policy;
     bool dataTerminalReady;
     bool requestToSend;
-    bool restoreSettingsOnClose;
+    bool settingsRestoredOnClose;
     QSerialPort * const q_ptr;
 };
 

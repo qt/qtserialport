@@ -209,7 +209,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    if (restoreSettingsOnClose) {
+    if (settingsRestoredOnClose) {
         ::tcsetattr(descriptor, TCSANOW, &restoredTermios);
 #ifdef Q_OS_LINUX
         if (isCustomBaudRateSupported)
