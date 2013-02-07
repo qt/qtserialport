@@ -710,7 +710,7 @@ bool QSerialPort::setStopBits(StopBits stopBits)
     Q_D(QSerialPort);
     if (d->setStopBits(stopBits)) {
         d->stopBits = stopBits;
-        stopBitsChanged(d->stopBits);
+        emit stopBitsChanged(d->stopBits);
         return true;
     }
     return false;
@@ -744,7 +744,7 @@ bool QSerialPort::setFlowControl(FlowControl flow)
     Q_D(QSerialPort);
     if (d->setFlowControl(flow)) {
         d->flow = flow;
-        flowControlChanged(d->flow);
+        emit flowControlChanged(d->flow);
         return true;
     }
     return false;
