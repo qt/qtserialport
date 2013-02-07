@@ -60,6 +60,8 @@
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qpair.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class ReadNotifier : public QSocketNotifier
@@ -1341,3 +1343,5 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

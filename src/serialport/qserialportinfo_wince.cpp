@@ -47,6 +47,8 @@
 
 #include <QtCore/qstringlist.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
@@ -132,3 +134,5 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

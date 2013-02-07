@@ -46,6 +46,8 @@
 
 #include <c32comm.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPortPrivate : public QSerialPortPrivateData
@@ -114,5 +116,7 @@ private:
 };
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORT_SYMBIAN_P_H

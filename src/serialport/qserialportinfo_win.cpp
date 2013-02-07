@@ -53,6 +53,8 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 #ifndef Q_OS_WINCE
@@ -229,3 +231,5 @@ bool QSerialPortInfo::isValid() const
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

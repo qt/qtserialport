@@ -58,6 +58,8 @@
 #  include <QtCore/qstringlist.h>
 #endif // defined (HAVE_BAUDBOY_H)
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
@@ -178,3 +180,5 @@ bool TtyLocker::isLocked(const char *portName, bool *currentPid)
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

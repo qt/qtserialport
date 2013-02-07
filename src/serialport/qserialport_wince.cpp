@@ -48,6 +48,8 @@
 #include <QtCore/qthread.h>
 #include <QtCore/qtimer.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPortPrivate;
@@ -502,3 +504,5 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
 #include "qserialport_wince.moc"
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

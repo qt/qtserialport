@@ -61,6 +61,8 @@ extern "C"
 
 #endif // Q_OS_MAC
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 #ifndef Q_OS_MAC
@@ -254,3 +256,5 @@ bool QSerialPortInfo::isValid() const
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

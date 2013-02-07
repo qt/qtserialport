@@ -47,6 +47,8 @@
 //#include <e32test.h>
 #include <f32file.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Physical device driver.
@@ -652,3 +654,5 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

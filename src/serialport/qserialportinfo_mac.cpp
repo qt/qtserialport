@@ -57,6 +57,8 @@
 #endif
 #include <IOKit/IOBSD.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 enum { MATCHING_PROPERTIES_COUNT = 6 };
@@ -262,3 +264,5 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

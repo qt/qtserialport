@@ -52,6 +52,8 @@
 #include "qt4support/qringbuffer_p.h"
 #endif
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPortPrivateData
@@ -83,5 +85,7 @@ public:
 };
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORT_P_H

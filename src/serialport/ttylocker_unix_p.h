@@ -44,6 +44,8 @@
 
 #include "qserialport-global.h"
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class TtyLocker
@@ -55,5 +57,7 @@ public:
 };
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // TTYLOCKER_UNIX_P_H

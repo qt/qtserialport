@@ -59,6 +59,8 @@
 #  define SERIALPORT_BUFFERSIZE 16384
 #endif
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
@@ -1187,3 +1189,5 @@ void QSerialPort::setError(QSerialPort::SerialPortError error)
 #include "moc_qserialport.cpp"
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

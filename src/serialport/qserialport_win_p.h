@@ -47,6 +47,8 @@
 
 #include <qt_windows.h>
 
+QT_BEGIN_NAMESPACE
+
 #ifndef Q_OS_WINCE
 class QWinEventNotifier;
 #include <QtCore/qhash.h>
@@ -158,5 +160,7 @@ private:
 };
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORT_WIN_P_H

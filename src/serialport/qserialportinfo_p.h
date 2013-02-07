@@ -48,6 +48,8 @@
 
 #include <QtCore/qstring.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 class QSerialPortInfoPrivate
@@ -73,5 +75,7 @@ public:
 };
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORTINFO_P_H

@@ -45,6 +45,8 @@
 #include "qserialportinfo_p.h"
 #include "qserialport.h"
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 
@@ -240,3 +242,5 @@ QString QSerialPortInfo::productIdentifier() const
 */
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

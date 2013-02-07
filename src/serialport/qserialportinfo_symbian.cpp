@@ -52,6 +52,8 @@
 
 #include <QtCore/qobject.h>
 
+QT_BEGIN_NAMESPACE
+
 QT_BEGIN_NAMESPACE_SERIALPORT
 
 // Physical device driver.
@@ -247,3 +249,5 @@ bool QSerialPortInfo::isValid() const
 }
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE

@@ -51,6 +51,8 @@
 #  include <linux/serial.h>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 class QSocketNotifier;
 
 QT_BEGIN_NAMESPACE_SERIALPORT
@@ -152,5 +154,7 @@ private:
 };
 
 QT_END_NAMESPACE_SERIALPORT
+
+QT_END_NAMESPACE
 
 #endif // QSERIALPORT_UNIX_P_H
