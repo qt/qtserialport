@@ -60,8 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
 static
@@ -178,7 +176,5 @@ bool QTtyLocker::isLocked(const char *portName, bool *currentPid)
 
 #endif
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

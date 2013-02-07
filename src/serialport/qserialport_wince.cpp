@@ -50,8 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QSerialPortPrivate;
 
 class CommEventNotifier : public QThread
@@ -502,7 +500,5 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
 }
 
 #include "qserialport_wince.moc"
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

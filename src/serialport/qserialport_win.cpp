@@ -87,8 +87,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 #ifndef Q_OS_WINCE
 
 class AbstractOverlappedEventNotifier : public QWinEventNotifier
@@ -1076,7 +1074,5 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
 
     return ret;
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

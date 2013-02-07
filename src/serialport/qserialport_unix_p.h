@@ -55,8 +55,6 @@ QT_BEGIN_NAMESPACE
 
 class QSocketNotifier;
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
 public:
@@ -152,8 +150,6 @@ private:
     qint64 readPerChar(char *data, qint64 maxSize);
 
 };
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 

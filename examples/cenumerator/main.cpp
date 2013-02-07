@@ -43,7 +43,7 @@
 #include <QCoreApplication>
 #include <QtSerialPort/QSerialPortInfo>
 
-QT_USE_NAMESPACE_SERIALPORT
+QT_USE_NAMESPACE
 
 int main(int argc, char *argv[])
 {

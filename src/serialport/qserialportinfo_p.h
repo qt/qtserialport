@@ -50,8 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QSerialPortInfoPrivate
 {
 public:
@@ -73,8 +71,6 @@ public:
         delete p;
     }
 };
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 

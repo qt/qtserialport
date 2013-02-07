@@ -11,8 +11,6 @@ sourcedirs  = ./src ../src
 indexes = $QT5DOC/doc/html/qt.index
 
 Cpp.ignoretokens = \
-    QT_BEGIN_NAMESPACE_SERIALPORT \
-    QT_END_NAMESPACE_SERIALPORT \
     Q_ADDON_SERIALPORT_EXPORT
 
 Cpp.ignoredirectives = \

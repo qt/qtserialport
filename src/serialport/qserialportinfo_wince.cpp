@@ -49,8 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 {
     const static QString valueName(QLatin1String("FriendlyName"));
@@ -132,7 +130,5 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     return serialPortInfoList;
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

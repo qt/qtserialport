@@ -47,8 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 
 /*!
     \class QSerialPortInfo
@@ -240,7 +238,5 @@ QString QSerialPortInfo::productIdentifier() const
 
     Returns a list of available serial ports on the system.
 */
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

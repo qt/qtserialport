@@ -47,6 +47,8 @@
 #include <QIntValidator>
 #include <QLineEdit>
 
+QT_USE_NAMESPACE
+
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)

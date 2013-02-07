@@ -47,7 +47,7 @@
 
 #include <QtSerialPort/QSerialPort>
 
-QT_USE_NAMESPACE_SERIALPORT
+QT_USE_NAMESPACE
 
 class QLabel;
 class QLineEdit;

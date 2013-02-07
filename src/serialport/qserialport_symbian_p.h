@@ -48,8 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
 public:
@@ -114,8 +112,6 @@ private:
                             bool checkRead, bool checkWrite,
                             int msecs, bool *timedOut);
 };
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 

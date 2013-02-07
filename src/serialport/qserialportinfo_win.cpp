@@ -55,8 +55,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 #ifndef Q_OS_WINCE
 
 static const GUID guidsArray[] =
@@ -229,7 +227,5 @@ bool QSerialPortInfo::isValid() const
     }
     return true;
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

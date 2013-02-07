@@ -54,8 +54,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QSerialPortPrivateData
 {
     Q_DECLARE_PUBLIC(QSerialPort)
@@ -83,8 +81,6 @@ public:
     bool restoreSettingsOnClose;
     QSerialPort * const q_ptr;
 };
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 

@@ -50,8 +50,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QSerialPort;
 class QSerialPortInfoPrivate;
 class QSerialPortInfoPrivateDeleter;
@@ -89,8 +87,6 @@ private:
 
 inline bool QSerialPortInfo::isNull() const
 { return !d_ptr; }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 

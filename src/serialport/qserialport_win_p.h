@@ -57,8 +57,6 @@ class QThread;
 #include <QtCore/qmutex.h>
 #endif
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 #ifndef Q_OS_WINCE
 class AbstractOverlappedEventNotifier;
 #endif
@@ -158,8 +156,6 @@ private:
 #endif
 
 };
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 

@@ -50,7 +50,7 @@
 
 #include <QtSerialPort/QSerialPortInfo>
 
-QT_USE_NAMESPACE_SERIALPORT
+QT_USE_NAMESPACE
 
 Dialog::Dialog(QWidget *parent)
     : QDialog(parent)

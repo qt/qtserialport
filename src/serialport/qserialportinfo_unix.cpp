@@ -63,8 +63,6 @@ extern "C"
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 #ifndef Q_OS_MAC
 
 #if !(defined (Q_OS_LINUX) && defined (HAVE_LIBUDEV))
@@ -254,7 +252,5 @@ bool QSerialPortInfo::isValid() const
     QFile f(systemLocation());
     return f.exists();
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

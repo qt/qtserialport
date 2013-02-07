@@ -56,7 +56,7 @@ class MainWindow;
 class Console;
 class SettingsDialog;
 
-QT_USE_NAMESPACE_SERIALPORT
+QT_USE_NAMESPACE
 
 class MainWindow : public QMainWindow
 {

@@ -45,7 +45,7 @@
 
 #include <QTime>
 
-QT_USE_NAMESPACE_SERIALPORT
+QT_USE_NAMESPACE
 
 SlaveThread::SlaveThread(QObject *parent)
     : QThread(parent), waitTimeout(0), quit(false)

@@ -53,16 +53,6 @@ QT_BEGIN_NAMESPACE
 #  define Q_SERIALPORT_EXPORT Q_DECL_IMPORT
 #endif
 
-#  define QT_BEGIN_NAMESPACE_SERIALPORT namespace QtSerialPort {
-#  define QT_END_NAMESPACE_SERIALPORT }
-#  define QT_USE_NAMESPACE_SERIALPORT using namespace QtSerialPort;
-
-// a workaround for moc - if there is a header file that doesn't use serialport
-// namespace, we still force moc to do "using namespace" but the namespace have to
-// be defined, so let's define an empty namespace here
-QT_BEGIN_NAMESPACE_SERIALPORT
-QT_END_NAMESPACE_SERIALPORT
-
 QT_END_NAMESPACE
 
 #endif // SERIALPORT_GLOBAL_H

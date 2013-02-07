@@ -62,8 +62,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class ReadNotifier : public QSocketNotifier
 {
 public:
@@ -1341,7 +1339,5 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
 
     return ret;
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

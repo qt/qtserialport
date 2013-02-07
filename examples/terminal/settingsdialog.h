@@ -46,13 +46,13 @@
 #include <QDialog>
 #include <QtSerialPort/QSerialPort>
 
+QT_USE_NAMESPACE
+
 namespace Ui {
 class SettingsDialog;
 }
 
 class QIntValidator;
-
-QT_USE_NAMESPACE_SERIALPORT
 
 class SettingsDialog : public QDialog
 {

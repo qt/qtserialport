@@ -54,8 +54,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 // Physical device driver.
 #ifdef __WINS__
 _LIT(KPddName, "ECDRV");
@@ -247,7 +245,5 @@ bool QSerialPortInfo::isValid() const
         port.Close();
     return r == KErrNone || r == KErrLocked;
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

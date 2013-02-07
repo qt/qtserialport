@@ -49,8 +49,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 // Physical device driver.
 #ifdef __WINS__
 _LIT(KPddName, "ECDRV");
@@ -652,7 +650,5 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
 
     return ret;
 }
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE

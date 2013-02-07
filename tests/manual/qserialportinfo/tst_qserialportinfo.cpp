@@ -45,7 +45,7 @@
 #include <QtSerialPort/qserialportinfo.h>
 #include <QtSerialPort/qserialport.h>
 
-QT_USE_NAMESPACE_SERIALPORT
+QT_USE_NAMESPACE
 
 class tst_QSerialPortInfo : public QObject
 {

@@ -46,8 +46,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QT_BEGIN_NAMESPACE_SERIALPORT
-
 class QTtyLocker
 {
 public:
@@ -55,8 +53,6 @@ public:
     static bool unlock(const char *portName);
     static bool isLocked(const char *portName, bool *currentPid);
 };
-
-QT_END_NAMESPACE_SERIALPORT
 
 QT_END_NAMESPACE
 
