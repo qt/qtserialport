@@ -37,14 +37,11 @@
     Qt Serial Port originated from the third-party library
     \l{http://gitorious.org/qserialdevice/qserialdevice/trees/2.0}{QSerialDevice 2.0}.
 
-    \section1 Overviews
-
-    Bla-bla
-
     \section1 Supported platforms
 
-    The goal is to implement support for multiple platforms, the current state
-    of support provided in the table below:
+    The primary goal is to support as many common platforms as possible. Please
+    find the information below about the support state for the various
+    platforms:
 
     \table
     \header
@@ -53,27 +50,27 @@
         \o Notes
     \row
         \o Windows x86/x64 NT based (2K, XP, Vista, 7, 8)
-        \o Full support.
+        \o Complete support (Tier 1).
         \o Support expected for Windows 8, but has not yet been tested.
     \row
         \o Windows CE
-        \o Partially support.
+        \o Partial support (Not Tier 1).
         \o Tested only with platforms 5 and 6 by using the emulator.
     \row
         \o Symbian
-        \o Partially support.
+        \o Partial support, and only for legacy Qt4 (Not Tier 1).
         \o The implementation is not complete and further support in doubt.
     \row
         \o Gnu/Linux
-        \o Full support.
+        \o Complete support (Tier 1).
         \o
     \row
         \o Mac OSX
-        \o Full support.
+        \o Complete support (Tier 1).
         \o
     \row
         \o Other *nix
-        \o Full support.
+        \o Complete support (Tier 1).
         \o All POSIX-compatible.
     \endtable
 

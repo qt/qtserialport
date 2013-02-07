@@ -33,11 +33,22 @@
     \contentspage {Building and usage} {Contents}
     \nextpage Examples
 
-    \section1 Bla-Bla1
+    \section1 Building
 
-    Bla-Bla-Bla
+    Make sure that when you build Qt, that you use the -developer-build option,
+    and do not do a \c{make install} as root. The same branch can be used for
+    building with Qt4 and Qt5.
 
-    \section1 Bla-Bla2
+    Instructions for building against Qt4 are fundamentally the same as for
+    Qt5. See the information provided below what needs to be done after getting
+    the source by cloning the repository:
 
-    Bla-Bla-Bla
+    \code
+    $ cd qtserialport
+    $ qmake
+    $ make (Unix) or jom/nmake (Windows)
+    \endcode
+
+    Once having successfully built, the examples can be run to see the intended
+    functionality provided by the module.
 */

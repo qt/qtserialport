@@ -33,11 +33,31 @@
     \contentspage {Get source} {Contents}
     \nextpage Building and usage
 
-    \section1 For users
+    \section1 Users
 
-    Bla-Bla-Bla
+    \code
+    $ git clone git://gitorious.org/qtplayground/qtserialport.git
+    \endcode
 
-    \section1 For developers
+    \section1 Developers
 
-    Bla-Bla-Bla
+    Getting a Qt developer account is necessary to contribute to the project,
+    so that has to be obtained first. Once, that is done, see the following page
+    for further details about the Git and Gerrit usage:
+
+    \l{http://wiki.qt-project.org/Setting_up_Gerrit}{Setting up Gerrit}
+
+    The following command can be used to clone the project with push access:
+
+    \code
+    $ git clone ssh://<username>@codereview.qt-project.org:29418/playground/qtserialport.git
+    \endcode
+
+    If you are in a corporate environment (e.g. behind a firewall) which only
+    allows Ports 80 (HTTP) and 443 (HTTPS), use the following configuration
+    instead:
+
+    \code
+    $ git clone ssh://<username>@codereview.qt-project.org:443/playground/qtserialport.git
+    \code
 */

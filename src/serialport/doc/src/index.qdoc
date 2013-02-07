@@ -30,11 +30,10 @@
     \title Qt Serial Port Reference Documentation
     \page index.html
 
-    \brief The Qt Serial Port module provides classes to make serial programming
-    easier and portable.
+    \brief The Qt Serial Port module provides classes to make the serial
+    programming simple and portable.
 
-    To include the definitions of the module's classes, use the
-    following directive:
+    Use this form to include Qt Serial Port headers:
 
     \code
     #include <QtSerialPort/QtSerialPort>
