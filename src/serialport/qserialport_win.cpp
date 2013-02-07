@@ -707,7 +707,7 @@ bool QSerialPortPrivate::processIoErrors(bool error)
     DWORD errors = 0;
     const bool ret = ::ClearCommError(descriptor, &errors, NULL);
     if (ret && errors) {
-        if (error & CE_FRAME)
+        if (errors & CE_FRAME)
             q_ptr->setError(QSerialPort::FramingError);
         else if (errors & CE_RXPARITY)
             q_ptr->setError(QSerialPort::ParityError);
