@@ -49,14 +49,16 @@
 
 #include <QtSerialPort/QSerialPort>
 
+QT_BEGIN_NAMESPACE
+
 namespace Ui {
 class MainWindow;
 }
 
+QT_END_NAMESPACE
+
 class Console;
 class SettingsDialog;
-
-QT_USE_NAMESPACE
 
 class MainWindow : public QMainWindow
 {

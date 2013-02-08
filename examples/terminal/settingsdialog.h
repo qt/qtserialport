@@ -48,11 +48,15 @@
 
 QT_USE_NAMESPACE
 
+QT_BEGIN_NAMESPACE
+
 namespace Ui {
 class SettingsDialog;
 }
 
 class QIntValidator;
+
+QT_END_NAMESPACE
 
 class SettingsDialog : public QDialog
 {
