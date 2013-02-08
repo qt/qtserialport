@@ -39,10 +39,10 @@
 **
 ****************************************************************************/
 
+#include <QtCore/qglobal.h>
+
 #ifndef TTYLOCKER_UNIX_P_H
 #define TTYLOCKER_UNIX_P_H
-
-#include "qserialport-global.h"
 
 QT_BEGIN_NAMESPACE
 

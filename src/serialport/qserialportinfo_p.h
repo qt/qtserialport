@@ -44,8 +44,6 @@
 #ifndef QSERIALPORTINFO_P_H
 #define QSERIALPORTINFO_P_H
 
-#include "qserialport-global.h"
-
 #include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
