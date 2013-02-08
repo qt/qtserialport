@@ -1166,11 +1166,11 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
     return d->writeToBuffer(data, maxSize);
 }
 
-void QSerialPort::setError(QSerialPort::SerialPortError error)
+void QSerialPort::setError(QSerialPort::SerialPortError serialPortError)
 {
     Q_D(QSerialPort);
-    d->error = error;
-    emit error(error);
+    d->error = serialPortError;
+    emit error(serialPortError);
 }
 
 /*!
