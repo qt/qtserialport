@@ -977,7 +977,7 @@ void QSerialPort::clearError()
 }
 
 /*!
-    \fn void QSerialPort::errorChanged(SerialPortError error)
+    \fn void QSerialPort::error(SerialPortError error)
 
     This signal is emitted after the error has been changed. The new erroris
     passed as \a error.
@@ -1170,7 +1170,7 @@ void QSerialPort::setError(QSerialPort::SerialPortError error)
 {
     Q_D(QSerialPort);
     d->error = error;
-    emit errorChanged(error);
+    emit error(error);
 }
 
 /*!

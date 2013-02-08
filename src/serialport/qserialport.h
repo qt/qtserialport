@@ -64,7 +64,7 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
     Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
-    Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY errorChanged)
+    Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
     Q_PROPERTY(bool restoreSettingsOnClose READ restoreSettingsOnClose WRITE setRestoreSettingsOnClose NOTIFY restoreSettingsOnCloseChanged)
 
     Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy SerialPortError )
@@ -231,7 +231,7 @@ Q_SIGNALS:
     void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
-    void errorChanged(QSerialPort::SerialPortError error);
+    void error(QSerialPort::SerialPortError error);
     void restoreSettingsOnCloseChanged(bool restore);
 
 protected:
