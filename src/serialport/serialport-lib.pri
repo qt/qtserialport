@@ -8,7 +8,7 @@ packagesExist(libudev) {
 }
 
 PUBLIC_HEADERS += \
-    $$PWD/qserialport-global.h \
+    $$PWD/qserialportglobal.h \
     $$PWD/qserialport.h \
     $$PWD/qserialportinfo.h
 
