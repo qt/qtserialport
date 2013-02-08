@@ -205,9 +205,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
-QList<qint32> QSerialPortInfo::standardRates()
+QList<qint32> QSerialPortInfo::standardBaudRates()
 {
-    return QSerialPortPrivate::standardRates();
+    return QSerialPortPrivate::standardBaudRates();
 }
 
 bool QSerialPortInfo::isBusy() const
