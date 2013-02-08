@@ -62,15 +62,17 @@ QT_BEGIN_NAMESPACE
 
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
-static
-const char * const entryLockDirectoryList[] = {
-    "/var/lock",
-    "/etc/locks",
-    "/var/spool/locks",
-    "/var/spool/uucp",
-    "/tmp",
-    0
-};
+static inline const QStringList& lockDirectoryList()
+{
+    static const QStringList lockDirectoryEntries = QStringList()
+        << "/var/lock"
+        << "/etc/locks"
+        << "/var/spool/locks"
+        << "/var/spool/uucp"
+        << "/tmp";
+
+    return lockDirectoryEntries;
+}
 
 // Returns the full path first found in the directory where you can create a lock file
 // (ie a directory with access to the read/write).
@@ -79,9 +81,11 @@ const char * const entryLockDirectoryList[] = {
 static
 QString lookupFirstSharedLockDir()
 {
-    for (int i = 0; entryLockDirectoryList[i] != 0; ++i) {
-        if (::access(entryLockDirectoryList[i], R_OK | W_OK) == 0)
-            return QLatin1String(entryLockDirectoryList[i]);
+    QStringList directoryList = lockDirectoryList();
+
+    foreach (const QString &lockDirectory, directoryList) {
+        if (::access(lockDirectory.toLocal8Bit().constData(), R_OK | W_OK) == 0)
+            return lockDirectory;
     }
     return QString();
 }
