@@ -566,8 +566,10 @@ void QSerialPort::setRestoreSettingsOnClose(bool restore)
 {
     Q_D(QSerialPort);
 
-    d->restoreSettingsOnClose = restore;
-    emit restoreSettingsOnCloseChanged(d->restoreSettingsOnClose);
+    if (d->restoreSettingsOnClose != restore) {
+        d->restoreSettingsOnClose = restore;
+        emit restoreSettingsOnCloseChanged(d->restoreSettingsOnClose);
+    }
 }
 
 bool QSerialPort::restoreSettingsOnClose() const
@@ -605,14 +607,28 @@ bool QSerialPort::restoreSettingsOnClose() const
 bool QSerialPort::setBaudRate(qint32 baudRate, Directions dir)
 {
     Q_D(QSerialPort);
+
     if (d->setBaudRate(baudRate, dir)) {
-        if (dir & QSerialPort::Input)
-            d->inputBaudRate = baudRate;
-        if (dir & QSerialPort::Output)
-            d->outputBaudRate = baudRate;
-        emit baudRateChanged(baudRate, dir);
+        if (dir & QSerialPort::Input) {
+            if (d->inputBaudRate != baudRate)
+                d->inputBaudRate = baudRate;
+            else
+                dir &= ~QSerialPort::Input;
+        }
+
+        if (dir & QSerialPort::Output) {
+            if (d->outputBaudRate != baudRate)
+                d->outputBaudRate = baudRate;
+            else
+                dir &= ~QSerialPort::Output;
+        }
+
+        if (!dir)
+            emit baudRateChanged(baudRate, dir);
+
         return true;
     }
+
     return false;
 }
 
@@ -645,11 +661,15 @@ qint32 QSerialPort::baudRate(Directions dir) const
 bool QSerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(QSerialPort);
+
     if (d->setDataBits(dataBits)) {
-        d->dataBits = dataBits;
-        emit dataBitsChanged(d->dataBits);
+        if (d->dataBits != dataBits) {
+            d->dataBits = dataBits;
+            emit dataBitsChanged(d->dataBits);
+        }
         return true;
     }
+
     return false;
 }
 
@@ -680,11 +700,15 @@ QSerialPort::DataBits QSerialPort::dataBits() const
 bool QSerialPort::setParity(Parity parity)
 {
     Q_D(QSerialPort);
+
     if (d->setParity(parity)) {
-        d->parity = parity;
-        emit parityChanged(d->parity);
+        if (d->parity != parity) {
+            d->parity = parity;
+            emit parityChanged(d->parity);
+        }
         return true;
     }
+
     return false;
 }
 
@@ -714,11 +738,15 @@ QSerialPort::Parity QSerialPort::parity() const
 bool QSerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(QSerialPort);
+
     if (d->setStopBits(stopBits)) {
-        d->stopBits = stopBits;
-        emit stopBitsChanged(d->stopBits);
+        if (d->stopBits != stopBits) {
+            d->stopBits = stopBits;
+            emit stopBitsChanged(d->stopBits);
+        }
         return true;
     }
+
     return false;
 }
 
@@ -748,11 +776,15 @@ QSerialPort::StopBits QSerialPort::stopBits() const
 bool QSerialPort::setFlowControl(FlowControl flow)
 {
     Q_D(QSerialPort);
+
     if (d->setFlowControl(flow)) {
-        d->flow = flow;
-        emit flowControlChanged(d->flow);
+        if (d->flow != flow) {
+            d->flow = flow;
+            emit flowControlChanged(d->flow);
+        }
         return true;
     }
+
     return false;
 }
 
@@ -785,7 +817,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
     Q_D(QSerialPort);
 
     bool retval = d->setDataTerminalReady(set);
-    if (retval) {
+    if (retval && (d->dataTerminalReady != set)) {
         d->dataTerminalReady = set;
         emit dataTerminalReadyChanged(set);
     }
@@ -823,7 +855,7 @@ bool QSerialPort::setRequestToSend(bool set)
     Q_D(QSerialPort);
 
     bool retval = d->setRequestToSend(set);
-    if (retval) {
+    if (retval && (d->requestToSend != set)) {
         d->requestToSend = set;
         emit requestToSendChanged(set);
     }
@@ -939,7 +971,7 @@ bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
     Q_D(QSerialPort);
 
     const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
-    if (ret) {
+    if (ret && (d->policy != policy)) {
         d->policy = policy;
         emit dataErrorPolicyChanged(d->policy);
     }
