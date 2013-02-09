@@ -465,8 +465,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         if (readyToRead && !readNotification())
             return false;
 
-        if (readyToWrite && writeNotification(WriteChunkSize))
-            return true;
+        if (readyToWrite)
+            return writeNotification(WriteChunkSize);
     }
     return false;
 }
