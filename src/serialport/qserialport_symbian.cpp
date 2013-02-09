@@ -160,7 +160,7 @@ void QSerialPortPrivate::close()
 
 QSerialPort::Lines QSerialPortPrivate::lines() const
 {
-    QSerialPort::Lines ret = 0;
+    QSerialPort::Lines ret = QSerialPort::NoLine;
 
     TUint signalMask = 0;
     descriptor.Signals(signalMask);

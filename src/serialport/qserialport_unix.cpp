@@ -255,10 +255,12 @@ void QSerialPortPrivate::close()
 QSerialPort::Lines QSerialPortPrivate::lines() const
 {
     int arg = 0;
-    QSerialPort::Lines ret = 0;
+    QSerialPort::Lines ret = QSerialPort::NoLine;
 
-    if (::ioctl(descriptor, TIOCMGET, &arg) == -1)
+    if (::ioctl(descriptor, TIOCMGET, &arg) == -1) {
+        q_ptr->setError(decodeSystemError());
         return ret;
+    }
 
 #ifdef TIOCM_LE
     if (arg & TIOCM_LE)

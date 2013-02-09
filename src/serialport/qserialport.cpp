@@ -319,6 +319,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the possible RS-232 pinout signals.
 
+    \value NoLine no any line is active
     \value Le DSR (data set ready/line enable).
     \value Dtr DTR (data terminal ready).
     \value Rts RTS (request to send).
@@ -886,7 +887,7 @@ bool QSerialPort::isRequestToSend() const
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
 */
-QSerialPort::Lines QSerialPort::lines() const
+QSerialPort::Lines QSerialPort::lines()
 {
     Q_D(const QSerialPort);
     return d->lines();

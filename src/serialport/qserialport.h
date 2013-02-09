@@ -122,6 +122,7 @@ public:
     };
 
     enum Line {
+        NoLine = 0x00,
         LeLine = 0x01,
         DtrLine = 0x02,
         RtsLine = 0x04,
@@ -191,7 +192,7 @@ public:
     bool isDataTerminalReady() const;
     bool isRequestToSend() const;
 
-    Lines lines() const;
+    Lines lines();
 
     bool flush();
     bool clear(Directions dir = AllDirections);

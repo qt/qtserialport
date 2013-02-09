@@ -308,10 +308,12 @@ void QSerialPortPrivate::close()
 QSerialPort::Lines QSerialPortPrivate::lines() const
 {
     DWORD modemStat = 0;
-    QSerialPort::Lines ret = 0;
+    QSerialPort::Lines ret = QSerialPort::NoLine;
 
-    if (!::GetCommModemStatus(descriptor, &modemStat))
+    if (!::GetCommModemStatus(descriptor, &modemStat)) {
+        q_ptr->setError(decodeSystemError());
         return ret;
+    }
 
     if (modemStat & MS_CTS_ON)
         ret |= QSerialPort::CtsLine;
