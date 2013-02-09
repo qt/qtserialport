@@ -522,6 +522,12 @@ bool QSerialPort::open(OpenMode mode)
     clearError();
     if (d->open(mode)) {
         QIODevice::open(mode);
+
+        QSerialPort::Lines serialPortLines = lines();
+
+        d->dataTerminalReady = serialPortLines & QSerialPort::DtrLine;
+        d->requestToSend = serialPortLines & QSerialPort::RtsLine;
+
         return true;
     }
     return false;
@@ -779,8 +785,10 @@ bool QSerialPort::setDataTerminalReady(bool set)
     Q_D(QSerialPort);
 
     bool retval = d->setDataTerminalReady(set);
-    if (retval)
+    if (retval) {
+        d->dataTerminalReady = set;
         emit dataTerminalReadyChanged(set);
+    }
 
     return retval;
 }
@@ -815,8 +823,10 @@ bool QSerialPort::setRequestToSend(bool set)
     Q_D(QSerialPort);
 
     bool retval = d->setRequestToSend(set);
-    if (retval)
+    if (retval) {
+        d->requestToSend = set;
         emit requestToSendChanged(set);
+    }
 
     return retval;
 }
