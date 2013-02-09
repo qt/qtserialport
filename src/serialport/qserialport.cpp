@@ -523,10 +523,8 @@ bool QSerialPort::open(OpenMode mode)
     if (d->open(mode)) {
         QIODevice::open(mode);
 
-        QSerialPort::Lines serialPortLines = lines();
-
-        d->dataTerminalReady = serialPortLines & QSerialPort::DtrLine;
-        d->requestToSend = serialPortLines & QSerialPort::RtsLine;
+        d->dataTerminalReady = isDataTerminalReady();
+        d->requestToSend = isRequestToSend();
 
         return true;
     }
