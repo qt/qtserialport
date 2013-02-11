@@ -11,7 +11,7 @@ sourcedirs  = ./src ../src
 indexes = $QT5DOC/doc/html/qt.index
 
 Cpp.ignoretokens = \
-    Q_ADDON_SERIALPORT_EXPORT
+    Q_SERIALPORT_EXPORT
 
 Cpp.ignoredirectives = \
     Q_DECLARE_OPERATORS_FOR_FLAGS \
