@@ -1,10 +1,12 @@
 INCLUDEPATH += $$PWD
 
-CONFIG += link_pkgconfig
+unix {
+    CONFIG += link_pkgconfig
 
-packagesExist(libudev) {
-    DEFINES += HAVE_LIBUDEV
-    PKGCONFIG += libudev
+    packagesExist(libudev) {
+        DEFINES += HAVE_LIBUDEV
+        PKGCONFIG += libudev
+    }
 }
 
 PUBLIC_HEADERS += \
