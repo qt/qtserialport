@@ -35,8 +35,8 @@ qhp.QtSerialPort.file = QtSerialPort.qhp
 # Namespace for the output file. This namespace is used to distinguish between
 # different documentation files in Creator/Assistant. The namespace ends with
 # a version being a number containing a major, minor and revision element.
-# E.g. version 1.0 becomes 100.
-qhp.QtSerialPort.namespace = com.nokia.QtSerialPort.100
+# E.g. version 5.1 becomes 510.
+qhp.QtSerialPort.namespace = com.qt-project.qtserialport.510
 
 # Title for the package, will be the main title for the package in
 # Assistant/Creator.
