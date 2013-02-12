@@ -49,11 +49,15 @@
 
 QT_USE_NAMESPACE
 
+QT_BEGIN_NAMESPACE
+
 class QLabel;
 class QLineEdit;
 class QComboBox;
 class QSpinBox;
 class QPushButton;
+
+QT_END_NAMESPACE
 
 class Dialog : public QDialog
 {

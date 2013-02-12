@@ -46,11 +46,15 @@
 
 #include "masterthread.h"
 
+QT_BEGIN_NAMESPACE
+
 class QLabel;
 class QLineEdit;
 class QSpinBox;
 class QPushButton;
 class QComboBox;
+
+QT_END_NAMESPACE
 
 class Dialog : public QDialog
 {
