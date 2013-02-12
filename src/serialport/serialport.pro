@@ -1,5 +1,5 @@
 QT = core
-DEFINES += QT_SERIALPORT_LIB
+DEFINES += QT_BUILD_SERIALPORT_LIB
 
 include($$PWD/doc/doc.pri)
 include($$PWD/serialport-lib.pri)
