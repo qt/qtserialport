@@ -47,14 +47,14 @@
 
 #include <qt_windows.h>
 
-QT_BEGIN_NAMESPACE
-
 #ifndef Q_OS_WINCE
-class QWinEventNotifier;
 #include <QtCore/qhash.h>
+QT_BEGIN_NAMESPACE
+class QWinEventNotifier;
 #else
-class QThread;
 #include <QtCore/qmutex.h>
+QT_BEGIN_NAMESPACE
+class QThread;
 #endif
 
 #ifndef Q_OS_WINCE
