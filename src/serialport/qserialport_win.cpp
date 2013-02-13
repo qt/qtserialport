@@ -158,7 +158,7 @@ public:
         if (!error)
             dptr->startAsyncRead();
 
-        return error;
+        return !error;
     }
 
 private:
