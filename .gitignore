@@ -10,12 +10,11 @@ moc_*.cpp
 lib*.so
 lib*.so.*
 .qmake.cache
-include/QtAddOnSerialPort/*
+include/*
 lib/cmake/*
 lib*.la
 lib*.prl
 module-paths/*
-src/qtaddonserialportversion.h
 lib/pkgconfig/*
 Makefile.Debug
 Makefile.Release
