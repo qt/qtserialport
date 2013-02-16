@@ -189,8 +189,8 @@ public:
     bool setFlowControl(FlowControl flow);
     FlowControl flowControl() const;
 
-    bool isDataTerminalReady() const;
-    bool isRequestToSend() const;
+    bool isDataTerminalReady();
+    bool isRequestToSend();
 
     Lines lines();
 

@@ -824,7 +824,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
     return retval;
 }
 
-bool QSerialPort::isDataTerminalReady() const
+bool QSerialPort::isDataTerminalReady()
 {
     Q_D(const QSerialPort);
     return d->lines() & QSerialPort::DtrLine;
@@ -862,7 +862,7 @@ bool QSerialPort::setRequestToSend(bool set)
     return retval;
 }
 
-bool QSerialPort::isRequestToSend() const
+bool QSerialPort::isRequestToSend()
 {
     Q_D(const QSerialPort);
     return d->lines() & QSerialPort::RtsLine;
