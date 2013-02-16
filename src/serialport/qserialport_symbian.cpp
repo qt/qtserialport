@@ -41,7 +41,7 @@
 
 #include "qserialport_symbian_p.h"
 
-#include <QtCore/qpair.h>
+#include <QtCore/qmap.h>
 
 #include <e32base.h>
 //#include <e32test.h>
@@ -580,75 +580,66 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
     return location;
 }
 
-typedef QPair<int, int> BaudRatePair;
+typedef QMap<qint32, qint32> BaudRateMap;
 
 // This table contains correspondences standard pairs values of
 // baud rates that are defined in files
 // - d32comm.h for Symbian^3
 // - d32public.h for Symbian SR1
 
-static const QList<BaudRatePair> standardBaudRatePairList()
+static const BaudRateMap createStandardBaudRateMap()
 {
-    static const QList<BaudRatePair> standardBaudRatesTable = QList<BaudRatePair>()
+    BaudRateMap baudRateMap;
 
-        << qMakePair(50, EBps50)
-        << qMakePair(75, EBps75)
-        << qMakePair(110, EBps110)
-        << qMakePair(134, EBps134)
-        << qMakePair(150, EBps150)
-        << qMakePair(300, EBps300)
-        << qMakePair(600, EBps600)
-        << qMakePair(1200, EBps1200)
-        << qMakePair(1800, EBps1800)
-        << qMakePair(2000, EBps2000)
-        << qMakePair(2400, EBps2400)
-        << qMakePair(3600, EBps3600)
-        << qMakePair(4800, EBps4800)
-        << qMakePair(7200, EBps7200)
-        << qMakePair(9600, EBps9600)
-        << qMakePair(19200, EBps19200)
-        << qMakePair(38400, EBps38400)
-        << qMakePair(57600, EBps57600)
-        << qMakePair(115200, EBps115200)
-        << qMakePair(230400, EBps230400)
-        << qMakePair(460800, EBps460800)
-        << qMakePair(576000, EBps576000)
-        << qMakePair(921600, EBps921600)
-        << qMakePair(1152000, EBps1152000)
-        // << qMakePair(1843200, EBps1843200) only for Symbian SR1
-        << qMakePair(4000000, EBps4000000);
+    baudRateMap.insert(50, EBps50)
+    baudRateMap.insert(75, EBps75)
+    baudRateMap.insert(110, EBps110)
+    baudRateMap.insert(134, EBps134)
+    baudRateMap.insert(150, EBps150)
+    baudRateMap.insert(300, EBps300)
+    baudRateMap.insert(600, EBps600)
+    baudRateMap.insert(1200, EBps1200)
+    baudRateMap.insert(1800, EBps1800)
+    baudRateMap.insert(2000, EBps2000)
+    baudRateMap.insert(2400, EBps2400)
+    baudRateMap.insert(3600, EBps3600)
+    baudRateMap.insert(4800, EBps4800)
+    baudRateMap.insert(7200, EBps7200)
+    baudRateMap.insert(9600, EBps9600)
+    baudRateMap.insert(19200, EBps19200)
+    baudRateMap.insert(38400, EBps38400)
+    baudRateMap.insert(57600, EBps57600)
+    baudRateMap.insert(115200, EBps115200)
+    baudRateMap.insert(230400, EBps230400)
+    baudRateMap.insert(460800, EBps460800)
+    baudRateMap.insert(576000, EBps576000)
+    baudRateMap.insert(921600, EBps921600)
+    baudRateMap.insert(1152000, EBps1152000)
+        // << baudRateMap.insert(1843200, EBps1843200) only for Symbian SR1
+    baudRateMap.insert(4000000, EBps4000000);
 
-    return standardBaudRatesTable;
+    return baudRateMap;
+}
+
+static const BaudRateMap& standardBaudRateMap()
+{
+    static const BaudRateMap baudRateMap = createStandardBaudRateMap();
+    return baudRateMap;
 }
 
 qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
-    const BaudRatePair rp = { 0, setting };
-    QList<BaudRatePair> baudRatePairList = standardBaudRatePairList();
-    const QList<BaudRatePair>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairList, rp);
-
-    return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? baudRatePairListConstIterator->first : 0;
+    return standardBaudRateMap().key(setting);
 }
 
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
-    const BaudRatePair rp = { baudRate, 0 };
-    QList<BaudRatePair> baudRatePairList = standardBaudRatePairList();
-    const QList<BaudRatePair>::const_iterator baudRatePairListConstIterator = qBinaryFind(standardBaudRatesTable, standardBaudRatesTable_end, rp);
-
-    return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? baudRatePairListConstIterator->second : 0;
+    return standardBaudRateMap().value(baudRate);
 }
 
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
-    QList<qint32> ret;
-    const QList<BaudRatePair> baudRatePairs = standardBaudRatePairList();
-
-    foreach (const BaudRatePair &baudRatePair, baudRatePairs) {
-        ret.append(baudRatePair.first);
-    }
-
-    return ret;
+    return standardBaudRateMap().keys();
 }
 
 QT_END_NAMESPACE
