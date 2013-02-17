@@ -320,15 +320,15 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This enum describes the possible RS-232 pinout signals.
 
     \value NoLine no any line is active
-    \value Le DSR (data set ready/line enable).
-    \value Dtr DTR (data terminal ready).
-    \value Rts RTS (request to send).
-    \value St Secondary TXD (transmit).
-    \value Sr Secondary RXD (receive).
-    \value Cts CTS (clear to send).
-    \value Dcd DCD (data carrier detect).
-    \value Ri RNG (ring).
-    \value Dsr DSR (data set ready).
+    \value LeLine DSR (Data Set Ready, Line Enable).
+    \value DtrLine DTR (Data Terminal Ready).
+    \value RtsLine RTS (Request To Send).
+    \value StLine Secondary TXD (Transmit).
+    \value SrLine Secondary RXD (Receive).
+    \value CtsLine CTS (Clear To Send).
+    \value DcdLine DCD (Data Carrier Detect).
+    \value RiLine RNG (Ring).
+    \value DsrLine DSR (Data Set Ready).
 
     \sa lines(), QSerialPort::dataTerminalReady, QSerialPort::requestToSend
 */
@@ -879,10 +879,15 @@ bool QSerialPort::isRequestToSend()
 */
 
 /*!
-    Returns the bitmap states of the line signals.
+    Returns the state of the line signals in a bitmap format.
+
     From this result, it is possible to allocate the state of the
     desired signal by applying a mask "AND", where the mask is
     the desired enumeration value from QSerialPort::Lines.
+
+    Note that, this method performs a system call, thus ensuring that the line
+    signal states are returned properly. This is necessary when the underlying
+    operating systems cannot provide proper notifications about the changes.
 
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
