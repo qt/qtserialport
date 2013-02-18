@@ -264,45 +264,45 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
 
 #ifdef TIOCM_LE
     if (arg & TIOCM_LE)
-        ret |= QSerialPort::LeLine;
+        ret |= QSerialPort::DataSetReadyLine;
 #endif
 #ifdef TIOCM_DTR
     if (arg & TIOCM_DTR)
-        ret |= QSerialPort::DtrLine;
+        ret |= QSerialPort::DataTerminalReadyLine;
 #endif
 #ifdef TIOCM_RTS
     if (arg & TIOCM_RTS)
-        ret |= QSerialPort::RtsLine;
+        ret |= QSerialPort::RequestToSendLine;
 #endif
 #ifdef TIOCM_ST
     if (arg & TIOCM_ST)
-        ret |= QSerialPort::StLine;
+        ret |= QSerialPort::SecondaryTransmittedDataLine;
 #endif
 #ifdef TIOCM_SR
     if (arg & TIOCM_SR)
-        ret |= QSerialPort::SrLine;
+        ret |= QSerialPort::SecondaryReceivedDataLine;
 #endif
 #ifdef TIOCM_CTS
     if (arg & TIOCM_CTS)
-        ret |= QSerialPort::CtsLine;
+        ret |= QSerialPort::ClearToSendLine;
 #endif
 #ifdef TIOCM_CAR
     if (arg & TIOCM_CAR)
-        ret |= QSerialPort::DcdLine;
+        ret |= QSerialPort::DataCarrierDetectLine;
 #elif defined TIOCM_CD
     if (arg & TIOCM_CD)
-        ret |= QSerialPort::DcdLine;
+        ret |= QSerialPort::DataCarrierDetectLine;
 #endif
 #ifdef TIOCM_RNG
     if (arg & TIOCM_RNG)
-        ret |= QSerialPort::RiLine;
+        ret |= QSerialPort::RingIndicatorLine;
 #elif defined TIOCM_RI
     if (arg & TIOCM_RI)
-        ret |= QSerialPort::RiLine;
+        ret |= QSerialPort::RingIndicatorLine;
 #endif
 #ifdef TIOCM_DSR
     if (arg & TIOCM_DSR)
-        ret |= QSerialPort::DsrLine;
+        ret |= QSerialPort::DataSetReadyLine;
 #endif
 
     return ret;

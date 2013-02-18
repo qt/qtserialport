@@ -316,13 +316,13 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
     }
 
     if (modemStat & MS_CTS_ON)
-        ret |= QSerialPort::CtsLine;
+        ret |= QSerialPort::ClearToSendLine;
     if (modemStat & MS_DSR_ON)
-        ret |= QSerialPort::DsrLine;
+        ret |= QSerialPort::DataSetReadyLine;
     if (modemStat & MS_RING_ON)
-        ret |= QSerialPort::RiLine;
+        ret |= QSerialPort::RingIndicatorLine;
     if (modemStat & MS_RLSD_ON)
-        ret |= QSerialPort::DcdLine;
+        ret |= QSerialPort::DataCarrierDetectLine;
 
     DWORD bytesReturned = 0;
     if (::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
@@ -330,9 +330,9 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
                           &bytesReturned, NULL)) {
 
         if (modemStat & SERIAL_DTR_STATE)
-            ret |= QSerialPort::DtrLine;
+            ret |= QSerialPort::DataTerminalReadyLine;
         if (modemStat & SERIAL_RTS_STATE)
-            ret |= QSerialPort::RtsLine;
+            ret |= QSerialPort::RequestToSendLine;
     }
 
     return ret;

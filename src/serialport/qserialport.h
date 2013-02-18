@@ -123,15 +123,16 @@ public:
 
     enum Line {
         NoLine = 0x00,
-        LeLine = 0x01,
-        DtrLine = 0x02,
-        RtsLine = 0x04,
-        StLine = 0x08,
-        SrLine = 0x10,
-        CtsLine = 0x20,
-        DcdLine = 0x40,
-        RiLine = 0x80,
-        DsrLine = LeLine
+        TransmittedDataLine = 0x01,
+        ReceivedDataLine = 0x02,
+        DataTerminalReadyLine = 0x04,
+        DataCarrierDetectLine = 0x08,
+        DataSetReadyLine = 0x10,
+        RingIndicatorLine = 0x20,
+        RequestToSendLine = 0x40,
+        ClearToSendLine = 0x80,
+        SecondaryTransmittedDataLine = 0x100,
+        SecondaryReceivedDataLine = 0x200,
     };
     Q_DECLARE_FLAGS(Lines, Line)
 

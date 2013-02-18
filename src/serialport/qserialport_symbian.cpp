@@ -166,17 +166,17 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
     descriptor.Signals(signalMask);
 
     if (signalMask & KSignalCTS)
-        ret |= QSerialPort::CtsLine;
+        ret |= QSerialPort::ClearToSendLine;
     if (signalMask & KSignalDSR)
-        ret |= QSerialPort::DsrLine;
+        ret |= QSerialPort::DataSetReadyLine;
     if (signalMask & KSignalDCD)
-        ret |= QSerialPort::DcdLine;
+        ret |= QSerialPort::DataCarrierDetectLine;
     if (signalMask & KSignalRNG)
-        ret |= QSerialPort::RiLine;
+        ret |= QSerialPort::RingIndicatorLine;
     if (signalMask & KSignalRTS)
-        ret |= QSerialPort::RtsLine;
+        ret |= QSerialPort::RequestToSendLine;
     if (signalMask & KSignalDTR)
-        ret |= QSerialPort::DtrLine;
+        ret |= QSerialPort::DataTerminalReadyLine;
 
     //if (signalMask & KSignalBreak)
     //  ret |=

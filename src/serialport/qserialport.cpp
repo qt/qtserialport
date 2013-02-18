@@ -319,16 +319,17 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the possible RS-232 pinout signals.
 
-    \value NoLine no any line is active
-    \value LeLine DSR (Data Set Ready, Line Enable).
-    \value DtrLine DTR (Data Terminal Ready).
-    \value RtsLine RTS (Request To Send).
-    \value StLine Secondary TXD (Transmit).
-    \value SrLine Secondary RXD (Receive).
-    \value CtsLine CTS (Clear To Send).
-    \value DcdLine DCD (Data Carrier Detect).
-    \value RiLine RNG (Ring).
-    \value DsrLine DSR (Data Set Ready).
+    \value NoLine                       No line active
+    \value TransmittedDataLine          TxD (Transmitted Data).
+    \value ReceivedDataLine             RxD (Received Data).
+    \value DataTerminalReadyLine        DTR (Data Terminal Ready).
+    \value DataCarrierDetectLine        DCD (Data Carrier Detect).
+    \value DataSetReadyLine             DSR (Data Set Ready).
+    \value RingIndicatorLine            RNG (Ring Indicator).
+    \value RequestToSendLine            RTS (Request To Send).
+    \value ClearToSendLine              CTS (Clear To Send).
+    \value SecondaryTransmittedDataLine STD (Secondary Transmitted Data).
+    \value SecondaryReceivedDataLine    SRD (Secondary Received Data).
 
     \sa lines(), QSerialPort::dataTerminalReady, QSerialPort::requestToSend
 */
@@ -827,7 +828,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
 bool QSerialPort::isDataTerminalReady()
 {
     Q_D(const QSerialPort);
-    return d->lines() & QSerialPort::DtrLine;
+    return d->lines() & QSerialPort::DataTerminalReadyLine;
 }
 
 /*!
@@ -865,7 +866,7 @@ bool QSerialPort::setRequestToSend(bool set)
 bool QSerialPort::isRequestToSend()
 {
     Q_D(const QSerialPort);
-    return d->lines() & QSerialPort::RtsLine;
+    return d->lines() & QSerialPort::RequestToSendLine;
 }
 
 /*!
