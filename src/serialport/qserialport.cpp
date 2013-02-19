@@ -1213,10 +1213,17 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
     return d->writeToBuffer(data, maxSize);
 }
 
-void QSerialPort::setError(QSerialPort::SerialPortError serialPortError)
+void QSerialPort::setError(QSerialPort::SerialPortError serialPortError, const QString &errorString)
 {
     Q_D(QSerialPort);
+
     d->error = serialPortError;
+
+    if (errorString.isNull())
+        setErrorString(qt_error_string(-1));
+    else
+        setErrorString(errorString);
+
     emit error(serialPortError);
 }
 
