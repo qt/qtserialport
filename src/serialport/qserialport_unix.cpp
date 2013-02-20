@@ -252,10 +252,10 @@ void QSerialPortPrivate::close()
     isCustomBaudRateSupported = false;
 }
 
-QSerialPort::Lines QSerialPortPrivate::lines() const
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
 {
     int arg = 0;
-    QSerialPort::Lines ret = QSerialPort::NoLine;
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (::ioctl(descriptor, TIOCMGET, &arg) == -1) {
         q_ptr->setError(decodeSystemError());
@@ -264,45 +264,45 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
 
 #ifdef TIOCM_LE
     if (arg & TIOCM_LE)
-        ret |= QSerialPort::DataSetReadyLine;
+        ret |= QSerialPort::DataSetReadySignal;
 #endif
 #ifdef TIOCM_DTR
     if (arg & TIOCM_DTR)
-        ret |= QSerialPort::DataTerminalReadyLine;
+        ret |= QSerialPort::DataTerminalReadySignal;
 #endif
 #ifdef TIOCM_RTS
     if (arg & TIOCM_RTS)
-        ret |= QSerialPort::RequestToSendLine;
+        ret |= QSerialPort::RequestToSendSignal;
 #endif
 #ifdef TIOCM_ST
     if (arg & TIOCM_ST)
-        ret |= QSerialPort::SecondaryTransmittedDataLine;
+        ret |= QSerialPort::SecondaryTransmittedDataSignal;
 #endif
 #ifdef TIOCM_SR
     if (arg & TIOCM_SR)
-        ret |= QSerialPort::SecondaryReceivedDataLine;
+        ret |= QSerialPort::SecondaryReceivedDataSignal;
 #endif
 #ifdef TIOCM_CTS
     if (arg & TIOCM_CTS)
-        ret |= QSerialPort::ClearToSendLine;
+        ret |= QSerialPort::ClearToSendSignal;
 #endif
 #ifdef TIOCM_CAR
     if (arg & TIOCM_CAR)
-        ret |= QSerialPort::DataCarrierDetectLine;
+        ret |= QSerialPort::DataCarrierDetectSignal;
 #elif defined TIOCM_CD
     if (arg & TIOCM_CD)
-        ret |= QSerialPort::DataCarrierDetectLine;
+        ret |= QSerialPort::DataCarrierDetectSignal;
 #endif
 #ifdef TIOCM_RNG
     if (arg & TIOCM_RNG)
-        ret |= QSerialPort::RingIndicatorLine;
+        ret |= QSerialPort::RingIndicatorSignal;
 #elif defined TIOCM_RI
     if (arg & TIOCM_RI)
-        ret |= QSerialPort::RingIndicatorLine;
+        ret |= QSerialPort::RingIndicatorSignal;
 #endif
 #ifdef TIOCM_DSR
     if (arg & TIOCM_DSR)
-        ret |= QSerialPort::DataSetReadyLine;
+        ret |= QSerialPort::DataSetReadySignal;
 #endif
 
     return ret;

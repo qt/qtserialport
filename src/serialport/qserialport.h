@@ -67,7 +67,7 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
     Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 
-    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl Lines DataErrorPolicy SerialPortError )
+    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl PinoutSignals DataErrorPolicy SerialPortError )
 
 public:
 
@@ -121,20 +121,20 @@ public:
         UnknownFlowControl = -1
     };
 
-    enum Line {
-        NoLine = 0x00,
-        TransmittedDataLine = 0x01,
-        ReceivedDataLine = 0x02,
-        DataTerminalReadyLine = 0x04,
-        DataCarrierDetectLine = 0x08,
-        DataSetReadyLine = 0x10,
-        RingIndicatorLine = 0x20,
-        RequestToSendLine = 0x40,
-        ClearToSendLine = 0x80,
-        SecondaryTransmittedDataLine = 0x100,
-        SecondaryReceivedDataLine = 0x200,
+    enum PinoutSignal {
+        NoSignal = 0x00,
+        TransmittedDataSignal = 0x01,
+        ReceivedDataSignal = 0x02,
+        DataTerminalReadySignal = 0x04,
+        DataCarrierDetectSignal = 0x08,
+        DataSetReadySignal = 0x10,
+        RingIndicatorSignal = 0x20,
+        RequestToSendSignal = 0x40,
+        ClearToSendSignal = 0x80,
+        SecondaryTransmittedDataSignal = 0x100,
+        SecondaryReceivedDataSignal = 0x200,
     };
-    Q_DECLARE_FLAGS(Lines, Line)
+    Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
     enum DataErrorPolicy {
         SkipPolicy,
@@ -195,7 +195,7 @@ public:
     bool setRequestToSend(bool set);
     bool isRequestToSend();
 
-    Lines lines();
+    PinoutSignals pinoutSignals();
 
     bool flush();
     bool clear(Directions dir = AllDirections);
@@ -253,7 +253,7 @@ inline bool QSerialPort::clearBreak(bool clear)
 { return setBreak(!clear); }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Directions)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Lines)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::PinoutSignals)
 
 QT_END_NAMESPACE
 

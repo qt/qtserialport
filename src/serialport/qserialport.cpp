@@ -109,14 +109,14 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \list
     \o Provides only common functionality which includes
     configuring, I/O data stream, get and set control signals of the
-    RS-232 lines.
+    RS-232 pinouts.
     \o Does not support for terminal features as echo, control CR/LF and so
     forth.
     \o Always works in binary mode.
     \o Does not support the native ability for configuring timeouts
     and delays while reading.
     \o Does not provide tracking and notification when the state
-    of RS-232 lines was changed.
+    of RS-232 pinout signals is changed.
     \endlist
 
     To get started with the QSerialPort class, first create an object of
@@ -167,9 +167,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     appended to the QSerialPort's internal read buffer. In order to limit the
     size of the read buffer, call setReadBufferSize().
 
-    The status of the control lines is determined with the isDataTerminalReady(),
-    isRequestToSend, and lines() methods. To change the control line status, use
-    the setDataTerminalReady(), and setRequestToSend() methods.
+    The status of the control pinout signals is determined with the
+    isDataTerminalReady(), isRequestToSend, and pinoutSignals() methods. To
+    change the control line status, use the setDataTerminalReady(), and
+    setRequestToSend() methods.
 
     To close the serial port, call the close() method. After all the pending data
     has been written to the serial port, the QSerialPort class actually closes
@@ -315,23 +316,24 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum QSerialPort::Line
+    \enum QSerialPort::PinoutSignals
 
     This enum describes the possible RS-232 pinout signals.
 
-    \value NoLine                       No line active
-    \value TransmittedDataLine          TxD (Transmitted Data).
-    \value ReceivedDataLine             RxD (Received Data).
-    \value DataTerminalReadyLine        DTR (Data Terminal Ready).
-    \value DataCarrierDetectLine        DCD (Data Carrier Detect).
-    \value DataSetReadyLine             DSR (Data Set Ready).
-    \value RingIndicatorLine            RNG (Ring Indicator).
-    \value RequestToSendLine            RTS (Request To Send).
-    \value ClearToSendLine              CTS (Clear To Send).
-    \value SecondaryTransmittedDataLine STD (Secondary Transmitted Data).
-    \value SecondaryReceivedDataLine    SRD (Secondary Received Data).
+    \value NoSignal                       No line active
+    \value TransmittedDataSignal          TxD (Transmitted Data).
+    \value ReceivedDataSignal             RxD (Received Data).
+    \value DataTerminalReadySignal        DTR (Data Terminal Ready).
+    \value DataCarrierDetectSignal        DCD (Data Carrier Detect).
+    \value DataSetReadySignal             DSR (Data Set Ready).
+    \value RingIndicatorSignal            RNG (Ring Indicator).
+    \value RequestToSendSignal            RTS (Request To Send).
+    \value ClearToSendSignal              CTS (Clear To Send).
+    \value SecondaryTransmittedDataSignal STD (Secondary Transmitted Data).
+    \value SecondaryReceivedDataSignal    SRD (Secondary Received Data).
 
-    \sa lines(), QSerialPort::dataTerminalReady, QSerialPort::requestToSend
+    \sa pinoutSignals(), QSerialPort::dataTerminalReady,
+    QSerialPort::requestToSend
 */
 
 /*!
@@ -807,7 +809,7 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the DTR signal is set to high; otherwise low.
 
-    \sa lines()
+    \sa pinoutSignals()
 */
 bool QSerialPort::setDataTerminalReady(bool set)
 {
@@ -825,7 +827,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
 bool QSerialPort::isDataTerminalReady()
 {
     Q_D(const QSerialPort);
-    return d->lines() & QSerialPort::DataTerminalReadyLine;
+    return d->pinoutSignals() & QSerialPort::DataTerminalReadySignal;
 }
 
 /*!
@@ -845,7 +847,7 @@ bool QSerialPort::isDataTerminalReady()
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the RTS signal is set to high; otherwise low.
 
-    \sa lines()
+    \sa pinoutSignals()
 */
 bool QSerialPort::setRequestToSend(bool set)
 {
@@ -863,7 +865,7 @@ bool QSerialPort::setRequestToSend(bool set)
 bool QSerialPort::isRequestToSend()
 {
     Q_D(const QSerialPort);
-    return d->lines() & QSerialPort::RequestToSendLine;
+    return d->pinoutSignals() & QSerialPort::RequestToSendSignal;
 }
 
 /*!
@@ -881,7 +883,7 @@ bool QSerialPort::isRequestToSend()
 
     From this result, it is possible to allocate the state of the
     desired signal by applying a mask "AND", where the mask is
-    the desired enumeration value from QSerialPort::Lines.
+    the desired enumeration value from QSerialPort::PinoutSignals.
 
     Note that, this method performs a system call, thus ensuring that the line
     signal states are returned properly. This is necessary when the underlying
@@ -890,10 +892,10 @@ bool QSerialPort::isRequestToSend()
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
 */
-QSerialPort::Lines QSerialPort::lines()
+QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 {
     Q_D(const QSerialPort);
-    return d->lines();
+    return d->pinoutSignals();
 }
 
 /*!

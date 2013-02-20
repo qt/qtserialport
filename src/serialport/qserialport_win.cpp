@@ -305,10 +305,10 @@ void QSerialPortPrivate::close()
 
 #endif // #ifndef Q_OS_WINCE
 
-QSerialPort::Lines QSerialPortPrivate::lines() const
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
 {
     DWORD modemStat = 0;
-    QSerialPort::Lines ret = QSerialPort::NoLine;
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (!::GetCommModemStatus(descriptor, &modemStat)) {
         q_ptr->setError(decodeSystemError());
@@ -316,13 +316,13 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
     }
 
     if (modemStat & MS_CTS_ON)
-        ret |= QSerialPort::ClearToSendLine;
+        ret |= QSerialPort::ClearToSendSignal;
     if (modemStat & MS_DSR_ON)
-        ret |= QSerialPort::DataSetReadyLine;
+        ret |= QSerialPort::DataSetReadySignal;
     if (modemStat & MS_RING_ON)
-        ret |= QSerialPort::RingIndicatorLine;
+        ret |= QSerialPort::RingIndicatorSignal;
     if (modemStat & MS_RLSD_ON)
-        ret |= QSerialPort::DataCarrierDetectLine;
+        ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
     if (::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
@@ -330,9 +330,9 @@ QSerialPort::Lines QSerialPortPrivate::lines() const
                           &bytesReturned, NULL)) {
 
         if (modemStat & SERIAL_DTR_STATE)
-            ret |= QSerialPort::DataTerminalReadyLine;
+            ret |= QSerialPort::DataTerminalReadySignal;
         if (modemStat & SERIAL_RTS_STATE)
-            ret |= QSerialPort::RequestToSendLine;
+            ret |= QSerialPort::RequestToSendSignal;
     }
 
     return ret;

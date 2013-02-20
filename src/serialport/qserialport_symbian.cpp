@@ -158,25 +158,25 @@ void QSerialPortPrivate::close()
     descriptor.Close();
 }
 
-QSerialPort::Lines QSerialPortPrivate::lines() const
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
 {
-    QSerialPort::Lines ret = QSerialPort::NoLine;
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     TUint signalMask = 0;
     descriptor.Signals(signalMask);
 
     if (signalMask & KSignalCTS)
-        ret |= QSerialPort::ClearToSendLine;
+        ret |= QSerialPort::ClearToSendSignal;
     if (signalMask & KSignalDSR)
-        ret |= QSerialPort::DataSetReadyLine;
+        ret |= QSerialPort::DataSetReadySignal;
     if (signalMask & KSignalDCD)
-        ret |= QSerialPort::DataCarrierDetectLine;
+        ret |= QSerialPort::DataCarrierDetectSignal;
     if (signalMask & KSignalRNG)
-        ret |= QSerialPort::RingIndicatorLine;
+        ret |= QSerialPort::RingIndicatorSignal;
     if (signalMask & KSignalRTS)
-        ret |= QSerialPort::RequestToSendLine;
+        ret |= QSerialPort::RequestToSendSignal;
     if (signalMask & KSignalDTR)
-        ret |= QSerialPort::DataTerminalReadyLine;
+        ret |= QSerialPort::DataTerminalReadySignal;
 
     //if (signalMask & KSignalBreak)
     //  ret |=
