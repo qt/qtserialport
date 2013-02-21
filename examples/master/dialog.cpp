@@ -100,7 +100,7 @@ void Dialog::sendRequest()
 {
     if (serial.portName() != serialPortComboBox->currentText()) {
         serial.close();
-        serial.setPort(serialPortComboBox->currentText());
+        serial.setPortName(serialPortComboBox->currentText());
 
         if (!serial.open(QIODevice::ReadWrite)) {
             processError(tr("Can't open %1, error code %2")

@@ -426,14 +426,14 @@ QSerialPort::~QSerialPort()
 }
 
 /*!
-    Sets the \a name of the port. The name may be in any format;
-    either short, or also as system location (with all the prefixes and
-    postfixed). As a result, this name will be automatically written
-    and converted into an internal variable as system location.
+    Sets the \a name of the serial port.
+
+    The name of the serial port can be passed on as either a short name or
+    the long system location if necessary.
 
     \sa portName(), QSerialPortInfo
 */
-void QSerialPort::setPort(const QString &name)
+void QSerialPort::setPortName(const QString &name)
 {
     Q_D(QSerialPort);
     d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(name);

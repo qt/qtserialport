@@ -164,9 +164,10 @@ public:
     explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = 0);
     virtual ~QSerialPort();
 
-    void setPort(const QString &port);
-    void setPort(const QSerialPortInfo &info);
+    void setPortName(const QString &name);
     QString portName() const;
+
+    void setPort(const QSerialPortInfo &info);
 
     virtual bool open(OpenMode mode);
     virtual void close();

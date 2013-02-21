@@ -87,7 +87,7 @@ MainWindow::~MainWindow()
 void MainWindow::openSerialPort()
 {
     SettingsDialog::Settings p = settings->settings();
-    serial->setPort(p.name);
+    serial->setPortName(p.name);
     if (serial->open(QIODevice::ReadWrite)) {
         if (serial->setBaudRate(p.baudRate)
                 && serial->setDataBits(p.dataBits)
