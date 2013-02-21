@@ -363,8 +363,6 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
            having enough permission and credentials to open.
     \value OpenError            An error occurred while attempting to
            open an already opened device in this object.
-    \value DeviceIsNotOpenedError An error occurred while attempting to
-           control a device still closed.
     \value ParityError Parity error detected by the hardware while reading data.
     \value FramingError Framing error detected by the hardware while reading data.
     \value BreakConditionError Break condition detected by the hardware on
@@ -545,7 +543,6 @@ void QSerialPort::close()
 {
     Q_D(QSerialPort);
     if (!isOpen()) {
-        setError(QSerialPort::DeviceIsNotOpenedError);
         return;
     }
 

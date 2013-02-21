@@ -149,7 +149,6 @@ public:
         DeviceNotFoundError,
         PermissionError,
         OpenError,
-        DeviceIsNotOpenedError,
         ParityError,
         FramingError,
         BreakConditionError,
