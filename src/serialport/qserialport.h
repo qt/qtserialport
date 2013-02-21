@@ -190,7 +190,10 @@ public:
     bool setFlowControl(FlowControl flow);
     FlowControl flowControl() const;
 
+    bool setDataTerminalReady(bool set);
     bool isDataTerminalReady();
+
+    bool setRequestToSend(bool set);
     bool isRequestToSend();
 
     Lines lines();
@@ -217,9 +220,6 @@ public:
     virtual bool waitForReadyRead(int msecs);
     virtual bool waitForBytesWritten(int msecs);
 
-public Q_SLOTS:
-    bool setDataTerminalReady(bool set);
-    bool setRequestToSend(bool set);
     bool sendBreak(int duration = 0);
     bool setBreak(bool set = true);
     bool clearBreak(bool clear = true);
