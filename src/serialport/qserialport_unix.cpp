@@ -913,6 +913,11 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     case EBADF:
         error = QSerialPort::ResourceError;
         break;
+#ifdef Q_OS_MAC
+    case ENXIO:
+        error = QSerialPort::ResourceError;
+        break;
+#endif
     default:
         error = QSerialPort::UnknownError;
         break;
