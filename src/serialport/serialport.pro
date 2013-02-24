@@ -1,6 +1,6 @@
 QT = core
 
-include($$PWD/doc/doc.pri)
+QMAKE_DOCS = $$PWD/doc/qtserialport.qdocconf
 include($$PWD/serialport-lib.pri)
 
 greaterThan(QT_MAJOR_VERSION, 4) {

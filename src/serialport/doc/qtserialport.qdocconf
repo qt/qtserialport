@@ -6,10 +6,6 @@ headerdirs  = ./src ../src
 imagedirs   = ./src/images
 sourcedirs  = ./src ../src
 
-# The index file contains links to the Qt 5 documentation.
-# Point to the any .index file to cross link to other projects
-indexes = $QT5DOC/doc/html/qt.index
-
 Cpp.ignoretokens = \
     Q_SERIALPORT_EXPORT
 
