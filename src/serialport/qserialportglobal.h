@@ -40,8 +40,8 @@
 **
 ****************************************************************************/
 
-#ifndef SERIALPORT_GLOBAL_H
-#define SERIALPORT_GLOBAL_H
+#ifndef QSERIALPORTGLOBAL_H
+#define QSERIALPORTGLOBAL_H
 
 #include <QtCore/qglobal.h>
 
@@ -59,4 +59,4 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-#endif // SERIALPORT_GLOBAL_H
+#endif // QSERIALPORTGLOBAL_H
