@@ -107,15 +107,15 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     listed below:
 
     \list
-    \o Provides only common functionality which includes
+    \li Provides only common functionality which includes
     configuring, I/O data stream, get and set control signals of the
     RS-232 pinouts.
-    \o Does not support for terminal features as echo, control CR/LF and so
+    \li Does not support for terminal features as echo, control CR/LF and so
     forth.
-    \o Always works in binary mode.
-    \o Does not support the native ability for configuring timeouts
+    \li Always works in binary mode.
+    \li Does not support the native ability for configuring timeouts
     and delays while reading.
-    \o Does not provide tracking and notification when the state
+    \li Does not provide tracking and notification when the state
     of RS-232 pinout signals is changed.
     \endlist
 
@@ -181,10 +181,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     used to implement blocking serial ports:
 
     \list
-    \o waitForReadyRead() blocks until new data is available for
+    \li waitForReadyRead() blocks until new data is available for
     reading.
 
-    \o waitForBytesWritten() blocks until one payload of data has been
+    \li waitForBytesWritten() blocks until one payload of data has been
     written to the serial port.
     \endlist
 
@@ -457,31 +457,31 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
     platform specific:
     \table
     \header
-        \o Platform
-        \o Brief Description
+        \li Platform
+        \li Brief Description
     \row
-        \o Windows
-        \o Removes the prefix "\\\\.\\" from the system location
+        \li Windows
+        \li Removes the prefix "\\\\.\\" from the system location
            and returns the remainder of the string.
     \row
-        \o Windows CE
-        \o Removes the postfix ":" from the system location
+        \li Windows CE
+        \li Removes the postfix ":" from the system location
            and returns the remainder of the string.
     \row
-        \o Symbian
-        \o Returns the system location as it is,
+        \li Symbian
+        \li Returns the system location as it is,
            as it is equivalent to the port name.
     \row
-        \o GNU/Linux
-        \o Removes the prefix "/dev/" from the system location
+        \li GNU/Linux
+        \li Removes the prefix "/dev/" from the system location
            and returns the remainder of the string.
     \row
-        \o Mac OSX
-        \o Removes the prefix "/dev/cu." and "/dev/tty." from the
+        \li Mac OSX
+        \li Removes the prefix "/dev/cu." and "/dev/tty." from the
            system location and returns the remainder of the string.
     \row
-        \o Other *nix
-        \o The same as for GNU/Linux.
+        \li Other *nix
+        \li  The same as for GNU/Linux.
     \endtable
 
     \sa setPort(), QSerialPortInfo::portName()

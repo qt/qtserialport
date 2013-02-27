@@ -34,10 +34,10 @@
     \contentspage {Examples} {Contents}
 
     \list
-    \o \l doc/blockingmaster
-    \o \l doc/blockingslave
-    \o \l doc/cenumerator
-    \o \l doc/enumerator
-    \o \l doc/terminal
+    \li \l doc/blockingmaster
+    \li \l doc/blockingslave
+    \li \l doc/cenumerator
+    \li \l doc/enumerator
+    \li \l doc/terminal
     \endlist
 */

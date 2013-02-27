@@ -49,10 +49,10 @@
     Table of contents:
 
     \list
-    \o \l {Introduction}
-    \o \l {Get source}
-    \o \l {Building and usage}
-    \o \l {Examples}
+    \li \l {Introduction}
+    \li \l {Get source}
+    \li \l {Building and usage}
+    \li \l {Examples}
     \endlist
 
     \section1 C++ Classes

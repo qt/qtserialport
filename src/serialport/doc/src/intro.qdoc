@@ -45,33 +45,33 @@
 
     \table
     \header
-        \o Platform
-        \o Support state
-        \o Notes
+        \li Platform
+        \li Support state
+        \li Notes
     \row
-        \o Windows x86/x64 NT based (2K, XP, Vista, 7, 8)
-        \o Complete support (Tier 1).
-        \o Support expected for Windows 8, but has not yet been tested.
+        \li Windows x86/x64 NT based (2K, XP, Vista, 7, 8)
+        \li Complete support (Tier 1).
+        \li Support expected for Windows 8, but has not yet been tested.
     \row
-        \o Windows CE
-        \o Partial support (Not Tier 1).
-        \o Tested only with platforms 5 and 6 by using the emulator.
+        \li Windows CE
+        \li Partial support (Not Tier 1).
+        \li Tested only with platforms 5 and 6 by using the emulator.
     \row
-        \o Symbian
-        \o Partial support, and only for legacy Qt4 (Not Tier 1).
-        \o The implementation is not complete and further support in doubt.
+        \li Symbian
+        \li Partial support, and only for legacy Qt4 (Not Tier 1).
+        \li The implementation is not complete and further support in doubt.
     \row
-        \o Gnu/Linux
-        \o Complete support (Tier 1).
-        \o
+        \li Gnu/Linux
+        \li Complete support (Tier 1).
+        \li
     \row
-        \o Mac OSX
-        \o Complete support (Tier 1).
-        \o
+        \li Mac OSX
+        \li Complete support (Tier 1).
+        \li
     \row
-        \o Other *nix
-        \o Complete support (Tier 1).
-        \o All POSIX-compatible.
+        \li Other *nix
+        \li Complete support (Tier 1).
+        \li All POSIX-compatible.
     \endtable
 
 */

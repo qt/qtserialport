@@ -44,13 +44,13 @@
 
     \list
 
-    \o \i{The asynchronous (non-blocking) approach.} Operations are scheduled
+    \li \e{The asynchronous (non-blocking) approach.} Operations are scheduled
     and performed when the control returns to Qt's event loop. QSerialPort emits
     a signal when the operation is finished. For example, QSerialPort::write()
     returns immediately. When the data is sent to the serial port, QSerialPort
     emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
 
-    \o \i{The synchronous (blocking) approach.} In non-GUI and multithreaded
+    \li \e{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
     QSerialPort::waitReadyRead()) to suspend the calling thread until the
     operation has completed.
@@ -65,16 +65,16 @@
 
     \list
 
-    \o \l{examples/terminal/mainwindow.cpp}{MainWindow} - is the main application
+    \li \l{examples/terminal/mainwindow.cpp}{MainWindow} - is the main application
     window that contains all the working logic for the serial port programming,
     including configuration, I/O processing and so forth, while inheriting the
     QMainWindow.
 
-    \o \l{examples/terminal/console.cpp}{Console} - is the central widget of the
+    \li \l{examples/terminal/console.cpp}{Console} - is the central widget of the
     main window, displaying the transmitted or received data. The widget is
     derived from the QPlainTextEdit class.
 
-    \o \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} - is a dialog
+    \li \l{examples/terminal/settingsdialog.cpp}{SettingsDialog} - is a dialog
     for configuring the serial port, as well as for displaying the available
     serial ports and information about them.
 
@@ -97,7 +97,7 @@
     \dots
     \snippet examples/terminal/mainwindow.cpp 3
 
-    Clicking on the \bold{Connect} button invokes the \c openSerialPort() slot:
+    Clicking on the \b{Connect} button invokes the \c openSerialPort() slot:
 
     \snippet examples/terminal/mainwindow.cpp 4
 
@@ -110,7 +110,7 @@
     \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}, then the terminal
     attempts to open the port with the default settings: 9600 8N1.
 
-    Clicking on the \bold{Disconnect} button invokes the \c closeSerialPort()
+    Clicking on the \b{Disconnect} button invokes the \c closeSerialPort()
     slot:
 
     \snippet examples/terminal/mainwindow.cpp 5
@@ -133,7 +133,7 @@
     This slot reads the data from the serial port and displays that in the
     \l{examples/terminal/console.cpp}{Console} widget.
 
-    Clicking on the \bold{Configure} button invokes the \c show() slot which
+    Clicking on the \b{Configure} button invokes the \c show() slot which
     belongs to the \l{examples/terminal/settingsdialog.cpp}{SettingsDialog}
     widget.
 

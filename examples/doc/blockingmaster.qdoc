@@ -39,13 +39,13 @@
 
     \list
 
-    \o \i{The asynchronous (non-blocking) approach.} Operations are scheduled
+    \li \e{The asynchronous (non-blocking) approach.} Operations are scheduled
     and performed when the control returns to Qt's event loop. QSerialPort emits
     a signal when the operation is finished. For example, QSerialPort::write()
     returns immediately. When the data is sent to the serial port, QSerialPort
     emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
 
-    \o \i{The synchronous (blocking) approach.} In non-GUI and multithreaded
+    \li \e{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
     QSerialPort::waitReadyRead()) to suspend the calling thread until the
     operation has completed.
