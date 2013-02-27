@@ -1,3 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS = \
-    manual
+SUBDIRS += manual
