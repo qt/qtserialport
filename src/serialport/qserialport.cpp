@@ -255,7 +255,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Baud38400    38400 baud.
     \value Baud57600    57600 baud.
     \value Baud115200   115200 baud.
-    \value UnknownRate  Unknown baud.
+    \value UnknownBaud  Unknown baud.
 
     \sa QSerialPort::baudRate
 */
@@ -279,7 +279,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the parity scheme used.
 
-    \Value NoParity No parity.
+    \value NoParity No parity.
     \value EvenParity Even parity.
     \value OddParity Odd parity.
     \value SpaceParity Space parity.
@@ -316,7 +316,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 */
 
 /*!
-    \enum QSerialPort::PinoutSignals
+    \enum QSerialPort::PinoutSignal
 
     This enum describes the possible RS-232 pinout signals.
 
@@ -583,7 +583,7 @@ bool QSerialPort::settingsRestoredOnClose() const
     This signal is emitted after the flag which allows to restore the
     previous settings while closing the serial port has been changed. The new
     flag which allows to restore the previous settings while closing the serial
-    port is passed as \restore.
+    port is passed as \a restore.
 
     \sa QSerialPort::settingsRestoredOnClose
 */
@@ -682,7 +682,7 @@ QSerialPort::DataBits QSerialPort::dataBits() const
     \fn void QSerialPort::dataBitsChanged(DataBits dataBits)
 
     This signal is emitted after the data bits in a frame has been changed. The
-    new data bits in a frame is passed as \dataBits.
+    new data bits in a frame is passed as \a dataBits.
 
     \sa QSerialPort::dataBits
 */
