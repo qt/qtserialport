@@ -36,7 +36,7 @@
     \section1 Users
 
     \code
-    $ git clone git://gitorious.org/qtplayground/qtserialport.git
+    $ git clone git://gitorious.org/qt/qtserialport.git
     \endcode
 
     \section1 Developers
@@ -50,7 +50,7 @@
     The following command can be used to clone the project with push access:
 
     \code
-    $ git clone ssh://<username>@codereview.qt-project.org:29418/playground/qtserialport.git
+    $ git clone ssh://<username>@codereview.qt-project.org:29418/qt/qtserialport.git
     \endcode
 
     If you are in a corporate environment (e.g. behind a firewall) which only
@@ -58,6 +58,6 @@
     instead:
 
     \code
-    $ git clone ssh://<username>@codereview.qt-project.org:443/playground/qtserialport.git
-    \code
+    $ git clone ssh://<username>@codereview.qt-project.org:443/qt/qtserialport.git
+    \endcode
 */
