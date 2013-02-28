@@ -69,6 +69,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
 
     ::CFMutableDictionaryRef matching = ::IOServiceMatching(kIOSerialBSDServiceValue);
+    if (!matching)
+        return serialPortInfoList;
 
     ::CFDictionaryAddValue(matching,
                            CFSTR(kIOSerialBSDTypeKey),
