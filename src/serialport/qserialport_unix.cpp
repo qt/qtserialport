@@ -706,11 +706,6 @@ bool QSerialPortPrivate::readNotification()
 
     if (readBytes <= 0) {
         readBuffer.chop(bytesToRead);
-
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::ResourceError)
-            error = QSerialPort::ReadError;
-        q_ptr->setError(error);
         return false;
     }
 
@@ -759,13 +754,8 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
 
     // Attempt to write it chunk.
     qint64 written = writeToPort(ptr, nextSize);
-    if (written < 0) {
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::ResourceError)
-            error = QSerialPort::WriteError;
-        q_ptr->setError(error);
+    if (written < 0)
         return false;
-    }
 
     // Remove what we wrote so far.
     writeBuffer.free(written);
@@ -1021,6 +1011,13 @@ qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
         bytesRead = readPerChar(data, maxSize);
     }
 
+    if (bytesRead <= 0) {
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::ReadError;
+        q_ptr->setError(error);
+    }
+
     return bytesRead;
 }
 
@@ -1037,6 +1034,13 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
         bytesWritten = writePerChar(data, maxSize);
     }
 #endif
+
+    if (bytesWritten < 0) {
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::WriteError;
+        q_ptr->setError(error);
+    }
 
     return bytesWritten;
 }
