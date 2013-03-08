@@ -1,5 +1,8 @@
-!exists($$[QT_INSTALL_HEADERS]/QtSerialPort) {
-    INCLUDEPATH += $$QTSERIALPORT_BUILD_ROOT/include $$QTSERIALPORT_BUILD_ROOT/include/QtSerialPort
+qtAddLibrary(QtSerialPort)
+
+!isEmpty(QTSERIALPORT_BUILD_ROOT) {
+    INCLUDEPATH -= $$QMAKE_INCDIR_QT/QtSerialPort
+    QMAKE_INCDIR += $$QTSERIALPORT_BUILD_ROOT/include $$QTSERIALPORT_BUILD_ROOT/include/QtSerialPort
 
     QTSERIALPORT_BUILD_SUBDIR = src/serialport
     win32 {
@@ -10,10 +13,8 @@
         }
     }
 
-    LIBS += -L$$QTSERIALPORT_BUILD_ROOT/$$QTSERIALPORT_BUILD_SUBDIR
+    QMAKE_LIBDIR += $$QTSERIALPORT_BUILD_ROOT/$$QTSERIALPORT_BUILD_SUBDIR
 }
-
-qtAddLibrary(QtSerialPort)
 
 mac {
     LIBS -= -framework QtSerialPort$${QT_LIBINFIX}

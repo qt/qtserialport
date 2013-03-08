@@ -13,6 +13,5 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     TARGET = $$qtLibraryTarget(QtSerialPort$$QT_LIBINFIX)
     include($$PWD/qt4support/install-helper.pri)
     CONFIG += module create_prl
-    win32|mac:CONFIG += debug_and_release
     mac:QMAKE_FRAMEWORK_BUNDLE_NAME = $$TARGET
 }
