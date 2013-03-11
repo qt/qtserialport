@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
             << QObject::tr("Location: ") << serialPortInfo.systemLocation() << endl
             << QObject::tr("Description: ") << serialPortInfo.description() << endl
             << QObject::tr("Manufacturer: ") << serialPortInfo.manufacturer() << endl
-            << QObject::tr("Vendor Idenifier: ") << serialPortInfo.vendorIdentifier() << endl
-            << QObject::tr("Product Idenifier: ") << serialPortInfo.productIdentifier() << endl
+            << QObject::tr("Vendor Identifier: ") << serialPortInfo.vendorIdentifier() << endl
+            << QObject::tr("Product Identifier: ") << serialPortInfo.productIdentifier() << endl
             << QObject::tr("Busy: ") << (serialPortInfo.isBusy() ? QObject::tr("Yes") : QObject::tr("No")) << endl;
     }
 
