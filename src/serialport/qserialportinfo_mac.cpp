@@ -213,42 +213,42 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             }
 
             if (description) {
-                ::CFStringGetCString(CFStringRef(description),
-                                     buffer.data(),
-                                     buffer.size(),
-                                     kCFStringEncodingUTF8);
-
-                serialPortInfo.d_ptr->description = QString(buffer);
+                if (::CFStringGetCString(CFStringRef(description),
+                                         buffer.data(),
+                                         buffer.size(),
+                                         kCFStringEncodingUTF8)) {
+                    serialPortInfo.d_ptr->description = QString(buffer);
+                }
                 ::CFRelease(description);
             }
 
             if (manufacturer) {
-                ::CFStringGetCString(CFStringRef(manufacturer),
-                                     buffer.data(),
-                                     buffer.size(),
-                                     kCFStringEncodingUTF8);
-
-                serialPortInfo.d_ptr->manufacturer = QString(buffer);
+                if (::CFStringGetCString(CFStringRef(manufacturer),
+                                         buffer.data(),
+                                         buffer.size(),
+                                         kCFStringEncodingUTF8)) {
+                    serialPortInfo.d_ptr->manufacturer = QString(buffer);
+                }
                 ::CFRelease(manufacturer);
             }
 
             int value = 0;
 
             if (vendorIdentifier) {
-                ::CFNumberGetValue(CFNumberRef(vendorIdentifier),
-                                   kCFNumberIntType,
-                                   &value);
-
-                serialPortInfo.d_ptr->vendorIdentifier = QString::number(value, 16);
+                if (::CFNumberGetValue(CFNumberRef(vendorIdentifier),
+                                       kCFNumberIntType,
+                                       &value)) {
+                    serialPortInfo.d_ptr->vendorIdentifier = QString::number(value, 16);
+                }
                 ::CFRelease(vendorIdentifier);
             }
 
             if (productIdentifier) {
-                ::CFNumberGetValue(CFNumberRef(productIdentifier),
-                                   kCFNumberIntType,
-                                   &value);
-
-                serialPortInfo.d_ptr->productIdentifier = QString::number(value, 16);
+                if (::CFNumberGetValue(CFNumberRef(productIdentifier),
+                                       kCFNumberIntType,
+                                       &value)) {
+                    serialPortInfo.d_ptr->productIdentifier = QString::number(value, 16);
+                }
                 ::CFRelease(productIdentifier);
             }
 
