@@ -536,9 +536,6 @@ bool QSerialPort::open(OpenMode mode)
 /*!
     \reimp
 
-    Calls QSerialPort::flush() and closes the serial port.
-    Errors from flush are ignored.
-
     \sa QIODevice::close()
 */
 void QSerialPort::close()
