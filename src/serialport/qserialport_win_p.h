@@ -125,7 +125,7 @@ public:
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE descriptor;
-    bool flagErrorFromCommEvent;
+    bool parityErrorOccurred;
 
 #ifndef Q_OS_WINCE
     QHash<HANDLE, AbstractOverlappedEventNotifier *> notifiers;

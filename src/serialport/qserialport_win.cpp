@@ -208,7 +208,7 @@ public:
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , descriptor(INVALID_HANDLE_VALUE)
-    , flagErrorFromCommEvent(false)
+    , parityErrorOccurred(false)
     , actualReadBufferSize(0)
     , actualWriteBufferSize(0)
     , acyncWritePosition(0)
@@ -292,7 +292,7 @@ void QSerialPortPrivate::close()
     acyncWritePosition = 0;
 
     readyReadEmitted = false;
-    flagErrorFromCommEvent = false;
+    parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
         ::SetCommState(descriptor, &restoredDcb);
@@ -707,16 +707,16 @@ bool QSerialPortPrivate::processIoErrors(bool error)
     DWORD errors = 0;
     const bool ret = ::ClearCommError(descriptor, &errors, NULL);
     if (ret && errors) {
-        if (errors & CE_FRAME)
+        if (errors & CE_FRAME) {
             q_ptr->setError(QSerialPort::FramingError);
-        else if (errors & CE_RXPARITY)
+        } else if (errors & CE_RXPARITY) {
             q_ptr->setError(QSerialPort::ParityError);
-        else if (errors & CE_BREAK)
+            parityErrorOccurred = true;
+        } else if (errors & CE_BREAK) {
             q_ptr->setError(QSerialPort::BreakConditionError);
-        else
+        } else {
             q_ptr->setError(QSerialPort::UnknownError);
-
-        flagErrorFromCommEvent = true;
+        }
     }
     return ret;
 }
@@ -731,9 +731,9 @@ bool QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
     if (numberOfBytes > 0) {
 
         // Process emulate policy.
-        if (flagErrorFromCommEvent) {
+        if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
 
-            flagErrorFromCommEvent = false;
+            parityErrorOccurred = false;
 
             // Ignore received character, remove it from buffer
             if (policy == QSerialPort::SkipPolicy) {

@@ -157,7 +157,7 @@ private:
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , descriptor(INVALID_HANDLE_VALUE)
-    , flagErrorFromCommEvent(0)
+    , parityErrorOccurred(false)
     , eventNotifier(0)
 {
 }
@@ -376,8 +376,9 @@ bool QSerialPortPrivate::notifyRead()
     readBuffer.truncate(readBytes);
 
     // Process emulate policy.
-    if (flagErrorFromCommEvent) {
-        flagErrorFromCommEvent = false;
+    if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
+
+        parityErrorOccurred = false;
 
         switch (policy) {
         case QSerialPort::SkipPolicy:
