@@ -178,7 +178,7 @@ public:
         bool ret = dptr->completeAsyncRead(numberOfBytesTransferred);
 
         // start async read for possible remainder into driver queue
-        if (ret && numberOfBytesTransferred > 0) {
+        if (ret && (numberOfBytesTransferred > 0) && (dptr->policy == QSerialPort::IgnorePolicy)) {
             dptr->startAsyncRead();
         } else { // driver queue is emplty, so startup wait comm event
             CommOverlappedEventNotifier *n =
