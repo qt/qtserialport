@@ -619,7 +619,7 @@ bool QSerialPort::setBaudRate(qint32 baudRate, Directions dir)
                 dir &= ~QSerialPort::Output;
         }
 
-        if (!dir)
+        if (dir)
             emit baudRateChanged(baudRate, dir);
 
         return true;
