@@ -648,7 +648,8 @@ bool QSerialPortPrivate::startAsyncRead()
 
     QSerialPort::SerialPortError error = decodeSystemError();
     if (error != QSerialPort::NoError) {
-        error = QSerialPort::ReadError;
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::ReadError;
         q_ptr->setError(error);
         return false;
     }
@@ -923,6 +924,9 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
         error = QSerialPort::UnsupportedOperationError;
         break;
     case ERROR_BAD_COMMAND:
+        error = QSerialPort::ResourceError;
+        break;
+    case ERROR_DEVICE_REMOVED:
         error = QSerialPort::ResourceError;
         break;
     default:
