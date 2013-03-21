@@ -109,18 +109,12 @@ void MainWindow::openSerialPort()
 
         } else {
             serial->close();
-            QMessageBox::critical(this, tr("Error"),
-                                  tr("Can't configure the serial port: %1,\n"
-                                     "error code: %2")
-                                  .arg(p.name).arg(serial->error()));
+            QMessageBox::critical(this, tr("Error"), serial->errorString());
 
             ui->statusBar->showMessage(tr("Open error"));
         }
     } else {
-        QMessageBox::critical(this, tr("Error"),
-                              tr("Can't opened the serial port: %1,\n"
-                                 "error code: %2")
-                              .arg(p.name).arg(serial->error()));
+        QMessageBox::critical(this, tr("Error"), serial->errorString());
 
         ui->statusBar->showMessage(tr("Configure error"));
     }
