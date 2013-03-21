@@ -69,6 +69,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionConfigure->setEnabled(true);
 
     initActionsConnections();
+
+    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this,
+            SLOT(handleError(QSerialPort::SerialPortError)));
+
 //! [2]
     connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
 //! [2]
@@ -157,6 +161,16 @@ void MainWindow::readData()
     console->putData(data);
 }
 //! [7]
+
+//! [8]
+void MainWindow::handleError(QSerialPort::SerialPortError error)
+{
+    if (error == QSerialPort::ResourceError) {
+        QMessageBox::critical(this, tr("Critical Error"), serial->errorString());
+        closeSerialPort();
+    }
+}
+//! [8]
 
 void MainWindow::initActionsConnections()
 {
