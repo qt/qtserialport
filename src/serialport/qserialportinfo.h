@@ -71,8 +71,8 @@ public:
     QString systemLocation() const;
     QString description() const;
     QString manufacturer() const;
-    QString vendorIdentifier() const;
-    QString productIdentifier() const;
+    quint16 vendorIdentifier() const;
+    quint16 productIdentifier() const;
 
     bool isNull() const;
     bool isBusy() const;

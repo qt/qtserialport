@@ -184,25 +184,23 @@ QString QSerialPortInfo::manufacturer() const
 }
 
 /*!
-    Returns the vendor identifier string of the serial
-    port in hexadecimal format, if available; otherwise
-    returns an empty string.
+    Returns the 16-bit vendor number for the serial port, if available;
+    otherwise returns zero.
 */
-QString QSerialPortInfo::vendorIdentifier() const
+quint16 QSerialPortInfo::vendorIdentifier() const
 {
     Q_D(const QSerialPortInfo);
-    return !d ? QString() : d->vendorIdentifier;
+    return !d ? 0 : d->vendorIdentifier;
 }
 
 /*!
-    Returns the product identifier string of the serial
-    port in hexadecimal format, if available; otherwise
-    returns an empty string.
+    Returns the 16-bit product number for the serial port, if available;
+    otherwise returns zero.
 */
-QString QSerialPortInfo::productIdentifier() const
+quint16 QSerialPortInfo::productIdentifier() const
 {
     Q_D(const QSerialPortInfo);
-    return !d ? QString() : d->productIdentifier;
+    return !d ? 0 : d->productIdentifier;
 }
 
 /*!

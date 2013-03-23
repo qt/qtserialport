@@ -232,13 +232,13 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 ::CFRelease(manufacturer);
             }
 
-            int value = 0;
+            quint16 value = 0;
 
             if (vendorIdentifier) {
                 if (::CFNumberGetValue(CFNumberRef(vendorIdentifier),
                                        kCFNumberIntType,
                                        &value)) {
-                    serialPortInfo.d_ptr->vendorIdentifier = QString::number(value, 16);
+                    serialPortInfo.d_ptr->vendorIdentifier = value;
                 }
                 ::CFRelease(vendorIdentifier);
             }
@@ -247,7 +247,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 if (::CFNumberGetValue(CFNumberRef(productIdentifier),
                                        kCFNumberIntType,
                                        &value)) {
-                    serialPortInfo.d_ptr->productIdentifier = QString::number(value, 16);
+                    serialPortInfo.d_ptr->productIdentifier = value;
                 }
                 ::CFRelease(productIdentifier);
             }

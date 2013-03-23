@@ -153,9 +153,12 @@ void SettingsDialog::fillPortsInfo()
     ui->serialPortInfoListBox->clear();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         QStringList list;
-        list << info.portName() << info.description()
-             << info.manufacturer() << info.systemLocation()
-             << info.vendorIdentifier() << info.productIdentifier();
+        list << info.portName()
+             << info.description()
+             << info.manufacturer()
+             << info.systemLocation()
+             << QString::number(info.vendorIdentifier(), 16)
+             << QString::number(info.productIdentifier(), 16);
 
         ui->serialPortInfoListBox->addItem(list.first(), list);
     }

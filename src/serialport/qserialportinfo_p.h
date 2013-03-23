@@ -51,15 +51,15 @@ QT_BEGIN_NAMESPACE
 class QSerialPortInfoPrivate
 {
 public:
-    QSerialPortInfoPrivate() {}
+    QSerialPortInfoPrivate() : vendorIdentifier(0), productIdentifier(0) {}
     ~QSerialPortInfoPrivate() {}
 
     QString portName;
     QString device;
     QString description;
     QString manufacturer;
-    QString vendorIdentifier;
-    QString productIdentifier;
+    quint16 vendorIdentifier;
+    quint16 productIdentifier;
 };
 
 class QSerialPortInfoPrivateDeleter
