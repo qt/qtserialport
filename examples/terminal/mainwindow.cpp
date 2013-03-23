@@ -100,6 +100,7 @@ void MainWindow::openSerialPort()
                 && serial->setFlowControl(p.flowControl)) {
 
             console->setEnabled(true);
+            console->setLocalEchoEnabled(p.localEchoEnabled);
             ui->actionConnect->setEnabled(false);
             ui->actionDisconnect->setEnabled(true);
             ui->actionConfigure->setEnabled(false);

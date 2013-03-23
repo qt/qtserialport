@@ -198,4 +198,7 @@ void SettingsDialog::updateSettings()
     currentSettings.flowControl = static_cast<QSerialPort::FlowControl>(
                 ui->flowControlBox->itemData(ui->flowControlBox->currentIndex()).toInt());
     currentSettings.stringFlowControl = ui->flowControlBox->currentText();
+
+    // Additional options
+    currentSettings.localEchoEnabled = ui->localEchoCheckBox->isChecked();
 }
