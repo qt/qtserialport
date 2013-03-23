@@ -114,7 +114,7 @@ public:
     OVERLAPPED *overlappedPointer() { return &o; }
 
 protected:
-    virtual bool event(QEvent *e) {
+    bool event(QEvent *e) Q_DECL_OVERRIDE {
         const bool ret = QWinEventNotifier::event(e);
         processCompletionRoutine();
         return ret;
@@ -137,7 +137,7 @@ public:
 
     void startWaitCommEvent() { ::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o); }
 
-    virtual bool processCompletionRoutine() {
+    bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
 
@@ -172,7 +172,7 @@ public:
     ReadOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, ReadCompletionEvent, false, parent) {}
 
-    virtual bool processCompletionRoutine() {
+    bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
         bool ret = dptr->completeAsyncRead(numberOfBytesTransferred);
@@ -197,7 +197,7 @@ public:
     WriteOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, WriteCompletionEvent, false, parent) {}
 
-    virtual bool processCompletionRoutine() {
+    bool processCompletionRoutine() Q_DECL_OVERRIDE {
         setEnabled(false);
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
