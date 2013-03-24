@@ -178,11 +178,13 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
             int index = s.indexOf(vendorIdentifierPrefix);
             if (index != -1)
-                serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + vendorIdentifierPrefix.size(), vendorIdentifierSize).toInt(0, 16);
+                serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + vendorIdentifierPrefix.size(), vendorIdentifierSize)
+                                                            .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
 
             index = s.indexOf(productIdentifierPrefix);
             if (index != -1)
-                serialPortInfo.d_ptr->productIdentifier = s.mid(index + productIdentifierPrefix.size(), productIdentifierSize).toInt(0, 16);
+                serialPortInfo.d_ptr->productIdentifier = s.mid(index + productIdentifierPrefix.size(), productIdentifierSize)
+                                                            .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
 
             serialPortInfoList.append(serialPortInfo);
         }

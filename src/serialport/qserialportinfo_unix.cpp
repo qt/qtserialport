@@ -147,10 +147,12 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                                                                    "ID_VENDOR"))).replace('_', ' ');
 
                             serialPortInfo.d_ptr->vendorIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev, "ID_VENDOR_ID")).toInt(0, 16);
+                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                "ID_VENDOR_ID")).toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
 
                             serialPortInfo.d_ptr->productIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev, "ID_MODEL_ID")).toInt(0, 16);
+                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                "ID_MODEL_ID")).toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
 
                         } else if (subsys == QLatin1String("pnp")) { // PNP bus type
                             // Append this device.

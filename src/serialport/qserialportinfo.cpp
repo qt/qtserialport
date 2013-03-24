@@ -204,6 +204,26 @@ quint16 QSerialPortInfo::productIdentifier() const
 }
 
 /*!
+    Returns true if there is a valid 16-bit vendor number present; otherwise
+    returns false.
+*/
+bool QSerialPortInfo::hasVendorIdentifier() const
+{
+    Q_D(const QSerialPortInfo);
+    return !d ? false : d->hasVendorIdentifier;
+}
+
+/*!
+    Returns true if there is a valid 16-bit product number present; otherwise
+    returns false.
+*/
+bool QSerialPortInfo::hasProductIdentifier() const
+{
+    Q_D(const QSerialPortInfo);
+    return !d ? false : d->hasProductIdentifier;
+}
+
+/*!
     \fn bool QSerialPortInfo::isNull() const
 
     Returns whether this QSerialPortInfo object holds a

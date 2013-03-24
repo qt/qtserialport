@@ -157,8 +157,8 @@ void SettingsDialog::fillPortsInfo()
              << info.description()
              << info.manufacturer()
              << info.systemLocation()
-             << QString::number(info.vendorIdentifier(), 16)
-             << QString::number(info.productIdentifier(), 16);
+             << (info.vendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : QString())
+             << (info.productIdentifier() ? QString::number(info.productIdentifier(), 16) : QString());
 
         ui->serialPortInfoListBox->addItem(list.first(), list);
     }

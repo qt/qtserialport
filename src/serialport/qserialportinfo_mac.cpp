@@ -235,20 +235,18 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             quint16 value = 0;
 
             if (vendorIdentifier) {
-                if (::CFNumberGetValue(CFNumberRef(vendorIdentifier),
-                                       kCFNumberIntType,
-                                       &value)) {
+                serialPortInfo.d_ptr->hasVendorIdentifier = ::CFNumberGetValue(CFNumberRef(vendorIdentifier), kCFNumberIntType, &value);
+                if (serialPortInfo.d_ptr->hasVendorIdentifier)
                     serialPortInfo.d_ptr->vendorIdentifier = value;
-                }
+
                 ::CFRelease(vendorIdentifier);
             }
 
             if (productIdentifier) {
-                if (::CFNumberGetValue(CFNumberRef(productIdentifier),
-                                       kCFNumberIntType,
-                                       &value)) {
+                serialPortInfo.d_ptr->hasProductIdentifier = ::CFNumberGetValue(CFNumberRef(productIdentifier), kCFNumberIntType, &value);
+                if (serialPortInfo.d_ptr->hasProductIdentifier)
                     serialPortInfo.d_ptr->productIdentifier = value;
-                }
+
                 ::CFRelease(productIdentifier);
             }
 
