@@ -136,6 +136,14 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                                               CFSTR(kUSBProductString),
                                                               kCFAllocatorDefault,
                                                               0);
+                if (!description)
+                    description =
+                            ::IORegistryEntrySearchCFProperty(entry,
+                                                              kIOServicePlane,
+                                                              CFSTR("BTName"),
+                                                              kCFAllocatorDefault,
+                                                              0);
+
                 if (description)
                     ++matchingPropertiesCounter;
             }
