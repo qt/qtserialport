@@ -635,13 +635,13 @@ bool QSerialPortPrivate::startAsyncRead()
         }
     }
 
-    char *ptr = readBuffer.reserve(bytesToRead);
-
     AbstractOverlappedEventNotifier *n = lookupReadCompletionNotifier();
     if (!n) {
         q_ptr->setError(QSerialPort::ResourceError);
         return false;
     }
+
+    char *ptr = readBuffer.reserve(bytesToRead);
 
     if (::ReadFile(descriptor, ptr, bytesToRead, NULL, n->overlappedPointer()))
         return true;
@@ -651,6 +651,8 @@ bool QSerialPortPrivate::startAsyncRead()
         if (error != QSerialPort::ResourceError)
             error = QSerialPort::ReadError;
         q_ptr->setError(error);
+
+        readBuffer.truncate(actualReadBufferSize);
         return false;
     }
 
