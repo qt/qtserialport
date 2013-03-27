@@ -400,7 +400,7 @@ QSerialPort::QSerialPort(const QString &name, QObject *parent)
     : QIODevice(parent)
     , d_ptr(new QSerialPortPrivate(this))
 {
-    setPort(name);
+    setPortName(name);
 }
 
 /*!
