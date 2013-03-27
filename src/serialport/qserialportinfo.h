@@ -59,9 +59,9 @@ class Q_SERIALPORT_EXPORT QSerialPortInfo
     Q_DECLARE_PRIVATE(QSerialPortInfo)
 public:
     QSerialPortInfo();
+    explicit QSerialPortInfo(const QSerialPort &port);
+    explicit QSerialPortInfo(const QString &name);
     QSerialPortInfo(const QSerialPortInfo &other);
-    QSerialPortInfo(const QSerialPort &port);
-    QSerialPortInfo(const QString &name);
     ~QSerialPortInfo();
 
     QSerialPortInfo& operator=(const QSerialPortInfo &other);
