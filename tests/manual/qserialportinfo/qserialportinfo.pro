@@ -1,5 +1,4 @@
 TEMPLATE = app
-CONFIG += testcase
 TARGET = tst_qserialportinfo
 
 QT = core testlib
