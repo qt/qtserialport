@@ -57,18 +57,13 @@ int main(int argc, char *argv[])
     QVBoxLayout *layout = new QVBoxLayout;
 
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-        QString s(QObject::tr("Port: %1\n"
-                              "Location: %2\n"
-                              "Description: %3\n"
-                              "Manufacturer: %4\n"
-                              "Vendor Identifier: %5\n"
-                              "Product Identifier: %6\n"
-                              "Busy: %7\n"));
-
-        s = s.arg(info.portName()).arg(info.systemLocation())
-                .arg(info.description()).arg(info.manufacturer())
-                .arg(info.vendorIdentifier()).arg(info.productIdentifier())
-                .arg(info.isBusy() ? QObject::tr("Yes") : QObject::tr("No"));
+        QString s = QObject::tr("Port: ") + info.portName() + "\n"
+                    + QObject::tr("Location: ") + info.systemLocation() + "\n"
+                    + QObject::tr("Description: ") + info.description() + "\n"
+                    + QObject::tr("Manufacturer: ") + info.manufacturer() + "\n"
+                    + QObject::tr("Vendor Identifier: ") + (info.hasVendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : QString()) + "\n"
+                    + QObject::tr("Product Identifier: ") + (info.hasProductIdentifier() ?QString::number(info.productIdentifier(), 16) : QString()) + "\n"
+                    + QObject::tr("Busy: ") + (info.isBusy() ? QObject::tr("Yes") : QObject::tr("No")) + "\n";
 
         QLabel *label = new QLabel(s);
         layout->addWidget(label);

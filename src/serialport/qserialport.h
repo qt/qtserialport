@@ -169,8 +169,8 @@ public:
 
     void setPort(const QSerialPortInfo &info);
 
-    virtual bool open(OpenMode mode);
-    virtual void close();
+    bool open(OpenMode mode) Q_DECL_OVERRIDE;
+    void close() Q_DECL_OVERRIDE;
 
     void setSettingsRestoredOnClose(bool restore);
     bool settingsRestoredOnClose() const;
@@ -200,7 +200,7 @@ public:
 
     bool flush();
     bool clear(Directions dir = AllDirections);
-    virtual bool atEnd() const;
+    bool atEnd() const Q_DECL_OVERRIDE;
 
     bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
     DataErrorPolicy dataErrorPolicy() const;
@@ -211,14 +211,14 @@ public:
     qint64 readBufferSize() const;
     void setReadBufferSize(qint64 size);
 
-    virtual bool isSequential() const;
+    bool isSequential() const Q_DECL_OVERRIDE;
 
-    virtual qint64 bytesAvailable() const;
-    virtual qint64 bytesToWrite() const;
-    virtual bool canReadLine() const;
+    qint64 bytesAvailable() const Q_DECL_OVERRIDE;
+    qint64 bytesToWrite() const Q_DECL_OVERRIDE;
+    bool canReadLine() const Q_DECL_OVERRIDE;
 
-    virtual bool waitForReadyRead(int msecs);
-    virtual bool waitForBytesWritten(int msecs);
+    bool waitForReadyRead(int msecs) Q_DECL_OVERRIDE;
+    bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
 
     bool sendBreak(int duration = 0);
     bool setBreak(bool set = true);
@@ -237,9 +237,9 @@ Q_SIGNALS:
     void settingsRestoredOnCloseChanged(bool restore);
 
 protected:
-    virtual qint64 readData(char *data, qint64 maxSize);
-    virtual qint64 readLineData(char *data, qint64 maxSize);
-    virtual qint64 writeData(const char *data, qint64 maxSize);
+    qint64 readData(char *data, qint64 maxSize) Q_DECL_OVERRIDE;
+    qint64 readLineData(char *data, qint64 maxSize) Q_DECL_OVERRIDE;
+    qint64 writeData(const char *data, qint64 maxSize) Q_DECL_OVERRIDE;
 
 private:
     void setError(QSerialPort::SerialPortError error, const QString &errorString = QString());

@@ -69,6 +69,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionConfigure->setEnabled(true);
 
     initActionsConnections();
+
+    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this,
+            SLOT(handleError(QSerialPort::SerialPortError)));
+
 //! [2]
     connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
 //! [2]
@@ -96,6 +100,7 @@ void MainWindow::openSerialPort()
                 && serial->setFlowControl(p.flowControl)) {
 
             console->setEnabled(true);
+            console->setLocalEchoEnabled(p.localEchoEnabled);
             ui->actionConnect->setEnabled(false);
             ui->actionDisconnect->setEnabled(true);
             ui->actionConfigure->setEnabled(false);
@@ -105,18 +110,12 @@ void MainWindow::openSerialPort()
 
         } else {
             serial->close();
-            QMessageBox::critical(this, tr("Error"),
-                                  tr("Can't configure the serial port: %1,\n"
-                                     "error code: %2")
-                                  .arg(p.name).arg(serial->error()));
+            QMessageBox::critical(this, tr("Error"), serial->errorString());
 
             ui->statusBar->showMessage(tr("Open error"));
         }
     } else {
-        QMessageBox::critical(this, tr("Error"),
-                              tr("Can't opened the serial port: %1,\n"
-                                 "error code: %2")
-                              .arg(p.name).arg(serial->error()));
+        QMessageBox::critical(this, tr("Error"), serial->errorString());
 
         ui->statusBar->showMessage(tr("Configure error"));
     }
@@ -157,6 +156,16 @@ void MainWindow::readData()
     console->putData(data);
 }
 //! [7]
+
+//! [8]
+void MainWindow::handleError(QSerialPort::SerialPortError error)
+{
+    if (error == QSerialPort::ResourceError) {
+        QMessageBox::critical(this, tr("Critical Error"), serial->errorString());
+        closeSerialPort();
+    }
+}
+//! [8]
 
 void MainWindow::initActionsConnections()
 {

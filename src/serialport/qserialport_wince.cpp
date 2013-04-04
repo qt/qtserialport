@@ -72,7 +72,7 @@ public:
     }
 
 protected:
-    virtual void run() {
+    void run() Q_DECL_OVERRIDE {
         DWORD mask = 0;
         while (running) {
             if (::WaitCommEvent(dptr->descriptor, &mask, FALSE)) {
