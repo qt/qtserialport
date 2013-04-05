@@ -27,7 +27,7 @@
 
 /*!
     \module QtSerialPort
-    \title Qt Serial Port Reference Documentation
+    \title Qt Serial Port
     \page index.html
 
     \brief The Qt Serial Port module provides classes to make the serial
