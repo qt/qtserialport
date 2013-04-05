@@ -71,7 +71,7 @@ public:
     {}
 
 protected:
-    virtual bool event(QEvent *e) {
+    bool event(QEvent *e) Q_DECL_OVERRIDE {
         bool ret = QSocketNotifier::event(e);
         if (ret)
             dptr->readNotification();
@@ -91,7 +91,7 @@ public:
     {}
 
 protected:
-    virtual bool event(QEvent *e) {
+    bool event(QEvent *e) Q_DECL_OVERRIDE {
         bool ret = QSocketNotifier::event(e);
         if (ret)
             dptr->writeNotification(QSerialPortPrivateData::WriteChunkSize);
@@ -111,7 +111,7 @@ public:
     {}
 
 protected:
-    virtual bool event(QEvent *e) {
+    bool event(QEvent *e) Q_DECL_OVERRIDE {
         bool ret = QSocketNotifier::event(e);
         if (ret)
             dptr->exceptionNotification();

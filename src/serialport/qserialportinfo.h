@@ -59,9 +59,9 @@ class Q_SERIALPORT_EXPORT QSerialPortInfo
     Q_DECLARE_PRIVATE(QSerialPortInfo)
 public:
     QSerialPortInfo();
+    explicit QSerialPortInfo(const QSerialPort &port);
+    explicit QSerialPortInfo(const QString &name);
     QSerialPortInfo(const QSerialPortInfo &other);
-    QSerialPortInfo(const QSerialPort &port);
-    QSerialPortInfo(const QString &name);
     ~QSerialPortInfo();
 
     QSerialPortInfo& operator=(const QSerialPortInfo &other);
@@ -71,8 +71,12 @@ public:
     QString systemLocation() const;
     QString description() const;
     QString manufacturer() const;
-    QString vendorIdentifier() const;
-    QString productIdentifier() const;
+
+    quint16 vendorIdentifier() const;
+    quint16 productIdentifier() const;
+
+    bool hasVendorIdentifier() const;
+    bool hasProductIdentifier() const;
 
     bool isNull() const;
     bool isBusy() const;

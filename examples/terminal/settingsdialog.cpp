@@ -103,12 +103,12 @@ void SettingsDialog::apply()
 void SettingsDialog::checkCustomBaudRatePolicy(int idx)
 {
     bool isCustomBaudRate = !ui->baudRateBox->itemData(idx).isValid();
+    ui->baudRateBox->setEditable(isCustomBaudRate);
     if (isCustomBaudRate) {
         ui->baudRateBox->clearEditText();
         QLineEdit *edit = ui->baudRateBox->lineEdit();
         edit->setValidator(intValidator);
     }
-    ui->baudRateBox->setEditable(isCustomBaudRate);
 }
 
 void SettingsDialog::fillPortsParameters()
@@ -153,9 +153,12 @@ void SettingsDialog::fillPortsInfo()
     ui->serialPortInfoListBox->clear();
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         QStringList list;
-        list << info.portName() << info.description()
-             << info.manufacturer() << info.systemLocation()
-             << info.vendorIdentifier() << info.productIdentifier();
+        list << info.portName()
+             << info.description()
+             << info.manufacturer()
+             << info.systemLocation()
+             << (info.vendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : QString())
+             << (info.productIdentifier() ? QString::number(info.productIdentifier(), 16) : QString());
 
         ui->serialPortInfoListBox->addItem(list.first(), list);
     }
@@ -195,4 +198,7 @@ void SettingsDialog::updateSettings()
     currentSettings.flowControl = static_cast<QSerialPort::FlowControl>(
                 ui->flowControlBox->itemData(ui->flowControlBox->currentIndex()).toInt());
     currentSettings.stringFlowControl = ui->flowControlBox->currentText();
+
+    // Additional options
+    currentSettings.localEchoEnabled = ui->localEchoCheckBox->isChecked();
 }

@@ -114,7 +114,7 @@ public:
     OVERLAPPED *overlappedPointer() { return &o; }
 
 protected:
-    virtual bool event(QEvent *e) {
+    bool event(QEvent *e) Q_DECL_OVERRIDE {
         const bool ret = QWinEventNotifier::event(e);
         processCompletionRoutine();
         return ret;
@@ -137,7 +137,7 @@ public:
 
     void startWaitCommEvent() { ::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o); }
 
-    virtual bool processCompletionRoutine() {
+    bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
 
@@ -172,7 +172,7 @@ public:
     ReadOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, ReadCompletionEvent, false, parent) {}
 
-    virtual bool processCompletionRoutine() {
+    bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
         bool ret = dptr->completeAsyncRead(numberOfBytesTransferred);
@@ -197,7 +197,7 @@ public:
     WriteOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, WriteCompletionEvent, false, parent) {}
 
-    virtual bool processCompletionRoutine() {
+    bool processCompletionRoutine() Q_DECL_OVERRIDE {
         setEnabled(false);
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
@@ -635,21 +635,24 @@ bool QSerialPortPrivate::startAsyncRead()
         }
     }
 
-    char *ptr = readBuffer.reserve(bytesToRead);
-
     AbstractOverlappedEventNotifier *n = lookupReadCompletionNotifier();
     if (!n) {
         q_ptr->setError(QSerialPort::ResourceError);
         return false;
     }
 
+    char *ptr = readBuffer.reserve(bytesToRead);
+
     if (::ReadFile(descriptor, ptr, bytesToRead, NULL, n->overlappedPointer()))
         return true;
 
     QSerialPort::SerialPortError error = decodeSystemError();
     if (error != QSerialPort::NoError) {
-        error = QSerialPort::ReadError;
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::ReadError;
         q_ptr->setError(error);
+
+        readBuffer.truncate(actualReadBufferSize);
         return false;
     }
 
@@ -923,6 +926,9 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
         error = QSerialPort::UnsupportedOperationError;
         break;
     case ERROR_BAD_COMMAND:
+        error = QSerialPort::ResourceError;
+        break;
+    case ERROR_DEVICE_REMOVED:
         error = QSerialPort::ResourceError;
         break;
     default:

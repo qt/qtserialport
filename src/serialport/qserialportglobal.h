@@ -57,6 +57,11 @@ QT_BEGIN_NAMESPACE
 #  define Q_SERIALPORT_EXPORT
 #endif
 
+// The macro has been available only since Qt 5.0
+#ifndef Q_DECL_OVERRIDE
+#define Q_DECL_OVERRIDE
+#endif
+
 QT_END_NAMESPACE
 
 #endif // QSERIALPORTGLOBAL_H
