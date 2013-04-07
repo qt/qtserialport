@@ -987,7 +987,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
 }
 
 /*!
-    \fn void QSerialPort::errorPolicyChanged(DataErrorPolicy policy)
+    \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
 
     This signal is emitted after the error policy how the process receives the
     character in case of parity error detection has been changed. The new error
