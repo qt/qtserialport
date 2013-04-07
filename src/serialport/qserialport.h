@@ -221,8 +221,7 @@ public:
     bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
 
     bool sendBreak(int duration = 0);
-    bool setBreak(bool set = true);
-    bool clearBreak(bool clear = true);
+    bool setBreakEnabled(bool set = true);
 
 Q_SIGNALS:
     void baudRateChanged(qint32 baudRate, QSerialPort::Directions dir);
@@ -249,9 +248,6 @@ private:
     Q_DECLARE_PRIVATE(QSerialPort)
     Q_DISABLE_COPY(QSerialPort)
 };
-
-inline bool QSerialPort::clearBreak(bool clear)
-{ return setBreak(!clear); }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Directions)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::PinoutSignals)

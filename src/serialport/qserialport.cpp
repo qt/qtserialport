@@ -1176,7 +1176,7 @@ bool QSerialPort::sendBreak(int duration)
 
     \sa clearBreak(), sendBreak()
 */
-bool QSerialPort::setBreak(bool set)
+bool QSerialPort::setBreakEnabled(bool set)
 {
     Q_D(QSerialPort);
     return d->setBreak(set);
