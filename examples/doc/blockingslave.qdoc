@@ -73,7 +73,7 @@
     We will start with the SlaveThread class, which handles the serial
     programming code.
 
-    \snippet examples/blockingslave/Slavethread.h 0
+    \snippet blockingslave/Slavethread.h 0
 
     SlaveThread is a QThread subclass that provides an API for receive requests
     from Master, and it has signals for delivering responses and reporting
@@ -91,15 +91,15 @@
     data members from different threads concurrently, we use QMutex to
     synchronize access.
 
-    \snippet examples/blockingslave/slavethread.cpp 2
+    \snippet blockingslave/slavethread.cpp 2
 
     The startSlave() function stores the serial port name, timeout and response
     data, and we lock the mutex with QMutexLocker to protect this data. We then
     start the thread, unless it is already running. We will come back to the
     QWaitCondition::wakeOne() call later.
 
-    \snippet examples/blockingslave/slavethread.cpp 4
-    \snippet examples/blockingslave/slavethread.cpp 5
+    \snippet blockingslave/slavethread.cpp 4
+    \snippet blockingslave/slavethread.cpp 5
 
     In the run() function, we start by acquiring the mutex lock, fetching the
     serial port name, timeout and response data from the member data, and then
@@ -113,7 +113,7 @@
     The QSerialPort object we construct on stack into run() function before loop
     enter:
 
-    \snippet examples/blockingslave/slavethread.cpp 6
+    \snippet blockingslave/slavethread.cpp 6
 
     This allows us once to create an object, while running loop, and also means
     that all the methods of the object will be executed in the context of the
@@ -123,11 +123,11 @@
     current startup. And if the name is changed then re-open and re-configure
     the serial port.
 
-    \snippet examples/blockingslave/slavethread.cpp 7
+    \snippet blockingslave/slavethread.cpp 7
 
     The loop will continue wait for reading request data:
 
-    \snippet examples/blockingslave/slavethread.cpp 8
+    \snippet blockingslave/slavethread.cpp 8
 
     \warning The method waitForReadyRead() should be used before each read()
     call for the blocking approach, because it processes all the I/O routines
@@ -135,12 +135,12 @@
 
     The timeout() signal is emitted if error occurs when reading data.
 
-    \snippet examples/blockingslave/slavethread.cpp 9
+    \snippet blockingslave/slavethread.cpp 9
 
     After a successful read, we try send response and wait completion of the
     transfer:
 
-    \snippet examples/blockingslave/slavethread.cpp 10
+    \snippet blockingslave/slavethread.cpp 10
 
     \warning The method waitForBytesWritten() should be used after each write()
     call for the blocking approach, because it processes all the I/O routines
@@ -148,18 +148,18 @@
 
     The timeout() signal is emitted if error occurs when writing data.
 
-    \snippet examples/blockingslave/slavethread.cpp 11
+    \snippet blockingslave/slavethread.cpp 11
 
     After a successful writing is emitted request() signal containing the
     data received from the Master application:
 
-    \snippet examples/blockingslave/slavethread.cpp 12
+    \snippet blockingslave/slavethread.cpp 12
 
     Next, the thread goes to re-reads the current parameters for serial interface,
     because they can be updated when new startSlave() and run loop from the
     beginning.
 
-    \snippet examples/blockingslave/slavethread.cpp 13
+    \snippet blockingslave/slavethread.cpp 13
 
     \sa {Simple Terminal Example}, {Blocking Master Example}
 */

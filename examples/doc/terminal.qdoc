@@ -84,22 +84,22 @@
     constructor. The main widget is passed as the parent, so the object deletion
     happens automatically according to the the parent and child mechanism in Qt:
 
-    \snippet examples/terminal/mainwindow.cpp 0
+    \snippet terminal/mainwindow.cpp 0
     \dots
-    \snippet examples/terminal/mainwindow.cpp 1
+    \snippet terminal/mainwindow.cpp 1
 
     The only QSerialPort signal invoked in this example is
     QSerialPort::readyRead(), which shows that new data has been received and
     hence available:
 
     \dots
-    \snippet examples/terminal/mainwindow.cpp 2
+    \snippet terminal/mainwindow.cpp 2
     \dots
-    \snippet examples/terminal/mainwindow.cpp 3
+    \snippet terminal/mainwindow.cpp 3
 
     Clicking on the \b{Connect} button invokes the \c openSerialPort() slot:
 
-    \snippet examples/terminal/mainwindow.cpp 4
+    \snippet terminal/mainwindow.cpp 4
 
     In this slot, the settings are read from \l{examples/terminal/settingsdialog.cpp}
     {SettingsDialog} and an attempt is made to open and initialize the serial
@@ -113,13 +113,13 @@
     Clicking on the \b{Disconnect} button invokes the \c closeSerialPort()
     slot:
 
-    \snippet examples/terminal/mainwindow.cpp 5
+    \snippet terminal/mainwindow.cpp 5
 
     In this case, handled by the closure of the serial port.
 
     Typing characters in the console invokes the \c writeData() slot:
 
-    \snippet examples/terminal/mainwindow.cpp 6
+    \snippet terminal/mainwindow.cpp 6
 
     This slot sends the characters typed in the given
     \l{examples/terminal/console.cpp}{Console} widget to the serial port.
@@ -128,7 +128,7 @@
     \l{QTcpSocket::readyRead()}{readyRead()} is emitted, and that signal is
     connected to the \c MainWindow::readData() slot:
 
-    \snippet examples/terminal/mainwindow.cpp 7
+    \snippet terminal/mainwindow.cpp 7
 
     This slot reads the data from the serial port and displays that in the
     \l{examples/terminal/console.cpp}{Console} widget.
