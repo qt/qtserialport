@@ -62,14 +62,18 @@ QT_BEGIN_NAMESPACE
 
 #if !(defined (HAVE_BAUDBOY_H) || defined (HAVE_LOCKDEV_H))
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+#  define QStringLiteral QLatin1String
+#endif
+
 static inline const QStringList& lockDirectoryList()
 {
     static const QStringList lockDirectoryEntries = QStringList()
-        << "/var/lock"
-        << "/etc/locks"
-        << "/var/spool/locks"
-        << "/var/spool/uucp"
-        << "/tmp";
+        << QStringLiteral("/var/lock")
+        << QStringLiteral("/etc/locks")
+        << QStringLiteral("/var/spool/locks")
+        << QStringLiteral("/var/spool/uucp")
+        << QStringLiteral("/tmp");
 
     return lockDirectoryEntries;
 }
