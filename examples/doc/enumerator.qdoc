@@ -26,9 +26,9 @@
 ****************************************************************************/
 
 /*!
-    \module QtSerialPort
-    \title Enumerator example
-    \example examples/enumerator
+    \example enumerator
+    \title Enumerator Example
+    \ingroup qtserialport-examples
 
     The Enumerator example shows how to use the class QSerialPortInfo for
     getting information about serial devices that are present in the system.

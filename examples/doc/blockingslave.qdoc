@@ -26,9 +26,9 @@
 ****************************************************************************/
 
 /*!
-    \module QtSerialPort
-    \title Blocking Slave example
-    \example examples/blockingslave
+    \example blockingslave
+    \title Blocking Slave Example
+    \ingroup qtserialport-examples
 
     The Blocking Slave example shows how to create a application for a
     serial interface using QSerialPort's synchronous API in a non-GUI thread.

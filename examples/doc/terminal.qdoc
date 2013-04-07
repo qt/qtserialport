@@ -26,9 +26,9 @@
 ****************************************************************************/
 
 /*!
-    \module QtSerialPort
-    \title Terminal example
-    \example examples/terminal
+    \example terminal
+    \title Terminal Example
+    \ingroup qtserialport-examples
 
     The Terminal example shows how to create a terminal for a simple serial
     interface by using Qt Serial Port.

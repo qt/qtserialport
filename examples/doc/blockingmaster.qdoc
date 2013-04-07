@@ -26,9 +26,9 @@
 ****************************************************************************/
 
 /*!
-    \module QtSerialPort
-    \title Blocking Master example
-    \example examples/blockingmaster
+    \example blockingmaster
+    \title Blocking Master Example
+    \ingroup qtserialport-examples
 
     The Blocking Master example shows how to create a application for a
     serial interface using QSerialPort's synchronous API in a non-GUI thread.
