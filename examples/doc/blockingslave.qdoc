@@ -73,7 +73,7 @@
     We will start with the SlaveThread class, which handles the serial
     programming code.
 
-    \snippet blockingslave/Slavethread.h 0
+    \snippet blockingslave/slavethread.h 0
 
     SlaveThread is a QThread subclass that provides an API for receive requests
     from Master, and it has signals for delivering responses and reporting
