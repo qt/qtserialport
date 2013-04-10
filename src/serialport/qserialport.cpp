@@ -500,8 +500,7 @@ QString QSerialPort::portName() const
     obtained by calling the error() method.
 
     \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
-    or QIODevice::ReadWrite. This may also have additional flags, such as
-    QIODevice::Unbuffered. Other modes are unsupported.
+    or QIODevice::ReadWrite. Other modes are unsupported.
 
     \sa QIODevice::OpenMode, setPort()
 */
