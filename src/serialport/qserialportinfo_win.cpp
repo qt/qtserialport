@@ -59,16 +59,10 @@ QT_BEGIN_NAMESPACE
 
 static const GUID guidsArray[] =
 {
-    // Windows Ports Class GUID
-    { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
-    // Virtual Ports Class GUID (i.e. com0com and etc)
-    { 0xDF799E12, 0x3C56, 0x421B, { 0xB2, 0x98, 0xB6, 0xD3, 0x64, 0x2B, 0xC8, 0x78 } },
-    // Windows Modems Class GUID
-    { 0x4D36E96D, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
-    // Eltima Virtual Serial Port Driver v4 GUID
-    { 0xCC0EF009, 0xB820, 0x42F4, { 0x95, 0xA9, 0x9B, 0xFA, 0x6A, 0x5A, 0xB7, 0xAB } },
-    // Advanced Virtual COM Port GUID
-    { 0x9341CD95, 0x4371, 0x4A37, { 0xA5, 0xAF, 0xFD, 0xB0, 0xA9, 0xD1, 0x96, 0x31 } },
+    // GUID_DEVINTERFACE_COMPORT
+    { 0x86E0D1E0, 0x8089, 0x11D0, { 0x9C, 0xE4, 0x08, 0x00, 0x3E, 0x30, 0x1F, 0x73} },
+    // GUID_DEVINTERFACE_MODEM
+    { 0x2C7089AA, 0x2E0E, 0x11D1, { 0xB1, 0x14, 0x00, 0xC0, 0x4F, 0xC2, 0xAA, 0xE4} },
 };
 
 static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
@@ -151,7 +145,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
     for (int i = 0; i < guidCount; ++i) {
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], NULL, 0, DIGCF_PRESENT);
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], NULL, 0,
+                                                             DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return serialPortInfoList;
 
@@ -164,7 +159,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             QSerialPortInfo serialPortInfo;
 
             QString s = devicePortName(deviceInfoSet, &deviceInfoData);
-            if (s.isEmpty() || s.contains(QLatin1String("LPT")))
+            if (s.isEmpty())
                 continue;
 
             serialPortInfo.d_ptr->portName = s;
