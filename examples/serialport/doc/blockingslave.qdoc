@@ -43,17 +43,18 @@
     and performed when the control returns to Qt's event loop. QSerialPort emits
     a signal when the operation is finished. For example, QSerialPort::write()
     returns immediately. When the data is sent to the serial port, QSerialPort
-    emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
+    emits \l{QIODevice::bytesWritten()}{bytesWritten()}.
 
     \li \e{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
-    QSerialPort::waitReadyRead()) to suspend the calling thread until the
+    QSerialPort::waitForReadyRead()) to suspend the calling thread until the
     operation has completed.
 
     \endlist
 
     In this example, the synchronous approach is demonstrated. The
-    \l{slave}{Slave Example} example illustrates the asynchronous approach.
+    \l{terminal}{Terminal} example illustrates the
+    asynchronous approach.
 
     The purpose of this example is to demonstrate a pattern that you can use
     to simplify your serial programming code, without losing responsiveness
@@ -64,7 +65,7 @@
     necessarily add unmanagable complexity to your application.
 
     This application is a Slave, that demonstrate the work paired with Master
-    application \l{blockingmaster}{Blocking Master Example}.
+    application \l{Blocking Master Example}.
 
     The Slave application is receives the request via serial port from
     the Master application and send a response to it.
@@ -104,7 +105,7 @@
     serial port name, timeout and response data from the member data, and then
     releasing the lock again. The case that we are protecting ourselves against
     is that \c startSlave() could be called at the same time as we are fetching
-    this data. QString is \l reentrant but \e not \l{thread-safe}, and we must
+    this data. QString is reentrant but not thread-safe, and we must
     also avoid the unlikely risk of reading the serial port name from one startup,
     call and timeout or response data of another. And as you might have guessed,
     SlaveThread can only handle one startup at a time.
@@ -160,5 +161,5 @@
 
     \snippet blockingslave/slavethread.cpp 13
 
-    \sa {Simple Terminal Example}, {Blocking Master Example}
+    \sa {Terminal Example}, {Blocking Master Example}
 */

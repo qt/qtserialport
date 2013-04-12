@@ -27,11 +27,12 @@
 ****************************************************************************/
 
 /*!
-    \module QtSerialPort
-    \title Examples
+    \title Qt Serial Port Examples
     \page examples.html
-    \previouspage Building and usage
-    \contentspage {Examples} {Contents}
+    \brief List of serial port examples
+
+    The module provides the following examples for reference to
+    help understand the API usage:
 
     \list
     \li \l blockingmaster

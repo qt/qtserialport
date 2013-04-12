@@ -48,16 +48,18 @@
     and performed when the control returns to Qt's event loop. QSerialPort emits
     a signal when the operation is finished. For example, QSerialPort::write()
     returns immediately. When the data is sent to the serial port, QSerialPort
-    emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
+    emits \l{QIODevice::bytesWritten()}{bytesWritten()}.
 
     \li \e{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
-    QSerialPort::waitReadyRead()) to suspend the calling thread until the
+    QSerialPort::waitForReadyRead()) to suspend the calling thread until the
     operation has completed.
 
     \endlist
 
-    In this example, the asynchronous approach is demonstrated.
+    In this example, the asynchronous approach is demonstrated. The
+    \l{blockingslave}{Blocking Slave} example illustrates the synchronous
+    approach.
 
     Our example contains some GUI widgets:
 
@@ -72,9 +74,9 @@
     main window, displaying the transmitted or received data. The widget is
     derived from the QPlainTextEdit class.
 
-    \li \l{terminal/settingsdialog.cpp}{SettingsDialog} - is a dialog
-    for configuring the serial port, as well as for displaying the available
-    serial ports and information about them.
+    \li \l{terminal/settingsdialog.cpp}{SettingsDialog} - is a dialog for
+    configuring the serial port, as well as for displaying the available serial
+    ports and information about them.
 
     \endlist
 
@@ -87,8 +89,8 @@
     \snippet terminal/mainwindow.cpp 1
 
     The only QSerialPort signal invoked in this example is
-    QSerialPort::readyRead(), which shows that new data has been received and
-    hence available:
+    \l{QIODevice::readyRead()}{readyRead()}, which shows that new data has been
+    received and hence available:
 
     \dots
     \snippet terminal/mainwindow.cpp 2
@@ -140,5 +142,5 @@
     about the selected port, and set the desired parameters of the given serial
     port.
 
-    \sa {Blocking Simple Terminal Example}
+    \sa {Blocking Slave Example}
 */

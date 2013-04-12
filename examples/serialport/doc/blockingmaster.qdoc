@@ -43,17 +43,17 @@
     and performed when the control returns to Qt's event loop. QSerialPort emits
     a signal when the operation is finished. For example, QSerialPort::write()
     returns immediately. When the data is sent to the serial port, QSerialPort
-    emits \l{QSerialPort::bytesWritten()}{bytesWritten()}.
+    emits \l{QIODevice::bytesWritten()}{bytesWritten()}.
 
     \li \e{The synchronous (blocking) approach.} In non-GUI and multithreaded
     applications, the \c waitFor...() functions can be called (i.e.
-    QSerialPort::waitReadyRead()) to suspend the calling thread until the
+    QSerialPort::waitForReadyRead()) to suspend the calling thread until the
     operation has completed.
 
     \endlist
 
     In this example, the synchronous approach is demonstrated. The
-    \l{terminal}{Simple Terminal} example illustrates the
+    \l{terminal}{Terminal} example illustrates the
     asynchronous approach.
 
     The purpose of this example is to demonstrate a pattern that you can use
@@ -102,7 +102,7 @@
     serial port name, timeout and request data from the member data, and then
     releasing the lock again. The case that we are protecting ourselves against
     is that \c transaction() could be called at the same time as we are fetching
-    this data. QString is \l reentrant but \e not \l{thread-safe}, and we must
+    this data. QString is reentrant but not thread-safe, and we must
     also avoid the unlikely risk of reading the serial port name from one request,
     and timeout or request data of another. And as you might have guessed,
     MasterThread can only handle one request at a time.
@@ -158,5 +158,5 @@
 
     \snippet blockingmaster/masterthread.cpp 13
 
-    \sa {Simple Terminal Example}, {Blocking Slave Example}
+    \sa {Terminal Example}, {Blocking Slave Example}
 */

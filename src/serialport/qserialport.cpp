@@ -89,104 +89,45 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 /*!
     \class QSerialPort
 
-    \brief The QSerialPort class provides functions to access
-    serial ports.
+    \brief Provides functions to access serial ports.
 
     \reentrant
     \ingroup serialport-main
     \inmodule QtSerialPort
     \since 5.1
 
-    This class resembles the functionality and behavior of the QAbstractSocket
-    class in many aspects, for instance the I/O operations, the implementation
-    of the wait methods, the internal architecture and so forth. Certain
-    QSerialPort method implementations were taken directly from QAbstractSocket
-    with only minor changes.
+    You can get information about the available serial ports using the
+    QSerialPortInfo helper class, which allows an enumeration of all the serial
+    ports in the system. This is useful to obtain the correct name of the
+    serial port you want to use. You can pass an object
+    of the helper class as an argument to the setPort() or setPortName()
+    methods to assign the desired serial device.
 
-    The features of the implementation and the conduct of the class are
-    listed below:
+    After setting the port, you can open it in read-only (r/o), write-only
+    (w/o), or read-write (r/w) mode using the open() method.
 
-    \list
-    \li Provides only common functionality which includes
-    configuring, I/O data stream, get and set control signals of the
-    RS-232 pinouts.
-    \li Does not support for terminal features as echo, control CR/LF and so
-    forth.
-    \li Always works in binary mode.
-    \li Does not support the native ability for configuring timeouts
-    and delays while reading.
-    \li Does not provide tracking and notification when the state
-    of RS-232 pinout signals is changed.
-    \endlist
+    \note The serial port is always opened with exclusive access
+    (that is, no other process or thread can access an already opened serial port).
 
-    To get started with the QSerialPort class, first create an object of
-    that.
-
-    Then, call the setPort() method in order to assign the object with the name
-    of the desired serial port (which has to be present in the system).
-    The name has to follow a certain format, which is platform dependent.
-
-    The helper class QSerialPortInfo allows the enumeration of all the serial
-    ports in the system. This is useful to obtain the correct serial port name.
-
-    The QSerialPortInfo class can also be used as an input parameter for the
-    setPort() method (to retrieve the currently assigned name, use the
-    portName() method).
-
-    After that, the serial port can be opened in read-only (r/o), write-only
-    (w/o) or read-write (r/w) mode using the open() method.
-
-    Note: The serial port is always opened with exclusive access
-    (i.e. no other process or thread can access an already opened serial port).
-
-    Having successfully opened, the QSerialPort determines its current
-    configuration and initializes itself to that. To access the current
-    configuration use the baudRate(), dataBits(), parity(), stopBits(), and
-    flowControl() methods.
-
-    If these settings are satisfying, the I/O operation can be proceed with.
-    Otherwise the port can be reconfigured to the desired setting using the
-    setBaudRate(), setDataBits(), setParity(), setStopBits(), and setFlowControl()
-    methods.
-
-    Read or write the data by calling read() or write(). Alternatively the
-    readLine() and readAll() convenience methods can also be invoked. The
-    QSerialPort class also inherits the getChar(), putChar(), and ungetChar()
-    methods from the QIODevice class. Those methods work on single bytes. The
-    bytesWritten() signal is emitted when data has been written to the serial
-    port. Note that, Qt does not limit the write buffer size, which can be
-    monitored by listening to this signal.
-
-    The readyRead() signal is emitted every time a new chunk of data
-    has arrived. The bytesAvailable() method then returns the number of bytes
-    that are available for reading. Typically, the readyRead() signal would be
-    connected to a slot and all data available could be read in there.
-
-    If not all the data is read at once, the remaining data will
-    still be available later. Any new incoming data will be
-    appended to the QSerialPort's internal read buffer. In order to limit the
-    size of the read buffer, call setReadBufferSize().
+    Having successfully opened, QSerialPort tries to determine the current
+    configuration of the port and initializes itself. You can reconfigure the
+    port to the desired setting using the setBaudRate(), setDataBits(),
+    setParity(), setStopBits(), and setFlowControl() methods.
 
     The status of the control pinout signals is determined with the
     isDataTerminalReady(), isRequestToSend, and pinoutSignals() methods. To
     change the control line status, use the setDataTerminalReady(), and
     setRequestToSend() methods.
 
-    To close the serial port, call the close() method. After all the pending data
-    has been written to the serial port, the QSerialPort class actually closes
-    the descriptor.
+    Once you know that the ports are ready to read or write, you can
+    use the read() or write() methods. Alternatively the
+    readLine() and readAll() convenience methods can also be invoked.
+    If not all the data is read at once, the remaining data will
+    be available for later as new incoming data is appended to the
+    QSerialPort's internal read buffer. You can limit the size of the read
+    buffer using setReadBufferSize().
 
-    QSerialPort provides a set of functions that suspend the calling
-    thread until certain signals are emitted. These functions can be
-    used to implement blocking serial ports:
-
-    \list
-    \li waitForReadyRead() blocks until new data is available for
-    reading.
-
-    \li waitForBytesWritten() blocks until one payload of data has been
-    written to the serial port.
-    \endlist
+    Use the close() method to close the port and cancel the I/O operations.
 
     See the following example:
 
@@ -214,16 +155,13 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     However, in a GUI application, blocking serial port should only be
     used in non-GUI threads, to avoid freezing the user interface.
 
-    See the \l master, \l slave, \l blockingmaster, and \l blockingslave
-    examples for an overview of both approaches.
+    For more details about these approaches, refer to the
+    \l {Examples}{example} applications.
 
-    The use of blocking functions is discouraged together with signals. One of
-    the two possibilities should be used.
-
-    The QSerialPort class can be used with QTextStream and QDataStream's stream
-    operators (operator<<() and operator>>()). There is one issue to be aware
-    of, though: make sure that enough data is available before attempting to
-    read by using the operator>>() overloaded operator.
+    The QSerialPort class can also be used with QTextStream and QDataStream's
+    stream operators (operator<<() and operator>>()). There is one issue to be
+    aware of, though: make sure that enough data is available before attempting
+    to read by using the operator>>() overloaded operator.
 
     \sa QSerialPortInfo
 */
@@ -232,8 +170,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \enum QSerialPort::Direction
 
     This enum describes the possible directions of the data transmission.
-    Note: This enumeration is used for setting the baud rate of the device
-    separately for each direction in case some operating systems (i.e. POSIX-like).
+
+    \note This enumeration is used for setting the baud rate of the device
+    separately for each direction on some operating systems (for example,
+    POSIX-like).
 
     \value Input            Input direction.
     \value Output           Output direction.

@@ -17,12 +17,7 @@ qhp.QtSerialPort.filterAttributes    = qtserialport $QT_VERSION qtrefdoc
 qhp.QtSerialPort.customFilters.Qt.name = QtSerialPort $QT_VERSION
 qhp.QtSerialPort.customFilters.Qt.filterAttributes = qtserialport $QT_VERSION
 
-qhp.QtSerialPort.subprojects         = overviews classes examples
-
-qhp.QtSerialPort.subprojects.overviews.title = Overview
-qhp.QtSerialPort.subprojects.overviews.indexTitle = Qt Serial Port
-qhp.QtSerialPort.subprojects.overviews.selectors = fake:page,group,module
-qhp.QtSerialPort.subprojects.overviews.sortPages = true
+qhp.QtSerialPort.subprojects         = classes examples
 
 qhp.QtSerialPort.subprojects.classes.title = C++ Classes
 qhp.QtSerialPort.subprojects.classes.indexTitle = Qt Serial Port C++ Classes
