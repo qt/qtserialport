@@ -211,7 +211,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateCommTimeouts())
         return false;
 
-    eventNotifier = new QSerialPort::CommEventNotifier(eventMask, this, q_ptr);
+    eventNotifier = new CommEventNotifier(eventMask, this, q_ptr);
     eventNotifier->start();
 
     detectDefaultSettings();
@@ -426,6 +426,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
                                            bool checkRead, bool checkWrite,
                                            int msecs, bool *timedOut)
 {
+    DWORD eventMask = 0;
     // FIXME: Here the situation is not properly handled with zero timeout:
     // breaker can work out before you call a method WaitCommEvent()
     // and so it will loop forever!
