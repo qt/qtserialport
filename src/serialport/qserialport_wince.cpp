@@ -286,6 +286,9 @@ qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
     else
         ::memcpy(ptr, data, maxSize);
 
+    // trigger write sequence
+    notifyWrite(QSerialPortPrivateData::WriteChunkSize);
+
     return maxSize;
 }
 
