@@ -43,6 +43,8 @@
 
 #include "qserialport_win_p.h"
 
+#include <QtCore/qcoreevent.h>
+
 #ifndef Q_OS_WINCE
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qvector.h>
@@ -116,7 +118,8 @@ public:
 protected:
     bool event(QEvent *e) Q_DECL_OVERRIDE {
         const bool ret = QWinEventNotifier::event(e);
-        processCompletionRoutine();
+        if (e->type() == QEvent::WinEventAct)
+            processCompletionRoutine();
         return ret;
     }
 
