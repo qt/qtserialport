@@ -36,7 +36,7 @@ qhp.QtSerialPort.subprojects.examples.sortPages = true
 
 headerdirs  += ..
 sourcedirs  += ..
-exampledirs += ../../../examples
+exampledirs += ../../../examples/serialport
 imagedirs   += images
 
 depends += qtcore qtdoc
