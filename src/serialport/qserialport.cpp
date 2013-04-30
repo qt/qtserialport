@@ -214,7 +214,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     However, in a GUI application, blocking serial port should only be
     used in non-GUI threads, to avoid freezing the user interface.
 
-    See the \l examples/terminal and \l examples/blockingterminal
+    See the \l master, \l slave, \l blockingmaster, and \l blockingslave
     examples for an overview of both approaches.
 
     The use of blocking functions is discouraged together with signals. One of

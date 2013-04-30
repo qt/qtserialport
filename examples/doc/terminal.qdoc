@@ -57,9 +57,7 @@
 
     \endlist
 
-    In this example, the asynchronous approach is demonstrated. The
-    \l{examples/blockingterminal}{Blocking Simple Terminal} example
-    illustrates the synchronous approach.
+    In this example, the asynchronous approach is demonstrated.
 
     Our example contains some GUI widgets:
 
