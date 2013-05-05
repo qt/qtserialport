@@ -72,7 +72,7 @@ public:
     bool clear(QSerialPort::Directions dir);
 
     bool sendBreak(int duration);
-    bool setBreak(bool set);
+    bool setBreakEnabled(bool set);
 
     qint64 systemInputQueueSize () const;
     qint64 systemOutputQueueSize () const;

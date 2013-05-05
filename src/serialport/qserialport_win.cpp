@@ -376,15 +376,15 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
 bool QSerialPortPrivate::sendBreak(int duration)
 {
     // FIXME:
-    if (setBreak(true)) {
+    if (setBreakEnabled(true)) {
         ::Sleep(duration);
-        if (setBreak(false))
+        if (setBreakEnabled(false))
             return true;
     }
     return false;
 }
 
-bool QSerialPortPrivate::setBreak(bool set)
+bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
     if (set)
         return ::SetCommBreak(descriptor);

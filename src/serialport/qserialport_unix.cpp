@@ -336,7 +336,7 @@ bool QSerialPortPrivate::sendBreak(int duration)
     return ::tcsendbreak(descriptor, duration) != -1;
 }
 
-bool QSerialPortPrivate::setBreak(bool set)
+bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
     return ::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) != -1;
 }

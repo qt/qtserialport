@@ -1160,7 +1160,7 @@ bool QSerialPort::waitForBytesWritten(int msecs)
     If the duration is non zero then zero bits are transmitted within a certain
     period of time depending on the implementation.
 
-    \sa setBreak(), clearBreak()
+    \sa setBreakEnabled()
 */
 bool QSerialPort::sendBreak(int duration)
 {
@@ -1174,12 +1174,12 @@ bool QSerialPort::sendBreak(int duration)
 
     If \a set is true then enables the break transmission; otherwise disables.
 
-    \sa clearBreak(), sendBreak()
+    \sa sendBreak()
 */
 bool QSerialPort::setBreakEnabled(bool set)
 {
     Q_D(QSerialPort);
-    return d->setBreak(set);
+    return d->setBreakEnabled(set);
 }
 
 /*!
@@ -1221,17 +1221,6 @@ void QSerialPort::setError(QSerialPort::SerialPortError serialPortError, const Q
 
     emit error(serialPortError);
 }
-
-/*!
-    \fn bool QSerialPort::clearBreak(bool clear)
-
-    Controls the signal break, depending on the flag \a clear.
-    If successful, returns true; otherwise returns false.
-
-    If clear is false then enables the break transmission; otherwise disables.
-
-    \sa setBreak(), sendBreak()
-*/
 
 #include "moc_qserialport.cpp"
 
