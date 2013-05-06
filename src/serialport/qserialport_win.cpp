@@ -960,7 +960,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
         return false;
     }
 
-    if (int(waitResult) > (handles.count() - 1))
+    if (waitResult >= DWORD(WAIT_OBJECT_0 + handles.count()))
         return false;
 
     HANDLE h = handles.at(waitResult - WAIT_OBJECT_0);
