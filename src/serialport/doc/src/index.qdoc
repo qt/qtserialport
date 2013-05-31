@@ -26,14 +26,24 @@
 ****************************************************************************/
 
 /*!
-    \module QtSerialPort
-    \title Qt Serial Port Reference Documentation
-    \page index.html
+    \page qtserialport-index.html
+    \title Qt Serial Port
+    \brief Provides API to make the serial programming simple and portable.
 
-    \brief The Qt Serial Port module provides classes to make the serial
-    programming simple and portable.
+    Qt Serial Port provides the basic functionality, which includes
+    configuring, I/O operations, get and set control signals of the
+    RS-232 pinouts.
 
-    Use this form to include Qt Serial Port headers:
+    The following are not supported by this module:
+    \list
+    \li Terminal features such as echo, control CR/LF, and so on.
+    \li Text mode.
+    \li Configuring timeouts and delays while reading.
+    \li Tracking and notification when the state of RS-232 pinout signals change.
+    \endlist
+
+    To use these classes in your application, use the following include
+    statement:
 
     \code
     #include <QtSerialPort/QtSerialPort>
@@ -46,16 +56,10 @@
     QT += serialport
     \endcode
 
-    Table of contents:
-
+    \section1 Related information
     \list
-    \li \l {Introduction}
-    \li \l {Get source}
-    \li \l {Building and usage}
-    \li \l {Examples}
+    \li \l{Qt Serial Port C++ Classes}{C++ Classes}
+    \li \l{Qt Serial Port Examples}{Examples}
     \endlist
 
-    \section1 C++ Classes
-
-    \generatelist annotatedclasses
 */

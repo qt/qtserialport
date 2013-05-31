@@ -229,7 +229,7 @@ bool QSerialPortPrivate::sendBreak(int duration)
     return false;
 }
 
-bool QSerialPortPrivate::setBreak(bool set)
+bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
     // TODO: Implement me
     return false;

@@ -77,7 +77,9 @@ static inline const QStringList& filtersOfDevices()
     << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
     << QLatin1String("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
     << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
-    << QLatin1String("rfcomm*"); // Bluetooth serial device.
+    << QLatin1String("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
+    << QLatin1String("rfcomm*")  // Bluetooth serial device.
+    << QLatin1String("ircomm*"); // IrDA serial device.
 #  elif defined (Q_OS_FREEBSD)
     << QLatin1String("cu*");
 #  else

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 -2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -27,37 +27,20 @@
 
 /*!
     \module QtSerialPort
-    \title Get source
-    \page getsrc.html
-    \previouspage Introduction
-    \contentspage {Get source} {Contents}
-    \nextpage Building and usage
+    \title Qt Serial Port C++ Classes
+    \brief List of C++ classes that enable access to a serial port.
 
-    \section1 Users
+    To use these classes in your application, use the following include
+    statement:
 
     \code
-    $ git clone git://gitorious.org/qt/qtserialport.git
+    #include <QtSerialPort/QtSerialPort>
     \endcode
 
-    \section1 Developers
-
-    Getting a Qt developer account is necessary to contribute to the project,
-    so that has to be obtained first. Once, that is done, see the following page
-    for further details about the Git and Gerrit usage:
-
-    \l{http://wiki.qt-project.org/Setting_up_Gerrit}{Setting up Gerrit}
-
-    The following command can be used to clone the project with push access:
+    To link against the module, add this line to your \l qmake \c
+    .pro file:
 
     \code
-    $ git clone ssh://<username>@codereview.qt-project.org:29418/qt/qtserialport.git
-    \endcode
-
-    If you are in a corporate environment (e.g. behind a firewall) which only
-    allows Ports 80 (HTTP) and 443 (HTTPS), use the following configuration
-    instead:
-
-    \code
-    $ git clone ssh://<username>@codereview.qt-project.org:443/qt/qtserialport.git
+    QT += serialport
     \endcode
 */

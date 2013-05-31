@@ -51,8 +51,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QSerialPortInfo
 
-    \brief The QSerialPortInfo class provides information about
-    existing serial ports.
+    \brief Provides information about existing serial ports.
 
     \ingroup serialport-main
     \inmodule QtSerialPort

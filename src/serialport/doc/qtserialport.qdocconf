@@ -1,4 +1,3 @@
-include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 
 project                 = QtSerialPort
@@ -11,30 +10,28 @@ qhp.projects            = QtSerialPort
 qhp.QtSerialPort.file                = qtserialport.qhp
 qhp.QtSerialPort.namespace           = org.qt-project.qtserialport.$QT_VERSION_TAG
 qhp.QtSerialPort.virtualFolder       = qtserialport
-qhp.QtSerialPort.indexTitle          = Qt Serial Port Reference Documentation
+qhp.QtSerialPort.indexTitle          = Qt Serial Port
 qhp.QtSerialPort.indexRoot           =
 
 qhp.QtSerialPort.filterAttributes    = qtserialport $QT_VERSION qtrefdoc
 qhp.QtSerialPort.customFilters.Qt.name = QtSerialPort $QT_VERSION
 qhp.QtSerialPort.customFilters.Qt.filterAttributes = qtserialport $QT_VERSION
 
-qhp.QtSerialPort.subprojects         = overviews classes examples
+qhp.QtSerialPort.subprojects         = classes examples
 
-qhp.QtSerialPort.subprojects.overviews.title = Overview
-qhp.QtSerialPort.subprojects.overviews.indexTitle = Qt Serial Port
-qhp.QtSerialPort.subprojects.overviews.selectors = fake:page,group,module
-
-qhp.QtSerialPort.subprojects.overviews.title = C++ Classes
-qhp.QtSerialPort.subprojects.overviews.indexTitle = Qt Serial Port C++ Classes
-qhp.QtSerialPort.subprojects.overviews.selectors = class fake:headerfile
+qhp.QtSerialPort.subprojects.classes.title = C++ Classes
+qhp.QtSerialPort.subprojects.classes.indexTitle = Qt Serial Port C++ Classes
+qhp.QtSerialPort.subprojects.classes.selectors = class fake:headerfile
+qhp.QtSerialPort.subprojects.classes.sortPages = true
 
 qhp.QtSerialPort.subprojects.examples.title = Examples
 qhp.QtSerialPort.subprojects.examples.indexTitle = Qt Serial Port Examples
 qhp.QtSerialPort.subprojects.examples.selectors = fake:example
+qhp.QtSerialPort.subprojects.examples.sortPages = true
 
 headerdirs  += ..
 sourcedirs  += ..
-exampledirs += ../../../examples
+exampledirs += ../../../examples/serialport
 imagedirs   += images
 
 depends += qtcore qtdoc
