@@ -146,8 +146,15 @@ public:
         // Check for unexpected event. This event triggered when pulled previously
         // opened device from the system, when opened as for not to read and not to
         // write options and so forth.
-        if ((triggeredEventMask == 0)
-                || ((originalEventMask & triggeredEventMask) == 0)) {
+        if (triggeredEventMask == 0)
+            error = true;
+
+        // Workaround for standard CDC ACM serial ports, for which triggered an
+        // unexpected event EV_TXEMPTY at data transmission.
+        if ((originalEventMask & triggeredEventMask) == 0) {
+            if (triggeredEventMask == EV_TXEMPTY) // it is not error
+                return true;
+
             error = true;
         }
 
