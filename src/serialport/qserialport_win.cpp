@@ -152,10 +152,8 @@ public:
         // Workaround for standard CDC ACM serial ports, for which triggered an
         // unexpected event EV_TXEMPTY at data transmission.
         if ((originalEventMask & triggeredEventMask) == 0) {
-            if (triggeredEventMask == EV_TXEMPTY) // it is not error
-                return true;
-
-            error = true;
+            if ((triggeredEventMask & EV_TXEMPTY) == 0)
+                error = true;
         }
 
         // Start processing a caught error.
