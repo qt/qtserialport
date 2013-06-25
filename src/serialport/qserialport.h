@@ -67,7 +67,7 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
     Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 
-    Q_ENUMS( Directions Rate DataBits Parity StopBits FlowControl PinoutSignals DataErrorPolicy SerialPortError )
+    Q_ENUMS( Directions BaudRate DataBits Parity StopBits FlowControl PinoutSignals DataErrorPolicy SerialPortError )
 
 public:
 
