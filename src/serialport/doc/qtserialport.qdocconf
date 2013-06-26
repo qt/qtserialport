@@ -35,3 +35,6 @@ exampledirs += ../../../examples/serialport
 imagedirs   += images
 
 depends += qtcore qtdoc
+
+navigation.landingpage = "Qt Serial Port"
+navigation.cppclassespage = "Qt Serial Port C++ Classes"
