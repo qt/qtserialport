@@ -310,6 +310,12 @@ void QSerialPortPrivate::close()
 
 #endif // #ifndef Q_OS_WINCE
 
+bool QSerialPortPrivate::setExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode)
+{
+    Q_UNUSED(exclusiveMode);
+    return false;
+}
+
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
 {
     DWORD modemStat = 0;
