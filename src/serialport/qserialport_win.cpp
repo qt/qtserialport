@@ -310,6 +310,12 @@ void QSerialPortPrivate::close()
 
 #endif // #ifndef Q_OS_WINCE
 
+bool QSerialPortPrivate::setExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode)
+{
+    Q_UNUSED(exclusiveMode);
+    return false;
+}
+
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
 {
     DWORD modemStat = 0;
@@ -960,7 +966,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
         return false;
     }
 
-    if (int(waitResult) > (handles.count() - 1))
+    if (waitResult >= DWORD(WAIT_OBJECT_0 + handles.count()))
         return false;
 
     HANDLE h = handles.at(waitResult - WAIT_OBJECT_0);

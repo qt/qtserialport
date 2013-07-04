@@ -139,11 +139,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
 
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
-    QByteArray portName = portNameFromSystemLocation(systemLocation).toLocal8Bit();
-    const char *ptr = portName.constData();
-
-    bool byCurrPid = false;
-    if (QTtyLocker::isLocked(ptr, &byCurrPid)) {
+    if (isLockedByFile()) {
         q_ptr->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -169,17 +165,13 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::fcntl(descriptor, F_SETFL, FNDELAY);
-
-    QTtyLocker::lock(ptr);
-    if (!QTtyLocker::isLocked(ptr, &byCurrPid)) {
+    if (!changeExclusiveMode(exclusiveMode)) {
+        ::close(descriptor);
         q_ptr->setError(QSerialPort::PermissionError);
         return false;
     }
 
-#ifdef TIOCEXCL
-    ::ioctl(descriptor, TIOCEXCL);
-#endif
+    ::fcntl(descriptor, F_SETFL, FNDELAY);
 
     if (::tcgetattr(descriptor, &restoredTermios) == -1) {
         q_ptr->setError(decodeSystemError());
@@ -217,10 +209,6 @@ void QSerialPortPrivate::close()
 #endif
     }
 
-#ifdef TIOCNXCL
-    ::ioctl(descriptor, TIOCNXCL);
-#endif
-
     if (readNotifier) {
         readNotifier->setEnabled(false);
         readNotifier->deleteLater();
@@ -239,17 +227,22 @@ void QSerialPortPrivate::close()
         exceptionNotifier = 0;
     }
 
+    changeExclusiveMode(QSerialPort::NotExclusive);
+
     ::close(descriptor);
-
-    QByteArray portName = portNameFromSystemLocation(systemLocation).toLocal8Bit();
-    const char *ptr = portName.constData();
-
-    bool byCurrPid = false;
-    if (QTtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
-        QTtyLocker::unlock(ptr);
 
     descriptor = -1;
     isCustomBaudRateSupported = false;
+}
+
+bool QSerialPortPrivate::setExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode)
+{
+    if (descriptor != -1 && !changeExclusiveMode(exclusiveMode)) {
+        q_ptr->setError(QSerialPort::PermissionError);
+        return false;
+    }
+    this->exclusiveMode = exclusiveMode;
+    return true;
 }
 
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
@@ -1338,6 +1331,43 @@ qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
     return standardBaudRateMap().keys();
+}
+
+bool QSerialPortPrivate::isLockedByFile()
+{
+    QByteArray portName = portNameFromSystemLocation(systemLocation).toLocal8Bit();
+    const char *ptr = portName.constData();
+    bool byCurrPid;
+
+    return QTtyLocker::isLocked(ptr, &byCurrPid);
+}
+
+bool QSerialPortPrivate::changeExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode)
+{
+    QByteArray portName = portNameFromSystemLocation(systemLocation).toLocal8Bit();
+    const char *ptr = portName.constData();
+    bool byCurrPid;
+
+    if (exclusiveMode & QSerialPort::LockFileExclusive) {
+        QTtyLocker::lock(ptr);
+        if (!QTtyLocker::isLocked(ptr, &byCurrPid))
+            return false;
+    } else {
+        if (QTtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
+            QTtyLocker::unlock(ptr);
+    }
+
+#ifdef TIOCEXCL
+    if (exclusiveMode & QSerialPort::DriverExclusive) {
+        if (::ioctl(descriptor, TIOCEXCL) < 0) {
+            QTtyLocker::unlock(ptr);
+            return false;
+        }
+    } else
+        ::ioctl(descriptor, TIOCNXCL);
+#endif
+
+    return true;
 }
 
 QT_END_NAMESPACE

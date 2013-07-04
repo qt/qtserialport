@@ -73,6 +73,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , stopBits(QSerialPort::UnknownStopBits)
     , flow(QSerialPort::UnknownFlowControl)
     , policy(QSerialPort::IgnorePolicy)
+    , exclusiveMode(QSerialPort::FullyExclusive)
     , settingsRestoredOnClose(true)
     , q_ptr(q)
 {
@@ -320,6 +321,27 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \sa QSerialPort::error
 */
 
+/*!
+    \enum QSerialPort::ExclusiveModeFlag
+
+    This enum describes the level of exclusivity to set on the serial port.
+
+    \value NotExclusive      The serial port may be opened elsewhere even if it
+                             is open here. This flag only has effect on Unix.
+    \value LockFileExclusive A lock file prevents the serial port from being
+                             opened elsewhere while it is open here. This flag
+                             only has effect on Unix.
+    \value DriverExclusive   The serial port driver prevents the serial port
+                             from being opened elsewhere while it is open here.
+                             This flag only has effect on Unix if the ioctl
+                             request TIOCEXCL is available.
+    \value FullyExclusive    Both the serial port driver and, if on Unix, a
+                             lock file prevent the serial port from being opened
+                             elsewhere while it is open here.
+
+    \sa QSerialPort::exclusiveMode
+*/
+
 
 
 /*!
@@ -486,6 +508,28 @@ void QSerialPort::close()
 
     QIODevice::close();
     d->close();
+}
+
+/*!
+    \property QSerialPort::exclusiveMode
+    \brief the exclusivity of this object's claim on the serial port
+
+    If the setting is successful, returns true; otherwise returns false. Serial
+    ports are set to QSerialPort::FullyExclusive by default.
+
+    This flag is always QSerialPort::FullyExclusive on Windows and Symbian and
+    cannot be changed.
+*/
+bool QSerialPort::setExclusiveMode(ExclusiveMode exclusiveMode)
+{
+    Q_D(QSerialPort);
+    return d->setExclusiveMode(exclusiveMode);
+}
+
+QSerialPort::ExclusiveMode QSerialPort::exclusiveMode() const
+{
+    Q_D(const QSerialPort);
+    return d->exclusiveMode;
 }
 
 /*!
