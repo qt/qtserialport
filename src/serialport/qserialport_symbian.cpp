@@ -158,12 +158,6 @@ void QSerialPortPrivate::close()
     descriptor.Close();
 }
 
-bool QSerialPortPrivate::setExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode)
-{
-    Q_UNUSED(exclusiveMode);
-    return false;
-}
-
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
 {
     QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;

@@ -65,11 +65,10 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
-    Q_PROPERTY(ExclusiveMode exclusiveMode READ exclusiveMode WRITE setExclusiveMode)
     Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 
     Q_ENUMS(BaudRate DataBits Parity StopBits FlowControl DataErrorPolicy SerialPortError)
-    Q_FLAGS(Directions PinoutSignals ExclusiveMode)
+    Q_FLAGS(Directions PinoutSignals)
 
 public:
 
@@ -161,14 +160,6 @@ public:
         UnknownError
     };
 
-    enum ExclusiveModeFlag {
-        NotExclusive = 0,
-        LockFileExclusive = 1,
-        DriverExclusive = 2,
-        FullyExclusive = LockFileExclusive | DriverExclusive
-    };
-    Q_DECLARE_FLAGS(ExclusiveMode, ExclusiveModeFlag)
-
     explicit QSerialPort(QObject *parent = 0);
     explicit QSerialPort(const QString &name, QObject *parent = 0);
     explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = 0);
@@ -181,9 +172,6 @@ public:
 
     bool open(OpenMode mode) Q_DECL_OVERRIDE;
     void close() Q_DECL_OVERRIDE;
-
-    bool setExclusiveMode(ExclusiveMode exclusiveMode);
-    ExclusiveMode exclusiveMode() const;
 
     void setSettingsRestoredOnClose(bool restore);
     bool settingsRestoredOnClose() const;
@@ -264,7 +252,6 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Directions)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::PinoutSignals)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::ExclusiveMode)
 
 QT_END_NAMESPACE
 

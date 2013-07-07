@@ -97,7 +97,6 @@ public:
     bool setStopBits(QSerialPort::StopBits stopBits);
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
-    bool setExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode);
 
     bool processIoErrors(bool error);
 #ifndef Q_OS_WINCE
