@@ -59,12 +59,11 @@
 
 QT_BEGIN_NAMESPACE
 
-enum { MATCHING_PROPERTIES_COUNT = 6 };
-
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
+    static const int propertyCount = 6;
     int matchingPropertiesCounter = 0;
 
 
@@ -185,7 +184,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             }
 
             // If all matching properties is found, then force break loop.
-            if (matchingPropertiesCounter == MATCHING_PROPERTIES_COUNT)
+            if (matchingPropertiesCounter == propertyCount)
                 break;
 
             kr = ::IORegistryEntryGetParentEntry(entry, kIOServicePlane, &entry);

@@ -146,6 +146,8 @@ QSerialPortInfo& QSerialPortInfo::operator=(const QSerialPortInfo &other)
 
 /*!
     Returns the name of the serial port.
+
+    \sa systemLocation()
 */
 QString QSerialPortInfo::portName() const
 {
@@ -155,6 +157,8 @@ QString QSerialPortInfo::portName() const
 
 /*!
     Returns the system location of the serial port.
+
+    \sa portName()
 */
 QString QSerialPortInfo::systemLocation() const
 {
@@ -165,6 +169,8 @@ QString QSerialPortInfo::systemLocation() const
 /*!
     Returns the description string of the serial port,
     if available; otherwise returns an empty string.
+
+    \sa manufacturer()
 */
 QString QSerialPortInfo::description() const
 {
@@ -175,6 +181,8 @@ QString QSerialPortInfo::description() const
 /*!
     Returns the manufacturer string of the serial port,
     if available; otherwise returns an empty string.
+
+    \sa description()
 */
 QString QSerialPortInfo::manufacturer() const
 {
@@ -185,6 +193,8 @@ QString QSerialPortInfo::manufacturer() const
 /*!
     Returns the 16-bit vendor number for the serial port, if available;
     otherwise returns zero.
+
+    \sa hasVendorIdentifier(), productIdentifier(), hasProductIdentifier()
 */
 quint16 QSerialPortInfo::vendorIdentifier() const
 {
@@ -195,6 +205,8 @@ quint16 QSerialPortInfo::vendorIdentifier() const
 /*!
     Returns the 16-bit product number for the serial port, if available;
     otherwise returns zero.
+
+    \sa hasProductIdentifier(), vendorIdentifier(), hasVendorIdentifier()
 */
 quint16 QSerialPortInfo::productIdentifier() const
 {
@@ -205,6 +217,8 @@ quint16 QSerialPortInfo::productIdentifier() const
 /*!
     Returns true if there is a valid 16-bit vendor number present; otherwise
     returns false.
+
+    \sa vendorIdentifier(), productIdentifier(), hasProductIdentifier()
 */
 bool QSerialPortInfo::hasVendorIdentifier() const
 {
@@ -215,6 +229,8 @@ bool QSerialPortInfo::hasVendorIdentifier() const
 /*!
     Returns true if there is a valid 16-bit product number present; otherwise
     returns false.
+
+    \sa productIdentifier(), vendorIdentifier(), hasVendorIdentifier()
 */
 bool QSerialPortInfo::hasProductIdentifier() const
 {
@@ -227,6 +243,8 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     Returns whether this QSerialPortInfo object holds a
     serial port definition.
+
+    \sa isBusy(), isValid()
 */
 
 /*!
@@ -234,6 +252,8 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     Returns true if serial port is busy;
     otherwise returns false.
+
+    \sa isNull(), isValid()
 */
 
 /*!
@@ -241,6 +261,8 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     Returns true if serial port is present on system;
     otherwise returns false.
+
+    \sa isNull(), isBusy()
 */
 
 /*!

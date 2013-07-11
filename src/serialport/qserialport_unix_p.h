@@ -91,7 +91,6 @@ public:
     bool setStopBits(QSerialPort::StopBits stopBits);
     bool setFlowControl(QSerialPort::FlowControl flow);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
-    bool setExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode);
 
     bool readNotification();
     bool writeNotification(int maxSize = INT_MAX);
@@ -150,8 +149,6 @@ private:
 #endif
     qint64 readPerChar(char *data, qint64 maxSize);
 
-    bool isLockedByFile();
-    bool changeExclusiveMode(QSerialPort::ExclusiveMode exclusiveMode);
 };
 
 QT_END_NAMESPACE
