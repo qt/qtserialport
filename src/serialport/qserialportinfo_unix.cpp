@@ -224,10 +224,75 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 serialPortInfo.d_ptr->device = deviceFilePath;
                 serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
 
-                // Get description, manufacturer, vendor identifier, product
-                // identifier are not supported.
+                bool canAppendToList = true;
 
-                serialPortInfoList.append(serialPortInfo);
+#if defined (Q_OS_LINUX)
+
+                const QFileInfo ttySysClassFileInfo(QDir(QLatin1String("/sys/class/tty"))
+                                                    .absoluteFilePath(serialPortInfo.d_ptr->portName));
+
+                const QString targetPath = ttySysClassFileInfo.isSymLink()
+                        ? ttySysClassFileInfo.symLinkTarget() : ttySysClassFileInfo.canonicalPath();
+
+                if (targetPath.contains(QLatin1String("pnp"))) {
+                    // TODO: Implement me.
+                } else if (targetPath.contains(QLatin1String("platform"))) {
+                    // Platform 'pseudo' bus for legacy device.
+                    // Skip this devices because this type of subsystem does
+                    // not include a real physical serial device.
+                    canAppendToList = false;
+                } else if (targetPath.contains(QLatin1String("usb"))) {
+
+                    QDir targetDir(targetPath);
+                    targetDir.setFilter(QDir::Files | QDir::Readable);
+                    targetDir.setNameFilters(QStringList(QLatin1String("uevent")));
+
+                    do {
+                        const QFileInfoList entryInfoList = targetDir.entryInfoList();
+                        if (entryInfoList.isEmpty())
+                            continue;
+
+                        QFile uevent(entryInfoList.first().absoluteFilePath());
+                        if (!uevent.open(QIODevice::ReadOnly | QIODevice::Text))
+                            continue;
+
+                        const QString ueventContent(uevent.readAll());
+
+                        if (ueventContent.contains(QLatin1String("DEVTYPE=usb_device"))
+                                && ueventContent.contains(QLatin1String("DRIVER=usb"))) {
+
+                            QFile description(QFileInfo(targetDir, QLatin1String("product")).absoluteFilePath());
+                            if (description.open(QIODevice::ReadOnly | QIODevice::Text))
+                                serialPortInfo.d_ptr->description = QString(description.readAll()).simplified();
+
+                            QFile manufacturer(QFileInfo(targetDir, QLatin1String("manufacturer")).absoluteFilePath());
+                            if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
+                                serialPortInfo.d_ptr->manufacturer = QString(manufacturer.readAll()).simplified();
+
+                            QFile vendorIdentifier(QFileInfo(targetDir, QLatin1String("idVendor")).absoluteFilePath());
+                            if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                                serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
+                                        .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+                            }
+
+                            QFile productIdentifier(QFileInfo(targetDir, QLatin1String("idProduct")).absoluteFilePath());
+                            if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                                serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
+                                        .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+                            }
+
+                            break;
+                        }
+                    } while (targetDir.cdUp());
+
+                } else {
+                    // Unknown types of devices
+                    canAppendToList = false;
+                }
+
+#endif
+                if (canAppendToList)
+                    serialPortInfoList.append(serialPortInfo);
 
             }
         }
