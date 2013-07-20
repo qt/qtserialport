@@ -762,7 +762,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
 
 bool QSerialPort::isDataTerminalReady()
 {
-    Q_D(const QSerialPort);
+    Q_D(QSerialPort);
     return d->pinoutSignals() & QSerialPort::DataTerminalReadySignal;
 }
 
@@ -800,7 +800,7 @@ bool QSerialPort::setRequestToSend(bool set)
 
 bool QSerialPort::isRequestToSend()
 {
-    Q_D(const QSerialPort);
+    Q_D(QSerialPort);
     return d->pinoutSignals() & QSerialPort::RequestToSendSignal;
 }
 
@@ -830,7 +830,7 @@ bool QSerialPort::isRequestToSend()
 */
 QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 {
-    Q_D(const QSerialPort);
+    Q_D(QSerialPort);
     return d->pinoutSignals();
 }
 
