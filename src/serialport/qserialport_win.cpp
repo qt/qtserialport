@@ -476,7 +476,8 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &n) || !n) {
             // This is occur timeout or another error
-            q_ptr->setError(decodeSystemError());
+            if (!timedOut)
+                q_ptr->setError(decodeSystemError());
             return false;
         }
 
@@ -511,7 +512,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         AbstractOverlappedEventNotifier *n = 0;
 
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &n) || !n) {
-            q_ptr->setError(decodeSystemError());
+            if (!timedOut)
+                q_ptr->setError(decodeSystemError());
             return false;
         }
 
