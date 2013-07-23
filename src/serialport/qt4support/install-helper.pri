@@ -24,7 +24,7 @@ PUBLIC_HEADERS += \
      \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortInfo\"
 
 target_headers.files  = $$PUBLIC_HEADERS
-target_headers.path   = $$[QT_INSTALL_PREFIX]/include/QtSerialPort
+target_headers.path   = $$[QT_INSTALL_HEADERS]/QtSerialPort
 INSTALLS              += target_headers
 
 mkspecs_features.files    = $$QTSERIALPORT_PROJECT_ROOT/src/serialport/qt4support/serialport.prf
