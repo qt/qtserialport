@@ -142,9 +142,12 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    static const QString vendorIdentifierPrefix(QLatin1String("VID_"));
+    static const QString usbVendorIdentifierPrefix(QLatin1String("VID_"));
+    static const QString usbProductIdentifierPrefix(QLatin1String("PID_"));
+    static const QString pciVendorIdentifierPrefix(QLatin1String("VEN_"));
+    static const QString pciDeviceIdentifierPrefix(QLatin1String("DEV_"));
+
     static const int vendorIdentifierSize = 4;
-    static const QString productIdentifierPrefix(QLatin1String("PID_"));
     static const int productIdentifierSize = 4;
 
     QList<QSerialPortInfo> serialPortInfoList;
@@ -176,15 +179,27 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
             s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().first().toUpper();
 
-            int index = s.indexOf(vendorIdentifierPrefix);
-            if (index != -1)
-                serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + vendorIdentifierPrefix.size(), vendorIdentifierSize)
-                                                            .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+            int index = s.indexOf(usbVendorIdentifierPrefix);
+            if (index != -1) {
+                serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + usbVendorIdentifierPrefix.size(), vendorIdentifierSize)
+                        .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+            } else {
+                index = s.indexOf(pciVendorIdentifierPrefix);
+                if (index != -1)
+                    serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + pciVendorIdentifierPrefix.size(), vendorIdentifierSize)
+                            .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+            }
 
-            index = s.indexOf(productIdentifierPrefix);
-            if (index != -1)
-                serialPortInfo.d_ptr->productIdentifier = s.mid(index + productIdentifierPrefix.size(), productIdentifierSize)
-                                                            .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+            index = s.indexOf(usbProductIdentifierPrefix);
+            if (index != -1) {
+                serialPortInfo.d_ptr->productIdentifier = s.mid(index + usbProductIdentifierPrefix.size(), productIdentifierSize)
+                        .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+            } else {
+                index = s.indexOf(pciDeviceIdentifierPrefix);
+                if (index != -1)
+                    serialPortInfo.d_ptr->productIdentifier = s.mid(index + pciDeviceIdentifierPrefix.size(), productIdentifierSize)
+                            .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+            }
 
             serialPortInfoList.append(serialPortInfo);
         }
