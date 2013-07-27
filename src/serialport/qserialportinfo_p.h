@@ -64,6 +64,7 @@ public:
     QString device;
     QString description;
     QString manufacturer;
+    QString serialNumber;
 
     quint16 vendorIdentifier;
     quint16 productIdentifier;

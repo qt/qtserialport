@@ -195,6 +195,28 @@ private:
     const QString &m_serialPortName;
 };
 
+static QString deviceSerialNumber(const QString &instanceIdentifier)
+{
+    int firstbound = instanceIdentifier.lastIndexOf(QLatin1Char('\\'));
+    int lastbound = instanceIdentifier.indexOf(QLatin1Char('_'), firstbound);
+    if (instanceIdentifier.startsWith(QStringLiteral("USB\\"))) {
+        if (lastbound != instanceIdentifier.size() - 3)
+            lastbound = instanceIdentifier.size();
+        int ampersand = instanceIdentifier.indexOf(QLatin1Char('&'), firstbound);
+        if (ampersand != -1 && ampersand < lastbound)
+            return QString();
+    } else if (instanceIdentifier.startsWith(QStringLiteral("FTDIBUS\\"))) {
+        firstbound = instanceIdentifier.lastIndexOf(QLatin1Char('+'));
+        lastbound = instanceIdentifier.indexOf(QLatin1Char('\\'), firstbound);
+        if (lastbound == -1)
+            return QString();
+    } else {
+        return QString();
+    }
+
+    return instanceIdentifier.mid(firstbound + 1, lastbound - firstbound - 1);
+}
+
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
     static const QString usbVendorIdentifierPrefix(QStringLiteral("VID_"));
@@ -237,6 +259,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
 
             s = deviceInstanceIdentifier(deviceInfoSet, &deviceInfoData).toUpper();
+
+            serialPortInfo.d_ptr->serialNumber = deviceSerialNumber(s);
 
             int index = s.indexOf(usbVendorIdentifierPrefix);
             if (index != -1) {

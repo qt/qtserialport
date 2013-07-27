@@ -71,6 +71,7 @@ public:
     QString systemLocation() const;
     QString description() const;
     QString manufacturer() const;
+    QString serialNumber() const;
 
     quint16 vendorIdentifier() const;
     quint16 productIdentifier() const;

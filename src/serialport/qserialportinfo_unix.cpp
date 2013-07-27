@@ -251,6 +251,9 @@ QList<QSerialPortInfo> availablePortsByUdev()
                             serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev,
                                                                                    "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
 
+                            serialPortInfo.d_ptr->serialNumber = QString(
+                                    QLatin1String(::udev_device_get_property_value(dev, "ID_SERIAL_SHORT")));
+
                             serialPortInfo.d_ptr->vendorIdentifier =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
                                                 "ID_VENDOR_ID")).toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);

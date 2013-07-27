@@ -63,7 +63,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
-    static const int propertyCount = 6;
+    static const int propertyCount = 7;
 
 
     ::CFMutableDictionaryRef matching = ::IOServiceMatching(kIOSerialBSDServiceValue);
@@ -90,6 +90,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         ::CFTypeRef portName = 0;
         ::CFTypeRef description = 0;
         ::CFTypeRef manufacturer = 0;
+        ::CFTypeRef serialNumber = 0;
         ::CFTypeRef vendorIdentifier = 0;
         ::CFTypeRef productIdentifier = 0;
 
@@ -158,6 +159,19 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     ++matchingPropertiesCounter;
 
             }
+
+            if (!serialNumber) {
+                serialNumber =
+                        ::IORegistryEntrySearchCFProperty(entry,
+                                                          kIOServicePlane,
+                                                          CFSTR(kUSBSerialNumberString),
+                                                          kCFAllocatorDefault,
+                                                          0);
+                if (serialNumber)
+                    ++matchingPropertiesCounter;
+
+            }
+
 
             if (!vendorIdentifier) {
                 vendorIdentifier =
@@ -235,6 +249,16 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     serialPortInfo.d_ptr->manufacturer = QString::fromUtf8(buffer);
                 }
                 ::CFRelease(manufacturer);
+            }
+
+            if (serialNumber) {
+                if (::CFStringGetCString(CFStringRef(serialNumber),
+                                         buffer.data(),
+                                         buffer.size(),
+                                         kCFStringEncodingUTF8)) {
+                    serialPortInfo.d_ptr->serialNumber = QString::fromUtf8(buffer);
+                }
+                ::CFRelease(serialNumber);
             }
 
             quint16 value = 0;
