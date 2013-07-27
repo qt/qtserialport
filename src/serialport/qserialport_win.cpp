@@ -313,7 +313,7 @@ void QSerialPortPrivate::close()
 
 #endif // #ifndef Q_OS_WINCE
 
-QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 {
     DWORD modemStat = 0;
     QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;

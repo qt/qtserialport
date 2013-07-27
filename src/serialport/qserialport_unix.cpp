@@ -252,7 +252,7 @@ void QSerialPortPrivate::close()
     isCustomBaudRateSupported = false;
 }
 
-QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 {
     int arg = 0;
     QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;

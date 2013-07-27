@@ -158,7 +158,7 @@ void QSerialPortPrivate::close()
     descriptor.Close();
 }
 
-QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals() const
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 {
     QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 

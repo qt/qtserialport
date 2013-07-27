@@ -63,7 +63,7 @@ public:
     bool open(QIODevice::OpenMode mode);
     void close();
 
-    QSerialPort::PinoutSignals pinoutSignals() const;
+    QSerialPort::PinoutSignals pinoutSignals();
 
     bool setDataTerminalReady(bool set);
     bool setRequestToSend(bool set);
