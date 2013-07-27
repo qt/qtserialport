@@ -57,6 +57,8 @@ class QSocketNotifier;
 
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
+    Q_DECLARE_PUBLIC(QSerialPort)
+
 public:
     QSerialPortPrivate(QSerialPort *q);
 

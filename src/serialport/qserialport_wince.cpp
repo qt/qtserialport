@@ -164,6 +164,8 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
 
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
+    Q_Q(QSerialPort);
+
     DWORD desiredAccess = 0;
     DWORD eventMask = EV_ERR;
 
@@ -180,12 +182,12 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
                               desiredAccess, 0, NULL, OPEN_EXISTING, 0, NULL);
 
     if (descriptor == INVALID_HANDLE_VALUE) {
-        q_ptr->setError(decodeSystemError());
+        q->setError(decodeSystemError());
         return false;
     }
 
     if (!::GetCommState(descriptor, &restoredDcb)) {
-        q_ptr->setError(decodeSystemError());
+        q->setError(decodeSystemError());
         return false;
     }
 
@@ -201,7 +203,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
 
     if (!::GetCommTimeouts(descriptor, &restoredCommTimeouts)) {
-        q_ptr->setError(decodeSystemError());
+        q->setError(decodeSystemError());
         return false;
     }
 
@@ -211,7 +213,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateCommTimeouts())
         return false;
 
-    eventNotifier = new CommEventNotifier(eventMask, this, q_ptr);
+    eventNotifier = new CommEventNotifier(eventMask, this, q);
     eventNotifier->start();
 
     detectDefaultSettings();
@@ -354,6 +356,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
 
 bool QSerialPortPrivate::notifyRead()
 {
+    Q_Q(QSerialPort);
+
     DWORD bytesToRead = (policy == QSerialPort::IgnorePolicy) ? ReadChunkSize : 1;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
@@ -372,7 +376,7 @@ bool QSerialPortPrivate::notifyRead()
 
     if (!sucessResult) {
         readBuffer.truncate(bytesToRead);
-        q_ptr->setError(QSerialPort::ReadError);
+        q->setError(QSerialPort::ReadError);
         return false;
     }
 
@@ -400,27 +404,29 @@ bool QSerialPortPrivate::notifyRead()
     }
 
     if (readBytes > 0)
-        emit q_ptr->readyRead();
+        emit q->readyRead();
 
     return true;
 }
 
 bool QSerialPortPrivate::notifyWrite(int maxSize)
 {
+    Q_Q(QSerialPort);
+
     int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
 
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
     if (!::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL)) {
-        q_ptr->setError(QSerialPort::WriteError);
+        q->setError(QSerialPort::WriteError);
         return false;
     }
 
     writeBuffer.free(bytesWritten);
 
     if (bytesWritten > 0)
-        emit q_ptr->bytesWritten(bytesWritten);
+        emit q->bytesWritten(bytesWritten);
 
     return true;
 }
@@ -458,6 +464,8 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
 
 bool QSerialPortPrivate::updateDcb()
 {
+    Q_Q(QSerialPort);
+
     QMutexLocker locker(&settingsChangeMutex);
 
     DWORD eventMask = 0;
@@ -470,7 +478,7 @@ bool QSerialPortPrivate::updateDcb()
     // Change parameters
     bool ret = ::SetCommState(descriptor, &currentDcb);
     if (!ret)
-        q_ptr->setError(decodeSystemError());
+        q->setError(decodeSystemError());
     // Restore the event mask
     ::SetCommMask(descriptor, eventMask);
 
@@ -479,8 +487,10 @@ bool QSerialPortPrivate::updateDcb()
 
 bool QSerialPortPrivate::updateCommTimeouts()
 {
+    Q_Q(QSerialPort);
+
     if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
-        q_ptr->setError(decodeSystemError());
+        q->setError(decodeSystemError());
         return false;
     }
     return true;
