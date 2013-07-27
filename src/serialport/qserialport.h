@@ -55,6 +55,7 @@ class QSerialPortPrivate;
 class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
 {
     Q_OBJECT
+    Q_DECLARE_PRIVATE(QSerialPort)
 
     Q_PROPERTY(qint32 baudRate READ baudRate WRITE setBaudRate NOTIFY baudRateChanged)
     Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits NOTIFY dataBitsChanged)
@@ -246,7 +247,6 @@ private:
 
     QSerialPortPrivate * const d_ptr;
 
-    Q_DECLARE_PRIVATE(QSerialPort)
     Q_DISABLE_COPY(QSerialPort)
 };
 
