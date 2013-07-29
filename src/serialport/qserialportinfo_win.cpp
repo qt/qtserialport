@@ -114,6 +114,23 @@ static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
     return QVariant();
 }
 
+static QString deviceInstanceIdentifier(HDEVINFO deviceInfoSet,
+                                        PSP_DEVINFO_DATA deviceInfoData)
+{
+    DWORD requiredSize = 0;
+    if (::SetupDiGetDeviceInstanceId(deviceInfoSet, deviceInfoData, NULL, 0, &requiredSize))
+        return QString();
+
+    QByteArray data(requiredSize * sizeof(wchar_t), 0);
+    if (!::SetupDiGetDeviceInstanceId(deviceInfoSet, deviceInfoData,
+                                      reinterpret_cast<wchar_t *>(data.data()), data.size(), NULL)) {
+        // TODO: error handling with GetLastError
+        return QString();
+    }
+
+    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()));
+}
+
 static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
 {
     static const wchar_t portKeyName[] = L"PortName";
@@ -177,7 +194,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             serialPortInfo.d_ptr->manufacturer =
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
 
-            s = deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_HARDWAREID).toStringList().first().toUpper();
+            s = deviceInstanceIdentifier(deviceInfoSet, &deviceInfoData).toUpper();
 
             int index = s.indexOf(usbVendorIdentifierPrefix);
             if (index != -1) {
