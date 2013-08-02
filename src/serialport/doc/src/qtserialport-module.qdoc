@@ -28,6 +28,8 @@
 /*!
     \module QtSerialPort
     \title Qt Serial Port C++ Classes
+    \ingroup modules
+    \qtvariable serialport
     \brief List of C++ classes that enable access to a serial port.
 
     To use these classes in your application, use the following include
