@@ -50,13 +50,15 @@ QT_BEGIN_NAMESPACE
 
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
+    Q_DECLARE_PUBLIC(QSerialPort)
+
 public:
     QSerialPortPrivate(QSerialPort *q);
 
     bool open(QIODevice::OpenMode mode);
     void close();
 
-    QSerialPort::PinoutSignals pinoutSignals() const;
+    QSerialPort::PinoutSignals pinoutSignals();
 
     bool setDataTerminalReady(bool set);
     bool setRequestToSend(bool set);

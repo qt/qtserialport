@@ -56,7 +56,6 @@ QT_BEGIN_NAMESPACE
 
 class QSerialPortPrivateData
 {
-    Q_DECLARE_PUBLIC(QSerialPort)
 public:
     enum IoConstants {
         ReadChunkSize = 512,
