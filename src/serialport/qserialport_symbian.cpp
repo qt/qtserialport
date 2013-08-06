@@ -648,4 +648,9 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
     return standardBaudRateMap().keys();
 }
 
+QSerialPort::Handle QSerialPort::handle() const
+{
+    return -1;
+}
+
 QT_END_NAMESPACE

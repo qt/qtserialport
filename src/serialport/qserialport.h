@@ -71,6 +71,12 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_ENUMS(BaudRate DataBits Parity StopBits FlowControl DataErrorPolicy SerialPortError)
     Q_FLAGS(Directions PinoutSignals)
 
+#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
+    typedef void* Handle;
+#else
+    typedef int Handle;
+#endif
+
 public:
 
     enum Direction  {
@@ -224,6 +230,8 @@ public:
 
     bool sendBreak(int duration = 0);
     bool setBreakEnabled(bool set = true);
+
+    Handle handle() const;
 
 Q_SIGNALS:
     void baudRateChanged(qint32 baudRate, QSerialPort::Directions dir);

@@ -1081,6 +1081,18 @@ bool QSerialPort::waitForReadyRead(int msecs)
 }
 
 /*!
+    \fn QSerialPort::Handle QSerialPort::handle()
+    \since 5.2
+
+    Returns the native serial port descriptor of the object. If the serial port
+    is not open or the platform is not supported, handle() returns -1.
+
+    \warning This function is for expert use only; use it at your own risk.
+    Furthermore, this function carries no compatibility promise between minor
+    Qt releases.
+*/
+
+/*!
     \reimp
 */
 bool QSerialPort::waitForBytesWritten(int msecs)

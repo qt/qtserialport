@@ -1119,4 +1119,10 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
     return ret;
 }
 
+QSerialPort::Handle QSerialPort::handle() const
+{
+    Q_D(const QSerialPort);
+    return d->descriptor;
+}
+
 QT_END_NAMESPACE
