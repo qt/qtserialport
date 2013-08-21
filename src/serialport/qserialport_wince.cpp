@@ -435,6 +435,8 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
                                            bool checkRead, bool checkWrite,
                                            int msecs, bool *timedOut)
 {
+    Q_Q(QSerialPort);
+
     DWORD eventMask = 0;
     // FIXME: Here the situation is not properly handled with zero timeout:
     // breaker can work out before you call a method WaitCommEvent()
@@ -443,8 +445,10 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     ::WaitCommEvent(descriptor, &eventMask, NULL);
     breaker.stop();
 
-    if (breaker.isWorked())
+    if (breaker.isWorked()) {
         *timedOut = true;
+        q->setError(QSerialPort::TimeoutError);
+    }
 
     if (!breaker.isWorked()) {
         if (checkRead) {

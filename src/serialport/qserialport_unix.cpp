@@ -990,6 +990,8 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
                                            bool checkRead, bool checkWrite,
                                            int msecs, bool *timedOut)
 {
+    Q_Q(QSerialPort);
+
     Q_ASSERT(selectForRead);
     Q_ASSERT(selectForWrite);
     Q_ASSERT(timedOut);
@@ -1013,6 +1015,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
         return false;
     if (ret == 0) {
         *timedOut = true;
+        q->setError(QSerialPort::TimeoutError);
         return false;
     }
 

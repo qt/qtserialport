@@ -979,6 +979,8 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
                                      AbstractOverlappedEventNotifier **triggeredNotifier)
 {
+    Q_Q(QSerialPort);
+
     Q_ASSERT(timedOut);
 
     QVector<HANDLE> handles =  notifiers.keys().toVector();
@@ -988,6 +990,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
                                                 qMax(msecs, 0));
     if (waitResult == WAIT_TIMEOUT) {
         *timedOut = true;
+        q->setError(QSerialPort::TimeoutError);
         return false;
     }
 

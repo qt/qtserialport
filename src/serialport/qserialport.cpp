@@ -315,8 +315,8 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
            e.g. when the device is unexpectedly removed from the system.
     \value UnsupportedOperationError The requested device operation is
            not supported or prohibited by the running operating system.
+    \value TimeoutError         A timeout error occurred.
     \value UnknownError         An unidentified error occurred.
-
     \sa QSerialPort::error
 */
 
