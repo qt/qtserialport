@@ -171,8 +171,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::fcntl(descriptor, F_SETFL, FNDELAY);
-
     QTtyLocker::lock(ptr);
     if (!QTtyLocker::isLocked(ptr, &byCurrPid)) {
         q->setError(QSerialPort::PermissionError);
