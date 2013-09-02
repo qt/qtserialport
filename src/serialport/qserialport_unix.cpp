@@ -324,7 +324,12 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return writeNotification() && (::tcdrain(descriptor) != -1);
+    return writeNotification()
+#ifndef Q_OS_ANDROID
+            && (::tcdrain(descriptor) != -1);
+#else
+            && (::ioctl(descriptor, TCSBRK, 1) != -1);
+#endif
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
@@ -515,7 +520,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
                 if (currentSerialInfo.custom_divisor == 0)
                     currentSerialInfo.custom_divisor = 1;
                 // for custom mode needed prepare to set B38400 baud rate
-                ret = (::cfsetspeed(&currentTermios, B38400) != -1);
+                ret = (::cfsetispeed(&currentTermios, B38400) != -1) && (::cfsetospeed(&currentTermios, B38400) != -1);
             } else {
                 ret = false;
             }
