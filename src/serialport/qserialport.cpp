@@ -539,27 +539,27 @@ bool QSerialPort::settingsRestoredOnClose() const
     \warning Returns equal baud rate in any direction on Windows, Windows CE, and
     Symbian.
 */
-bool QSerialPort::setBaudRate(qint32 baudRate, Directions dir)
+bool QSerialPort::setBaudRate(qint32 baudRate, Directions directions)
 {
     Q_D(QSerialPort);
 
-    if (d->setBaudRate(baudRate, dir)) {
-        if (dir & QSerialPort::Input) {
+    if (d->setBaudRate(baudRate, directions)) {
+        if (directions & QSerialPort::Input) {
             if (d->inputBaudRate != baudRate)
                 d->inputBaudRate = baudRate;
             else
-                dir &= ~QSerialPort::Input;
+                directions &= ~QSerialPort::Input;
         }
 
-        if (dir & QSerialPort::Output) {
+        if (directions & QSerialPort::Output) {
             if (d->outputBaudRate != baudRate)
                 d->outputBaudRate = baudRate;
             else
-                dir &= ~QSerialPort::Output;
+                directions &= ~QSerialPort::Output;
         }
 
-        if (dir)
-            emit baudRateChanged(baudRate, dir);
+        if (directions)
+            emit baudRateChanged(baudRate, directions);
 
         return true;
     }
@@ -567,20 +567,20 @@ bool QSerialPort::setBaudRate(qint32 baudRate, Directions dir)
     return false;
 }
 
-qint32 QSerialPort::baudRate(Directions dir) const
+qint32 QSerialPort::baudRate(Directions directions) const
 {
     Q_D(const QSerialPort);
-    if (dir == QSerialPort::AllDirections)
+    if (directions == QSerialPort::AllDirections)
         return d->inputBaudRate == d->outputBaudRate ?
                     d->inputBaudRate : QSerialPort::UnknownBaud;
-    return dir & QSerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
+    return directions & QSerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
 }
 
 /*!
-    \fn void QSerialPort::baudRateChanged(qint32 baudRate, Directions dir)
+    \fn void QSerialPort::baudRateChanged(qint32 baudRate, Directions directions)
 
     This signal is emitted after the baud rate has been changed. The new baud
-    rate is passed as \a baudRate and directions as \a dir.
+    rate is passed as \a baudRate and directions as \a directions.
 
     \sa QSerialPort::baudRate
 */
@@ -856,18 +856,18 @@ bool QSerialPort::flush()
 
 /*!
     Discards all characters from the output or input buffer, depending on
-    a given direction \a dir. Including clear an internal class buffers and
+    given directions \a directions. Including clear an internal class buffers and
     the UART (driver) buffers. Also terminate pending read or write operations.
     If successful, returns true; otherwise returns false.
 */
-bool QSerialPort::clear(Directions dir)
+bool QSerialPort::clear(Directions directions)
 {
     Q_D(QSerialPort);
-    if (dir & Input)
+    if (directions & Input)
         d->readBuffer.clear();
-    if (dir & Output)
+    if (directions & Output)
         d->writeBuffer.clear();
-    return d->clear(dir);
+    return d->clear(directions);
 }
 
 /*!

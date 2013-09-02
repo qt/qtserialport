@@ -241,12 +241,12 @@ bool QSerialPortPrivate::flush()
     return notifyWrite() && ::FlushFileBuffers(descriptor);
 }
 
-bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
     DWORD flags = 0;
-    if (dir & QSerialPort::Input)
+    if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-    if (dir & QSerialPort::Output)
+    if (directions & QSerialPort::Output)
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
     return ::PurgeComm(descriptor, flags);
 }

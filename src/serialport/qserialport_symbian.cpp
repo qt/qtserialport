@@ -213,12 +213,12 @@ bool QSerialPortPrivate::flush()
     return false;
 }
 
-bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
     TUint flags = 0;
-    if (dir & QSerialPort::Input)
+    if (directions & QSerialPort::Input)
         flags |= KCommResetRx;
-    if (dir & QSerialPort::Output)
+    if (directions & QSerialPort::Output)
         flags |= KCommResetTx;
     TInt r = descriptor.ResetBuffers(flags);
     return r == KErrNone;
@@ -277,11 +277,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
     return false;
 }
 
-bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
+bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_Q(QSerialPort);
 
-    if (dir != QSerialPort::AllDirections) {
+    if (directions != QSerialPort::AllDirections) {
         q->setError(QSerialPort::UnsupportedOperationError);
         return false;
     }

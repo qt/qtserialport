@@ -367,14 +367,14 @@ bool QSerialPortPrivate::flush()
     return startAsyncWrite() && ::FlushFileBuffers(descriptor);
 }
 
-bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
     DWORD flags = 0;
-    if (dir & QSerialPort::Input) {
+    if (directions & QSerialPort::Input) {
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
         actualReadBufferSize = 0;
     }
-    if (dir & QSerialPort::Output) {
+    if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
         actualWriteBufferSize = 0;
         acyncWritePosition = 0;
@@ -546,11 +546,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 
 #endif // #ifndef Q_OS_WINCE
 
-bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
+bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_Q(QSerialPort);
 
-    if (dir != QSerialPort::AllDirections) {
+    if (directions != QSerialPort::AllDirections) {
         q->setError(QSerialPort::UnsupportedOperationError);
         return false;
     }

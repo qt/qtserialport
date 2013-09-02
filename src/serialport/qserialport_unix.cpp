@@ -332,10 +332,10 @@ bool QSerialPortPrivate::flush()
 #endif
 }
 
-bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
-    return ::tcflush(descriptor, (dir == QSerialPort::AllDirections)
-                     ? TCIOFLUSH : (dir & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
+    return ::tcflush(descriptor, (directions == QSerialPort::AllDirections)
+                     ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
 }
 
 bool QSerialPortPrivate::sendBreak(int duration)
@@ -486,7 +486,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     return false;
 }
 
-bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
+bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_Q(QSerialPort);
 
@@ -507,8 +507,8 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
             }
 #endif
             // prepare to set standard baud rate
-            ret = !(((dir & QSerialPort::Input) && ::cfsetispeed(&currentTermios, unixBaudRate) < 0)
-                    || ((dir & QSerialPort::Output) && ::cfsetospeed(&currentTermios, unixBaudRate) < 0));
+            ret = !(((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, unixBaudRate) < 0)
+                    || ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, unixBaudRate) < 0));
         } else {
             // try prepate to set custom baud rate
 #ifdef Q_OS_LINUX
