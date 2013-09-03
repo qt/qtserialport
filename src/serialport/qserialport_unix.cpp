@@ -56,10 +56,6 @@
 #endif
 #endif
 
-#ifdef Q_OS_ANDROID
-#include <android/api-level.h>
-#endif
-
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
@@ -330,14 +326,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    if (!writeNotification())
-        return false;
-
-#if defined (__ANDROID_API__) && (__ANDROID_API__ < 17)
-    return ::ioctl(descriptor, TCSBRK, 1) != -1;
-#else
-    return ::tcdrain(descriptor) != -1;
-#endif
+    return writeNotification() && (::tcdrain(descriptor) != -1);
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
