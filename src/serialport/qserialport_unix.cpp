@@ -171,8 +171,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::fcntl(descriptor, F_SETFL, FNDELAY);
-
     QTtyLocker::lock(ptr);
     if (!QTtyLocker::isLocked(ptr, &byCurrPid)) {
         q->setError(QSerialPort::PermissionError);
@@ -326,13 +324,18 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return writeNotification() && (::tcdrain(descriptor) != -1);
+    return writeNotification()
+#ifndef Q_OS_ANDROID
+            && (::tcdrain(descriptor) != -1);
+#else
+            && (::ioctl(descriptor, TCSBRK, 1) != -1);
+#endif
 }
 
-bool QSerialPortPrivate::clear(QSerialPort::Directions dir)
+bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
-    return ::tcflush(descriptor, (dir == QSerialPort::AllDirections)
-                     ? TCIOFLUSH : (dir & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
+    return ::tcflush(descriptor, (directions == QSerialPort::AllDirections)
+                     ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
 }
 
 bool QSerialPortPrivate::sendBreak(int duration)
@@ -483,7 +486,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     return false;
 }
 
-bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions dir)
+bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_Q(QSerialPort);
 
@@ -504,8 +507,8 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
             }
 #endif
             // prepare to set standard baud rate
-            ret = !(((dir & QSerialPort::Input) && ::cfsetispeed(&currentTermios, unixBaudRate) < 0)
-                    || ((dir & QSerialPort::Output) && ::cfsetospeed(&currentTermios, unixBaudRate) < 0));
+            ret = !(((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, unixBaudRate) < 0)
+                    || ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, unixBaudRate) < 0));
         } else {
             // try prepate to set custom baud rate
 #ifdef Q_OS_LINUX
@@ -517,7 +520,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
                 if (currentSerialInfo.custom_divisor == 0)
                     currentSerialInfo.custom_divisor = 1;
                 // for custom mode needed prepare to set B38400 baud rate
-                ret = (::cfsetspeed(&currentTermios, B38400) != -1);
+                ret = (::cfsetispeed(&currentTermios, B38400) != -1) && (::cfsetospeed(&currentTermios, B38400) != -1);
             } else {
                 ret = false;
             }

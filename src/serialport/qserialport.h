@@ -184,8 +184,8 @@ public:
     void setSettingsRestoredOnClose(bool restore);
     bool settingsRestoredOnClose() const;
 
-    bool setBaudRate(qint32 baudRate, Directions dir = AllDirections);
-    qint32 baudRate(Directions dir = AllDirections) const;
+    bool setBaudRate(qint32 baudRate, Directions directions = AllDirections);
+    qint32 baudRate(Directions directions = AllDirections) const;
 
     bool setDataBits(DataBits dataBits);
     DataBits dataBits() const;
@@ -208,7 +208,7 @@ public:
     PinoutSignals pinoutSignals();
 
     bool flush();
-    bool clear(Directions dir = AllDirections);
+    bool clear(Directions directions = AllDirections);
     bool atEnd() const Q_DECL_OVERRIDE;
 
     bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
@@ -235,7 +235,7 @@ public:
     Handle handle() const;
 
 Q_SIGNALS:
-    void baudRateChanged(qint32 baudRate, QSerialPort::Directions dir);
+    void baudRateChanged(qint32 baudRate, QSerialPort::Directions directions);
     void dataBitsChanged(QSerialPort::DataBits dataBits);
     void parityChanged(QSerialPort::Parity parity);
     void stopBitsChanged(QSerialPort::StopBits stopBits);

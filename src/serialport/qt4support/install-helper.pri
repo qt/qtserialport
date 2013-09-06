@@ -10,13 +10,9 @@ for(header_file, PUBLIC_HEADERS) {
 
 # This is a quick workaround for generating forward header with Qt4.
 
-unix {
-    system("echo \'$${LITERAL_HASH}include \"qserialport.h\"\' > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPort\"")
-    system("echo \'$${LITERAL_HASH}include \"qserialportinfo.h\"\' > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortInfo\"")
-} win32 {
-    system("echo $${LITERAL_HASH}include \"qserialport.h\" > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPort\"")
-    system("echo $${LITERAL_HASH}include \"qserialportinfo.h\" > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortInfo\"")
-}
+!equals(QMAKE_HOST.os, Windows): maybe_quote = "\'"
+system("echo $${maybe_quote}$${LITERAL_HASH}include \"qserialport.h\"$${maybe_quote} > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPort\"")
+system("echo $${maybe_quote}$${LITERAL_HASH}include \"qserialportinfo.h\"$${maybe_quote} > \"$$QTSERIALPORT_PROJECT_INCLUDEDIR/QSerialPortInfo\"")
 
 PUBLIC_HEADERS += \
      $$PUBLIC_HEADERS \

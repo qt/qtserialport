@@ -64,7 +64,7 @@ public:
     bool setRequestToSend(bool set);
 
     bool flush();
-    bool clear(QSerialPort::Directions dir);
+    bool clear(QSerialPort::Directions directions);
 
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
@@ -80,7 +80,7 @@ public:
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);
 
-    bool setBaudRate(qint32 baudRate, QSerialPort::Directions dir);
+    bool setBaudRate(qint32 baudRate, QSerialPort::Directions directions);
     bool setDataBits(QSerialPort::DataBits dataBits);
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);

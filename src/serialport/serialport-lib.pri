@@ -77,10 +77,6 @@ unix:!symbian {
         SOURCES += $$PWD/qserialportinfo_mac.cpp
 
         LIBS += -framework IOKit -framework CoreFoundation
-    } else {
-        linux*:contains( DEFINES, HAVE_LIBUDEV ) {
-            LIBS += -ludev
-        }
     }
 }
 
