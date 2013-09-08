@@ -985,7 +985,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
     DWORD waitResult = ::WaitForMultipleObjects(handles.count(),
                                                 handles.constData(),
                                                 FALSE, // wait any event
-                                                qMax(msecs, 0));
+                                                msecs == -1 ? INFINITE : msecs);
     if (waitResult == WAIT_TIMEOUT) {
         *timedOut = true;
         return false;
