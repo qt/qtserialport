@@ -27,6 +27,7 @@
 
 /*!
     \page qtserialport-index.html
+    \since 5.1
     \title Qt Serial Port
     \brief Provides API to make the serial programming simple and portable.
 
@@ -34,12 +35,12 @@
     configuring, I/O operations, get and set control signals of the
     RS-232 pinouts.
 
-    The following are not supported by this module:
+    The following items are not supported by this module:
     \list
     \li Terminal features such as echo, control CR/LF, and so on.
     \li Text mode.
-    \li Configuring timeouts and delays while reading.
-    \li Tracking and notification when the state of RS-232 pinout signals change.
+    \li Configuring timeouts and delays while reading or writing.
+    \li Pinout signal change notification.
     \endlist
 
     To use these classes in your application, use the following include
