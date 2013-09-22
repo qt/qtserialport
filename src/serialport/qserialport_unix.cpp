@@ -1282,12 +1282,24 @@ static const BaudRateMap createStandardBaudRateMap()
     baudRateMap.insert(4800, B4800);
 #endif
 
+#ifdef B7200
+    baudRateMap.insert(7200, B7200);
+#endif
+
 #ifdef B9600
     baudRateMap.insert(9600, B9600);
 #endif
 
+#ifdef B14400
+    baudRateMap.insert(14400, B14400);
+#endif
+
 #ifdef B19200
     baudRateMap.insert(19200, B19200);
+#endif
+
+#ifdef B28800
+    baudRateMap.insert(28800, B28800);
 #endif
 
 #ifdef B38400
@@ -1296,6 +1308,10 @@ static const BaudRateMap createStandardBaudRateMap()
 
 #ifdef B57600
     baudRateMap.insert(57600, B57600);
+#endif
+
+#ifdef B76800
+    baudRateMap.insert(76800, B76800);
 #endif
 
 #ifdef B115200
