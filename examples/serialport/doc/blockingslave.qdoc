@@ -87,28 +87,27 @@
 
     It's important to notice that startSlave() is called from the main, GUI
     thread, but the response data and other parameters will be accessed from
-    SlaveThread's thread. Because we will be reading and writing SlaveThread's
-    data members from different threads concurrently, we use QMutex to
+    SlaveThread's thread. SlaveThread's data members are read and written
+    from different threads concurrently, so it is advisable to use QMutex to
     synchronize access.
 
     \snippet blockingslave/slavethread.cpp 2
 
     The startSlave() function stores the serial port name, timeout and response
-    data, and we lock the mutex with QMutexLocker to protect this data. We then
-    start the thread, unless it is already running. We will come back to the
-    QWaitCondition::wakeOne() call later.
+    data, and QMutexLocker locks the mutex to protect these data. We then
+    start the thread, unless it is already running. QWaitCondition::wakeOne()
+    will be discussed later.
 
     \snippet blockingslave/slavethread.cpp 4
     \snippet blockingslave/slavethread.cpp 5
 
-    In the run() function, we start by acquiring the mutex lock, fetching the
+    In the run() function, start by acquiring the mutex lock, fetch the
     serial port name, timeout and response data from the member data, and then
-    releasing the lock again. The case that we are protecting ourselves against
-    is that \c startSlave() could be called at the same time as we are fetching
-    this data. QString is reentrant but not thread-safe, and we must
-    also avoid the unlikely risk of reading the serial port name from one startup,
-    call and timeout or response data of another. And as you might have guessed,
-    SlaveThread can only handle one startup at a time.
+    release the lock again. Under no circumstance should the method \c startSlave()
+    be called simultaneously with a process fetching these data. QString is reentrant
+    but not thread-safe, and it is not recommended to read the serial port name
+    from one startup, call and timeout or response data of another.  SlaveThread
+    can only handle one startup at a time.
 
     The QSerialPort object we construct on stack into run() function before loop
     enter:
@@ -119,13 +118,12 @@
     that all the methods of the object will be executed in the context of the
     run() thread.
 
-    In the loop, we check for changed or not the name of serial port for the
-    current startup. And if the name is changed then re-open and re-configure
-    the serial port.
+    In the loop, check whether the name of the serial port for the current
+    startup has changed or not. If it has, re-open and reconfigure the serial port.
 
     \snippet blockingslave/slavethread.cpp 7
 
-    The loop will continue wait for reading request data:
+    The loop will continue waiting for request data:
 
     \snippet blockingslave/slavethread.cpp 8
 
@@ -137,7 +135,7 @@
 
     \snippet blockingslave/slavethread.cpp 9
 
-    After a successful read, we try send response and wait completion of the
+    After a successful read, try to send a response and wait for completion of the
     transfer:
 
     \snippet blockingslave/slavethread.cpp 10
@@ -146,18 +144,18 @@
     call for the blocking approach, because it processes all the I/O routines
     instead of Qt event-loop.
 
-    The timeout() signal is emitted if error occurs when writing data.
+    The timeout() signal is emitted if an error occurs when writing data.
 
     \snippet blockingslave/slavethread.cpp 11
 
-    After a successful writing is emitted request() signal containing the
+    After a successful writing is emitted, request() signal containing the
     data received from the Master application:
 
     \snippet blockingslave/slavethread.cpp 12
 
-    Next, the thread goes to re-reads the current parameters for serial interface,
-    because they can be updated when new startSlave() and run loop from the
-    beginning.
+    Next, the thread switches to reading the current parameters for the serial
+    interface, because they can already have been updated, and run the loop
+    from the beginning.
 
     \snippet blockingslave/slavethread.cpp 13
 
