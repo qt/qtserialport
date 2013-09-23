@@ -115,12 +115,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
-    bool sysfsEnabled = false;
-
-#ifdef Q_OS_LINUX
-
+#ifndef Q_OS_LINUX
+    static const bool sysfsEnabled = false;
+#else
     QDir ttySysClassDir(QLatin1String("/sys/class/tty"));
-    sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
+    const bool sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
 
     if (sysfsEnabled) {
         ttySysClassDir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
