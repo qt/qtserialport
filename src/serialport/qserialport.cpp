@@ -306,6 +306,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
            having enough permission and credentials to open.
     \value OpenError            An error occurred while attempting to
            open an already opened device in this object.
+    \value NotOpenError         This error occurs when an operation is executed
+                                that can only be successfully performed if the
+                                device is open. This value was introduced in
+                                QtSerialPort 5.2.
     \value ParityError Parity error detected by the hardware while reading data.
     \value FramingError Framing error detected by the hardware while reading data.
     \value BreakConditionError Break condition detected by the hardware on
@@ -544,6 +548,11 @@ bool QSerialPort::setBaudRate(qint32 baudRate, Directions directions)
 {
     Q_D(QSerialPort);
 
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     if (d->setBaudRate(baudRate, directions)) {
         if (directions & QSerialPort::Input) {
             if (d->inputBaudRate != baudRate)
@@ -598,6 +607,11 @@ bool QSerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(QSerialPort);
 
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     if (d->setDataBits(dataBits)) {
         if (d->dataBits != dataBits) {
             d->dataBits = dataBits;
@@ -637,6 +651,11 @@ bool QSerialPort::setParity(Parity parity)
 {
     Q_D(QSerialPort);
 
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     if (d->setParity(parity)) {
         if (d->parity != parity) {
             d->parity = parity;
@@ -675,6 +694,11 @@ bool QSerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(QSerialPort);
 
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     if (d->setStopBits(stopBits)) {
         if (d->stopBits != stopBits) {
             d->stopBits = stopBits;
@@ -712,6 +736,11 @@ QSerialPort::StopBits QSerialPort::stopBits() const
 bool QSerialPort::setFlowControl(FlowControl flow)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
 
     if (d->setFlowControl(flow)) {
         if (d->flow != flow) {
@@ -752,6 +781,11 @@ bool QSerialPort::setDataTerminalReady(bool set)
 {
     Q_D(QSerialPort);
 
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     bool retval = d->setDataTerminalReady(set);
     if (retval && (d->dataTerminalReady != set)) {
         d->dataTerminalReady = set;
@@ -789,6 +823,11 @@ bool QSerialPort::isDataTerminalReady()
 bool QSerialPort::setRequestToSend(bool set)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
 
     bool retval = d->setRequestToSend(set);
     if (retval && (d->requestToSend != set)) {
@@ -910,6 +949,11 @@ bool QSerialPort::atEnd() const
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
 
     const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
     if (ret && (d->policy != policy)) {

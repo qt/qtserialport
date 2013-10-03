@@ -165,7 +165,8 @@ public:
         ResourceError,
         UnsupportedOperationError,
         UnknownError,
-        TimeoutError
+        TimeoutError,
+        NotOpenError
     };
 
     explicit QSerialPort(QObject *parent = 0);
