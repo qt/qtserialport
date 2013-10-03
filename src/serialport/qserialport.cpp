@@ -184,8 +184,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \enum QSerialPort::BaudRate
 
     This enum describes the baud rate which the communication device operates
-    with. Note: only the most common standard baud rates are listed in this
-    enum.
+    with.
+
+    \note Only the most common standard baud rates are listed in this enum.
 
     \value Baud1200     1200 baud.
     \value Baud2400     2400 baud.
@@ -821,8 +822,8 @@ bool QSerialPort::isRequestToSend()
     desired signal by applying a mask "AND", where the mask is
     the desired enumeration value from QSerialPort::PinoutSignals.
 
-    Note that, this method performs a system call, thus ensuring that the line
-    signal states are returned properly. This is necessary when the underlying
+    \note This method performs a system call, thus ensuring that the line signal
+    states are returned properly. This is necessary when the underlying
     operating systems cannot provide proper notifications about the changes.
 
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
