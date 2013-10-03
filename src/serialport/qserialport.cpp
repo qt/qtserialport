@@ -444,6 +444,10 @@ QString QSerialPort::portName() const
     successful; otherwise returns false and sets an error code which can be
     obtained by calling the error() method.
 
+    \note This method has to be called before setting certain serial port
+    parameters. See each property documentation for details when it is
+    necessary.
+
     \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
     or QIODevice::ReadWrite. Other modes are unsupported.
 
@@ -538,6 +542,13 @@ bool QSerialPort::settingsRestoredOnClose() const
     QSerialPort::error property. To set the baud rate, use the enumeration
     QSerialPort::BaudRate or any positive qint32 value.
 
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
+
     \warning Only the AllDirections flag is support for setting this property on
     Windows, Windows CE, and Symbian.
 
@@ -602,6 +613,13 @@ qint32 QSerialPort::baudRate(Directions directions) const
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setDataBits(DataBits dataBits)
 {
@@ -646,6 +664,13 @@ QSerialPort::DataBits QSerialPort::dataBits() const
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setParity(Parity parity)
 {
@@ -689,6 +714,13 @@ QSerialPort::Parity QSerialPort::parity() const
     If the setting is successful, returns true; otherwise returns false and
     sets an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setStopBits(StopBits stopBits)
 {
@@ -732,6 +764,13 @@ QSerialPort::StopBits QSerialPort::stopBits() const
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setFlowControl(FlowControl flow)
 {
@@ -775,6 +814,13 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the DTR signal is set to high; otherwise low.
 
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
+
     \sa pinoutSignals()
 */
 bool QSerialPort::setDataTerminalReady(bool set)
@@ -817,6 +863,13 @@ bool QSerialPort::isDataTerminalReady()
 
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the RTS signal is set to high; otherwise low.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 
     \sa pinoutSignals()
 */
@@ -945,6 +998,13 @@ bool QSerialPort::atEnd() const
 
     If the setting is successful, returns true; otherwise returns false. The
     default policy set is IgnorePolicy.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
