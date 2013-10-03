@@ -441,7 +441,7 @@ QString QSerialPort::portName() const
     \reimp
 
     Opens the serial port using OpenMode \a mode, and then returns true if
-    successful; otherwise returns false with and sets an error code which can be
+    successful; otherwise returns false and sets an error code which can be
     obtained by calling the error() method.
 
     \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
