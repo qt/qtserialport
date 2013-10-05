@@ -484,12 +484,16 @@ bool QSerialPort::open(OpenMode mode)
 /*!
     \reimp
 
+    \note The serial port has to be open before trying to close it; otherwise
+    sets the NotOpenError error code.
+
     \sa QIODevice::close()
 */
 void QSerialPort::close()
 {
     Q_D(QSerialPort);
     if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
         return;
     }
 
