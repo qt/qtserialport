@@ -140,7 +140,8 @@ public:
         RequestToSendSignal = 0x40,
         ClearToSendSignal = 0x80,
         SecondaryTransmittedDataSignal = 0x100,
-        SecondaryReceivedDataSignal = 0x200
+        SecondaryReceivedDataSignal = 0x200,
+        UnknownSignal = -1
     };
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 

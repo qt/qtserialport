@@ -320,12 +320,13 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
     Q_Q(QSerialPort);
 
     DWORD modemStat = 0;
-    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (!::GetCommModemStatus(descriptor, &modemStat)) {
         q->setError(decodeSystemError());
-        return ret;
+        return QSerialPort::UnknownSignal;
     }
+
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (modemStat & MS_CTS_ON)
         ret |= QSerialPort::ClearToSendSignal;

@@ -272,6 +272,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value ClearToSendSignal              CTS (Clear To Send).
     \value SecondaryTransmittedDataSignal STD (Secondary Transmitted Data).
     \value SecondaryReceivedDataSignal    SRD (Secondary Received Data).
+    \value UnknownSignal                  Unknown line state. This value was introduced in QtSerialPort 5.2.
 
     \sa pinoutSignals(), QSerialPort::dataTerminalReady,
     QSerialPort::requestToSend
