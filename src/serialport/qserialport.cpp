@@ -819,12 +819,12 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the DTR signal is set to high; otherwise low.
 
-    \note The serial port has to be open before trying to set this property;
-    otherwise returns false and sets the NotOpenError error code. This is a bit
-    unusual as opposed to the regular Qt property settings of a class. However,
-    this is a special use case since the property is set through the interaction
-    with the kernel and hardware. Hence, the two scenarios cannot be completely
-    compared to each other.
+    \note The serial port has to be open before trying to set or get this
+    property; otherwise returns false and sets the NotOpenError error code. This
+    is a bit unusual as opposed to the regular Qt property settings of a class.
+    However, this is a special use case since the property is set through the
+    interaction with the kernel and hardware. Hence, the two scenarios cannot be
+    completely compared to each other.
 
     \sa pinoutSignals()
 */
@@ -869,12 +869,12 @@ bool QSerialPort::isDataTerminalReady()
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the RTS signal is set to high; otherwise low.
 
-    \note The serial port has to be open before trying to set this property;
-    otherwise returns false and sets the NotOpenError error code. This is a bit
-    unusual as opposed to the regular Qt property settings of a class. However,
-    this is a special use case since the property is set through the interaction
-    with the kernel and hardware. Hence, the two scenarios cannot be completely
-    compared to each other.
+    \note The serial port has to be open before trying to set or get this
+    property; otherwise returns false and sets the NotOpenError error code. This
+    is a bit unusual as opposed to the regular Qt property settings of a class.
+    However, this is a special use case since the property is set through the
+    interaction with the kernel and hardware. Hence, the two scenarios cannot be
+    completely compared to each other.
 
     \sa pinoutSignals()
 */
@@ -923,12 +923,22 @@ bool QSerialPort::isRequestToSend()
     states are returned properly. This is necessary when the underlying
     operating systems cannot provide proper notifications about the changes.
 
+    \note The serial port has to be open before trying to get the pinout
+    signals; otherwise returns UnknownSignal and sets the NotOpenError error
+    code.
+
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
 */
 QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return QSerialPort::UnknownSignal;
+    }
+
     return d->pinoutSignals();
 }
 
@@ -944,11 +954,20 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
     returned to the event loop. In the absence of an event loop, call
     waitForBytesWritten() instead.
 
+    \note The serial port has to be open before trying to flush any buffered
+    data; otherwise returns false and sets the NotOpenError error code.
+
     \sa write(), waitForBytesWritten()
 */
 bool QSerialPort::flush()
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     return d->flush();
 }
 
@@ -957,10 +976,19 @@ bool QSerialPort::flush()
     given directions \a directions. Including clear an internal class buffers and
     the UART (driver) buffers. Also terminate pending read or write operations.
     If successful, returns true; otherwise returns false.
+
+    \note The serial port has to be open before trying to clear any buffered
+    data; otherwise returns false and sets the NotOpenError error code.
 */
 bool QSerialPort::clear(Directions directions)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     if (directions & Input)
         d->readBuffer.clear();
     if (directions & Output)
@@ -1222,11 +1250,20 @@ bool QSerialPort::waitForBytesWritten(int msecs)
     If the duration is non zero then zero bits are transmitted within a certain
     period of time depending on the implementation.
 
+    \note The serial port has to be open before trying to send a break
+    duration; otherwise returns false and sets the NotOpenError error code.
+
     \sa setBreakEnabled()
 */
 bool QSerialPort::sendBreak(int duration)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     return d->sendBreak(duration);
 }
 
@@ -1236,11 +1273,20 @@ bool QSerialPort::sendBreak(int duration)
 
     If \a set is true then enables the break transmission; otherwise disables.
 
+    \note The serial port has to be open before trying to set break enabled;
+    otherwise returns false and sets the NotOpenError error code.
+
     \sa sendBreak()
 */
 bool QSerialPort::setBreakEnabled(bool set)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        return false;
+    }
+
     return d->setBreakEnabled(set);
 }
 
