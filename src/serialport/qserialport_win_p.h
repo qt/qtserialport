@@ -85,9 +85,6 @@ public:
     qint64 systemInputQueueSize ();
     qint64 systemOutputQueueSize ();
 
-    qint64 bytesAvailable() const;
-
-    qint64 readFromBuffer(char *data, qint64 maxSize);
     qint64 writeToBuffer(const char *data, qint64 maxSize);
 
     bool waitForReadyRead(int msec);
@@ -133,7 +130,7 @@ public:
 
 #ifndef Q_OS_WINCE
     QHash<HANDLE, AbstractOverlappedEventNotifier *> notifiers;
-    qint64 actualReadBufferSize;
+    QByteArray readChunkBuffer;
     qint64 actualWriteBufferSize;
     qint64 acyncWritePosition;
     bool readyReadEmitted;

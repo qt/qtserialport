@@ -248,17 +248,6 @@ qint64 QSerialPortPrivate::systemOutputQueueSize () const
     return 0;
 }
 
-qint64 QSerialPortPrivate::bytesAvailable() const
-{
-    return readBuffer.size();
-}
-
-qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
-{
-    // TODO: Implement me
-    return -1;
-}
-
 qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
     // TODO: Implement me

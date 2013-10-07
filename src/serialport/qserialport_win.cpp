@@ -243,7 +243,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , descriptor(INVALID_HANDLE_VALUE)
     , parityErrorOccurred(false)
-    , actualReadBufferSize(0)
+    , readChunkBuffer(ReadChunkSize, 0)
     , actualWriteBufferSize(0)
     , acyncWritePosition(0)
     , readyReadEmitted(0)
@@ -323,7 +323,6 @@ void QSerialPortPrivate::close()
     notifiers.clear();
 
     readBuffer.clear();
-    actualReadBufferSize = 0;
 
     writeSequenceStarted = false;
     writeBuffer.clear();
@@ -405,10 +404,8 @@ bool QSerialPortPrivate::flush()
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
     DWORD flags = 0;
-    if (directions & QSerialPort::Input) {
+    if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-        actualReadBufferSize = 0;
-    }
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
         actualWriteBufferSize = 0;
@@ -465,38 +462,6 @@ qint64 QSerialPortPrivate::systemOutputQueueSize ()
 }
 
 #ifndef Q_OS_WINCE
-
-qint64 QSerialPortPrivate::bytesAvailable() const
-{
-    return actualReadBufferSize;
-}
-
-qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
-{
-    if (actualReadBufferSize == 0)
-        return 0;
-
-    qint64 readSoFar = -1;
-    if (maxSize == 1 && actualReadBufferSize > 0) {
-        *data = readBuffer.getChar();
-        actualReadBufferSize--;
-        readSoFar = 1;
-    } else {
-        const qint64 bytesToRead = qMin(qint64(actualReadBufferSize), maxSize);
-        readSoFar = 0;
-        while (readSoFar < bytesToRead) {
-            const char *ptr = readBuffer.readPointer();
-            const int bytesToReadFromThisBlock = qMin(bytesToRead - readSoFar,
-                                                      qint64(readBuffer.nextDataBlockSize()));
-            ::memcpy(data + readSoFar, ptr, bytesToReadFromThisBlock);
-            readSoFar += bytesToReadFromThisBlock;
-            readBuffer.free(bytesToReadFromThisBlock);
-            actualReadBufferSize -= bytesToReadFromThisBlock;
-        }
-    }
-
-    return readSoFar;
-}
 
 qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
@@ -706,9 +671,7 @@ bool QSerialPortPrivate::startAsyncRead()
         return false;
     }
 
-    char *ptr = readBuffer.reserve(bytesToRead);
-
-    if (::ReadFile(descriptor, ptr, bytesToRead, NULL, n->overlappedPointer()))
+    if (::ReadFile(descriptor, readChunkBuffer.data(), bytesToRead, NULL, n->overlappedPointer()))
         return true;
 
     QSerialPort::SerialPortError error = decodeSystemError();
@@ -717,7 +680,6 @@ bool QSerialPortPrivate::startAsyncRead()
             error = QSerialPort::ReadError;
         q->setError(error);
 
-        readBuffer.truncate(actualReadBufferSize);
         return false;
     }
 
@@ -800,10 +762,9 @@ void QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
 {
     Q_Q(QSerialPort);
 
-    actualReadBufferSize += qint64(numberOfBytes);
-    readBuffer.truncate(actualReadBufferSize);
-
     if (numberOfBytes > 0) {
+
+        readBuffer.append(readChunkBuffer.left(numberOfBytes));
 
         // Process emulate policy.
         if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {

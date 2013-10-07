@@ -1062,7 +1062,7 @@ bool QSerialPort::clear(Directions directions)
 bool QSerialPort::atEnd() const
 {
     Q_D(const QSerialPort);
-    return QIODevice::atEnd() && (!isOpen() || (d->bytesAvailable() == 0));
+    return QIODevice::atEnd() && (!isOpen() || (d->readBuffer.size() == 0));
 }
 
 /*!
@@ -1210,7 +1210,7 @@ bool QSerialPort::isSequential() const
 qint64 QSerialPort::bytesAvailable() const
 {
     Q_D(const QSerialPort);
-    return d->bytesAvailable() + QIODevice::bytesAvailable();
+    return d->readBuffer.size() + QIODevice::bytesAvailable();
 }
 
 /*!
@@ -1239,7 +1239,7 @@ qint64 QSerialPort::bytesToWrite() const
 bool QSerialPort::canReadLine() const
 {
     Q_D(const QSerialPort);
-    const bool hasLine = (d->bytesAvailable() > 0) && d->readBuffer.canReadLine();
+    const bool hasLine = (d->readBuffer.size() > 0) && d->readBuffer.canReadLine();
     return hasLine || QIODevice::canReadLine();
 }
 
@@ -1342,7 +1342,7 @@ bool QSerialPort::setBreakEnabled(bool set)
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->readFromBuffer(data, maxSize);
+    return d->readBuffer.read(data, maxSize);
 }
 
 /*!
