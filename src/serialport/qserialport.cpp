@@ -59,6 +59,8 @@
 #  define SERIALPORT_BUFFERSIZE 16384
 #endif
 
+#include <QtCore/qdebug.h>
+
 QT_BEGIN_NAMESPACE
 
 QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
@@ -495,6 +497,7 @@ void QSerialPort::close()
     Q_D(QSerialPort);
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return;
     }
 
@@ -566,6 +569,7 @@ bool QSerialPort::setBaudRate(qint32 baudRate, Directions directions)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -632,6 +636,7 @@ bool QSerialPort::setDataBits(DataBits dataBits)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -683,6 +688,7 @@ bool QSerialPort::setParity(Parity parity)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -733,6 +739,7 @@ bool QSerialPort::setStopBits(StopBits stopBits)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -783,6 +790,7 @@ bool QSerialPort::setFlowControl(FlowControl flow)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -834,6 +842,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -884,6 +893,7 @@ bool QSerialPort::setRequestToSend(bool set)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -936,6 +946,7 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return QSerialPort::UnknownSignal;
     }
 
@@ -965,6 +976,7 @@ bool QSerialPort::flush()
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -986,6 +998,7 @@ bool QSerialPort::clear(Directions directions)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -1045,6 +1058,7 @@ bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -1261,6 +1275,7 @@ bool QSerialPort::sendBreak(int duration)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
@@ -1284,6 +1299,7 @@ bool QSerialPort::setBreakEnabled(bool set)
 
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
