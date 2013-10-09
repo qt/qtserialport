@@ -89,6 +89,7 @@ QT_BEGIN_NAMESPACE
 
 class AbstractOverlappedEventNotifier : public QWinEventNotifier
 {
+    Q_OBJECT
 public:
     enum Type { CommEvent, ReadCompletionEvent, WriteCompletionEvent };
 
@@ -126,6 +127,7 @@ protected:
 
 class CommOverlappedEventNotifier : public AbstractOverlappedEventNotifier
 {
+    Q_OBJECT
 public:
     CommOverlappedEventNotifier(QSerialPortPrivate *d, DWORD eventMask, QObject *parent)
         : AbstractOverlappedEventNotifier(d, CommEvent, false, parent)
@@ -172,6 +174,7 @@ private:
 
 class ReadOverlappedCompletionNotifier : public AbstractOverlappedEventNotifier
 {
+    Q_OBJECT
 public:
     ReadOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, ReadCompletionEvent, false, parent) {}
@@ -197,6 +200,7 @@ public:
 
 class WriteOverlappedCompletionNotifier : public AbstractOverlappedEventNotifier
 {
+    Q_OBJECT
 public:
     WriteOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, WriteCompletionEvent, false, parent) {}
@@ -208,6 +212,8 @@ public:
         return dptr->completeAsyncWrite(numberOfBytesTransferred);
     }
 };
+
+#include "qserialport_win.moc"
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
