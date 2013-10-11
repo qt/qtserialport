@@ -50,11 +50,7 @@
 #include <QtCore/qvector.h>
 #endif
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #include <QtCore/qwineventnotifier.h>
-#else
-#include "qt4support/qwineventnotifier_p.h"
-#endif
 
 #ifndef CTL_CODE
 #  define CTL_CODE(DeviceType, Function, Method, Access) ( \
@@ -320,12 +316,13 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
     Q_Q(QSerialPort);
 
     DWORD modemStat = 0;
-    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (!::GetCommModemStatus(descriptor, &modemStat)) {
         q->setError(decodeSystemError());
-        return ret;
+        return QSerialPort::UnknownSignal;
     }
+
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (modemStat & MS_CTS_ON)
         ret |= QSerialPort::ClearToSendSignal;

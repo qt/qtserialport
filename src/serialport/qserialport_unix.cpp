@@ -257,12 +257,13 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
     Q_Q(QSerialPort);
 
     int arg = 0;
-    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
     if (::ioctl(descriptor, TIOCMGET, &arg) == -1) {
         q->setError(decodeSystemError());
-        return ret;
+        return QSerialPort::UnknownSignal;
     }
+
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
 
 #ifdef TIOCM_LE
     if (arg & TIOCM_LE)

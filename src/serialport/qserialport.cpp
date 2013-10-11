@@ -59,6 +59,8 @@
 #  define SERIALPORT_BUFFERSIZE 16384
 #endif
 
+#include <QtCore/qdebug.h>
+
 QT_BEGIN_NAMESPACE
 
 QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
@@ -184,8 +186,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \enum QSerialPort::BaudRate
 
     This enum describes the baud rate which the communication device operates
-    with. Note: only the most common standard baud rates are listed in this
-    enum.
+    with.
+
+    \note Only the most common standard baud rates are listed in this enum.
 
     \value Baud1200     1200 baud.
     \value Baud2400     2400 baud.
@@ -271,6 +274,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value ClearToSendSignal              CTS (Clear To Send).
     \value SecondaryTransmittedDataSignal STD (Secondary Transmitted Data).
     \value SecondaryReceivedDataSignal    SRD (Secondary Received Data).
+    \value UnknownSignal                  Unknown line state. This value was introduced in QtSerialPort 5.2.
 
     \sa pinoutSignals(), QSerialPort::dataTerminalReady,
     QSerialPort::requestToSend
@@ -305,6 +309,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
            having enough permission and credentials to open.
     \value OpenError            An error occurred while attempting to
            open an already opened device in this object.
+    \value NotOpenError         This error occurs when an operation is executed
+                                that can only be successfully performed if the
+                                device is open. This value was introduced in
+                                QtSerialPort 5.2.
     \value ParityError Parity error detected by the hardware while reading data.
     \value FramingError Framing error detected by the hardware while reading data.
     \value BreakConditionError Break condition detected by the hardware on
@@ -436,8 +444,12 @@ QString QSerialPort::portName() const
     \reimp
 
     Opens the serial port using OpenMode \a mode, and then returns true if
-    successful; otherwise returns false with and sets an error code which can be
+    successful; otherwise returns false and sets an error code which can be
     obtained by calling the error() method.
+
+    \note This method has to be called before setting certain serial port
+    parameters. See each property documentation for details when it is
+    necessary.
 
     \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
     or QIODevice::ReadWrite. Other modes are unsupported.
@@ -475,12 +487,17 @@ bool QSerialPort::open(OpenMode mode)
 /*!
     \reimp
 
+    \note The serial port has to be open before trying to close it; otherwise
+    sets the NotOpenError error code.
+
     \sa QIODevice::close()
 */
 void QSerialPort::close()
 {
     Q_D(QSerialPort);
     if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
         return;
     }
 
@@ -533,6 +550,13 @@ bool QSerialPort::settingsRestoredOnClose() const
     QSerialPort::error property. To set the baud rate, use the enumeration
     QSerialPort::BaudRate or any positive qint32 value.
 
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
+
     \warning Only the AllDirections flag is support for setting this property on
     Windows, Windows CE, and Symbian.
 
@@ -542,6 +566,12 @@ bool QSerialPort::settingsRestoredOnClose() const
 bool QSerialPort::setBaudRate(qint32 baudRate, Directions directions)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     if (d->setBaudRate(baudRate, directions)) {
         if (directions & QSerialPort::Input) {
@@ -592,10 +622,23 @@ qint32 QSerialPort::baudRate(Directions directions) const
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     if (d->setDataBits(dataBits)) {
         if (d->dataBits != dataBits) {
@@ -631,10 +674,23 @@ QSerialPort::DataBits QSerialPort::dataBits() const
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setParity(Parity parity)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     if (d->setParity(parity)) {
         if (d->parity != parity) {
@@ -669,10 +725,23 @@ QSerialPort::Parity QSerialPort::parity() const
     If the setting is successful, returns true; otherwise returns false and
     sets an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     if (d->setStopBits(stopBits)) {
         if (d->stopBits != stopBits) {
@@ -707,10 +776,23 @@ QSerialPort::StopBits QSerialPort::stopBits() const
     If the setting is successful, returns true; otherwise returns false and sets
     an error code which can be obtained by accessing the value of the
     QSerialPort::error property.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setFlowControl(FlowControl flow)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     if (d->setFlowControl(flow)) {
         if (d->flow != flow) {
@@ -745,11 +827,24 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the DTR signal is set to high; otherwise low.
 
+    \note The serial port has to be open before trying to set or get this
+    property; otherwise returns false and sets the NotOpenError error code. This
+    is a bit unusual as opposed to the regular Qt property settings of a class.
+    However, this is a special use case since the property is set through the
+    interaction with the kernel and hardware. Hence, the two scenarios cannot be
+    completely compared to each other.
+
     \sa pinoutSignals()
 */
 bool QSerialPort::setDataTerminalReady(bool set)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     bool retval = d->setDataTerminalReady(set);
     if (retval && (d->dataTerminalReady != set)) {
@@ -783,11 +878,24 @@ bool QSerialPort::isDataTerminalReady()
     If the setting is successful, returns true; otherwise returns false.
     If the flag is true then the RTS signal is set to high; otherwise low.
 
+    \note The serial port has to be open before trying to set or get this
+    property; otherwise returns false and sets the NotOpenError error code. This
+    is a bit unusual as opposed to the regular Qt property settings of a class.
+    However, this is a special use case since the property is set through the
+    interaction with the kernel and hardware. Hence, the two scenarios cannot be
+    completely compared to each other.
+
     \sa pinoutSignals()
 */
 bool QSerialPort::setRequestToSend(bool set)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     bool retval = d->setRequestToSend(set);
     if (retval && (d->requestToSend != set)) {
@@ -821,9 +929,13 @@ bool QSerialPort::isRequestToSend()
     desired signal by applying a mask "AND", where the mask is
     the desired enumeration value from QSerialPort::PinoutSignals.
 
-    Note that, this method performs a system call, thus ensuring that the line
-    signal states are returned properly. This is necessary when the underlying
+    \note This method performs a system call, thus ensuring that the line signal
+    states are returned properly. This is necessary when the underlying
     operating systems cannot provide proper notifications about the changes.
+
+    \note The serial port has to be open before trying to get the pinout
+    signals; otherwise returns UnknownSignal and sets the NotOpenError error
+    code.
 
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
@@ -831,6 +943,13 @@ bool QSerialPort::isRequestToSend()
 QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return QSerialPort::UnknownSignal;
+    }
+
     return d->pinoutSignals();
 }
 
@@ -846,11 +965,21 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
     returned to the event loop. In the absence of an event loop, call
     waitForBytesWritten() instead.
 
+    \note The serial port has to be open before trying to flush any buffered
+    data; otherwise returns false and sets the NotOpenError error code.
+
     \sa write(), waitForBytesWritten()
 */
 bool QSerialPort::flush()
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
+
     return d->flush();
 }
 
@@ -859,10 +988,20 @@ bool QSerialPort::flush()
     given directions \a directions. Including clear an internal class buffers and
     the UART (driver) buffers. Also terminate pending read or write operations.
     If successful, returns true; otherwise returns false.
+
+    \note The serial port has to be open before trying to clear any buffered
+    data; otherwise returns false and sets the NotOpenError error code.
 */
 bool QSerialPort::clear(Directions directions)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
+
     if (directions & Input)
         d->readBuffer.clear();
     if (directions & Output)
@@ -905,10 +1044,23 @@ bool QSerialPort::atEnd() const
 
     If the setting is successful, returns true; otherwise returns false. The
     default policy set is IgnorePolicy.
+
+    \note The serial port has to be open before trying to set this property;
+    otherwise returns false and sets the NotOpenError error code. This is a bit
+    unusual as opposed to the regular Qt property settings of a class. However,
+    this is a special use case since the property is set through the interaction
+    with the kernel and hardware. Hence, the two scenarios cannot be completely
+    compared to each other.
 */
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
 
     const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
     if (ret && (d->policy != policy)) {
@@ -1112,11 +1264,21 @@ bool QSerialPort::waitForBytesWritten(int msecs)
     If the duration is non zero then zero bits are transmitted within a certain
     period of time depending on the implementation.
 
+    \note The serial port has to be open before trying to send a break
+    duration; otherwise returns false and sets the NotOpenError error code.
+
     \sa setBreakEnabled()
 */
 bool QSerialPort::sendBreak(int duration)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
+
     return d->sendBreak(duration);
 }
 
@@ -1126,11 +1288,21 @@ bool QSerialPort::sendBreak(int duration)
 
     If \a set is true then enables the break transmission; otherwise disables.
 
+    \note The serial port has to be open before trying to set break enabled;
+    otherwise returns false and sets the NotOpenError error code.
+
     \sa sendBreak()
 */
 bool QSerialPort::setBreakEnabled(bool set)
 {
     Q_D(QSerialPort);
+
+    if (!isOpen()) {
+        setError(QSerialPort::NotOpenError);
+        qWarning("%s: device not open", Q_FUNC_INFO);
+        return false;
+    }
+
     return d->setBreakEnabled(set);
 }
 
