@@ -497,7 +497,6 @@ void QSerialPort::close()
     Q_D(QSerialPort);
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
-        qWarning("%s: device not open", Q_FUNC_INFO);
         return;
     }
 
