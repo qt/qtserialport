@@ -105,7 +105,6 @@ public:
 
     virtual ~AbstractOverlappedEventNotifier() {
         setEnabled(false);
-        ::CancelIo(o.hEvent);
         ::CloseHandle(o.hEvent);
     }
 
