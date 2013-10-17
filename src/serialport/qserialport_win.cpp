@@ -189,7 +189,7 @@ public:
             dptr->startAsyncRead();
         } else { // driver queue is emplty, so startup wait comm event
             CommOverlappedEventNotifier *n =
-                    reinterpret_cast<CommOverlappedEventNotifier *>(dptr->lookupCommEventNotifier());
+                    qobject_cast<CommOverlappedEventNotifier *>(dptr->lookupCommEventNotifier());
             if (n)
                 n->startWaitCommEvent();
         }
