@@ -51,6 +51,7 @@
 #endif
 
 #include <QtCore/qwineventnotifier.h>
+#include <algorithm>
 
 #ifndef CTL_CODE
 #  define CTL_CODE(DeviceType, Function, Method, Access) ( \
@@ -1099,7 +1100,8 @@ static const QList<qint32> standardBaudRatePairList()
 qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
     const QList<qint32> baudRatePairs = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairs, setting);
+    const QList<qint32>::const_iterator baudRatePairListConstIterator
+            = std::find(baudRatePairs.constBegin(), baudRatePairs.constEnd(), setting);
 
     return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
 }
@@ -1107,7 +1109,8 @@ qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
     const QList<qint32> baudRatePairList = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairList, baudRate);
+    const QList<qint32>::const_iterator baudRatePairListConstIterator
+            = std::find(baudRatePairList.constBegin(), baudRatePairList.constEnd(), baudRate);
 
     return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
 }
