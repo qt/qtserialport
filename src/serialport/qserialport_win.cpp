@@ -51,6 +51,7 @@
 #endif
 
 #include <QtCore/qwineventnotifier.h>
+#include <algorithm>
 
 #ifndef CTL_CODE
 #  define CTL_CODE(DeviceType, Function, Method, Access) ( \
@@ -89,6 +90,7 @@ QT_BEGIN_NAMESPACE
 
 class AbstractOverlappedEventNotifier : public QWinEventNotifier
 {
+    Q_OBJECT
 public:
     enum Type { CommEvent, ReadCompletionEvent, WriteCompletionEvent };
 
@@ -104,7 +106,6 @@ public:
 
     virtual ~AbstractOverlappedEventNotifier() {
         setEnabled(false);
-        ::CancelIo(o.hEvent);
         ::CloseHandle(o.hEvent);
     }
 
@@ -126,6 +127,7 @@ protected:
 
 class CommOverlappedEventNotifier : public AbstractOverlappedEventNotifier
 {
+    Q_OBJECT
 public:
     CommOverlappedEventNotifier(QSerialPortPrivate *d, DWORD eventMask, QObject *parent)
         : AbstractOverlappedEventNotifier(d, CommEvent, false, parent)
@@ -172,6 +174,7 @@ private:
 
 class ReadOverlappedCompletionNotifier : public AbstractOverlappedEventNotifier
 {
+    Q_OBJECT
 public:
     ReadOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, ReadCompletionEvent, false, parent) {}
@@ -186,7 +189,7 @@ public:
             dptr->startAsyncRead();
         } else { // driver queue is emplty, so startup wait comm event
             CommOverlappedEventNotifier *n =
-                    reinterpret_cast<CommOverlappedEventNotifier *>(dptr->lookupCommEventNotifier());
+                    qobject_cast<CommOverlappedEventNotifier *>(dptr->lookupCommEventNotifier());
             if (n)
                 n->startWaitCommEvent();
         }
@@ -197,6 +200,7 @@ public:
 
 class WriteOverlappedCompletionNotifier : public AbstractOverlappedEventNotifier
 {
+    Q_OBJECT
 public:
     WriteOverlappedCompletionNotifier(QSerialPortPrivate *d, QObject *parent)
         : AbstractOverlappedEventNotifier(d, WriteCompletionEvent, false, parent) {}
@@ -208,6 +212,8 @@ public:
         return dptr->completeAsyncWrite(numberOfBytesTransferred);
     }
 };
+
+#include "qserialport_win.moc"
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
@@ -1094,7 +1100,8 @@ static const QList<qint32> standardBaudRatePairList()
 qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 {
     const QList<qint32> baudRatePairs = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairs, setting);
+    const QList<qint32>::const_iterator baudRatePairListConstIterator
+            = std::find(baudRatePairs.constBegin(), baudRatePairs.constEnd(), setting);
 
     return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
 }
@@ -1102,7 +1109,8 @@ qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
     const QList<qint32> baudRatePairList = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator = qFind(baudRatePairList, baudRate);
+    const QList<qint32>::const_iterator baudRatePairListConstIterator
+            = std::find(baudRatePairList.constBegin(), baudRatePairList.constEnd(), baudRate);
 
     return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
 }

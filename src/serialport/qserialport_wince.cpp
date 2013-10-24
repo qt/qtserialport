@@ -154,6 +154,8 @@ private:
     mutable bool worked;
 };
 
+#include "qserialport_wince.moc"
+
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , descriptor(INVALID_HANDLE_VALUE)
@@ -517,7 +519,5 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
         ret.remove(defaultPathPostfix);
     return ret;
 }
-
-#include "qserialport_wince.moc"
 
 QT_END_NAMESPACE

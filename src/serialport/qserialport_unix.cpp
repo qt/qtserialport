@@ -64,6 +64,7 @@ QT_BEGIN_NAMESPACE
 
 class ReadNotifier : public QSocketNotifier
 {
+    Q_OBJECT
 public:
     ReadNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Read, parent)
@@ -84,6 +85,7 @@ private:
 
 class WriteNotifier : public QSocketNotifier
 {
+    Q_OBJECT
 public:
     WriteNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Write, parent)
@@ -104,6 +106,7 @@ private:
 
 class ExceptionNotifier : public QSocketNotifier
 {
+    Q_OBJECT
 public:
     ExceptionNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Exception, parent)
@@ -121,6 +124,8 @@ protected:
 private:
     QSerialPortPrivate *dptr;
 };
+
+#include "qserialport_unix.moc"
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
