@@ -49,11 +49,8 @@
 
 #ifndef Q_OS_MAC
 
-#ifdef HAVE_LIBUDEV
-extern "C"
-{
-#include <libudev.h>
-}
+#if defined(LINK_LIBUDEV) || defined(LOAD_LIBUDEV)
+#include "qtudev_p.h"
 #else
 #include <QtCore/qdir.h>
 #include <QtCore/qstringlist.h>
@@ -65,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 #ifndef Q_OS_MAC
 
-#ifndef HAVE_LIBUDEV
+#if !defined(LINK_LIBUDEV) && !defined(LOAD_LIBUDEV)
 
 static inline const QStringList& filtersOfDevices()
 {
@@ -218,6 +215,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
+#ifdef LOAD_LIBUDEV
+    static bool symbolsResolved = resolveSymbols();
+    if (!symbolsResolved)
+        return QList<QSerialPortInfo>();
+#endif
     QList<QSerialPortInfo> serialPortInfoList;
 
     // White list for devices without a parent

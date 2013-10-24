@@ -1,10 +1,10 @@
 INCLUDEPATH += $$PWD
 
-unix {
+!contains(DEFINES, LOAD_LIBUDEV): unix {
     CONFIG += link_pkgconfig
 
     packagesExist(libudev) {
-        DEFINES += HAVE_LIBUDEV
+        DEFINES += LINK_LIBUDEV
         PKGCONFIG += libudev
     }
 }
