@@ -123,7 +123,7 @@ void MasterThread::run()
             }
 
             if (!serial.setParity(QSerialPort::NoParity)) {
-                emit error(tr("Can't set no patity to port %1, error code %2")
+                emit error(tr("Can't set no parity to port %1, error code %2")
                            .arg(portName).arg(serial.error()));
                 return;
             }
