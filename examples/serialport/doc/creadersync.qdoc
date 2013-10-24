@@ -1,7 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011-2012 Denis Shienkov <denis.shienkov@gmail.com>
-** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
+** Copyright (C) 2013 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -27,20 +26,20 @@
 ****************************************************************************/
 
 /*!
-    \title Qt Serial Port Examples
-    \page examples.html
-    \brief List of serial port examples
+    \example creader
+    \title Command Line Reader Sync Example
+    \ingroup qtserialport-examples
 
-    The module provides the following examples for reference to
-    help understand the API usage:
+    The Command Line Reader Sync example shows how to use the QSerialPort class for
+    receiving data synchronously over the selected serial port with the desired
+    settings.
 
-    \list
-    \li \l blockingmaster
-    \li \l blockingslave
-    \li \l cenumerator
-    \li \l cwritersync
-    \li \l creadersync
-    \li \l enumerator
-    \li \l terminal
-    \endlist
+    \image creadersync-example.png Screenshot of the Command Line Reader Sync example
+
+    This command line reader sync example receives data synchronously over the
+    selected serial port in a console, provided by the QSerialPort class.
+
+    For receiving data synchronously over the selected serial port, use the
+    \l{QSerialPort::read()}{read()} or \l{QSerialPort::readAll()}{readAll()},
+    and \l{QIODevice::waitForReadyRead()}{waitForReadyRead()} methods.
 */

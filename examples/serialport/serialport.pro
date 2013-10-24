@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 CONFIG += ordered
-SUBDIRS = cenumerator cwritersync
+SUBDIRS = cenumerator creadersync cwritersync
 greaterThan(QT_MAJOR_VERSION, 4) {
     !isEmpty(QT.widgets.name):SUBDIRS += enumerator terminal blockingmaster blockingslave
 } else {
