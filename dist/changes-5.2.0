@@ -85,6 +85,9 @@ includes mostly typo, but also some comprehensive changes.
 - New command line sync reader example available with screen shot and
 documentation.
 
+- New command line async reader example available with screen shot and
+documentation.
+
 - New command line sync writer example available with screen shot and
 documentation.
 
