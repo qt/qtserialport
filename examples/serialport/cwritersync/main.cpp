@@ -103,14 +103,12 @@ int main(int argc, char *argv[])
     }
 
     QByteArray writeData(dataFile.readAll());
+    dataFile.close();
 
     if (writeData.isEmpty()) {
         standardOutput << QObject::tr("Either no data was currently available on the standard input for reading, or an error occurred for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        dataFile.close();
         return 1;
     }
-
-    dataFile.close();
 
     qint64 bytesWritten = serialPort.write(writeData);
 
