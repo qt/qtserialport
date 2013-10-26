@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \example creader
+    \example creadersync
     \title Command Line Reader Sync Example
     \ingroup qtserialport-examples
 
