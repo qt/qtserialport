@@ -88,6 +88,9 @@ documentation.
 - New command line sync writer example available with screen shot and
 documentation.
 
+- New command line async writer example available with screen shot and
+documentation.
+
 - [QTBUG-34329] Support added for loading udev at runtime rather than linking at
 compilation time.
 
