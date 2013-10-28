@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    standardOutput << QObject::tr("Data successfully reiceved from port %1").arg(serialPortName) << endl;
+    standardOutput << QObject::tr("Data successfully received from port %1").arg(serialPortName) << endl;
     standardOutput << readData << endl;
 
     return 0;
