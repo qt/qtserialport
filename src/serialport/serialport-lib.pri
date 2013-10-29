@@ -1,11 +1,18 @@
 INCLUDEPATH += $$PWD
 
 !contains(DEFINES, LOAD_LIBUDEV): unix {
-    CONFIG += link_pkgconfig
-
-    packagesExist(libudev) {
-        DEFINES += LINK_LIBUDEV
-        PKGCONFIG += libudev
+    greaterThan(QT_MAJOR_VERSION, 4) {
+        contains(QT_CONFIG, libudev) {
+            DEFINES += LINK_LIBUDEV
+            INCLUDEPATH += $$QMAKE_INCDIR_LIBUDEV
+            LIBS += $$QMAKE_LIBS_LIBUDEV
+        }
+    } else {
+        packagesExist(libudev) {
+            CONFIG += link_pkgconfig
+            DEFINES += LINK_LIBUDEV
+            PKGCONFIG += libudev
+        }
     }
 }
 
