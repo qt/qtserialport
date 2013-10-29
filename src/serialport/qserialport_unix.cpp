@@ -728,6 +728,10 @@ bool QSerialPortPrivate::readNotification()
     const qint64 readBytes = readFromPort(ptr, bytesToRead);
 
     if (readBytes <= 0) {
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::ReadError;
+        q->setError(error);
         readBuffer.chop(bytesToRead);
         return false;
     }
@@ -779,8 +783,13 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
 
     // Attempt to write it chunk.
     qint64 written = writeToPort(ptr, nextSize);
-    if (written < 0)
+    if (written < 0) {
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::ResourceError)
+            error = QSerialPort::WriteError;
+        q->setError(error);
         return false;
+    }
 
     // Remove what we wrote so far.
     writeBuffer.free(written);
@@ -1036,8 +1045,6 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
 
 qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
 {
-    Q_Q(QSerialPort);
-
     qint64 bytesRead = 0;
 #if defined (CMSPAR)
     if (parity == QSerialPort::NoParity
@@ -1051,20 +1058,11 @@ qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
         bytesRead = readPerChar(data, maxSize);
     }
 
-    if (bytesRead <= 0) {
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::ResourceError)
-            error = QSerialPort::ReadError;
-        q->setError(error);
-    }
-
     return bytesRead;
 }
 
 qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
 {
-    Q_Q(QSerialPort);
-
     qint64 bytesWritten = 0;
 #if defined (CMSPAR)
     bytesWritten = ::write(descriptor, data, maxSize);
@@ -1076,13 +1074,6 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
         bytesWritten = writePerChar(data, maxSize);
     }
 #endif
-
-    if (bytesWritten < 0) {
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::ResourceError)
-            error = QSerialPort::WriteError;
-        q->setError(error);
-    }
 
     return bytesWritten;
 }
