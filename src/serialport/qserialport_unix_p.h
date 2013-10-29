@@ -121,7 +121,7 @@ public:
 
     bool readNotification();
     bool writeNotification(int maxSize = INT_MAX);
-    bool exceptionNotification();
+    void exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);

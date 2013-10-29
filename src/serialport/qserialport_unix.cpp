@@ -808,14 +808,12 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
     return (writeBuffer.size() < tmp);
 }
 
-bool QSerialPortPrivate::exceptionNotification()
+void QSerialPortPrivate::exceptionNotification()
 {
     Q_Q(QSerialPort);
 
     QSerialPort::SerialPortError error = decodeSystemError();
     q->setError(error);
-
-    return true;
 }
 
 bool QSerialPortPrivate::updateTermios()
