@@ -222,12 +222,12 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the parity scheme used.
 
-    \value NoParity No parity.
-    \value EvenParity Even parity.
-    \value OddParity Odd parity.
-    \value SpaceParity Space parity.
-    \value MarkParity Mark parity.
-    \value UnknownParity Unknown parity.
+    \value NoParity         No parity.
+    \value EvenParity       Even parity.
+    \value OddParity        Odd parity.
+    \value SpaceParity      Space parity.
+    \value MarkParity       Mark parity.
+    \value UnknownParity    Unknown parity.
 
     \sa QSerialPort::parity
 */
@@ -237,10 +237,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the number of stop bits used.
 
-    \value OneStop 1 stop bit.
-    \value OneAndHalfStop 1.5 stop bits.
-    \value TwoStop 2 stop bits.
-    \value UnknownStopBits Unknown number of stop bit.
+    \value OneStop          1 stop bit.
+    \value OneAndHalfStop   1.5 stop bits.
+    \value TwoStop          2 stop bits.
+    \value UnknownStopBits  Unknown number of stop bit.
 
     \sa QSerialPort::stopBits
 */
@@ -250,10 +250,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the flow control used.
 
-    \value NoFlowControl No flow control.
-    \value HardwareControl Hardware flow control (RTS/CTS).
-    \value SoftwareControl Software flow control (XON/XOFF).
-    \value UnknownFlowControl Unknown flow control.
+    \value NoFlowControl        No flow control.
+    \value HardwareControl      Hardware flow control (RTS/CTS).
+    \value SoftwareControl      Software flow control (XON/XOFF).
+    \value UnknownFlowControl   Unknown flow control.
 
     \sa QSerialPort::flowControl
 */
@@ -302,28 +302,47 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     QSerialPort::error property.
 
     \value NoError              No error occurred.
+
     \value DeviceNotFoundError  An error occurred while attempting to
                                 open an non-existing device.
+
     \value PermissionError      An error occurred while attempting to
-           open an already opened device by another process or a user not
-           having enough permission and credentials to open.
-    \value OpenError            An error occurred while attempting to
-           open an already opened device in this object.
+                                open an already opened device by another
+                                process or a user not having enough permission
+                                and credentials to open.
+
+    \value OpenError            An error occurred while attempting to open an
+                                already opened device in this object.
+
     \value NotOpenError         This error occurs when an operation is executed
                                 that can only be successfully performed if the
                                 device is open. This value was introduced in
                                 QtSerialPort 5.2.
-    \value ParityError Parity error detected by the hardware while reading data.
-    \value FramingError Framing error detected by the hardware while reading data.
-    \value BreakConditionError Break condition detected by the hardware on
-           the input line.
-    \value WriteError An I/O error occurred while writing the data.
-    \value ReadError An I/O error occurred while reading the data.
-    \value ResourceError An I/O error occurred when a resource becomes unavailable,
-           e.g. when the device is unexpectedly removed from the system.
-    \value UnsupportedOperationError The requested device operation is
-           not supported or prohibited by the running operating system.
-    \value TimeoutError         A timeout error occurred. This value was introduced in QtSerialPort 5.2.
+
+    \value ParityError          Parity error detected by the hardware while
+                                reading data.
+
+    \value FramingError         Framing error detected by the hardware while
+                                reading data.
+
+    \value BreakConditionError  Break condition detected by the hardware on
+                                the input line.
+
+    \value WriteError           An I/O error occurred while writing the data.
+
+    \value ReadError            An I/O error occurred while reading the data.
+
+    \value ResourceError        An I/O error occurred when a resource becomes
+                                unavailable, e.g. when the device is
+                                unexpectedly removed from the system.
+
+    \value UnsupportedOperationError The requested device operation is not
+                                supported or prohibited by the running operating
+                                system.
+
+    \value TimeoutError         A timeout error occurred. This value was
+                                introduced in QtSerialPort 5.2.
+
     \value UnknownError         An unidentified error occurred.
     \sa QSerialPort::error
 */
