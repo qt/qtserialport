@@ -781,7 +781,7 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
 
     const char *ptr = writeBuffer.readPointer();
 
-    // Attempt to write it chunk.
+    // Attempt to write it all in one chunk.
     qint64 written = writeToPort(ptr, nextSize);
     if (written < 0) {
         QSerialPort::SerialPortError error = decodeSystemError();
