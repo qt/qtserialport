@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS += auto manual
+!qnx:SUBDIRS += auto manual
