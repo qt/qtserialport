@@ -282,6 +282,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
 /*!
     \enum QSerialPort::DataErrorPolicy
+    \obsolete
 
     This enum describes the policies for the received symbols
     while parity errors were detected.
@@ -1059,6 +1060,7 @@ bool QSerialPort::atEnd() const
     \property QSerialPort::dataErrorPolicy
     \brief the error policy how the process receives the character in case of
     parity error detection.
+    \obsolete
 
     If the setting is successful, returns true; otherwise returns false. The
     default policy set is IgnorePolicy.
@@ -1097,6 +1099,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
 
 /*!
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
+    \obsolete
 
     This signal is emitted after the error policy how the process receives the
     character in case of parity error detection has been changed. The new error

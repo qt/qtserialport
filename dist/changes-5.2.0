@@ -96,3 +96,7 @@ not used for finding udev again.
 
 - [QTBUG-32563] Motorola IMX support was added when udev and sysfs are not
 present.
+
+- [QTBUG-34429] Mark the the data error policy obsolete. End users should stop
+using this feature now. It may be removed later in Qt 6.X, and there is a
+warning now if it is used.
