@@ -73,6 +73,8 @@ static inline const QStringList& filtersOfDevices()
     << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
     << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
     << QLatin1String("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
+    << QLatin1String("ttyHS*")   // High speed UART (e.g. Android).
+    << QLatin1String("ttyHSL*")  // Low speed UART (e.g. Android).
     << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
     << QLatin1String("ttymxc*")  // Motorola IMX serial ports (i.e. Freescale i.MX).
     << QLatin1String("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
