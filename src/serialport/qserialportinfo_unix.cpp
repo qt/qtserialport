@@ -251,10 +251,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     QSerialPortInfo serialPortInfo;
 
-                    serialPortInfo.d_ptr->device =
-                            QLatin1String(::udev_device_get_devnode(dev));
-                    serialPortInfo.d_ptr->portName =
-                            QLatin1String(::udev_device_get_sysname(dev));
+                    serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev));
+                    serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev));
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
@@ -262,17 +260,15 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     if (parentdev) {
 
-                        QLatin1String subsys(::udev_device_get_subsystem(parentdev));
+                        QString subsys = QString::fromLatin1(::udev_device_get_subsystem(parentdev));
 
                         if (subsys == QStringLiteral("usb-serial")
                                 || subsys == QStringLiteral("usb")) { // USB bus type
                             // Append this devices and try get additional information about them.
-                            serialPortInfo.d_ptr->description = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev,
-                                                                                   "ID_MODEL"))).replace(QLatin1Char('_'), QLatin1Char(' '));
-                            serialPortInfo.d_ptr->manufacturer = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev,
-                                                                                   "ID_VENDOR"))).replace(QLatin1Char('_'), QLatin1Char(' '));
+                            serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                   "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
+                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                   "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
 
                             serialPortInfo.d_ptr->vendorIdentifier =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
