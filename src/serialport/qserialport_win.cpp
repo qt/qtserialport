@@ -1001,7 +1001,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
     return true;
 }
 
-static const QLatin1String defaultPathPrefix("\\\\.\\");
+static const QString defaultPathPrefix = QStringLiteral("\\\\.\\");
 
 QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
 {

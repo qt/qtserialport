@@ -64,11 +64,11 @@ QT_BEGIN_NAMESPACE
 QString serialPortLockFilePath(const QString &portName)
 {
     static const QStringList lockDirectoryPaths = QStringList()
-        << QLatin1String("/var/lock")
-        << QLatin1String("/etc/locks")
-        << QLatin1String("/var/spool/locks")
-        << QLatin1String("/var/spool/uucp")
-        << QLatin1String("/tmp");
+        << QStringLiteral("/var/lock")
+        << QStringLiteral("/etc/locks")
+        << QStringLiteral("/var/spool/locks")
+        << QStringLiteral("/var/spool/uucp")
+        << QStringLiteral("/tmp");
 
     QString lockFilePath;
 
@@ -89,7 +89,7 @@ QString serialPortLockFilePath(const QString &portName)
 
     QString replacedPortName = portName;
 
-    lockFilePath.append(QLatin1String("/LCK.."));
+    lockFilePath.append(QStringLiteral("/LCK.."));
     lockFilePath.append(replacedPortName.replace(QLatin1Char('/'), QLatin1Char('_')));
 
     return lockFilePath;
@@ -1228,10 +1228,10 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
 }
 
 #ifdef Q_OS_MAC
-static const QLatin1String defaultFilePathPrefix("/dev/cu.");
-static const QLatin1String unusedFilePathPrefix("/dev/tty.");
+static const QString defaultFilePathPrefix = QStringLiteral("/dev/cu.");
+static const QString unusedFilePathPrefix = QStringLiteral("/dev/tty.");
 #else
-static const QLatin1String defaultFilePathPrefix("/dev/");
+static const QString defaultFilePathPrefix = QStringLiteral("/dev/");
 #endif
 
 QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
