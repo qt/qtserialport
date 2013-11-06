@@ -8,8 +8,11 @@ for(header_file, PUBLIC_HEADERS) {
    system("$$QMAKE_COPY \"$${header_file}\" \"$$QTSERIALPORT_PROJECT_INCLUDEDIR\"")
 }
 
-SOURCES += $$PWD/src/qlockfile.cpp
-unix:!symbian: SOURCES += $$PWD/src/qlockfile_unix.cpp
+unix:!symbian {
+    SOURCES += \
+        $$PWD/src/qlockfile.cpp
+        $$PWD/src/qlockfile_unix.cpp
+}
 
 # This is a quick workaround for generating forward header with Qt4.
 
