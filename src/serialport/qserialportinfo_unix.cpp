@@ -43,8 +43,9 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qttylocker_unix_p.h"
 #include "qserialport_unix_p.h"
+
+#include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
 
 #ifndef Q_OS_MAC
@@ -344,8 +345,12 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
 
 bool QSerialPortInfo::isBusy() const
 {
-    bool currentPid = false;
-    return QTtyLocker::isLocked(portName().toLocal8Bit().constData(), &currentPid);
+    QString lockFilePath = serialPortLockFilePath(portName());
+    if (lockFilePath.isEmpty())
+        return false;
+
+    QLockFile lockFile(lockFilePath);
+    return lockFile.isLocked();
 }
 
 bool QSerialPortInfo::isValid() const

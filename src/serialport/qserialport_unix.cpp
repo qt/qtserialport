@@ -42,7 +42,6 @@
 ****************************************************************************/
 
 #include "qserialport_unix_p.h"
-#include "qttylocker_unix_p.h"
 
 #include <errno.h>
 #include <sys/time.h>
@@ -61,6 +60,40 @@
 #include <QtCore/qmap.h>
 
 QT_BEGIN_NAMESPACE
+
+QString serialPortLockFilePath(const QString &portName)
+{
+    static const QStringList lockDirectoryPaths = QStringList()
+        << QLatin1String("/var/lock")
+        << QLatin1String("/etc/locks")
+        << QLatin1String("/var/spool/locks")
+        << QLatin1String("/var/spool/uucp")
+        << QLatin1String("/tmp");
+
+    QString lockFilePath;
+
+    foreach (const QString &lockDirectoryPath, lockDirectoryPaths) {
+        QFileInfo lockDirectoryInfo(lockDirectoryPath);
+        if (lockDirectoryInfo.isReadable() && lockDirectoryInfo.isWritable()) {
+            lockFilePath = lockDirectoryPath;
+            break;
+        }
+    }
+
+    if (lockFilePath.isEmpty()) {
+        qWarning("The following directories are not readable or writable for detaling with lock files\n");
+        foreach (const QString &lockDirectoryPath, lockDirectoryPaths)
+            qWarning("\t%s\n", qPrintable(lockDirectoryPath));
+        return QString();
+    }
+
+    QString replacedPortName = portName;
+
+    lockFilePath.append(QLatin1String("/LCK.."));
+    lockFilePath.append(replacedPortName.replace(QLatin1Char('/'), QLatin1Char('_')));
+
+    return lockFilePath;
+}
 
 class ReadNotifier : public QSocketNotifier
 {
@@ -146,11 +179,20 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     Q_Q(QSerialPort);
 
-    QByteArray portName = portNameFromSystemLocation(systemLocation).toLocal8Bit();
-    const char *ptr = portName.constData();
+    QString lockFilePath = serialPortLockFilePath(portNameFromSystemLocation(systemLocation));
+    bool isLockFileEmpty = lockFilePath.isEmpty();
+    if (isLockFileEmpty) {
+        qWarning("Failed to create a lock file for opening the device");
+        q->setError(QSerialPort::PermissionError);
+        return false;
+    }
 
-    bool byCurrPid = false;
-    if (QTtyLocker::isLocked(ptr, &byCurrPid)) {
+    if (!lockFileScopedPointer.isNull()) {
+        QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
+        lockFileScopedPointer.swap(newLockFileScopedPointer);
+    }
+
+    if (lockFileScopedPointer->isLocked()) {
         q->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -176,8 +218,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    QTtyLocker::lock(ptr);
-    if (!QTtyLocker::isLocked(ptr, &byCurrPid)) {
+    lockFileScopedPointer->lock();
+    if (!lockFileScopedPointer->isLocked()) {
         q->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -246,12 +288,8 @@ void QSerialPortPrivate::close()
 
     ::close(descriptor);
 
-    QByteArray portName = portNameFromSystemLocation(systemLocation).toLocal8Bit();
-    const char *ptr = portName.constData();
-
-    bool byCurrPid = false;
-    if (QTtyLocker::isLocked(ptr, &byCurrPid) && byCurrPid)
-        QTtyLocker::unlock(ptr);
+    if (lockFileScopedPointer->isLocked())
+        lockFileScopedPointer->unlock();
 
     descriptor = -1;
     isCustomBaudRateSupported = false;

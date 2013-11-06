@@ -72,11 +72,9 @@ symbian {
 
 unix:!symbian {
     PRIVATE_HEADERS += \
-        $$PWD/qttylocker_unix_p.h \
         $$PWD/qserialport_unix_p.h
 
     SOURCES += \
-        $$PWD/qttylocker_unix.cpp \
         $$PWD/qserialport_unix.cpp \
         $$PWD/qserialportinfo_unix.cpp
 

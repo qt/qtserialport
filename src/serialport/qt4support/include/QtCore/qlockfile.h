@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2013 David Faure <faure+bluesystems@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtSerialPort module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,21 +39,49 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qglobal.h>
+#ifndef QLOCKFILE_H
+#define QLOCKFILE_H
 
-#ifndef TTYLOCKER_UNIX_P_H
-#define TTYLOCKER_UNIX_P_H
+#include <QtCore/qstring.h>
+#include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-class QTtyLocker
+class QLockFilePrivate;
+
+class Q_CORE_EXPORT QLockFile
 {
 public:
-    static bool lock(const char *portName);
-    static bool unlock(const char *portName);
-    static bool isLocked(const char *portName, bool *currentPid);
+    QLockFile(const QString &fileName);
+    ~QLockFile();
+
+    bool lock();
+    bool tryLock(int timeout = 0);
+    void unlock();
+
+    void setStaleLockTime(int);
+    int staleLockTime() const;
+
+    bool isLocked() const;
+    bool getLockInfo(qint64 *pid, QString *hostname, QString *appname) const;
+    bool removeStaleLockFile();
+
+    enum LockError {
+        NoError = 0,
+        LockFailedError = 1,
+        PermissionError = 2,
+        UnknownError = 3
+    };
+    LockError error() const;
+
+protected:
+    QScopedPointer<QLockFilePrivate> d_ptr;
+
+private:
+    Q_DECLARE_PRIVATE(QLockFile)
+    Q_DISABLE_COPY(QLockFile)
 };
 
 QT_END_NAMESPACE
 
-#endif // TTYLOCKER_UNIX_P_H
+#endif // QLOCKFILE_H

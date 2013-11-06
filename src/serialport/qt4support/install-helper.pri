@@ -8,6 +8,9 @@ for(header_file, PUBLIC_HEADERS) {
    system("$$QMAKE_COPY \"$${header_file}\" \"$$QTSERIALPORT_PROJECT_INCLUDEDIR\"")
 }
 
+SOURCES += $$PWD/src/qlockfile.cpp
+unix:!symbian: SOURCES += $$PWD/src/qlockfile_unix.cpp
+
 # This is a quick workaround for generating forward header with Qt4.
 
 !equals(QMAKE_HOST.os, Windows): maybe_quote = "\'"
@@ -36,5 +39,11 @@ target.path = $$[QT_INSTALL_LIBS]
 INSTALLS += target
 
 INCLUDEPATH += $$QTSERIALPORT_BUILD_ROOT/include $$QTSERIALPORT_BUILD_ROOT/include/QtSerialPort
-lessThan(QT_MAJOR_VERSION, 5): INCLUDEPATH += $$QTSERIALPORT_PROJECT_ROOT/src/serialport/qt4support/include
+lessThan(QT_MAJOR_VERSION, 5) {
+    QTSERIALPORT_PROJECT_QT4SUPPORT_INCLUDEDIR = $$QTSERIALPORT_PROJECT_ROOT/src/serialport/qt4support/include
+    INCLUDEPATH += \
+                   $$QTSERIALPORT_PROJECT_QT4SUPPORT_INCLUDEDIR \
+                   $$QTSERIALPORT_PROJECT_QT4SUPPORT_INCLUDEDIR/QtCore \
+                   $$QTSERIALPORT_PROJECT_QT4SUPPORT_INCLUDEDIR/private
+}
 DEFINES += QT_BUILD_SERIALPORT_LIB

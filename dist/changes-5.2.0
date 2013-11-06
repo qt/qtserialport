@@ -107,3 +107,7 @@ warning now if it is used.
 - Support has been added for the hard-coded device enumeration backend to get
 information. Android uarts such as /dev/ttyHS* (High speed UART) and
 /dev/ttyHSL* (Low speed UART) are supported by that backend.
+
+- [QTBUG-34474] Replace the internal QTtyLocker with QLockFile from QtCore and a
+small convenience on top of it to comply with the locking directories lockdev
+also uses.
