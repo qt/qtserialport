@@ -187,10 +187,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    if (!lockFileScopedPointer.isNull()) {
-        QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
-        lockFileScopedPointer.swap(newLockFileScopedPointer);
-    }
+    QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
+    lockFileScopedPointer.swap(newLockFileScopedPointer);
 
     if (lockFileScopedPointer->isLocked()) {
         q->setError(QSerialPort::PermissionError);
