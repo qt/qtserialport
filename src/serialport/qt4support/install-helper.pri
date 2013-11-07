@@ -10,7 +10,7 @@ for(header_file, PUBLIC_HEADERS) {
 
 unix:!symbian {
     SOURCES += \
-        $$PWD/src/qlockfile.cpp
+        $$PWD/src/qlockfile.cpp \
         $$PWD/src/qlockfile_unix.cpp
 }
 
