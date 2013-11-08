@@ -111,3 +111,6 @@ information. Android uarts such as /dev/ttyHS* (High speed UART) and
 - [QTBUG-34474] Replace the internal QTtyLocker with QLockFile from QtCore and a
 small convenience on top of it to comply with the locking directories lockdev
 also uses.
+
+- Support has been added for the hard-coded device enumeration backend to get
+information. /dev/ttyO* (native OMAP UART) is supported by that backend.
