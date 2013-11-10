@@ -45,6 +45,11 @@
 
 #include "qserialport_p.h"
 
+#include <QtCore/qlockfile.h>
+#include <QtCore/qscopedpointer.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qstringlist.h>
+
 #include <limits.h>
 #include <termios.h>
 #ifndef Q_OS_ANDROID
@@ -77,6 +82,8 @@ struct serial_struct {
 #endif
 
 QT_BEGIN_NAMESPACE
+
+QString serialPortLockFilePath(const QString &portName);
 
 class QSocketNotifier;
 
@@ -121,7 +128,7 @@ public:
 
     bool readNotification();
     bool writeNotification(int maxSize = INT_MAX);
-    bool exceptionNotification();
+    void exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -150,6 +157,8 @@ public:
 
     bool emittedReadyRead;
     bool emittedBytesWritten;
+
+    QScopedPointer<QLockFile> lockFileScopedPointer;
 
 private:
     bool updateTermios();

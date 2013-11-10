@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2013 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
@@ -39,21 +39,43 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qglobal.h>
+#ifndef SERIALPORTWRITER_H
+#define SERIALPORTWRITER_H
 
-#ifndef TTYLOCKER_UNIX_P_H
-#define TTYLOCKER_UNIX_P_H
+#include <QtSerialPort/QSerialPort>
+
+#include <QTextStream>
+#include <QTimer>
+#include <QByteArray>
+#include <QObject>
+
+QT_USE_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 
-class QTtyLocker
-{
-public:
-    static bool lock(const char *portName);
-    static bool unlock(const char *portName);
-    static bool isLocked(const char *portName, bool *currentPid);
-};
-
 QT_END_NAMESPACE
 
-#endif // TTYLOCKER_UNIX_P_H
+class SerialPortWriter : public QObject
+{
+    Q_OBJECT
+
+public:
+    SerialPortWriter(QSerialPort *serialPort, QObject *parent = 0);
+    ~SerialPortWriter();
+
+    void write(const QByteArray &writeData);
+
+private slots:
+    void handleBytesWritten(qint64 bytes);
+    void handleTimeout();
+    void handleError(QSerialPort::SerialPortError error);
+
+private:
+    QSerialPort     *m_serialPort;
+    QByteArray      m_writeData;
+    QTextStream     m_standardOutput;
+    qint64          m_bytesWritten;
+    QTimer          m_timer;
+};
+
+#endif

@@ -182,10 +182,10 @@ public:
     bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
-        bool ret = dptr->completeAsyncRead(numberOfBytesTransferred);
+        dptr->completeAsyncRead(numberOfBytesTransferred);
 
         // start async read for possible remainder into driver queue
-        if (ret && (numberOfBytesTransferred > 0) && (dptr->policy == QSerialPort::IgnorePolicy)) {
+        if ((numberOfBytesTransferred > 0) && (dptr->policy == QSerialPort::IgnorePolicy)) {
             dptr->startAsyncRead();
         } else { // driver queue is emplty, so startup wait comm event
             CommOverlappedEventNotifier *n =
@@ -194,7 +194,7 @@ public:
                 n->startWaitCommEvent();
         }
 
-        return ret;
+        return true;
     }
 };
 
@@ -209,7 +209,8 @@ public:
         setEnabled(false);
         DWORD numberOfBytesTransferred = 0;
         ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
-        return dptr->completeAsyncWrite(numberOfBytesTransferred);
+        dptr->completeAsyncWrite(numberOfBytesTransferred);
+        return true;
     }
 };
 
@@ -727,18 +728,17 @@ bool QSerialPortPrivate::startAsyncWrite(int maxSize)
 
 #endif // #ifndef Q_OS_WINCE
 
-bool QSerialPortPrivate::processIoErrors(bool error)
+void QSerialPortPrivate::processIoErrors(bool error)
 {
     Q_Q(QSerialPort);
 
     if (error) {
         q->setError(QSerialPort::ResourceError);
-        return true;
+        return;
     }
 
     DWORD errors = 0;
-    const bool ret = ::ClearCommError(descriptor, &errors, NULL);
-    if (ret && errors) {
+    if (::ClearCommError(descriptor, &errors, NULL) && errors) {
         if (errors & CE_FRAME) {
             q->setError(QSerialPort::FramingError);
         } else if (errors & CE_RXPARITY) {
@@ -750,12 +750,11 @@ bool QSerialPortPrivate::processIoErrors(bool error)
             q->setError(QSerialPort::UnknownError);
         }
     }
-    return ret;
 }
 
 #ifndef Q_OS_WINCE
 
-bool QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
+void QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
 {
     Q_Q(QSerialPort);
 
@@ -773,14 +772,14 @@ bool QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
             if (policy == QSerialPort::SkipPolicy) {
                 readBuffer.getChar();
                 // Force returning without emitting a readyRead() signal
-                return true;
+                return;
             }
 
             // Abort receiving
             if (policy == QSerialPort::StopReceivingPolicy) {
                 readyReadEmitted = true;
                 emit q->readyRead();
-                return true;
+                return;
             }
 
             // Replace received character by zero
@@ -794,10 +793,9 @@ bool QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
         readyReadEmitted = true;
         emit q->readyRead();
     }
-    return true;
 }
 
-bool QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
+void QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
 {
     Q_Q(QSerialPort);
 
@@ -812,8 +810,6 @@ bool QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
         writeSequenceStarted = false;
     else
         startAsyncWrite(WriteChunkSize);
-
-    return true;
 }
 
 AbstractOverlappedEventNotifier *QSerialPortPrivate::lookupFreeWriteCompletionNotifier()
@@ -1005,7 +1001,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut,
     return true;
 }
 
-static const QLatin1String defaultPathPrefix("\\\\.\\");
+static const QString defaultPathPrefix = QStringLiteral("\\\\.\\");
 
 QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
 {

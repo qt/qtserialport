@@ -128,7 +128,7 @@ void Dialog::startSlave()
         }
 
         if (!serial.setParity(QSerialPort::NoParity)) {
-            processError(tr("Can't set no patity to port %1, error code %2")
+            processError(tr("Can't set no parity to port %1, error code %2")
                          .arg(serial.portName()).arg(serial.error()));
             return;
         }

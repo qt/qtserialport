@@ -100,12 +100,12 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    bool processIoErrors(bool error);
+    void processIoErrors(bool error);
 #ifndef Q_OS_WINCE
     bool startAsyncRead();
     bool startAsyncWrite(int maxSize = INT_MAX);
-    bool completeAsyncRead(DWORD numberOfBytes);
-    bool completeAsyncWrite(DWORD numberOfBytes);
+    void completeAsyncRead(DWORD numberOfBytes);
+    void completeAsyncWrite(DWORD numberOfBytes);
     AbstractOverlappedEventNotifier *lookupFreeWriteCompletionNotifier();
     AbstractOverlappedEventNotifier *lookupCommEventNotifier();
     AbstractOverlappedEventNotifier *lookupReadCompletionNotifier();

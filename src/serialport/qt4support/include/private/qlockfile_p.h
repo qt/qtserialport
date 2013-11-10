@@ -1,10 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
-** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
+** Copyright (C) 2013 David Faure <faure+bluesystems@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtSerialPort module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -40,33 +39,66 @@
 **
 ****************************************************************************/
 
-#ifndef QSERIALPORTGLOBAL_H
-#define QSERIALPORTGLOBAL_H
+#ifndef QLOCKFILE_P_H
+#define QLOCKFILE_P_H
 
-#include <QtCore/qstring.h>
-#include <QtCore/qglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qlockfile.h>
+#include <QtCore/qfile.h>
+
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_SERIALPORT_LIB)
-#    define Q_SERIALPORT_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_SERIALPORT_EXPORT Q_DECL_IMPORT
-#  endif
+class QLockFilePrivate
+{
+public:
+    QLockFilePrivate(const QString &fn)
+        : fileName(fn),
+#ifdef Q_OS_WIN
+          fileHandle(INVALID_HANDLE_VALUE),
 #else
-#  define Q_SERIALPORT_EXPORT
+          fileHandle(-1),
+#endif
+          staleLockTime(30 * 1000), // 30 seconds
+          lockError(QLockFile::NoError),
+          isLocked(false)
+    {
+    }
+    QLockFile::LockError tryLock_sys();
+    bool removeStaleLock();
+    bool getLockInfo(qint64 *pid, QString *hostname, QString *appname) const;
+    // Returns \c true if the lock belongs to dead PID, or is old.
+    // The attempt to delete it will tell us if it was really stale or not, though.
+    bool isApparentlyStale() const;
+
+#ifdef Q_OS_UNIX
+    static int checkFcntlWorksAfterFlock();
 #endif
 
-// These macros have been available only since Qt 5.0
-#ifndef Q_DECL_OVERRIDE
-#define Q_DECL_OVERRIDE
+    QString fileName;
+#ifdef Q_OS_WIN
+    Qt::HANDLE fileHandle;
+#else
+    int fileHandle;
 #endif
-
-#ifndef QStringLiteral
-#define QStringLiteral(str) QString::fromUtf8(str)
-#endif
+    int staleLockTime; // "int milliseconds" is big enough for 24 days
+    QLockFile::LockError lockError;
+    bool isLocked;
+};
 
 QT_END_NAMESPACE
 
-#endif // QSERIALPORTGLOBAL_H
+#endif /* QLOCKFILE_P_H */

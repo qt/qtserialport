@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 
 static QString findDescription(HKEY parentKeyHandle, const QString &subKey)
 {
-    const static QString valueName(QLatin1String("FriendlyName"));
+    const static QString valueName(QStringLiteral("FriendlyName"));
 
     QString result;
     HKEY hSubKey = 0;

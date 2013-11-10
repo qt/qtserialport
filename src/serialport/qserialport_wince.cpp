@@ -502,21 +502,19 @@ bool QSerialPortPrivate::updateCommTimeouts()
     return true;
 }
 
-static const QLatin1String defaultPathPostfix(":");
-
 QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
 {
     QString ret = port;
-    if (!ret.contains(defaultPathPostfix))
-        ret.append(defaultPathPostfix);
+    if (!ret.contains(QLatin1Char(':')))
+        ret.append(QLatin1Char(':'));
     return ret;
 }
 
 QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
 {
     QString ret = location;
-    if (ret.contains(defaultPathPostfix))
-        ret.remove(defaultPathPostfix);
+    if (ret.contains(QLatin1Char(':')))
+        ret.remove(QLatin1Char(':'));
     return ret;
 }
 

@@ -1,10 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
-** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
+** Copyright (C) 2013 David Faure <faure+bluesystems@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the QtSerialPort module of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -40,33 +39,49 @@
 **
 ****************************************************************************/
 
-#ifndef QSERIALPORTGLOBAL_H
-#define QSERIALPORTGLOBAL_H
+#ifndef QLOCKFILE_H
+#define QLOCKFILE_H
 
 #include <QtCore/qstring.h>
-#include <QtCore/qglobal.h>
+#include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_SERIALPORT_LIB)
-#    define Q_SERIALPORT_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_SERIALPORT_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_SERIALPORT_EXPORT
-#endif
+class QLockFilePrivate;
 
-// These macros have been available only since Qt 5.0
-#ifndef Q_DECL_OVERRIDE
-#define Q_DECL_OVERRIDE
-#endif
+class Q_CORE_EXPORT QLockFile
+{
+public:
+    QLockFile(const QString &fileName);
+    ~QLockFile();
 
-#ifndef QStringLiteral
-#define QStringLiteral(str) QString::fromUtf8(str)
-#endif
+    bool lock();
+    bool tryLock(int timeout = 0);
+    void unlock();
+
+    void setStaleLockTime(int);
+    int staleLockTime() const;
+
+    bool isLocked() const;
+    bool getLockInfo(qint64 *pid, QString *hostname, QString *appname) const;
+    bool removeStaleLockFile();
+
+    enum LockError {
+        NoError = 0,
+        LockFailedError = 1,
+        PermissionError = 2,
+        UnknownError = 3
+    };
+    LockError error() const;
+
+protected:
+    QScopedPointer<QLockFilePrivate> d_ptr;
+
+private:
+    Q_DECLARE_PRIVATE(QLockFile)
+    Q_DISABLE_COPY(QLockFile)
+};
 
 QT_END_NAMESPACE
 
-#endif // QSERIALPORTGLOBAL_H
+#endif // QLOCKFILE_H

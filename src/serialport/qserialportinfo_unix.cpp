@@ -43,17 +43,15 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qttylocker_unix_p.h"
 #include "qserialport_unix_p.h"
+
+#include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
 
 #ifndef Q_OS_MAC
 
-#ifdef HAVE_LIBUDEV
-extern "C"
-{
-#include <libudev.h>
-}
+#if defined(LINK_LIBUDEV) || defined(LOAD_LIBUDEV)
+#include "qtudev_p.h"
 #else
 #include <QtCore/qdir.h>
 #include <QtCore/qstringlist.h>
@@ -65,24 +63,24 @@ QT_BEGIN_NAMESPACE
 
 #ifndef Q_OS_MAC
 
-#ifndef HAVE_LIBUDEV
+#if !defined(LINK_LIBUDEV) && !defined(LOAD_LIBUDEV)
 
 static inline const QStringList& filtersOfDevices()
 {
     static const QStringList deviceFileNameFilterList = QStringList()
 
 #  ifdef Q_OS_LINUX
-    << QLatin1String("ttyS*")    // Standart UART 8250 and etc.
-    << QLatin1String("ttyUSB*")  // Usb/serial converters PL2303 and etc.
-    << QLatin1String("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
-    << QLatin1String("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
-    << QLatin1String("ttyMI*")   // MOXA pci/serial converters.
-    << QLatin1String("ttymxc*")  // Motorola IMX serial ports (i.e. Freescale i.MX).
-    << QLatin1String("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
-    << QLatin1String("rfcomm*")  // Bluetooth serial device.
-    << QLatin1String("ircomm*"); // IrDA serial device.
+    << QStringLiteral("ttyS*")    // Standard UART 8250 and etc.
+    << QStringLiteral("ttyUSB*")  // Usb/serial converters PL2303 and etc.
+    << QStringLiteral("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
+    << QStringLiteral("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
+    << QStringLiteral("ttyMI*")   // MOXA pci/serial converters.
+    << QStringLiteral("ttymxc*")  // Motorola IMX serial ports (i.e. Freescale i.MX).
+    << QStringLiteral("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
+    << QStringLiteral("rfcomm*")  // Bluetooth serial device.
+    << QStringLiteral("ircomm*"); // IrDA serial device.
 #  elif defined (Q_OS_FREEBSD)
-    << QLatin1String("cu*");
+    << QStringLiteral("cu*");
 #  else
     ; // Here for other *nix OS.
 #  endif
@@ -94,7 +92,7 @@ static QStringList filteredDeviceFilePaths()
 {
     QStringList result;
 
-    QDir deviceDir(QLatin1String("/dev"));
+    QDir deviceDir(QStringLiteral("/dev"));
     if (deviceDir.exists()) {
         deviceDir.setNameFilters(filtersOfDevices());
         deviceDir.setFilter(QDir::Files | QDir::System | QDir::NoSymLinks);
@@ -118,7 +116,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 #ifndef Q_OS_LINUX
     static const bool sysfsEnabled = false;
 #else
-    QDir ttySysClassDir(QLatin1String("/sys/class/tty"));
+    QDir ttySysClassDir(QStringLiteral("/sys/class/tty"));
     const bool sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
 
     if (sysfsEnabled) {
@@ -135,18 +133,18 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             bool canAppendToList = true;
             QSerialPortInfo serialPortInfo;
 
-            if (targetPath.contains(QLatin1String("pnp"))) {
+            if (targetPath.contains(QStringLiteral("pnp"))) {
                 // TODO: Implement me.
-            } else if (targetPath.contains(QLatin1String("platform"))) {
+            } else if (targetPath.contains(QStringLiteral("platform"))) {
                 // Platform 'pseudo' bus for legacy device.
                 // Skip this devices because this type of subsystem does
                 // not include a real physical serial device.
                 canAppendToList = false;
-            } else if (targetPath.contains(QLatin1String("usb"))) {
+            } else if (targetPath.contains(QStringLiteral("usb"))) {
 
                 QDir targetDir(targetPath);
                 targetDir.setFilter(QDir::Files | QDir::Readable);
-                targetDir.setNameFilters(QStringList(QLatin1String("uevent")));
+                targetDir.setNameFilters(QStringList(QStringLiteral("uevent")));
 
                 do {
                     const QFileInfoList entryInfoList = targetDir.entryInfoList();
@@ -159,24 +157,24 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     const QString ueventContent = QString::fromLatin1(uevent.readAll());
 
-                    if (ueventContent.contains(QLatin1String("DEVTYPE=usb_device"))
-                            && ueventContent.contains(QLatin1String("DRIVER=usb"))) {
+                    if (ueventContent.contains(QStringLiteral("DEVTYPE=usb_device"))
+                            && ueventContent.contains(QStringLiteral("DRIVER=usb"))) {
 
-                        QFile description(QFileInfo(targetDir, QLatin1String("product")).absoluteFilePath());
+                        QFile description(QFileInfo(targetDir, QStringLiteral("product")).absoluteFilePath());
                         if (description.open(QIODevice::ReadOnly | QIODevice::Text))
                             serialPortInfo.d_ptr->description = QString::fromLatin1(description.readAll()).simplified();
 
-                        QFile manufacturer(QFileInfo(targetDir, QLatin1String("manufacturer")).absoluteFilePath());
+                        QFile manufacturer(QFileInfo(targetDir, QStringLiteral("manufacturer")).absoluteFilePath());
                         if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
                             serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
 
-                        QFile vendorIdentifier(QFileInfo(targetDir, QLatin1String("idVendor")).absoluteFilePath());
+                        QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("idVendor")).absoluteFilePath());
                         if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
                             serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
                                     .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
                         }
 
-                        QFile productIdentifier(QFileInfo(targetDir, QLatin1String("idProduct")).absoluteFilePath());
+                        QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("idProduct")).absoluteFilePath());
                         if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
                             serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
                                     .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
@@ -217,10 +215,15 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
+#ifdef LOAD_LIBUDEV
+    static bool symbolsResolved = resolveSymbols();
+    if (!symbolsResolved)
+        return QList<QSerialPortInfo>();
+#endif
     QList<QSerialPortInfo> serialPortInfoList;
 
     // White list for devices without a parent
-    static const QString rfcommDeviceName(QLatin1String("rfcomm"));
+    static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
     struct ::udev *udev = ::udev_new();
     if (udev) {
@@ -247,10 +250,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     QSerialPortInfo serialPortInfo;
 
-                    serialPortInfo.d_ptr->device =
-                            QLatin1String(::udev_device_get_devnode(dev));
-                    serialPortInfo.d_ptr->portName =
-                            QLatin1String(::udev_device_get_sysname(dev));
+                    serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev));
+                    serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev));
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
@@ -258,17 +259,15 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     if (parentdev) {
 
-                        QLatin1String subsys(::udev_device_get_subsystem(parentdev));
+                        QString subsys = QString::fromLatin1(::udev_device_get_subsystem(parentdev));
 
-                        if (subsys == QLatin1String("usb-serial")
-                                || subsys == QLatin1String("usb")) { // USB bus type
+                        if (subsys == QStringLiteral("usb-serial")
+                                || subsys == QStringLiteral("usb")) { // USB bus type
                             // Append this devices and try get additional information about them.
-                            serialPortInfo.d_ptr->description = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev,
-                                                                                   "ID_MODEL"))).replace(QLatin1Char('_'), QLatin1Char(' '));
-                            serialPortInfo.d_ptr->manufacturer = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev,
-                                                                                   "ID_VENDOR"))).replace(QLatin1Char('_'), QLatin1Char(' '));
+                            serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                   "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
+                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev,
+                                                                                   "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
 
                             serialPortInfo.d_ptr->vendorIdentifier =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
@@ -278,11 +277,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
                                                 "ID_MODEL_ID")).toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
 
-                        } else if (subsys == QLatin1String("pnp")) { // PNP bus type
+                        } else if (subsys == QStringLiteral("pnp")) { // PNP bus type
                             // Append this device.
                             // FIXME: How to get additional information about serial devices
                             // with this subsystem?
-                        } else if (subsys == QLatin1String("platform")) { // Platform 'pseudo' bus for legacy device.
+                        } else if (subsys == QStringLiteral("platform")) { // Platform 'pseudo' bus for legacy device.
                             // Skip this devices because this type of subsystem does
                             // not include a real physical serial device.
                             canAppendToList = false;
@@ -339,8 +338,12 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
 
 bool QSerialPortInfo::isBusy() const
 {
-    bool currentPid = false;
-    return QTtyLocker::isLocked(portName().toLocal8Bit().constData(), &currentPid);
+    QString lockFilePath = serialPortLockFilePath(portName());
+    if (lockFilePath.isEmpty())
+        return false;
+
+    QLockFile lockFile(lockFilePath);
+    return lockFile.isLocked();
 }
 
 bool QSerialPortInfo::isValid() const

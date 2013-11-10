@@ -159,10 +159,10 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    static const QString usbVendorIdentifierPrefix(QLatin1String("VID_"));
-    static const QString usbProductIdentifierPrefix(QLatin1String("PID_"));
-    static const QString pciVendorIdentifierPrefix(QLatin1String("VEN_"));
-    static const QString pciDeviceIdentifierPrefix(QLatin1String("DEV_"));
+    static const QString usbVendorIdentifierPrefix(QStringLiteral("VID_"));
+    static const QString usbProductIdentifierPrefix(QStringLiteral("PID_"));
+    static const QString pciVendorIdentifierPrefix(QStringLiteral("VEN_"));
+    static const QString pciDeviceIdentifierPrefix(QStringLiteral("DEV_"));
 
     static const int vendorIdentifierSize = 4;
     static const int productIdentifierSize = 4;
@@ -184,7 +184,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             QSerialPortInfo serialPortInfo;
 
             QString s = devicePortName(deviceInfoSet, &deviceInfoData);
-            if (s.isEmpty() || s.contains(QLatin1String("LPT")))
+            if (s.isEmpty() || s.contains(QStringLiteral("LPT")))
                 continue;
 
             serialPortInfo.d_ptr->portName = s;

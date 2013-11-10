@@ -1,11 +1,18 @@
 INCLUDEPATH += $$PWD
 
-unix {
-    CONFIG += link_pkgconfig
-
-    packagesExist(libudev) {
-        DEFINES += HAVE_LIBUDEV
-        PKGCONFIG += libudev
+!contains(DEFINES, LOAD_LIBUDEV): unix {
+    greaterThan(QT_MAJOR_VERSION, 4) {
+        contains(QT_CONFIG, libudev) {
+            DEFINES += LINK_LIBUDEV
+            INCLUDEPATH += $$QMAKE_INCDIR_LIBUDEV
+            LIBS += $$QMAKE_LIBS_LIBUDEV
+        }
+    } else {
+        packagesExist(libudev) {
+            CONFIG += link_pkgconfig
+            DEFINES += LINK_LIBUDEV
+            PKGCONFIG += libudev
+        }
     }
 }
 
@@ -65,11 +72,9 @@ symbian {
 
 unix:!symbian {
     PRIVATE_HEADERS += \
-        $$PWD/qttylocker_unix_p.h \
         $$PWD/qserialport_unix_p.h
 
     SOURCES += \
-        $$PWD/qttylocker_unix.cpp \
         $$PWD/qserialport_unix.cpp \
         $$PWD/qserialportinfo_unix.cpp
 

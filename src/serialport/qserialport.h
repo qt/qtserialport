@@ -47,6 +47,10 @@
 
 #include <QtSerialPort/qserialportglobal.h>
 
+#ifndef QT_DEPRECATED_SINCE
+#define QT_DEPRECATED_SINCE(major, minor) 1
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QSerialPortInfo;
@@ -62,7 +66,9 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(Parity parity READ parity WRITE setParity NOTIFY parityChanged)
     Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
     Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
+#if QT_DEPRECATED_SINCE(5, 2)
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
+#endif
     Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
@@ -145,6 +151,7 @@ public:
     };
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
+#if QT_DEPRECATED_SINCE(5, 2)
     enum DataErrorPolicy {
         SkipPolicy,
         PassZeroPolicy,
@@ -152,6 +159,7 @@ public:
         StopReceivingPolicy,
         UnknownPolicy = -1
     };
+#endif
 
     enum SerialPortError {
         NoError,
@@ -213,8 +221,10 @@ public:
     bool clear(Directions directions = AllDirections);
     bool atEnd() const Q_DECL_OVERRIDE;
 
-    bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
-    DataErrorPolicy dataErrorPolicy() const;
+#if QT_DEPRECATED_SINCE(5, 2)
+    QT_DEPRECATED bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
+    QT_DEPRECATED DataErrorPolicy dataErrorPolicy() const;
+#endif
 
     SerialPortError error() const;
     void clearError();
