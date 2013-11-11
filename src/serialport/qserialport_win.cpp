@@ -98,15 +98,20 @@ public:
         : QWinEventNotifier(parent), dptr(d), t(type) {
         ::ZeroMemory(&o, sizeof(o));
         o.hEvent = ::CreateEvent(NULL, manual, FALSE, NULL);
-        setHandle(o.hEvent);
-        dptr->notifiers[o.hEvent] = this;
+        if (!o.hEvent) {
+            dptr->setError(dptr->decodeSystemError());
+        } else {
+            setHandle(o.hEvent);
+            dptr->notifiers[o.hEvent] = this;
+        }
     }
 
     virtual bool processCompletionRoutine() = 0;
 
     virtual ~AbstractOverlappedEventNotifier() {
         setEnabled(false);
-        ::CloseHandle(o.hEvent);
+        if (!::CloseHandle(o.hEvent))
+            dptr->setError(dptr->decodeSystemError());
     }
 
     Type type() const { return t; }
@@ -132,15 +137,27 @@ public:
     CommOverlappedEventNotifier(QSerialPortPrivate *d, DWORD eventMask, QObject *parent)
         : AbstractOverlappedEventNotifier(d, CommEvent, false, parent)
         , originalEventMask(eventMask), triggeredEventMask(0) {
-        ::SetCommMask(dptr->descriptor, originalEventMask);
-        startWaitCommEvent();
+        if (!::SetCommMask(dptr->descriptor, originalEventMask))
+            dptr->setError(dptr->decodeSystemError());
+        else
+            startWaitCommEvent();
     }
 
-    void startWaitCommEvent() { ::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o); }
+    void startWaitCommEvent() {
+        if (!::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o)) {
+            const QSerialPort::SerialPortError error = dptr->decodeSystemError();
+            if (error != QSerialPort::NoError) {
+                dptr->setError(dptr->decodeSystemError());
+                return;
+            }
+        }
+    }
 
     bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
-        ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
+
+        if (!::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE))
+            dptr->setError(dptr->decodeSystemError());
 
         bool error = false;
 
@@ -181,7 +198,9 @@ public:
 
     bool processCompletionRoutine() Q_DECL_OVERRIDE {
         DWORD numberOfBytesTransferred = 0;
-        ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
+        if (!::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE))
+            dptr->setError(dptr->decodeSystemError());
+
         dptr->completeAsyncRead(numberOfBytesTransferred);
 
         // start async read for possible remainder into driver queue
@@ -208,7 +227,11 @@ public:
     bool processCompletionRoutine() Q_DECL_OVERRIDE {
         setEnabled(false);
         DWORD numberOfBytesTransferred = 0;
-        ::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE);
+        if (!::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE)) {
+            numberOfBytesTransferred = 0;
+            dptr->setError(dptr->decodeSystemError());
+        }
+
         dptr->completeAsyncWrite(numberOfBytesTransferred);
         return true;
     }
@@ -291,7 +314,10 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    ::CancelIo(descriptor);
+    Q_Q(QSerialPort);
+
+    if (!::CancelIo(descriptor))
+        q->setError(decodeSystemError());
 
     qDeleteAll(notifiers);
     notifiers.clear();
@@ -308,11 +334,15 @@ void QSerialPortPrivate::close()
     parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
-        ::SetCommState(descriptor, &restoredDcb);
-        ::SetCommTimeouts(descriptor, &restoredCommTimeouts);
+        if (!::SetCommState(descriptor, &restoredDcb))
+            q->setError(decodeSystemError());
+        else if (!::SetCommTimeouts(descriptor, &restoredCommTimeouts))
+            q->setError(decodeSystemError());
     }
 
-    ::CloseHandle(descriptor);
+    if (!::CloseHandle(descriptor))
+        q->setError(decodeSystemError());
+
     descriptor = INVALID_HANDLE_VALUE;
 }
 
@@ -341,15 +371,16 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
         ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
-    if (::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
+    if (!::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
                           &modemStat, sizeof(modemStat),
                           &bytesReturned, NULL)) {
-
-        if (modemStat & SERIAL_DTR_STATE)
-            ret |= QSerialPort::DataTerminalReadySignal;
-        if (modemStat & SERIAL_RTS_STATE)
-            ret |= QSerialPort::RequestToSendSignal;
+        return ret;
     }
+
+    if (modemStat & SERIAL_DTR_STATE)
+        ret |= QSerialPort::DataTerminalReadySignal;
+    if (modemStat & SERIAL_RTS_STATE)
+        ret |= QSerialPort::RequestToSendSignal;
 
     return ret;
 }
@@ -407,21 +438,29 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return ::ClearCommBreak(descriptor);
 }
 
-qint64 QSerialPortPrivate::systemInputQueueSize () const
+qint64 QSerialPortPrivate::systemInputQueueSize ()
 {
+    Q_Q(QSerialPort);
+
     COMSTAT cs;
     ::ZeroMemory(&cs, sizeof(cs));
-    if (!::ClearCommError(descriptor, NULL, &cs))
+    if (!::ClearCommError(descriptor, NULL, &cs)) {
+        q->setError(decodeSystemError());
         return -1;
+    }
     return cs.cbInQue;
 }
 
-qint64 QSerialPortPrivate::systemOutputQueueSize () const
+qint64 QSerialPortPrivate::systemOutputQueueSize ()
 {
+    Q_Q(QSerialPort);
+
     COMSTAT cs;
     ::ZeroMemory(&cs, sizeof(cs));
-    if (!::ClearCommError(descriptor, NULL, &cs))
+    if (!::ClearCommError(descriptor, NULL, &cs)) {
+        q->setError(decodeSystemError());
         return -1;
+    }
     return cs.cbOutQue;
 }
 
@@ -738,17 +777,20 @@ void QSerialPortPrivate::processIoErrors(bool error)
     }
 
     DWORD errors = 0;
-    if (::ClearCommError(descriptor, &errors, NULL) && errors) {
-        if (errors & CE_FRAME) {
-            q->setError(QSerialPort::FramingError);
-        } else if (errors & CE_RXPARITY) {
-            q->setError(QSerialPort::ParityError);
-            parityErrorOccurred = true;
-        } else if (errors & CE_BREAK) {
-            q->setError(QSerialPort::BreakConditionError);
-        } else {
-            q->setError(QSerialPort::UnknownError);
-        }
+    if (!::ClearCommError(descriptor, &errors, NULL)) {
+        q->setError(decodeSystemError());
+        return;
+    }
+
+    if (errors & CE_FRAME) {
+        q->setError(QSerialPort::FramingError);
+    } else if (errors & CE_RXPARITY) {
+        q->setError(QSerialPort::ParityError);
+        parityErrorOccurred = true;
+    } else if (errors & CE_BREAK) {
+        q->setError(QSerialPort::BreakConditionError);
+    } else {
+        q->setError(QSerialPort::UnknownError);
     }
 }
 
@@ -1121,6 +1163,13 @@ QList<qint32> QSerialPortPrivate::standardBaudRates()
     }
 
     return ret;
+}
+
+void QSerialPortPrivate::setError(QSerialPort::SerialPortError serialPortError, const QString &errorString)
+{
+    Q_Q(QSerialPort);
+
+    q->setError(serialPortError, errorString);
 }
 
 QSerialPort::Handle QSerialPort::handle() const

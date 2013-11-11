@@ -82,8 +82,8 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    qint64 systemInputQueueSize () const;
-    qint64 systemOutputQueueSize () const;
+    qint64 systemInputQueueSize ();
+    qint64 systemOutputQueueSize ();
 
     qint64 bytesAvailable() const;
 
@@ -101,6 +101,8 @@ public:
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     void processIoErrors(bool error);
+    void setError(QSerialPort::SerialPortError error, const QString &errorString = QString());
+    QSerialPort::SerialPortError decodeSystemError() const;
 #ifndef Q_OS_WINCE
     bool startAsyncRead();
     bool startAsyncWrite(int maxSize = INT_MAX);
@@ -146,7 +148,6 @@ private:
     bool updateCommTimeouts();
 
     void detectDefaultSettings();
-    QSerialPort::SerialPortError decodeSystemError() const;
 
 #ifndef Q_OS_WINCE
     bool waitAnyEvent(int msecs, bool *timedOut,
