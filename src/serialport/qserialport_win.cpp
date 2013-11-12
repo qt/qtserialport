@@ -88,6 +88,14 @@ QT_BEGIN_NAMESPACE
 
 #ifndef Q_OS_WINCE
 
+static void initializeOverlappedStructure(OVERLAPPED &overlapped)
+{
+    overlapped.Internal = 0;
+    overlapped.InternalHigh = 0;
+    overlapped.Offset = 0;
+    overlapped.OffsetHigh = 0;
+}
+
 class AbstractOverlappedEventNotifier : public QWinEventNotifier
 {
     Q_OBJECT
@@ -144,6 +152,7 @@ public:
     }
 
     void startWaitCommEvent() {
+        initializeOverlappedStructure(o);
         if (!::WaitCommEvent(dptr->descriptor, &triggeredEventMask, &o)) {
             const QSerialPort::SerialPortError error = dptr->decodeSystemError();
             if (error != QSerialPort::NoError) {
@@ -671,6 +680,7 @@ bool QSerialPortPrivate::startAsyncRead()
         return false;
     }
 
+    initializeOverlappedStructure(*n->overlappedPointer());
     if (::ReadFile(descriptor, readChunkBuffer.data(), bytesToRead, NULL, n->overlappedPointer()))
         return true;
 
@@ -710,6 +720,7 @@ bool QSerialPortPrivate::startAsyncWrite(int maxSize)
 
     n->setEnabled(true);
 
+    initializeOverlappedStructure(*n->overlappedPointer());
     if (::WriteFile(descriptor, ptr, nextSize, NULL, n->overlappedPointer()))
         return true;
 
