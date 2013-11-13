@@ -96,7 +96,7 @@ public:
 
     AbstractOverlappedEventNotifier(QSerialPortPrivate *d, Type type, bool manual, QObject *parent)
         : QWinEventNotifier(parent), dptr(d), t(type) {
-        ::memset(&o, 0, sizeof(o));
+        ::ZeroMemory(&o, sizeof(o));
         o.hEvent = ::CreateEvent(NULL, manual, FALSE, NULL);
         setHandle(o.hEvent);
         dptr->notifiers[o.hEvent] = this;
@@ -271,7 +271,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::memset(&currentCommTimeouts, 0, sizeof(currentCommTimeouts));
+    ::ZeroMemory(&currentCommTimeouts, sizeof(currentCommTimeouts));
     currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
     if (!updateCommTimeouts())
@@ -410,7 +410,7 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 qint64 QSerialPortPrivate::systemInputQueueSize () const
 {
     COMSTAT cs;
-    ::memset(&cs, 0, sizeof(cs));
+    ::ZeroMemory(&cs, sizeof(cs));
     if (!::ClearCommError(descriptor, NULL, &cs))
         return -1;
     return cs.cbInQue;
@@ -419,7 +419,7 @@ qint64 QSerialPortPrivate::systemInputQueueSize () const
 qint64 QSerialPortPrivate::systemOutputQueueSize () const
 {
     COMSTAT cs;
-    ::memset(&cs, 0, sizeof(cs));
+    ::ZeroMemory(&cs, sizeof(cs));
     if (!::ClearCommError(descriptor, NULL, &cs))
         return -1;
     return cs.cbOutQue;
