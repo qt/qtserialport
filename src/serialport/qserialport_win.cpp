@@ -234,7 +234,6 @@ public:
         : AbstractOverlappedEventNotifier(d, WriteCompletionEvent, false, parent) {}
 
     bool processCompletionRoutine() Q_DECL_OVERRIDE {
-        setEnabled(false);
         DWORD numberOfBytesTransferred = 0;
         if (!::GetOverlappedResult(dptr->descriptor, &o, &numberOfBytesTransferred, FALSE)) {
             numberOfBytesTransferred = 0;
@@ -309,8 +308,13 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateCommTimeouts())
         return false;
 
-    if (originalEventMask & EV_RXCHAR) {
+    if (mode & QIODevice::ReadOnly) {
         QWinEventNotifier *n = new ReadOverlappedCompletionNotifier(this, q);
+        n->setEnabled(true);
+    }
+
+    if (mode & QIODevice::WriteOnly) {
+        QWinEventNotifier *n = new WriteOverlappedCompletionNotifier(this, q);
         n->setEnabled(true);
     }
 
@@ -712,13 +716,11 @@ bool QSerialPortPrivate::startAsyncWrite(int maxSize)
 
     writeSequenceStarted = true;
 
-    AbstractOverlappedEventNotifier *n = lookupFreeWriteCompletionNotifier();
+    AbstractOverlappedEventNotifier *n = lookupWriteCompletionNotifier();
     if (!n) {
         q->setError(QSerialPort::ResourceError);
         return false;
     }
-
-    n->setEnabled(true);
 
     initializeOverlappedStructure(*n->overlappedPointer());
     if (::WriteFile(descriptor, ptr, nextSize, NULL, n->overlappedPointer()))
@@ -826,19 +828,13 @@ void QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
         startAsyncWrite(WriteChunkSize);
 }
 
-AbstractOverlappedEventNotifier *QSerialPortPrivate::lookupFreeWriteCompletionNotifier()
+AbstractOverlappedEventNotifier *QSerialPortPrivate::lookupWriteCompletionNotifier()
 {
-    Q_Q(QSerialPort);
-
-    // find first free not running write notifier
     foreach (AbstractOverlappedEventNotifier *n, notifiers) {
-        if ((n->type() == AbstractOverlappedEventNotifier::WriteCompletionEvent)
-                && !n->isEnabled()) {
+        if (n->type() == AbstractOverlappedEventNotifier::WriteCompletionEvent)
             return n;
-        }
     }
-    // if all write notifiers in use, then create new write notifier
-    return new WriteOverlappedCompletionNotifier(this, q);
+    return 0;
 }
 
 AbstractOverlappedEventNotifier *QSerialPortPrivate::lookupCommEventNotifier()

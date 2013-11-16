@@ -105,7 +105,7 @@ public:
     bool startAsyncWrite(int maxSize = INT_MAX);
     void completeAsyncRead(DWORD numberOfBytes);
     void completeAsyncWrite(DWORD numberOfBytes);
-    AbstractOverlappedEventNotifier *lookupFreeWriteCompletionNotifier();
+    AbstractOverlappedEventNotifier *lookupWriteCompletionNotifier();
     AbstractOverlappedEventNotifier *lookupCommEventNotifier();
     AbstractOverlappedEventNotifier *lookupReadCompletionNotifier();
 #else
