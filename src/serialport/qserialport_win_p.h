@@ -57,10 +57,6 @@ QT_BEGIN_NAMESPACE
 class QThread;
 #endif
 
-#ifndef Q_OS_WINCE
-class AbstractOverlappedEventNotifier;
-#endif
-
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
     Q_DECLARE_PUBLIC(QSerialPort)
@@ -98,16 +94,16 @@ public:
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     void processIoErrors(bool error);
-    void setError(QSerialPort::SerialPortError error, const QString &errorString = QString());
     QSerialPort::SerialPortError decodeSystemError() const;
 #ifndef Q_OS_WINCE
+    void _q_canCompleteCommunication();
+    void _q_canCompleteRead();
+    void _q_canCompleteWrite();
+
     bool startAsyncRead();
     bool startAsyncWrite(int maxSize = INT_MAX);
     void completeAsyncRead(DWORD numberOfBytes);
     void completeAsyncWrite(DWORD numberOfBytes);
-    AbstractOverlappedEventNotifier *lookupWriteCompletionNotifier();
-    AbstractOverlappedEventNotifier *lookupCommEventNotifier();
-    AbstractOverlappedEventNotifier *lookupReadCompletionNotifier();
 #else
     bool notifyRead();
     bool notifyWrite(int maxSize = INT_MAX);
@@ -129,12 +125,19 @@ public:
     bool parityErrorOccurred;
 
 #ifndef Q_OS_WINCE
-    QHash<HANDLE, AbstractOverlappedEventNotifier *> notifiers;
     QByteArray readChunkBuffer;
     qint64 actualWriteBufferSize;
     qint64 acyncWritePosition;
     bool readyReadEmitted;
     bool writeSequenceStarted;
+    QWinEventNotifier *communicationNotifier;
+    QWinEventNotifier *readCompletionNotifier;
+    QWinEventNotifier *writeCompletionNotifier;
+    OVERLAPPED communicationOverlapped;
+    OVERLAPPED readCompletionOverlapped;
+    OVERLAPPED writeCompletionOverlapped;
+    DWORD originalEventMask;
+    DWORD triggeredEventMask;
 #else
     QThread *eventNotifier;
     QMutex settingsChangeMutex;
@@ -147,8 +150,7 @@ private:
     void detectDefaultSettings();
 
 #ifndef Q_OS_WINCE
-    bool waitAnyEvent(int msecs, bool *timedOut,
-                      AbstractOverlappedEventNotifier **triggeredNotifier);
+    bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);
 #else
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
