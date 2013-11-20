@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         readData.append(serialPort.readAll());
 
     if (readData.isEmpty()) {
-        standardOutput << QObject::tr("Either no data was currently available on the standard input for reading, or an error occurred for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
+        standardOutput << QObject::tr("Either no data was currently available for reading, or an error occurred for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
     }
 
