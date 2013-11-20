@@ -85,6 +85,9 @@ includes mostly typo, but also some comprehensive changes.
 - New command line sync reader example available with screen shot and
 documentation.
 
+- New command line async reader example available with screen shot and
+documentation.
+
 - New command line sync writer example available with screen shot and
 documentation.
 
@@ -111,3 +114,10 @@ information. Android uarts such as /dev/ttyHS* (High speed UART) and
 - [QTBUG-34474] Replace the internal QTtyLocker with QLockFile from QtCore and a
 small convenience on top of it to comply with the locking directories lockdev
 also uses.
+
+- Support has been added for the hard-coded device enumeration backend to get
+information. /dev/ttyO* (native OMAP UART) is supported by that backend.
+
+- The lock file usage has been extended to support Android as there is no direct
+access to the usual Unix lock file system paths. The lock file is now placed
+into /data/local/tmp.

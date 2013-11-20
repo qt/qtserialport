@@ -64,7 +64,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     QList<QSerialPortInfo> serialPortInfoList;
 
     static const int propertyCount = 6;
-    int matchingPropertiesCounter = 0;
 
 
     ::CFMutableDictionaryRef matching = ::IOServiceMatching(kIOSerialBSDServiceValue);
@@ -93,6 +92,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         ::CFTypeRef manufacturer = 0;
         ::CFTypeRef vendorIdentifier = 0;
         ::CFTypeRef productIdentifier = 0;
+
+        int matchingPropertiesCounter = 0;
 
         io_registry_entry_t entry = service;
 

@@ -39,10 +39,13 @@
 **
 ****************************************************************************/
 
+#include "serialportreader.h"
+
 #include <QtSerialPort/QSerialPort>
 
 #include <QTextStream>
 #include <QCoreApplication>
+#include <QFile>
 #include <QStringList>
 
 QT_USE_NAMESPACE
@@ -65,7 +68,7 @@ int main(int argc, char *argv[])
     serialPort.setPortName(serialPortName);
 
     if (!serialPort.open(QIODevice::ReadOnly)) {
-        standardOutput << QObject::tr("Failed to open port %1, error: %2").arg(serialPortName).arg(serialPort.error()) << endl;
+        standardOutput << QObject::tr("Failed to open port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
     }
 
@@ -76,7 +79,7 @@ int main(int argc, char *argv[])
     }
 
     if (!serialPort.setDataBits(QSerialPort::Data8)) {
-        standardOutput << QObject::tr("Failed set 8 data bits for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
+        standardOutput << QObject::tr("Failed to set 8 data bits for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
     }
 
@@ -91,21 +94,11 @@ int main(int argc, char *argv[])
     }
 
     if (!serialPort.setFlowControl(QSerialPort::NoFlowControl)) {
-        standardOutput << QObject::tr("Failed set no flow control for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
+        standardOutput << QObject::tr("Failed to set no flow control for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
     }
 
-    QByteArray readData = serialPort.readAll();
-    while (serialPort.waitForReadyRead(5000))
-        readData.append(serialPort.readAll());
+    SerialPortReader serialPortReader(&serialPort);
 
-    if (readData.isEmpty()) {
-        standardOutput << QObject::tr("Either no data was currently available for reading, or an error occurred for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        return 1;
-    }
-
-    standardOutput << QObject::tr("Data successfully received from port %1").arg(serialPortName) << endl;
-    standardOutput << readData << endl;
-
-    return 0;
+    return coreApplication.exec();
 }

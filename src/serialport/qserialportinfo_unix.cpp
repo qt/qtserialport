@@ -71,6 +71,7 @@ static inline const QStringList& filtersOfDevices()
 
 #  ifdef Q_OS_LINUX
     << QStringLiteral("ttyS*")    // Standard UART 8250 and etc.
+    << QStringLiteral("ttyO*")    // OMAP UART 8250 and etc.
     << QStringLiteral("ttyUSB*")  // Usb/serial converters PL2303 and etc.
     << QStringLiteral("ttyACM*")  // CDC_ACM converters (i.e. Mobile Phones).
     << QStringLiteral("ttyGS*")   // Gadget serial device (i.e. Mobile Phones with gadget serial driver).
