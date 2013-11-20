@@ -99,9 +99,12 @@ int main(int argc, char *argv[])
     while (serialPort.waitForReadyRead(5000))
         readData.append(serialPort.readAll());
 
-    if (readData.isEmpty()) {
-        standardOutput << QObject::tr("Either no data was currently available for reading, or an error occurred for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
+    if (serialPort.error() == QSerialPort::ReadError) {
+        standardOutput << QObject::tr("Failed to read from port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
+    } else if (serialPort.error() == QSerialPort::TimeoutError) {
+        standardOutput << QObject::tr("No data was currently available for reading from port %1").arg(serialPortName) << endl;
+        return 0;
     }
 
     standardOutput << QObject::tr("Data successfully received from port %1").arg(serialPortName) << endl;
