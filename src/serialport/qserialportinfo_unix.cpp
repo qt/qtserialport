@@ -132,7 +132,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             if (lastIndexOfSlash == -1)
                 continue;
 
-            bool canAppendToList = true;
             QSerialPortInfo serialPortInfo;
 
             if (targetPath.contains(QStringLiteral("pnp"))) {
@@ -141,7 +140,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 // Platform 'pseudo' bus for legacy device.
                 // Skip this devices because this type of subsystem does
                 // not include a real physical serial device.
-                canAppendToList = false;
+                continue;
             } else if (targetPath.contains(QStringLiteral("usb"))) {
 
                 QDir targetDir(targetPath);
@@ -188,14 +187,12 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
             } else {
                 // unknown types of devices
-                canAppendToList = false;
+                continue;
             }
 
-            if (canAppendToList) {
-                serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
-                serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
-                serialPortInfoList.append(serialPortInfo);
-            }
+            serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
+            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
+            serialPortInfoList.append(serialPortInfo);
         }
     }
 
@@ -257,8 +254,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
-                    bool canAppendToList = true;
-
                     if (parentdev) {
 
                         QString subsys = QString::fromLatin1(::udev_device_get_subsystem(parentdev));
@@ -286,7 +281,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                         } else if (subsys == QStringLiteral("platform")) { // Platform 'pseudo' bus for legacy device.
                             // Skip this devices because this type of subsystem does
                             // not include a real physical serial device.
-                            canAppendToList = false;
+                            continue;
                         } else { // Others types of subsystems.
                             // Append this devices because we believe that any other types of
                             // subsystems provide a real serial devices. For example, for devices
@@ -303,15 +298,14 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                             int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
 
                             if (!ok || (portNumber < 0) || (portNumber > 255)) {
-                                canAppendToList = false;
+                                continue;
                             }
                         } else {
-                            canAppendToList = false;
+                            continue;
                         }
                     }
 
-                    if (canAppendToList)
-                        serialPortInfoList.append(serialPortInfo);
+                    serialPortInfoList.append(serialPortInfo);
 
                     ::udev_device_unref(dev);
                 }
