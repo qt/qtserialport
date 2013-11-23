@@ -69,7 +69,7 @@ static inline const QStringList& filtersOfDevices()
 {
     static const QStringList deviceFileNameFilterList = QStringList()
 
-#  ifdef Q_OS_LINUX
+#ifdef Q_OS_LINUX
     << QStringLiteral("ttyS*")    // Standard UART 8250 and etc.
     << QStringLiteral("ttyO*")    // OMAP UART 8250 and etc.
     << QStringLiteral("ttyUSB*")  // Usb/serial converters PL2303 and etc.
@@ -80,11 +80,11 @@ static inline const QStringList& filtersOfDevices()
     << QStringLiteral("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
     << QStringLiteral("rfcomm*")  // Bluetooth serial device.
     << QStringLiteral("ircomm*"); // IrDA serial device.
-#  elif defined (Q_OS_FREEBSD)
+#elif defined (Q_OS_FREEBSD)
     << QStringLiteral("cu*");
-#  else
+#else
     ; // Here for other *nix OS.
-#  endif
+#endif
 
     return deviceFileNameFilterList;
 }
