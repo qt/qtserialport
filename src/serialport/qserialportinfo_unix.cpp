@@ -47,23 +47,17 @@
 
 #include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qdir.h>
 
 #ifndef Q_OS_MAC
 
-#if defined(LINK_LIBUDEV) || defined(LOAD_LIBUDEV)
 #include "qtudev_p.h"
-#else
-#include <QtCore/qdir.h>
-#include <QtCore/qstringlist.h>
-#endif
 
 #endif
 
 QT_BEGIN_NAMESPACE
 
 #ifndef Q_OS_MAC
-
-#if !defined(LINK_LIBUDEV) && !defined(LOAD_LIBUDEV)
 
 static QStringList filteredDeviceFilePaths()
 {
@@ -105,16 +99,25 @@ static QStringList filteredDeviceFilePaths()
     return result;
 }
 
-QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
+QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
-    bool sysfsEnabled = false;
+    foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
+        QSerialPortInfo serialPortInfo;
+        serialPortInfo.d_ptr->device = deviceFilePath;
+        serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
+        serialPortInfoList.append(serialPortInfo);
+    }
 
-#ifdef Q_OS_LINUX
+    return serialPortInfoList;
+}
 
+QList<QSerialPortInfo> availablePortsBySysfs()
+{
+    QList<QSerialPortInfo> serialPortInfoList;
     QDir ttySysClassDir(QStringLiteral("/sys/class/tty"));
-    sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
+    const bool sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
 
     if (sysfsEnabled) {
         ttySysClassDir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -187,25 +190,12 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         }
     }
 
-#endif
-
-    if (!sysfsEnabled) {
-        foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
-            QSerialPortInfo serialPortInfo;
-            serialPortInfo.d_ptr->device = deviceFilePath;
-            serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
-            serialPortInfoList.append(serialPortInfo);
-        }
-    }
-
     return serialPortInfoList;
 }
 
-#else
-
-QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
+QList<QSerialPortInfo> availablePortsByUdev()
 {
-#ifdef LOAD_LIBUDEV
+#ifndef LINK_LIBUDEV
     static bool symbolsResolved = resolveSymbols();
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
@@ -298,7 +288,27 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
+{
+    QList<QSerialPortInfo> serialPortInfoList;
+    // TODO: Remove this condition once the udev runtime symbol resolution crash
+    // is fixed for Qt 4.
+#if defined(LINK_LIBUDEV) || (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    serialPortInfoList = availablePortsByUdev();
 #endif
+
+#ifdef Q_OS_LINUX
+    if (serialPortInfoList.isEmpty())
+        serialPortInfoList = availablePortsBySysfs();
+    else
+        return serialPortInfoList;
+#endif
+
+    if (serialPortInfoList.isEmpty())
+        serialPortInfoList = availablePortsByFiltersOfDevices();
+
+    return serialPortInfoList;
+}
 
 #endif
 

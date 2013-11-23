@@ -47,7 +47,7 @@ extern "C"
 {
 #include <libudev.h>
 }
-#elif defined(LOAD_LIBUDEV)
+#else
 #include <QtCore/qlibrary.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qdebug.h>
