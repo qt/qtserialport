@@ -119,9 +119,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             serialPortInfo.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
                                                       QString::fromWCharArray(di.szDeviceKey));
 
-            // Get manufacturer, vendor identifier, product identifier are not
-            // possible.
-
             serialPortInfoList.append(serialPortInfo);
 
         } while (::FindNextDevice(hSearch, &di));

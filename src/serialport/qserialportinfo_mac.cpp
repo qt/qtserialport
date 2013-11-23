@@ -97,7 +97,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
         io_registry_entry_t entry = service;
 
-        // Find MacOSX-specific properties names.
         do {
 
             if (!device) {
@@ -184,7 +183,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
             }
 
-            // If all matching properties is found, then force break loop.
             if (matchingPropertiesCounter == propertyCount)
                 break;
 
@@ -194,7 +192,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
         (void) ::IOObjectRelease(entry);
 
-        // Convert from MacOSX-specific properties to Qt4-specific.
         if (matchingPropertiesCounter > 0) {
 
             QSerialPortInfo serialPortInfo;

@@ -227,8 +227,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
 #endif
 
-// common part
-
 QList<qint32> QSerialPortInfo::standardBaudRates()
 {
     return QSerialPortPrivate::standardBaudRates();

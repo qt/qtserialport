@@ -46,7 +46,6 @@
 #include "qserialport_symbian_p.h"
 
 #include <e32base.h>
-//#include <e32test.h>
 #include <c32comm.h>
 #include <f32file.h>
 
@@ -54,23 +53,19 @@
 
 QT_BEGIN_NAMESPACE
 
-// Physical device driver.
 #ifdef __WINS__
 _LIT(KPddName, "ECDRV");
-#else // defined (__EPOC32__)
+#else
 _LIT(KPddName, "EUART");
 #endif
 
-// Logical native device driver.
 _LIT(KLddName,"ECOMM");
 
-// Modules names.
 _LIT(KRS232ModuleName , "ECUART");
 _LIT(KBluetoothModuleName , "BTCOMM");
 _LIT(KInfraRedModuleName , "IRCOMM");
 _LIT(KACMModuleName, "ECACM");
 
-// Return false on error load.
 static bool loadDevices()
 {
     TInt r = KErrNone;
@@ -84,16 +79,16 @@ static bool loadDevices()
 
     r = User::LoadPhysicalDevice(KPddName);
     if (r != KErrNone && r != KErrAlreadyExists)
-        return false; //User::Leave(r);
+        return false;
 
     r = User::LoadLogicalDevice(KLddName);
     if (r != KErrNone && r != KErrAlreadyExists)
-        return false; //User::Leave(r);
+        return false;
 
 #ifndef __WINS__
     r = StartC32();
     if (r != KErrNone && r != KErrAlreadyExists)
-        return false; //User::Leave(r);
+        return false;
 #endif
 
     return true;
@@ -109,14 +104,13 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     RCommServ server;
     TInt r = server.Connect();
     if (r != KErrNone)
-        return serialPortInfoList; //User::LeaveIfError(r);
+        return serialPortInfoList;
 
-    TSerialInfo nativeSerialInfo; // Native Symbian OS port info class.
+    TSerialInfo nativeSerialInfo;
     QString s("%1::%2");
 
     // FIXME: Get info about RS232 ports.
     r = server.LoadCommModule(KRS232ModuleName);
-    //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KRS232ModuleName, nativeSerialInfo);
         if (r == KErrNone) {
@@ -138,7 +132,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     // FIXME: Get info about Bluetooth ports.
     r = server.LoadCommModule(KBluetoothModuleName);
-    //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KBluetoothModuleName, nativeSerialInfo);
         if (r == KErrNone) {
@@ -160,7 +153,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     // FIXME: Get info about InfraRed ports.
     r = server.LoadCommModule(KInfraRedModuleName);
-    //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KInfraRedModuleName, nativeSerialInfo);
         if (r == KErrNone) {
@@ -182,7 +174,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     // FIXME: Get info about ACM ports.
     r = server.LoadCommModule(KACMModuleName);
-    //User::LeaveIfError(r);
     if (r == KErrNone) {
         r = server.GetPortInfo(KACMModuleName, nativeSerialInfo);
         if (r == KErrNone) {
