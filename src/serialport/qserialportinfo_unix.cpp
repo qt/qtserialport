@@ -186,6 +186,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     }
                 } while (targetDir.cdUp());
 
+            } else if (targetPath.contains(QStringLiteral("pci"))) {
+                // TODO: Obtain more information about the device
             } else {
                 // unknown types of devices
                 canAppendToList = false;
@@ -287,6 +289,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                             // Skip this devices because this type of subsystem does
                             // not include a real physical serial device.
                             canAppendToList = false;
+                        } else if (subsys == QStringLiteral("pci")) {
+                            // TODO: Obtain more information about the device
                         } else { // Others types of subsystems.
                             // Append this devices because we believe that any other types of
                             // subsystems provide a real serial devices. For example, for devices

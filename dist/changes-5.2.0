@@ -121,3 +121,6 @@ information. /dev/ttyO* (native OMAP UART) is supported by that backend.
 - The lock file usage has been extended to support Android as there is no direct
 access to the usual Unix lock file system paths. The lock file is now placed
 into /data/local/tmp.
+
+- [QTBUG-35064] PCI support has been added to the sysfs backend on Linux to
+support the enumeration of such devices.
