@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 #if !defined(LINK_LIBUDEV) && !defined(LOAD_LIBUDEV)
 
-static inline const QStringList& filtersOfDevices()
+static QStringList filteredDeviceFilePaths()
 {
     static const QStringList deviceFileNameFilterList = QStringList()
 
@@ -86,16 +86,11 @@ static inline const QStringList& filtersOfDevices()
     ; // Here for other *nix OS.
 #endif
 
-    return deviceFileNameFilterList;
-}
-
-static QStringList filteredDeviceFilePaths()
-{
     QStringList result;
 
     QDir deviceDir(QStringLiteral("/dev"));
     if (deviceDir.exists()) {
-        deviceDir.setNameFilters(filtersOfDevices());
+        deviceDir.setNameFilters(deviceFileNameFilterList);
         deviceDir.setFilter(QDir::Files | QDir::System | QDir::NoSymLinks);
         QStringList deviceFilePaths;
         foreach (const QFileInfo &deviceFileInfo, deviceDir.entryInfoList()) {
