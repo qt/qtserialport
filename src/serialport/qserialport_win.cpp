@@ -1155,14 +1155,7 @@ qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
-    QList<qint32> ret;
-    const QList<qint32> baudRatePairs = standardBaudRatePairList();
-
-    foreach (qint32 baudRatePair, baudRatePairs) {
-        ret.append(baudRatePair);
-    }
-
-    return ret;
+    return standardBaudRatePairList();
 }
 
 void QSerialPortPrivate::setError(QSerialPort::SerialPortError serialPortError, const QString &errorString)
