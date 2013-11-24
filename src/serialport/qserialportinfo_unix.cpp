@@ -292,9 +292,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                             // devices with negative and invalid numbers in the name are rejected
                             int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
 
-                            if (!ok || (portNumber < 0) || (portNumber > 255)) {
+                            if (!ok || (portNumber < 0) || (portNumber > 255))
                                 continue;
-                            }
                         } else {
                             continue;
                         }
