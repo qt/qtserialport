@@ -124,3 +124,6 @@ into /data/local/tmp.
 
 - [QTBUG-35064] PCI support has been added to the sysfs backend on Linux to
 support the enumeration of such devices.
+
+- [QTBUG-35184] Mark the isValid() method in QSerialPortInfo deprecated because
+it has no common use case.

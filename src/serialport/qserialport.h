@@ -47,10 +47,6 @@
 
 #include <QtSerialPort/qserialportglobal.h>
 
-#ifndef QT_DEPRECATED_SINCE
-#define QT_DEPRECATED_SINCE(major, minor) 1
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QSerialPortInfo;

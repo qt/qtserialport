@@ -80,7 +80,9 @@ public:
 
     bool isNull() const;
     bool isBusy() const;
-    bool isValid() const;
+#if QT_DEPRECATED_SINCE(5, 2)
+    QT_DEPRECATED bool isValid() const;
+#endif
 
     static QList<qint32> standardBaudRates();
     static QList<QSerialPortInfo> availablePorts();
