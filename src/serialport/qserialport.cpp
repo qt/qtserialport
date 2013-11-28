@@ -222,11 +222,20 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the parity scheme used.
 
-    \value NoParity         No parity.
-    \value EvenParity       Even parity.
-    \value OddParity        Odd parity.
-    \value SpaceParity      Space parity.
-    \value MarkParity       Mark parity.
+    \value NoParity         No parity bit it sent. This is the most common
+                            parity setting. Error detection is handled by the
+                            communication protocol.
+    \value EvenParity       The number of 1 bits in each character, including
+                            the parity bit, is always even.
+    \value OddParity        The number of 1 bits in each character, including
+                            the parity bit, is always odd. It ensures that at
+                            least one state transition occurs in each character.
+    \value SpaceParity      Space parity. The parity bit is sent in the space
+                            signal condition. It does not provide error
+                            detection information.
+    \value MarkParity       Mark parity. The parity bit is always set to the
+                            mark signal condition (logical 1). It does not
+                            provide error detection information.
     \value UnknownParity    Unknown parity.
 
     \sa QSerialPort::parity
