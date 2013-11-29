@@ -905,8 +905,10 @@ void QSerialPortPrivate::detectDefaultSettings()
         parity = QSerialPort::EvenParity;
     else if ((currentDcb.Parity == ODDPARITY) && currentDcb.fParity)
         parity = QSerialPort::OddParity;
-    else
-        parity = QSerialPort::UnknownParity;
+    else {
+        qWarning("%s: Unexpected parity settings", Q_FUNC_INFO);
+        parity = QSerialPort::NoParity;
+    }
 
     // Detect stopbits.
     switch (currentDcb.StopBits) {

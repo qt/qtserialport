@@ -114,8 +114,18 @@ public:
         OddParity = 3,
         SpaceParity = 4,
         MarkParity = 5,
+#if !defined(Q_CC_GNU) && !defined(Q_CC_CLANG)
         UnknownParity = -1
+#endif
     };
+
+#if QT_DEPRECATED_SINCE(5, 2)
+#if defined(Q_CC_GNU) || defined(Q_CC_CLANG)
+    QT_DEPRECATED static const Parity UnknownParity = Parity(-1);
+#elif defined _MSC_VER
+#pragma deprecated(UnknownParity)
+#endif
+#endif
 
     enum StopBits {
         OneStop = 1,

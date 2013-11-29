@@ -455,7 +455,8 @@ void QSerialPortPrivate::detectDefaultSettings()
         parity = QSerialPort::SpaceParity;
         break;
     default:
-        parity = QSerialPort::UnknownParity;
+        qWarning("%s: Unexpected parity settings", Q_FUNC_INFO);
+        parity = QSerialPort::NoParity;
         break;
     }
 

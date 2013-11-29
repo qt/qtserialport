@@ -71,7 +71,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , inputBaudRate(0)
     , outputBaudRate(0)
     , dataBits(QSerialPort::UnknownDataBits)
-    , parity(QSerialPort::UnknownParity)
+    , parity(QSerialPort::NoParity)
     , stopBits(QSerialPort::UnknownStopBits)
     , flow(QSerialPort::UnknownFlowControl)
     , policy(QSerialPort::IgnorePolicy)
@@ -227,7 +227,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value OddParity        Odd parity.
     \value SpaceParity      Space parity.
     \value MarkParity       Mark parity.
-    \value UnknownParity    Unknown parity.
+    \value UnknownParity    Unknown parity. This value is obsolete. It is
+                            provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::parity
 */

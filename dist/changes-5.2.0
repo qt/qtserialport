@@ -127,3 +127,7 @@ support the enumeration of such devices.
 
 - [QTBUG-35184] Mark the isValid() method in QSerialPortInfo deprecated because
 it has no common use case.
+
+- [QTBUG-35215] Mark the QSerialPort::UnknownParity method in QSerialPort
+deprecated because it has no use case, and was added mistakenly. There is no
+such a "standard" serial port parity behavior.
