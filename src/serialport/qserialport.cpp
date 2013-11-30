@@ -208,10 +208,18 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the number of data bits used.
 
-    \value Data5            Five bits.
-    \value Data6            Six bits.
-    \value Data7            Seven bits
-    \value Data8            Eight bits.
+    \value Data5            The number of data bits in each character is 5. It
+                            is used for Baudot code. It generally only makes
+                            sense with older equipments such as teleprinters.
+    \value Data6            The number of data bits in each character is 6. It
+                            is rarely used.
+    \value Data7            The number of data bits in each character is 7. It
+                            is used for true ASCII. It generally only makes
+                            sense with older equipments such as teleprinters.
+    \value Data8            The number of data bits in each character is 8. It
+                            is used for most kinds of data, as this size matches
+                            the size of a byte. It is almost universally used in
+                            newer applications.
     \value UnknownDataBits  Unknown number of bits.
 
     \sa QSerialPort::dataBits
