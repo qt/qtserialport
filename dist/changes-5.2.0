@@ -64,9 +64,6 @@ now.
 - [QTBUG-33774] Document that the serial port parameters cannot be set before
 opening.
 
-- Add an "UnknownSignal" value for the pinout signals. This is now the returned
-value when the pinout state of the signals cannot be detected properly.
-
 - No more unnecessary syscalls (parameter settings, pinout signal query, etc) in the
 backend when the port is closed. This also means no improper errors are set
 accordingly.
@@ -128,6 +125,7 @@ support the enumeration of such devices.
 - [QTBUG-35184] Mark the isValid() method in QSerialPortInfo deprecated because
 it has no common use case.
 
-- [QTBUG-35215] Mark the QSerialPort::UnknownParity method in QSerialPort
+- [QTBUG-35215] Mark the QSerialPort::Unknown* enumeration values in QSerialPort
 deprecated because it has no use case, and was added mistakenly. There is no
-such a "standard" serial port parity behavior.
+such "standard" serial port behavior general for these as "unknown". It is an
+implementation detail for error reporting, and hence not recommended anymore.
