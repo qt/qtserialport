@@ -255,7 +255,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This enum describes the number of stop bits used.
 
     \value OneStop          1 stop bit.
-    \value OneAndHalfStop   1.5 stop bits.
+    \value OneAndHalfStop   1.5 stop bits. This is only for Windows platform.
     \value TwoStop          2 stop bits.
     \value UnknownStopBits  Unknown number of stop bit.
 
