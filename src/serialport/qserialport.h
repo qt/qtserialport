@@ -96,20 +96,16 @@ public:
         Baud19200 = 19200,
         Baud38400 = 38400,
         Baud57600 = 57600,
-        Baud115200 = 115200
-#if !defined(Q_CC_GNU) && !defined(Q_CC_CLANG)
-        , UnknownBaud = -1
-#endif
+        Baud115200 = 115200,
+        UnknownBaud = -1
     };
 
     enum DataBits {
         Data5 = 5,
         Data6 = 6,
         Data7 = 7,
-        Data8 = 8
-#if !defined(Q_CC_GNU) && !defined(Q_CC_CLANG)
-        , UnknownDataBits = -1
-#endif
+        Data8 = 8,
+        UnknownDataBits = -1
     };
 
     enum Parity {
@@ -117,38 +113,26 @@ public:
         EvenParity = 2,
         OddParity = 3,
         SpaceParity = 4,
-        MarkParity = 5
-#if !defined(Q_CC_GNU) && !defined(Q_CC_CLANG)
-        , UnknownParity = -1
-#endif
+        MarkParity = 5,
+        UnknownParity = -1
     };
 
     enum StopBits {
         OneStop = 1,
         OneAndHalfStop = 3,
-        TwoStop = 2
-#if !defined(Q_CC_GNU) && !defined(Q_CC_CLANG)
-        , UnknownStopBits = -1
-#endif
+        TwoStop = 2,
+        UnknownStopBits = -1
     };
 
     enum FlowControl {
         NoFlowControl,
         HardwareControl,
-        SoftwareControl
-#if !defined(Q_CC_GNU) && !defined(Q_CC_CLANG)
-        , UnknownFlowControl = -1
-#endif
+        SoftwareControl,
+        UnknownFlowControl = -1
     };
 
 #if QT_DEPRECATED_SINCE(5, 2)
-#if defined(Q_CC_GNU) || defined(Q_CC_CLANG)
-    QT_DEPRECATED static const BaudRate UnknownBaud = BaudRate(-1);
-    QT_DEPRECATED static const DataBits UnknownDataBits = DataBits(-1);
-    QT_DEPRECATED static const Parity UnknownParity = Parity(-1);
-    QT_DEPRECATED static const StopBits UnknownStopBits = StopBits(-1);
-    QT_DEPRECATED static const FlowControl UnknownFlowControl = FlowControl(-1);
-#elif defined _MSC_VER
+#if defined _MSC_VER
 #pragma deprecated(UnknownBaud)
 #pragma deprecated(UnknownDataBits)
 #pragma deprecated(UnknownParity)
