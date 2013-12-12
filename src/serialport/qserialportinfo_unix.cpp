@@ -180,6 +180,8 @@ QList<QSerialPortInfo> availablePortsBySysfs()
                     }
                 } while (targetDir.cdUp());
 
+            } else if (targetPath.contains(QStringLiteral("pci"))) {
+                // TODO: Obtain more information about the device
             } else {
                 continue;
             }
@@ -257,6 +259,8 @@ QList<QSerialPortInfo> availablePortsByUdev()
                             // TODO: Obtain more information
                         } else if (subsys == QStringLiteral("platform")) {
                             continue;
+                        } else if (subsys == QStringLiteral("pci")) {
+                            // TODO: Obtain more information about the device
                         } else {
                             // FIXME: Obtain more information
                         }

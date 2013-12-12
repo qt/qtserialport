@@ -305,7 +305,7 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 
     if (::ioctl(descriptor, TIOCMGET, &arg) == -1) {
         q->setError(decodeSystemError());
-        return QSerialPort::UnknownSignal;
+        return QSerialPort::NoSignal;
     }
 
     QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
@@ -881,7 +881,8 @@ void QSerialPortPrivate::detectDefaultSettings()
         dataBits = QSerialPort::Data8;
         break;
     default:
-        dataBits = QSerialPort::UnknownDataBits;
+        qWarning("%s: Unexpected data bits settings", Q_FUNC_INFO);
+        dataBits = QSerialPort::Data8;
         break;
     }
 
@@ -913,8 +914,10 @@ void QSerialPortPrivate::detectDefaultSettings()
         flow = QSerialPort::SoftwareControl;
     else if ((currentTermios.c_cflag & CRTSCTS) && (!(currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
         flow = QSerialPort::HardwareControl;
-    else
-        flow = QSerialPort::UnknownFlowControl;
+    else {
+        qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
+        flow = QSerialPort::NoFlowControl;
+    }
 }
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const

@@ -258,6 +258,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
 /*!
     \fn bool QSerialPortInfo::isValid() const
+    \obsolete
 
     Returns true if serial port is present on system;
     otherwise returns false.

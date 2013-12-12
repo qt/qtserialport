@@ -70,10 +70,10 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , error(QSerialPort::NoError)
     , inputBaudRate(0)
     , outputBaudRate(0)
-    , dataBits(QSerialPort::UnknownDataBits)
-    , parity(QSerialPort::UnknownParity)
-    , stopBits(QSerialPort::UnknownStopBits)
-    , flow(QSerialPort::UnknownFlowControl)
+    , dataBits(QSerialPort::Data8)
+    , parity(QSerialPort::NoParity)
+    , stopBits(QSerialPort::OneStop)
+    , flow(QSerialPort::NoFlowControl)
     , policy(QSerialPort::IgnorePolicy)
     , settingsRestoredOnClose(true)
     , q_ptr(q)
@@ -198,7 +198,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Baud38400    38400 baud.
     \value Baud57600    57600 baud.
     \value Baud115200   115200 baud.
-    \value UnknownBaud  Unknown baud.
+    \value UnknownBaud  Unknown baud. This value is obsolete. It is provided to
+                        keep old source code working. We strongly advise against
+                        using it in new code.
 
     \sa QSerialPort::baudRate
 */
@@ -220,7 +222,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
                             is used for most kinds of data, as this size matches
                             the size of a byte. It is almost universally used in
                             newer applications.
-    \value UnknownDataBits  Unknown number of bits.
+    \value UnknownDataBits  Unknown number of bits. This value is obsolete. It
+                            is provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::dataBits
 */
@@ -244,7 +248,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value MarkParity       Mark parity. The parity bit is always set to the
                             mark signal condition (logical 1). It does not
                             provide error detection information.
-    \value UnknownParity    Unknown parity.
+    \value UnknownParity    Unknown parity. This value is obsolete. It is
+                            provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::parity
 */
@@ -257,7 +263,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value OneStop          1 stop bit.
     \value OneAndHalfStop   1.5 stop bits. This is only for Windows platform.
     \value TwoStop          2 stop bits.
-    \value UnknownStopBits  Unknown number of stop bit.
+    \value UnknownStopBits  Unknown number of stop bit. This value is obsolete.
+                            It is provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::stopBits
 */
@@ -270,7 +278,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value NoFlowControl        No flow control.
     \value HardwareControl      Hardware flow control (RTS/CTS).
     \value SoftwareControl      Software flow control (XON/XOFF).
-    \value UnknownFlowControl   Unknown flow control.
+    \value UnknownFlowControl   Unknown flow control. This value is obsolete. It
+                                is provided to keep old source code working. We
+                                strongly advise against using it in new code.
 
     \sa QSerialPort::flowControl
 */
@@ -291,7 +301,6 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value ClearToSendSignal              CTS (Clear To Send).
     \value SecondaryTransmittedDataSignal STD (Secondary Transmitted Data).
     \value SecondaryReceivedDataSignal    SRD (Secondary Received Data).
-    \value UnknownSignal                  Unknown line state. This value was introduced in QtSerialPort 5.2.
 
     \sa pinoutSignals(), QSerialPort::dataTerminalReady,
     QSerialPort::requestToSend
@@ -638,7 +647,7 @@ qint32 QSerialPort::baudRate(Directions directions) const
     Q_D(const QSerialPort);
     if (directions == QSerialPort::AllDirections)
         return d->inputBaudRate == d->outputBaudRate ?
-                    d->inputBaudRate : QSerialPort::UnknownBaud;
+                    d->inputBaudRate : -1;
     return directions & QSerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
 }
 
@@ -970,8 +979,7 @@ bool QSerialPort::isRequestToSend()
     operating systems cannot provide proper notifications about the changes.
 
     \note The serial port has to be open before trying to get the pinout
-    signals; otherwise returns UnknownSignal and sets the NotOpenError error
-    code.
+    signals; otherwise returns NoSignal and sets the NotOpenError error code.
 
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
@@ -983,7 +991,7 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
         qWarning("%s: device not open", Q_FUNC_INFO);
-        return QSerialPort::UnknownSignal;
+        return QSerialPort::NoSignal;
     }
 
     return d->pinoutSignals();
