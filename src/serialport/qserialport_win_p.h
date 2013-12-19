@@ -126,8 +126,6 @@ public:
 
 #ifndef Q_OS_WINCE
     QByteArray readChunkBuffer;
-    qint64 actualWriteBufferSize;
-    qint64 acyncWritePosition;
     bool readyReadEmitted;
     bool writeSequenceStarted;
     QWinEventNotifier *communicationNotifier;

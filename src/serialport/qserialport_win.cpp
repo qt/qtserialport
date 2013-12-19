@@ -101,8 +101,6 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , descriptor(INVALID_HANDLE_VALUE)
     , parityErrorOccurred(false)
     , readChunkBuffer(ReadChunkSize, 0)
-    , actualWriteBufferSize(0)
-    , acyncWritePosition(0)
     , readyReadEmitted(0)
     , writeSequenceStarted(false)
     , communicationNotifier(new QWinEventNotifier(q))
@@ -229,8 +227,6 @@ void QSerialPortPrivate::close()
 
     writeSequenceStarted = false;
     writeBuffer.clear();
-    actualWriteBufferSize = 0;
-    acyncWritePosition = 0;
 
     readyReadEmitted = false;
     parityErrorOccurred = false;
@@ -311,8 +307,6 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-        actualWriteBufferSize = 0;
-        acyncWritePosition = 0;
         writeSequenceStarted = false;
     }
     return ::PurgeComm(descriptor, flags);
@@ -369,13 +363,10 @@ qint64 QSerialPortPrivate::systemOutputQueueSize ()
 qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
     char *ptr = writeBuffer.reserve(maxSize);
-    if (maxSize == 1) {
+    if (maxSize == 1)
         *ptr = *data;
-        actualWriteBufferSize++;
-    } else {
+    else
         ::memcpy(ptr, data, maxSize);
-        actualWriteBufferSize += maxSize;
-    }
 
     if (!writeSequenceStarted)
         startAsyncWrite(WriteChunkSize);
@@ -657,11 +648,10 @@ bool QSerialPortPrivate::startAsyncWrite(int maxSize)
 {
     Q_Q(QSerialPort);
 
-    qint64 nextSize = 0;
-    const char *ptr = writeBuffer.readPointerAtPosition(acyncWritePosition, nextSize);
+    qint64 nextSize = writeBuffer.nextDataBlockSize();
+    const char *ptr = writeBuffer.readPointer();
 
     nextSize = qMin(nextSize, qint64(maxSize));
-    acyncWritePosition += nextSize;
 
     // no more data to write
     if (!ptr || nextSize == 0)
@@ -763,8 +753,6 @@ void QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
     Q_Q(QSerialPort);
 
     writeBuffer.free(numberOfBytes);
-    actualWriteBufferSize -= qint64(numberOfBytes);
-    acyncWritePosition -= qint64(numberOfBytes);
 
     if (numberOfBytes > 0)
         emit q->bytesWritten(numberOfBytes);
