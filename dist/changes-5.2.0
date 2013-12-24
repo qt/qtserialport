@@ -64,9 +64,6 @@ now.
 - [QTBUG-33774] Document that the serial port parameters cannot be set before
 opening.
 
-- Add an "UnknownSignal" value for the pinout signals. This is now the returned
-value when the pinout state of the signals cannot be detected properly.
-
 - No more unnecessary syscalls (parameter settings, pinout signal query, etc) in the
 backend when the port is closed. This also means no improper errors are set
 accordingly.
@@ -103,9 +100,9 @@ not used for finding udev again.
 - [QTBUG-32563] Motorola IMX support was added when udev and sysfs are not
 present.
 
-- [QTBUG-34429] Mark the the data error policy obsolete. End users should stop
-using this feature now. It may be removed later in Qt 6.X, and there is a
-warning now if it is used.
+- [QTBUG-34429] Mark the data error policy obsolete. End users should stop using
+this feature now. It may be removed later in Qt 6.X, and there is a warning now
+if it is used.
 
 - Support has been added for the hard-coded device enumeration backend to get
 information. Android uarts such as /dev/ttyHS* (High speed UART) and
@@ -121,3 +118,14 @@ information. /dev/ttyO* (native OMAP UART) is supported by that backend.
 - The lock file usage has been extended to support Android as there is no direct
 access to the usual Unix lock file system paths. The lock file is now placed
 into /data/local/tmp.
+
+- [QTBUG-35064] PCI support has been added to the sysfs backend on Linux to
+support the enumeration of such devices.
+
+- [QTBUG-35184] Mark the isValid() method in QSerialPortInfo deprecated because
+it has no common use case.
+
+- [QTBUG-35215] Mark the QSerialPort::Unknown* enumeration values in QSerialPort
+deprecated because it has no use case, and was added mistakenly. There is no
+such "standard" serial port behavior general for these as "unknown". It is an
+implementation detail for error reporting, and hence not recommended anymore.

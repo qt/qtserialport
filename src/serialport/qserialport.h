@@ -47,10 +47,6 @@
 
 #include <QtSerialPort/qserialportglobal.h>
 
-#ifndef QT_DEPRECATED_SINCE
-#define QT_DEPRECATED_SINCE(major, minor) 1
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QSerialPortInfo;
@@ -135,6 +131,16 @@ public:
         UnknownFlowControl = -1
     };
 
+#if QT_DEPRECATED_SINCE(5, 2)
+#if defined _MSC_VER
+#pragma deprecated(UnknownBaud)
+#pragma deprecated(UnknownDataBits)
+#pragma deprecated(UnknownParity)
+#pragma deprecated(UnknownStopBits)
+#pragma deprecated(UnknownFlowControl)
+#endif
+#endif
+
     enum PinoutSignal {
         NoSignal = 0x00,
         TransmittedDataSignal = 0x01,
@@ -146,8 +152,7 @@ public:
         RequestToSendSignal = 0x40,
         ClearToSendSignal = 0x80,
         SecondaryTransmittedDataSignal = 0x100,
-        SecondaryReceivedDataSignal = 0x200,
-        UnknownSignal = -1
+        SecondaryReceivedDataSignal = 0x200
     };
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
@@ -269,6 +274,12 @@ private:
     QSerialPortPrivate * const d_ptr;
 
     Q_DISABLE_COPY(QSerialPort)
+
+#if defined (Q_OS_WIN32) || defined(Q_OS_WIN64)
+    Q_PRIVATE_SLOT(d_func(), void _q_canCompleteCommunication())
+    Q_PRIVATE_SLOT(d_func(), void _q_canCompleteRead())
+    Q_PRIVATE_SLOT(d_func(), void _q_canCompleteWrite())
+#endif
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSerialPort::Directions)

@@ -1,6 +1,6 @@
 INCLUDEPATH += $$PWD
 
-!contains(DEFINES, LOAD_LIBUDEV): unix {
+unix {
     greaterThan(QT_MAJOR_VERSION, 4) {
         contains(QT_CONFIG, libudev) {
             DEFINES += LINK_LIBUDEV

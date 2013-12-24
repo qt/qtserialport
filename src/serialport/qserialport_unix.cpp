@@ -305,7 +305,7 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 
     if (::ioctl(descriptor, TIOCMGET, &arg) == -1) {
         q->setError(decodeSystemError());
-        return QSerialPort::UnknownSignal;
+        return QSerialPort::NoSignal;
     }
 
     QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
@@ -412,46 +412,6 @@ qint64 QSerialPortPrivate::systemOutputQueueSize () const
         return -1;
 #endif
     return nbytes;
-}
-
-qint64 QSerialPortPrivate::bytesAvailable() const
-{
-    return readBuffer.size();
-}
-
-qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
-{
-    if (readBuffer.isEmpty())
-        return 0;
-
-    if (maxSize == 1) {
-        *data = readBuffer.getChar();
-        if (readBuffer.isEmpty())
-            setReadNotificationEnabled(true);
-        return 1;
-    }
-
-    const qint64 bytesToRead = qMin(qint64(readBuffer.size()), maxSize);
-    qint64 readSoFar = 0;
-    while (readSoFar < bytesToRead) {
-        const char *ptr = readBuffer.readPointer();
-        const int bytesToReadFromThisBlock = qMin(int(bytesToRead - readSoFar),
-                                                  readBuffer.nextDataBlockSize());
-        ::memcpy(data + readSoFar, ptr, bytesToReadFromThisBlock);
-        readSoFar += bytesToReadFromThisBlock;
-        readBuffer.free(bytesToReadFromThisBlock);
-    }
-
-    if (!isReadNotificationEnabled())
-        setReadNotificationEnabled(true);
-
-    if (readSoFar > 0) {
-        if (readBuffer.isEmpty())
-            setReadNotificationEnabled(true);
-        return readSoFar;
-    }
-
-    return readSoFar;
 }
 
 qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
@@ -921,7 +881,8 @@ void QSerialPortPrivate::detectDefaultSettings()
         dataBits = QSerialPort::Data8;
         break;
     default:
-        dataBits = QSerialPort::UnknownDataBits;
+        qWarning("%s: Unexpected data bits settings", Q_FUNC_INFO);
+        dataBits = QSerialPort::Data8;
         break;
     }
 
@@ -953,8 +914,10 @@ void QSerialPortPrivate::detectDefaultSettings()
         flow = QSerialPort::SoftwareControl;
     else if ((currentTermios.c_cflag & CRTSCTS) && (!(currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
         flow = QSerialPort::HardwareControl;
-    else
-        flow = QSerialPort::UnknownFlowControl;
+    else {
+        qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
+        flow = QSerialPort::NoFlowControl;
+    }
 }
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const

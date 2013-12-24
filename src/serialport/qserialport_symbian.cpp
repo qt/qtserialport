@@ -248,17 +248,6 @@ qint64 QSerialPortPrivate::systemOutputQueueSize () const
     return 0;
 }
 
-qint64 QSerialPortPrivate::bytesAvailable() const
-{
-    return readBuffer.size();
-}
-
-qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
-{
-    // TODO: Implement me
-    return -1;
-}
-
 qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
     // TODO: Implement me
@@ -433,7 +422,8 @@ void QSerialPortPrivate::detectDefaultSettings()
         dataBits = QSerialPort::Data8;
         break;
     default:
-        dataBits = QSerialPort::UnknownDataBits;
+        qWarning("%s: Unexpected data bits settings", Q_FUNC_INFO);
+        dataBits = QSerialPort::Data8;
         break;
     }
 
@@ -455,7 +445,8 @@ void QSerialPortPrivate::detectDefaultSettings()
         parity = QSerialPort::SpaceParity;
         break;
     default:
-        parity = QSerialPort::UnknownParity;
+        qWarning("%s: Unexpected parity settings", Q_FUNC_INFO);
+        parity = QSerialPort::NoParity;
         break;
     }
 
@@ -468,7 +459,8 @@ void QSerialPortPrivate::detectDefaultSettings()
         stopBits = QSerialPort::TwoStop;
         break;
     default:
-        stopBits = QSerialPort::UnknownStopBits;
+        qWarning("%s: Unexpected stop bits settings", Q_FUNC_INFO);
+        stopBits = QSerialPort::OneStop;
         break;
     }
 
@@ -481,8 +473,10 @@ void QSerialPortPrivate::detectDefaultSettings()
         flow = QSerialPort::HardwareControl;
     else if (currentSettings().iHandshake & KConfigFailDSR)
         flow = QSerialPort::NoFlowControl;
-    else
-        flow = QSerialPort::UnknownFlowControl;
+    else {
+        qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
+        flow = QSerialPort::NoFlowControl;
+    }
 }
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const

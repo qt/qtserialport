@@ -52,24 +52,28 @@
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/quuid.h>
+#include <QtCore/qpair.h>
 
 QT_BEGIN_NAMESPACE
 
 #ifndef Q_OS_WINCE
 
-static const GUID guidsArray[] =
+typedef QPair<QUuid, DWORD> GuidFlagsPair;
+
+static inline const QList<GuidFlagsPair>& guidFlagsPairs()
 {
-    // Windows Ports Class GUID
-    { 0x4D36E978, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
-    // Virtual Ports Class GUID (i.e. com0com and etc)
-    { 0xDF799E12, 0x3C56, 0x421B, { 0xB2, 0x98, 0xB6, 0xD3, 0x64, 0x2B, 0xC8, 0x78 } },
-    // Windows Modems Class GUID
-    { 0x4D36E96D, 0xE325, 0x11CE, { 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18 } },
-    // Eltima Virtual Serial Port Driver v4 GUID
-    { 0xCC0EF009, 0xB820, 0x42F4, { 0x95, 0xA9, 0x9B, 0xFA, 0x6A, 0x5A, 0xB7, 0xAB } },
-    // Advanced Virtual COM Port GUID
-    { 0x9341CD95, 0x4371, 0x4A37, { 0xA5, 0xAF, 0xFD, 0xB0, 0xA9, 0xD1, 0x96, 0x31 } },
-};
+    static const QList<GuidFlagsPair> guidFlagsPairList = QList<GuidFlagsPair>()
+               // Standard Setup Ports Class GUID
+            << qMakePair(QUuid(0x4D36E978, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18), DWORD(DIGCF_PRESENT))
+               // Standard Setup Modems Class GUID
+            << qMakePair(QUuid(0x4D36E96D, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18), DWORD(DIGCF_PRESENT))
+               // Standard Serial Port Device Interface Class GUID
+            << qMakePair(QUuid(0x86E0D1E0, 0x8089, 0x11D0, 0x9C, 0xE4, 0x08, 0x00, 0x3E, 0x30, 0x1F, 0x73), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE))
+               // Standard Modem Device Interface Class GUID
+            << qMakePair(QUuid(0x2C7089AA, 0x2E0E, 0x11D1, 0xB1, 0x14, 0x00, 0xC0, 0x4F, 0xC2, 0xAA, 0xE4), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
+    return guidFlagsPairList;
+}
 
 static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
@@ -157,6 +161,23 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
     return QString::fromWCharArray(((const wchar_t *)data.constData()));
 }
 
+class SerialPortNameEqualFunctor
+{
+public:
+    explicit SerialPortNameEqualFunctor(const QString &serialPortName)
+        : m_serialPortName(serialPortName)
+    {
+    }
+
+    bool operator() (const QSerialPortInfo &serialPortInfo) const
+    {
+        return serialPortInfo.portName() == m_serialPortName;
+    }
+
+private:
+    const QString &m_serialPortName;
+};
+
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
     static const QString usbVendorIdentifierPrefix(QStringLiteral("VID_"));
@@ -168,10 +189,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     static const int productIdentifierSize = 4;
 
     QList<QSerialPortInfo> serialPortInfoList;
-    static const int guidCount = sizeof(guidsArray)/sizeof(guidsArray[0]);
 
-    for (int i = 0; i < guidCount; ++i) {
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&guidsArray[i], NULL, 0, DIGCF_PRESENT);
+    foreach (const GuidFlagsPair &uniquePair, guidFlagsPairs()) {
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(reinterpret_cast<const GUID *>(&uniquePair.first), NULL, 0, uniquePair.second);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return serialPortInfoList;
 
@@ -186,6 +206,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             QString s = devicePortName(deviceInfoSet, &deviceInfoData);
             if (s.isEmpty() || s.contains(QStringLiteral("LPT")))
                 continue;
+
+            if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
+                             SerialPortNameEqualFunctor(s)) != serialPortInfoList.end()) {
+                continue;
+            }
 
             serialPortInfo.d_ptr->portName = s;
             serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
@@ -226,8 +251,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 }
 
 #endif
-
-// common part
 
 QList<qint32> QSerialPortInfo::standardBaudRates()
 {

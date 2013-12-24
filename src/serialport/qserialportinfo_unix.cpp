@@ -47,29 +47,23 @@
 
 #include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qdir.h>
 
 #ifndef Q_OS_MAC
 
-#if defined(LINK_LIBUDEV) || defined(LOAD_LIBUDEV)
 #include "qtudev_p.h"
-#else
-#include <QtCore/qdir.h>
-#include <QtCore/qstringlist.h>
-#endif
 
-#endif // Q_OS_MAC
+#endif
 
 QT_BEGIN_NAMESPACE
 
 #ifndef Q_OS_MAC
 
-#if !defined(LINK_LIBUDEV) && !defined(LOAD_LIBUDEV)
-
-static inline const QStringList& filtersOfDevices()
+static QStringList filteredDeviceFilePaths()
 {
     static const QStringList deviceFileNameFilterList = QStringList()
 
-#  ifdef Q_OS_LINUX
+#ifdef Q_OS_LINUX
     << QStringLiteral("ttyS*")    // Standard UART 8250 and etc.
     << QStringLiteral("ttyO*")    // OMAP UART 8250 and etc.
     << QStringLiteral("ttyUSB*")  // Usb/serial converters PL2303 and etc.
@@ -80,22 +74,17 @@ static inline const QStringList& filtersOfDevices()
     << QStringLiteral("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
     << QStringLiteral("rfcomm*")  // Bluetooth serial device.
     << QStringLiteral("ircomm*"); // IrDA serial device.
-#  elif defined (Q_OS_FREEBSD)
+#elif defined (Q_OS_FREEBSD)
     << QStringLiteral("cu*");
-#  else
-    ; // Here for other *nix OS.
-#  endif
+#else
+    ;
+#endif
 
-    return deviceFileNameFilterList;
-}
-
-static QStringList filteredDeviceFilePaths()
-{
     QStringList result;
 
     QDir deviceDir(QStringLiteral("/dev"));
     if (deviceDir.exists()) {
-        deviceDir.setNameFilters(filtersOfDevices());
+        deviceDir.setNameFilters(deviceFileNameFilterList);
         deviceDir.setFilter(QDir::Files | QDir::System | QDir::NoSymLinks);
         QStringList deviceFilePaths;
         foreach (const QFileInfo &deviceFileInfo, deviceDir.entryInfoList()) {
@@ -110,13 +99,23 @@ static QStringList filteredDeviceFilePaths()
     return result;
 }
 
-QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
+QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
-#ifndef Q_OS_LINUX
-    static const bool sysfsEnabled = false;
-#else
+    foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
+        QSerialPortInfo serialPortInfo;
+        serialPortInfo.d_ptr->device = deviceFilePath;
+        serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
+        serialPortInfoList.append(serialPortInfo);
+    }
+
+    return serialPortInfoList;
+}
+
+QList<QSerialPortInfo> availablePortsBySysfs()
+{
+    QList<QSerialPortInfo> serialPortInfoList;
     QDir ttySysClassDir(QStringLiteral("/sys/class/tty"));
     const bool sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
 
@@ -131,16 +130,12 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             if (lastIndexOfSlash == -1)
                 continue;
 
-            bool canAppendToList = true;
             QSerialPortInfo serialPortInfo;
 
             if (targetPath.contains(QStringLiteral("pnp"))) {
-                // TODO: Implement me.
+                // TODO: Obtain more information
             } else if (targetPath.contains(QStringLiteral("platform"))) {
-                // Platform 'pseudo' bus for legacy device.
-                // Skip this devices because this type of subsystem does
-                // not include a real physical serial device.
-                canAppendToList = false;
+                continue;
             } else if (targetPath.contains(QStringLiteral("usb"))) {
 
                 QDir targetDir(targetPath);
@@ -185,26 +180,14 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     }
                 } while (targetDir.cdUp());
 
+            } else if (targetPath.contains(QStringLiteral("pci"))) {
+                // TODO: Obtain more information about the device
             } else {
-                // unknown types of devices
-                canAppendToList = false;
+                continue;
             }
 
-            if (canAppendToList) {
-                serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
-                serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
-                serialPortInfoList.append(serialPortInfo);
-            }
-        }
-    }
-
-#endif
-
-    if (!sysfsEnabled) {
-        foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
-            QSerialPortInfo serialPortInfo;
-            serialPortInfo.d_ptr->device = deviceFilePath;
-            serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
+            serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
+            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
             serialPortInfoList.append(serialPortInfo);
         }
     }
@@ -212,18 +195,15 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
-#else
-
-QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
+QList<QSerialPortInfo> availablePortsByUdev()
 {
-#ifdef LOAD_LIBUDEV
+#ifndef LINK_LIBUDEV
     static bool symbolsResolved = resolveSymbols();
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
 #endif
     QList<QSerialPortInfo> serialPortInfoList;
 
-    // White list for devices without a parent
     static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
     struct ::udev *udev = ::udev_new();
@@ -256,15 +236,12 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
                     struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
 
-                    bool canAppendToList = true;
-
                     if (parentdev) {
 
                         QString subsys = QString::fromLatin1(::udev_device_get_subsystem(parentdev));
 
                         if (subsys == QStringLiteral("usb-serial")
-                                || subsys == QStringLiteral("usb")) { // USB bus type
-                            // Append this devices and try get additional information about them.
+                                || subsys == QStringLiteral("usb")) {
                             serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev,
                                                                                    "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
                             serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev,
@@ -278,39 +255,28 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                     QString::fromLatin1(::udev_device_get_property_value(dev,
                                                 "ID_MODEL_ID")).toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
 
-                        } else if (subsys == QStringLiteral("pnp")) { // PNP bus type
-                            // Append this device.
-                            // FIXME: How to get additional information about serial devices
-                            // with this subsystem?
-                        } else if (subsys == QStringLiteral("platform")) { // Platform 'pseudo' bus for legacy device.
-                            // Skip this devices because this type of subsystem does
-                            // not include a real physical serial device.
-                            canAppendToList = false;
-                        } else { // Others types of subsystems.
-                            // Append this devices because we believe that any other types of
-                            // subsystems provide a real serial devices. For example, for devices
-                            // such as ttyGSx, its driver provide an empty subsystem name, but it
-                            // devices is a real physical serial devices.
-                            // FIXME: How to get additional information about serial devices
-                            // with this subsystems?
+                        } else if (subsys == QStringLiteral("pnp")) {
+                            // TODO: Obtain more information
+                        } else if (subsys == QStringLiteral("platform")) {
+                            continue;
+                        } else if (subsys == QStringLiteral("pci")) {
+                            // TODO: Obtain more information about the device
+                        } else {
+                            // FIXME: Obtain more information
                         }
-                    } else { // Devices without a parent
-                        if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) { // Bluetooth device
+                    } else {
+                        if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
                             bool ok;
-                            // Check for an unsigned decimal integer at the end of the device name: "rfcomm0", "rfcomm15"
-                            // devices with negative and invalid numbers in the name are rejected
                             int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
 
-                            if (!ok || (portNumber < 0) || (portNumber > 255)) {
-                                canAppendToList = false;
-                            }
+                            if (!ok || (portNumber < 0) || (portNumber > 255))
+                                continue;
                         } else {
-                            canAppendToList = false;
+                            continue;
                         }
                     }
 
-                    if (canAppendToList)
-                        serialPortInfoList.append(serialPortInfo);
+                    serialPortInfoList.append(serialPortInfo);
 
                     ::udev_device_unref(dev);
                 }
@@ -326,11 +292,29 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
+QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
+{
+    QList<QSerialPortInfo> serialPortInfoList;
+    // TODO: Remove this condition once the udev runtime symbol resolution crash
+    // is fixed for Qt 4.
+#if defined(LINK_LIBUDEV) || (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    serialPortInfoList = availablePortsByUdev();
 #endif
 
-#endif // Q_OS_MAC
+#ifdef Q_OS_LINUX
+    if (serialPortInfoList.isEmpty())
+        serialPortInfoList = availablePortsBySysfs();
+    else
+        return serialPortInfoList;
+#endif
 
-// common part
+    if (serialPortInfoList.isEmpty())
+        serialPortInfoList = availablePortsByFiltersOfDevices();
+
+    return serialPortInfoList;
+}
+
+#endif
 
 QList<qint32> QSerialPortInfo::standardBaudRates()
 {

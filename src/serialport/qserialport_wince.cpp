@@ -253,35 +253,6 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     return ::PurgeComm(descriptor, flags);
 }
 
-qint64 QSerialPortPrivate::bytesAvailable() const
-{
-    return readBuffer.size();
-}
-
-qint64 QSerialPortPrivate::readFromBuffer(char *data, qint64 maxSize)
-{
-    if (readBuffer.isEmpty())
-        return 0;
-
-    if (maxSize == 1) {
-        *data = readBuffer.getChar();
-        return 1;
-    }
-
-    const qint64 bytesToRead = qMin(qint64(readBuffer.size()), maxSize);
-    qint64 readSoFar = 0;
-    while (readSoFar < bytesToRead) {
-        const char *ptr = readBuffer.readPointer();
-        const int bytesToReadFromThisBlock = qMin(int(bytesToRead - readSoFar),
-                                                  readBuffer.nextDataBlockSize());
-        ::memcpy(data + readSoFar, ptr, bytesToReadFromThisBlock);
-        readSoFar += bytesToReadFromThisBlock;
-        readBuffer.free(bytesToReadFromThisBlock);
-    }
-
-    return readSoFar;
-}
-
 qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
 {
     char *ptr = writeBuffer.reserve(maxSize);

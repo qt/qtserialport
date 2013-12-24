@@ -70,10 +70,10 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , error(QSerialPort::NoError)
     , inputBaudRate(0)
     , outputBaudRate(0)
-    , dataBits(QSerialPort::UnknownDataBits)
-    , parity(QSerialPort::UnknownParity)
-    , stopBits(QSerialPort::UnknownStopBits)
-    , flow(QSerialPort::UnknownFlowControl)
+    , dataBits(QSerialPort::Data8)
+    , parity(QSerialPort::NoParity)
+    , stopBits(QSerialPort::OneStop)
+    , flow(QSerialPort::NoFlowControl)
     , policy(QSerialPort::IgnorePolicy)
     , settingsRestoredOnClose(true)
     , q_ptr(q)
@@ -198,7 +198,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value Baud38400    38400 baud.
     \value Baud57600    57600 baud.
     \value Baud115200   115200 baud.
-    \value UnknownBaud  Unknown baud.
+    \value UnknownBaud  Unknown baud. This value is obsolete. It is provided to
+                        keep old source code working. We strongly advise against
+                        using it in new code.
 
     \sa QSerialPort::baudRate
 */
@@ -208,11 +210,21 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the number of data bits used.
 
-    \value Data5            Five bits.
-    \value Data6            Six bits.
-    \value Data7            Seven bits
-    \value Data8            Eight bits.
-    \value UnknownDataBits  Unknown number of bits.
+    \value Data5            The number of data bits in each character is 5. It
+                            is used for Baudot code. It generally only makes
+                            sense with older equipments such as teleprinters.
+    \value Data6            The number of data bits in each character is 6. It
+                            is rarely used.
+    \value Data7            The number of data bits in each character is 7. It
+                            is used for true ASCII. It generally only makes
+                            sense with older equipments such as teleprinters.
+    \value Data8            The number of data bits in each character is 8. It
+                            is used for most kinds of data, as this size matches
+                            the size of a byte. It is almost universally used in
+                            newer applications.
+    \value UnknownDataBits  Unknown number of bits. This value is obsolete. It
+                            is provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::dataBits
 */
@@ -222,12 +234,23 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     This enum describes the parity scheme used.
 
-    \value NoParity         No parity.
-    \value EvenParity       Even parity.
-    \value OddParity        Odd parity.
-    \value SpaceParity      Space parity.
-    \value MarkParity       Mark parity.
-    \value UnknownParity    Unknown parity.
+    \value NoParity         No parity bit it sent. This is the most common
+                            parity setting. Error detection is handled by the
+                            communication protocol.
+    \value EvenParity       The number of 1 bits in each character, including
+                            the parity bit, is always even.
+    \value OddParity        The number of 1 bits in each character, including
+                            the parity bit, is always odd. It ensures that at
+                            least one state transition occurs in each character.
+    \value SpaceParity      Space parity. The parity bit is sent in the space
+                            signal condition. It does not provide error
+                            detection information.
+    \value MarkParity       Mark parity. The parity bit is always set to the
+                            mark signal condition (logical 1). It does not
+                            provide error detection information.
+    \value UnknownParity    Unknown parity. This value is obsolete. It is
+                            provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::parity
 */
@@ -238,9 +261,11 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This enum describes the number of stop bits used.
 
     \value OneStop          1 stop bit.
-    \value OneAndHalfStop   1.5 stop bits.
+    \value OneAndHalfStop   1.5 stop bits. This is only for Windows platform.
     \value TwoStop          2 stop bits.
-    \value UnknownStopBits  Unknown number of stop bit.
+    \value UnknownStopBits  Unknown number of stop bit. This value is obsolete.
+                            It is provided to keep old source code working. We
+                            strongly advise against using it in new code.
 
     \sa QSerialPort::stopBits
 */
@@ -253,7 +278,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value NoFlowControl        No flow control.
     \value HardwareControl      Hardware flow control (RTS/CTS).
     \value SoftwareControl      Software flow control (XON/XOFF).
-    \value UnknownFlowControl   Unknown flow control.
+    \value UnknownFlowControl   Unknown flow control. This value is obsolete. It
+                                is provided to keep old source code working. We
+                                strongly advise against using it in new code.
 
     \sa QSerialPort::flowControl
 */
@@ -274,7 +301,6 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     \value ClearToSendSignal              CTS (Clear To Send).
     \value SecondaryTransmittedDataSignal STD (Secondary Transmitted Data).
     \value SecondaryReceivedDataSignal    SRD (Secondary Received Data).
-    \value UnknownSignal                  Unknown line state. This value was introduced in QtSerialPort 5.2.
 
     \sa pinoutSignals(), QSerialPort::dataTerminalReady,
     QSerialPort::requestToSend
@@ -621,7 +647,7 @@ qint32 QSerialPort::baudRate(Directions directions) const
     Q_D(const QSerialPort);
     if (directions == QSerialPort::AllDirections)
         return d->inputBaudRate == d->outputBaudRate ?
-                    d->inputBaudRate : QSerialPort::UnknownBaud;
+                    d->inputBaudRate : -1;
     return directions & QSerialPort::Input ? d->inputBaudRate : d->outputBaudRate;
 }
 
@@ -953,8 +979,7 @@ bool QSerialPort::isRequestToSend()
     operating systems cannot provide proper notifications about the changes.
 
     \note The serial port has to be open before trying to get the pinout
-    signals; otherwise returns UnknownSignal and sets the NotOpenError error
-    code.
+    signals; otherwise returns NoSignal and sets the NotOpenError error code.
 
     \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
     setRequestToSend()
@@ -966,7 +991,7 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
     if (!isOpen()) {
         setError(QSerialPort::NotOpenError);
         qWarning("%s: device not open", Q_FUNC_INFO);
-        return QSerialPort::UnknownSignal;
+        return QSerialPort::NoSignal;
     }
 
     return d->pinoutSignals();
@@ -1053,7 +1078,7 @@ bool QSerialPort::clear(Directions directions)
 bool QSerialPort::atEnd() const
 {
     Q_D(const QSerialPort);
-    return QIODevice::atEnd() && (!isOpen() || (d->bytesAvailable() == 0));
+    return QIODevice::atEnd() && (!isOpen() || (d->readBuffer.size() == 0));
 }
 
 /*!
@@ -1201,7 +1226,7 @@ bool QSerialPort::isSequential() const
 qint64 QSerialPort::bytesAvailable() const
 {
     Q_D(const QSerialPort);
-    return d->bytesAvailable() + QIODevice::bytesAvailable();
+    return d->readBuffer.size() + QIODevice::bytesAvailable();
 }
 
 /*!
@@ -1230,7 +1255,7 @@ qint64 QSerialPort::bytesToWrite() const
 bool QSerialPort::canReadLine() const
 {
     Q_D(const QSerialPort);
-    const bool hasLine = (d->bytesAvailable() > 0) && d->readBuffer.canReadLine();
+    const bool hasLine = (d->readBuffer.size() > 0) && d->readBuffer.canReadLine();
     return hasLine || QIODevice::canReadLine();
 }
 
@@ -1333,7 +1358,7 @@ bool QSerialPort::setBreakEnabled(bool set)
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->readFromBuffer(data, maxSize);
+    return d->readBuffer.read(data, maxSize);
 }
 
 /*!

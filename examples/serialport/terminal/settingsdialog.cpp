@@ -151,14 +151,19 @@ void SettingsDialog::fillPortsParameters()
 void SettingsDialog::fillPortsInfo()
 {
     ui->serialPortInfoListBox->clear();
+    static const QString blankString = QObject::tr("N/A");
+    QString description;
+    QString manufacturer;
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         QStringList list;
+        description = info.description();
+        manufacturer = info.manufacturer();
         list << info.portName()
-             << info.description()
-             << info.manufacturer()
+             << (!description.isEmpty() ? description : blankString)
+             << (!manufacturer.isEmpty() ? manufacturer : blankString)
              << info.systemLocation()
-             << (info.vendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : QString())
-             << (info.productIdentifier() ? QString::number(info.productIdentifier(), 16) : QString());
+             << (info.vendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : blankString)
+             << (info.productIdentifier() ? QString::number(info.productIdentifier(), 16) : blankString);
 
         ui->serialPortInfoListBox->addItem(list.first(), list);
     }
