@@ -96,14 +96,16 @@ public:
     void processIoErrors(bool error);
     QSerialPort::SerialPortError decodeSystemError() const;
 #ifndef Q_OS_WINCE
-    void _q_canCompleteCommunication();
-    void _q_canCompleteRead();
-    void _q_canCompleteWrite();
+    void _q_completeAsyncCommunication();
+    void _q_completeAsyncRead();
+    void _q_completeAsyncWrite();
 
+    bool startAsyncCommunication();
     bool startAsyncRead();
     bool startAsyncWrite();
-    void completeAsyncRead(DWORD numberOfBytes);
-    void completeAsyncWrite(DWORD numberOfBytes);
+
+    bool emulateErrorPolicy();
+    void emitReadyRead();
 #else
     bool notifyRead();
     bool notifyWrite();
