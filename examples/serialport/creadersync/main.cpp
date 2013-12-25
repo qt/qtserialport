@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     if (serialPort.error() == QSerialPort::ReadError) {
         standardOutput << QObject::tr("Failed to read from port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
-    } else if (serialPort.error() == QSerialPort::TimeoutError) {
+    } else if (serialPort.error() == QSerialPort::TimeoutError && readData.isEmpty()) {
         standardOutput << QObject::tr("No data was currently available for reading from port %1").arg(serialPortName) << endl;
         return 0;
     }
