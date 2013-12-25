@@ -381,6 +381,9 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
+    const qint64 initialReadBufferSize = readBuffer.size();
+    qint64 currentReadBufferSize = initialReadBufferSize;
+
     do {
         bool timedOut = false;
         HANDLE triggeredEvent = 0;
@@ -394,11 +397,12 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
             _q_canCompleteCommunication();
-            if (error != QSerialPort::NoError)
-                return false;
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
             _q_canCompleteRead();
-            return error == QSerialPort::NoError;
+            if (qint64(readBuffer.size()) != currentReadBufferSize)
+                currentReadBufferSize = readBuffer.size();
+            else if (initialReadBufferSize != currentReadBufferSize)
+                return true;
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
             _q_canCompleteWrite();
         } else {
