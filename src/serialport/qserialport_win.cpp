@@ -369,7 +369,7 @@ qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
         ::memcpy(ptr, data, maxSize);
 
     if (!writeSequenceStarted)
-        startAsyncWrite(WriteChunkSize);
+        startAsyncWrite();
 
     return maxSize;
 }
@@ -644,14 +644,12 @@ bool QSerialPortPrivate::startAsyncRead()
     return true;
 }
 
-bool QSerialPortPrivate::startAsyncWrite(int maxSize)
+bool QSerialPortPrivate::startAsyncWrite()
 {
     Q_Q(QSerialPort);
 
     qint64 nextSize = writeBuffer.nextDataBlockSize();
     const char *ptr = writeBuffer.readPointer();
-
-    nextSize = qMin(nextSize, qint64(maxSize));
 
     // no more data to write
     if (!ptr || nextSize == 0)
@@ -760,7 +758,7 @@ void QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
     if (writeBuffer.isEmpty())
         writeSequenceStarted = false;
     else
-        startAsyncWrite(WriteChunkSize);
+        startAsyncWrite();
 }
 
 bool QSerialPortPrivate::updateDcb()

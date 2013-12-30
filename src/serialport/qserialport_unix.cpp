@@ -133,7 +133,7 @@ protected:
     bool event(QEvent *e) Q_DECL_OVERRIDE {
         bool ret = QSocketNotifier::event(e);
         if (ret)
-            dptr->writeNotification(QSerialPortPrivateData::WriteChunkSize);
+            dptr->writeNotification();
         return ret;
     }
 
@@ -455,7 +455,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (readyToWrite)
-            writeNotification(WriteChunkSize);
+            writeNotification();
 
     } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
     return false;
@@ -487,7 +487,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return false;
 
         if (readyToWrite)
-            return writeNotification(WriteChunkSize);
+            return writeNotification();
     }
     return false;
 }
@@ -766,7 +766,7 @@ bool QSerialPortPrivate::readNotification()
     return true;
 }
 
-bool QSerialPortPrivate::writeNotification(int maxSize)
+bool QSerialPortPrivate::writeNotification()
 {
     Q_Q(QSerialPort);
 
@@ -777,7 +777,7 @@ bool QSerialPortPrivate::writeNotification(int maxSize)
         return false;
     }
 
-    int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
+    int nextSize = writeBuffer.nextDataBlockSize();
 
     const char *ptr = writeBuffer.readPointer();
 
