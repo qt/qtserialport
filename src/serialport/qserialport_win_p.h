@@ -101,12 +101,12 @@ public:
     void _q_canCompleteWrite();
 
     bool startAsyncRead();
-    bool startAsyncWrite(int maxSize = INT_MAX);
+    bool startAsyncWrite();
     void completeAsyncRead(DWORD numberOfBytes);
     void completeAsyncWrite(DWORD numberOfBytes);
 #else
     bool notifyRead();
-    bool notifyWrite(int maxSize = INT_MAX);
+    bool notifyWrite();
 #endif
 
     static QString portNameToSystemLocation(const QString &port);
@@ -126,8 +126,6 @@ public:
 
 #ifndef Q_OS_WINCE
     QByteArray readChunkBuffer;
-    qint64 actualWriteBufferSize;
-    qint64 acyncWritePosition;
     bool readyReadEmitted;
     bool writeSequenceStarted;
     QWinEventNotifier *communicationNotifier;

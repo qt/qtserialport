@@ -103,7 +103,7 @@ private slots:
         if (EV_RXCHAR & eventMask)
             dptr->notifyRead();
         if (EV_TXEMPTY & eventMask)
-            dptr->notifyWrite(QSerialPortPrivateData::WriteChunkSize);
+            dptr->notifyWrite();
     }
 
 private:
@@ -262,7 +262,7 @@ qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
         ::memcpy(ptr, data, maxSize);
 
     // trigger write sequence
-    notifyWrite(QSerialPortPrivateData::WriteChunkSize);
+    notifyWrite();
 
     return maxSize;
 }
@@ -291,7 +291,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msec)
                 return true;
         }
         if (readyToWrite)
-            notifyWrite(WriteChunkSize);
+            notifyWrite();
     }
     return false;
 }
@@ -320,7 +320,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
                 return false;
         }
         if (readyToWrite) {
-            if (notifyWrite(WriteChunkSize))
+            if (notifyWrite())
                 return true;
         }
     }
@@ -382,11 +382,11 @@ bool QSerialPortPrivate::notifyRead()
     return true;
 }
 
-bool QSerialPortPrivate::notifyWrite(int maxSize)
+bool QSerialPortPrivate::notifyWrite()
 {
     Q_Q(QSerialPort);
 
-    int nextSize = qMin(writeBuffer.nextDataBlockSize(), maxSize);
+    int nextSize = writeBuffer.nextDataBlockSize();
 
     const char *ptr = writeBuffer.readPointer();
 

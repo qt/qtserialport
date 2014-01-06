@@ -124,7 +124,7 @@ public:
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     bool readNotification();
-    bool writeNotification(int maxSize = INT_MAX);
+    bool writeNotification();
     void exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
