@@ -414,20 +414,10 @@ qint64 QSerialPortPrivate::systemOutputQueueSize () const
     return nbytes;
 }
 
-qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+void QSerialPortPrivate::startWriting()
 {
-    char *ptr = writeBuffer.reserve(maxSize);
-    if (maxSize == 1)
-        *ptr = *data;
-    else
-        ::memcpy(ptr, data, maxSize);
-
-    const qint64 written = maxSize;
-
-    if (!writeBuffer.isEmpty() && !isWriteNotificationEnabled())
+    if (!isWriteNotificationEnabled())
         setWriteNotificationEnabled(true);
-
-    return written;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)

@@ -354,18 +354,10 @@ qint64 QSerialPortPrivate::systemOutputQueueSize ()
 
 #ifndef Q_OS_WINCE
 
-qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+void QSerialPortPrivate::startWriting()
 {
-    char *ptr = writeBuffer.reserve(maxSize);
-    if (maxSize == 1)
-        *ptr = *data;
-    else
-        ::memcpy(ptr, data, maxSize);
-
     if (!writeSequenceStarted)
         startAsyncWrite();
-
-    return maxSize;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)

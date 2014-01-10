@@ -81,7 +81,7 @@ public:
     qint64 systemInputQueueSize ();
     qint64 systemOutputQueueSize ();
 
-    qint64 writeToBuffer(const char *data, qint64 maxSize);
+    void startWriting();
 
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);
