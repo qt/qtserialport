@@ -1279,7 +1279,7 @@ bool QSerialPort::waitForReadyRead(int msecs)
 }
 
 /*!
-    \fn QSerialPort::Handle QSerialPort::handle()
+    \fn Handle QSerialPort::handle() const
     \since 5.2
 
     Returns the native serial port descriptor of the object. If the serial port
