@@ -248,10 +248,9 @@ qint64 QSerialPortPrivate::systemOutputQueueSize () const
     return 0;
 }
 
-qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+void QSerialPortPrivate::startWriting()
 {
     // TODO: Implement me
-    return -1;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msec)

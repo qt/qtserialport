@@ -115,7 +115,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
         q->setError(decodeSystemError());
     else {
         communicationNotifier->setHandle(communicationOverlapped.hEvent);
-        q->connect(communicationNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_canCompleteCommunication()));
+        q->connect(communicationNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncCommunication()));
     }
 
     ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
@@ -124,7 +124,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
         q->setError(decodeSystemError());
     else {
         readCompletionNotifier->setHandle(readCompletionOverlapped.hEvent);
-        q->connect(readCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_canCompleteRead()));
+        q->connect(readCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncRead()));
     }
 
     ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
@@ -133,7 +133,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
         q->setError(decodeSystemError());
     else {
         writeCompletionNotifier->setHandle(writeCompletionOverlapped.hEvent);
-        q->connect(writeCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_canCompleteWrite()));
+        q->connect(writeCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncWrite()));
     }
 }
 
@@ -197,14 +197,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    initializeOverlappedStructure(communicationOverlapped);
-    if (!::WaitCommEvent(descriptor, &triggeredEventMask, &communicationOverlapped)) {
-        const QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::NoError) {
-            q->setError(decodeSystemError());
-            return false;
-        }
-    }
+    if (!startAsyncCommunication())
+        return false;
 
     communicationNotifier->setEnabled(true);
 
@@ -360,18 +354,10 @@ qint64 QSerialPortPrivate::systemOutputQueueSize ()
 
 #ifndef Q_OS_WINCE
 
-qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+void QSerialPortPrivate::startWriting()
 {
-    char *ptr = writeBuffer.reserve(maxSize);
-    if (maxSize == 1)
-        *ptr = *data;
-    else
-        ::memcpy(ptr, data, maxSize);
-
     if (!writeSequenceStarted)
         startAsyncWrite();
-
-    return maxSize;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -393,14 +379,14 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
-            _q_canCompleteCommunication();
+            _q_completeAsyncCommunication();
             if (error != QSerialPort::NoError)
                 return false;
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
-            _q_canCompleteRead();
+            _q_completeAsyncRead();
             return error == QSerialPort::NoError;
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
-            _q_canCompleteWrite();
+            _q_completeAsyncWrite();
         } else {
             return false;
         }
@@ -431,11 +417,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         }
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
-             _q_canCompleteRead();
+             _q_completeAsyncRead();
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
-            _q_canCompleteRead();
+            _q_completeAsyncRead();
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
-            _q_canCompleteWrite();
+            _q_completeAsyncWrite();
             return error == QSerialPort::NoError;
         } else {
             return false;
@@ -544,7 +530,7 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
 
 #ifndef Q_OS_WINCE
 
-void QSerialPortPrivate::_q_canCompleteCommunication()
+void QSerialPortPrivate::_q_completeAsyncCommunication()
 {
     Q_Q(QSerialPort);
 
@@ -576,7 +562,7 @@ void QSerialPortPrivate::_q_canCompleteCommunication()
         startAsyncRead();
 }
 
-void QSerialPortPrivate::_q_canCompleteRead()
+void QSerialPortPrivate::_q_completeAsyncRead()
 {
     Q_Q(QSerialPort);
 
@@ -584,23 +570,22 @@ void QSerialPortPrivate::_q_canCompleteRead()
     if (!::GetOverlappedResult(descriptor, &readCompletionOverlapped, &numberOfBytesTransferred, FALSE))
         q->setError(decodeSystemError());
 
-    completeAsyncRead(numberOfBytesTransferred);
+    if (numberOfBytesTransferred > 0) {
+
+        readBuffer.append(readChunkBuffer.left(numberOfBytesTransferred));
+
+        if (!emulateErrorPolicy())
+            emitReadyRead();
+    }
 
     // start async read for possible remainder into driver queue
-    if ((numberOfBytesTransferred > 0) && (policy == QSerialPort::IgnorePolicy)) {
+    if ((numberOfBytesTransferred > 0) && (policy == QSerialPort::IgnorePolicy))
         startAsyncRead();
-    } else { // driver queue is emplty, so startup wait comm event
-        initializeOverlappedStructure(communicationOverlapped);
-        if (!::WaitCommEvent(descriptor, &triggeredEventMask, &communicationOverlapped)) {
-            const QSerialPort::SerialPortError error = decodeSystemError();
-            if (error != QSerialPort::NoError) {
-                q->setError(decodeSystemError());
-            }
-        }
-    }
+    else // driver queue is emplty, so startup wait comm event
+        startAsyncCommunication();
 }
 
-void QSerialPortPrivate::_q_canCompleteWrite()
+void QSerialPortPrivate::_q_completeAsyncWrite()
 {
     Q_Q(QSerialPort);
 
@@ -610,7 +595,30 @@ void QSerialPortPrivate::_q_canCompleteWrite()
         q->setError(decodeSystemError());
     }
 
-    completeAsyncWrite(numberOfBytesTransferred);
+    writeBuffer.free(numberOfBytesTransferred);
+
+    if (numberOfBytesTransferred > 0)
+        emit q->bytesWritten(numberOfBytesTransferred);
+
+    if (writeBuffer.isEmpty())
+        writeSequenceStarted = false;
+    else
+        startAsyncWrite();
+}
+
+bool QSerialPortPrivate::startAsyncCommunication()
+{
+    Q_Q(QSerialPort);
+
+    initializeOverlappedStructure(communicationOverlapped);
+    if (!::WaitCommEvent(descriptor, &triggeredEventMask, &communicationOverlapped)) {
+        const QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::NoError) {
+            q->setError(decodeSystemError());
+            return false;
+        }
+    }
+    return true;
 }
 
 bool QSerialPortPrivate::startAsyncRead()
@@ -675,6 +683,42 @@ bool QSerialPortPrivate::startAsyncWrite()
     return true;
 }
 
+bool QSerialPortPrivate::emulateErrorPolicy()
+{
+    if (!parityErrorOccurred)
+        return false;
+
+    parityErrorOccurred = false;
+
+    switch (policy) {
+    case QSerialPort::SkipPolicy:
+        readBuffer.getChar();
+        break;
+    case QSerialPort::PassZeroPolicy:
+        readBuffer.getChar();
+        readBuffer.putChar('\0');
+        emitReadyRead();
+        break;
+    case QSerialPort::IgnorePolicy:
+        return false;
+    case QSerialPort::StopReceivingPolicy:
+        emitReadyRead();
+        break;
+    default:
+        return false;
+    }
+
+    return true;
+}
+
+void QSerialPortPrivate::emitReadyRead()
+{
+    Q_Q(QSerialPort);
+
+    readyReadEmitted = true;
+    emit q->readyRead();
+}
+
 #endif // #ifndef Q_OS_WINCE
 
 void QSerialPortPrivate::processIoErrors(bool error)
@@ -705,61 +749,6 @@ void QSerialPortPrivate::processIoErrors(bool error)
 }
 
 #ifndef Q_OS_WINCE
-
-void QSerialPortPrivate::completeAsyncRead(DWORD numberOfBytes)
-{
-    Q_Q(QSerialPort);
-
-    if (numberOfBytes > 0) {
-
-        readBuffer.append(readChunkBuffer.left(numberOfBytes));
-
-        // Process emulate policy.
-        if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
-
-            parityErrorOccurred = false;
-
-            // Ignore received character, remove it from buffer
-            if (policy == QSerialPort::SkipPolicy) {
-                readBuffer.getChar();
-                // Force returning without emitting a readyRead() signal
-                return;
-            }
-
-            // Abort receiving
-            if (policy == QSerialPort::StopReceivingPolicy) {
-                readyReadEmitted = true;
-                emit q->readyRead();
-                return;
-            }
-
-            // Replace received character by zero
-            if (policy == QSerialPort::PassZeroPolicy) {
-                readBuffer.getChar();
-                readBuffer.putChar('\0');
-            }
-
-        }
-
-        readyReadEmitted = true;
-        emit q->readyRead();
-    }
-}
-
-void QSerialPortPrivate::completeAsyncWrite(DWORD numberOfBytes)
-{
-    Q_Q(QSerialPort);
-
-    writeBuffer.free(numberOfBytes);
-
-    if (numberOfBytes > 0)
-        emit q->bytesWritten(numberOfBytes);
-
-    if (writeBuffer.isEmpty())
-        writeSequenceStarted = false;
-    else
-        startAsyncWrite();
-}
 
 bool QSerialPortPrivate::updateDcb()
 {

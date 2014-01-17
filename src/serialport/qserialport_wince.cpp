@@ -253,18 +253,10 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     return ::PurgeComm(descriptor, flags);
 }
 
-qint64 QSerialPortPrivate::writeToBuffer(const char *data, qint64 maxSize)
+void QSerialPortPrivate::startWriting()
 {
-    char *ptr = writeBuffer.reserve(maxSize);
-    if (maxSize == 1)
-        *ptr = *data;
-    else
-        ::memcpy(ptr, data, maxSize);
-
     // trigger write sequence
     notifyWrite();
-
-    return maxSize;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msec)

@@ -1375,7 +1375,11 @@ qint64 QSerialPort::readLineData(char *data, qint64 maxSize)
 qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->writeToBuffer(data, maxSize);
+
+    ::memcpy(d->writeBuffer.reserve(maxSize), data, maxSize);
+    if (!d->writeBuffer.isEmpty())
+        d->startWriting();
+    return maxSize;
 }
 
 void QSerialPort::setError(QSerialPort::SerialPortError serialPortError, const QString &errorString)
