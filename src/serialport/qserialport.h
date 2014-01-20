@@ -131,16 +131,6 @@ public:
         UnknownFlowControl = -1
     };
 
-#if QT_DEPRECATED_SINCE(5, 2)
-#if defined _MSC_VER
-#pragma deprecated(UnknownBaud)
-#pragma deprecated(UnknownDataBits)
-#pragma deprecated(UnknownParity)
-#pragma deprecated(UnknownStopBits)
-#pragma deprecated(UnknownFlowControl)
-#endif
-#endif
-
     enum PinoutSignal {
         NoSignal = 0x00,
         TransmittedDataSignal = 0x01,
@@ -155,6 +145,18 @@ public:
         SecondaryReceivedDataSignal = 0x200
     };
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
+
+#if QT_DEPRECATED_SINCE(5, 2)
+#if defined _MSC_VER
+#pragma deprecated(UnknownBaud)
+#pragma deprecated(UnknownDataBits)
+#pragma deprecated(UnknownParity)
+#pragma deprecated(UnknownStopBits)
+#pragma deprecated(UnknownFlowControl)
+#pragma deprecated(TransmittedDataSignal)
+#pragma deprecated(ReceivedDataSignal)
+#endif
+#endif
 
 #if QT_DEPRECATED_SINCE(5, 2)
     enum DataErrorPolicy {

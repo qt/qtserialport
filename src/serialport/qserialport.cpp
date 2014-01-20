@@ -291,8 +291,14 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This enum describes the possible RS-232 pinout signals.
 
     \value NoSignal                       No line active
-    \value TransmittedDataSignal          TxD (Transmitted Data).
-    \value ReceivedDataSignal             RxD (Received Data).
+    \value TransmittedDataSignal          TxD (Transmitted Data). This value is
+                                          obsolete. It is provided to keep old
+                                          source code working. We strongly
+                                          advise against using it in new code.
+    \value ReceivedDataSignal             RxD (Received Data). This value is
+                                          obsolete. It is provided to keep old
+                                          source code working. We strongly
+                                          advise against using it in new code.
     \value DataTerminalReadySignal        DTR (Data Terminal Ready).
     \value DataCarrierDetectSignal        DCD (Data Carrier Detect).
     \value DataSetReadySignal             DSR (Data Set Ready).
