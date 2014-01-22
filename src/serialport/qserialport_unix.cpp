@@ -133,7 +133,7 @@ protected:
     bool event(QEvent *e) Q_DECL_OVERRIDE {
         bool ret = QSocketNotifier::event(e);
         if (ret)
-            dptr->writeNotification();
+            dptr->completeAsyncWrite();
         return ret;
     }
 
@@ -176,6 +176,8 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , readPortNotifierStateSet(false)
     , emittedReadyRead(false)
     , emittedBytesWritten(false)
+    , pendingBytesWritten(0)
+    , writeSequenceStarted(false)
 {
 }
 
@@ -312,6 +314,8 @@ void QSerialPortPrivate::close()
 
     descriptor = -1;
     isCustomBaudRateSupported = false;
+    pendingBytesWritten = 0;
+    writeSequenceStarted = false;
 }
 
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
@@ -401,7 +405,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return writeNotification()
+    return startAsyncWrite()
 #ifndef Q_OS_ANDROID
             && (::tcdrain(descriptor) != -1);
 #else
@@ -477,7 +481,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (readyToWrite)
-            writeNotification();
+            completeAsyncWrite();
 
     } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
     return false;
@@ -487,7 +491,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 {
     Q_Q(QSerialPort);
 
-    if (writeBuffer.isEmpty())
+    if (writeBuffer.isEmpty() && pendingBytesWritten <= 0)
         return false;
 
     QElapsedTimer stopWatch;
@@ -509,7 +513,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return false;
 
         if (readyToWrite)
-            return writeNotification();
+            return completeAsyncWrite();
     }
     return false;
 }
@@ -788,23 +792,15 @@ bool QSerialPortPrivate::readNotification()
     return true;
 }
 
-bool QSerialPortPrivate::writeNotification()
+bool QSerialPortPrivate::startAsyncWrite()
 {
     Q_Q(QSerialPort);
 
-    const int tmp = writeBuffer.size();
-
-    if (writeBuffer.isEmpty()) {
-        setWriteNotificationEnabled(false);
-        return false;
-    }
-
-    int nextSize = writeBuffer.nextDataBlockSize();
-
-    const char *ptr = writeBuffer.readPointer();
+    if (writeBuffer.isEmpty() || writeSequenceStarted)
+        return true;
 
     // Attempt to write it all in one chunk.
-    qint64 written = writeToPort(ptr, nextSize);
+    qint64 written = writeToPort(writeBuffer.readPointer(), writeBuffer.nextDataBlockSize());
     if (written < 0) {
         QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::ResourceError)
@@ -813,21 +809,36 @@ bool QSerialPortPrivate::writeNotification()
         return false;
     }
 
-    // Remove what we wrote so far.
     writeBuffer.free(written);
-    if (written > 0) {
-        // Don't emit bytesWritten() recursively.
+    pendingBytesWritten += written;
+    writeSequenceStarted = true;
+
+    if (!isWriteNotificationEnabled())
+        setWriteNotificationEnabled(true);
+    return true;
+}
+
+bool QSerialPortPrivate::completeAsyncWrite()
+{
+    Q_Q(QSerialPort);
+
+    if (pendingBytesWritten > 0) {
         if (!emittedBytesWritten) {
             emittedBytesWritten = true;
-            emit q->bytesWritten(written);
+            emit q->bytesWritten(pendingBytesWritten);
+            pendingBytesWritten = 0;
             emittedBytesWritten = false;
         }
     }
 
-    if (writeBuffer.isEmpty())
-        setWriteNotificationEnabled(false);
+    writeSequenceStarted = false;
 
-    return (writeBuffer.size() < tmp);
+    if (writeBuffer.isEmpty()) {
+        setWriteNotificationEnabled(false);
+        return true;
+    }
+
+    return startAsyncWrite();
 }
 
 void QSerialPortPrivate::exceptionNotification()

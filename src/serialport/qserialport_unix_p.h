@@ -121,7 +121,8 @@ public:
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     bool readNotification();
-    bool writeNotification();
+    bool startAsyncWrite();
+    bool completeAsyncWrite();
     void exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
@@ -151,6 +152,9 @@ public:
 
     bool emittedReadyRead;
     bool emittedBytesWritten;
+
+    qint64 pendingBytesWritten;
+    bool writeSequenceStarted;
 
     QScopedPointer<QLockFile> lockFileScopedPointer;
 
