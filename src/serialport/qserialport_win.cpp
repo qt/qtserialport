@@ -862,6 +862,9 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     case ERROR_FILE_NOT_FOUND:
         error = QSerialPort::DeviceNotFoundError;
         break;
+    case ERROR_INVALID_NAME:
+        error = QSerialPort::DeviceNotFoundError;
+        break;
     case ERROR_ACCESS_DENIED:
         error = QSerialPort::PermissionError;
         break;
