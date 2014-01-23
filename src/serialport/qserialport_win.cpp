@@ -595,15 +595,13 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
         q->setError(decodeSystemError());
     }
 
-    writeBuffer.free(numberOfBytesTransferred);
-
-    if (numberOfBytesTransferred > 0)
+    if (numberOfBytesTransferred > 0) {
+        writeBuffer.free(numberOfBytesTransferred);
         emit q->bytesWritten(numberOfBytesTransferred);
+    }
 
-    if (writeBuffer.isEmpty())
-        writeSequenceStarted = false;
-    else
-        startAsyncWrite();
+    writeSequenceStarted = false;
+    startAsyncWrite();
 }
 
 bool QSerialPortPrivate::startAsyncCommunication()
@@ -656,30 +654,24 @@ bool QSerialPortPrivate::startAsyncWrite()
 {
     Q_Q(QSerialPort);
 
-    qint64 nextSize = writeBuffer.nextDataBlockSize();
-    const char *ptr = writeBuffer.readPointer();
-
-    // no more data to write
-    if (!ptr || nextSize == 0)
+    if (writeBuffer.isEmpty() || writeSequenceStarted)
         return true;
-
-    writeSequenceStarted = true;
 
     initializeOverlappedStructure(writeCompletionOverlapped);
-    if (::WriteFile(descriptor, ptr, nextSize, NULL, &writeCompletionOverlapped))
-        return true;
+    if (!::WriteFile(descriptor, writeBuffer.readPointer(),
+                     writeBuffer.nextDataBlockSize(),
+                     NULL, &writeCompletionOverlapped)) {
 
-    QSerialPort::SerialPortError error = decodeSystemError();
-    if (error != QSerialPort::NoError) {
-         writeSequenceStarted = false;
-
-         if (error != QSerialPort::ResourceError)
-             error = QSerialPort::WriteError;
-
-         q->setError(error);
-         return false;
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::NoError) {
+            if (error != QSerialPort::ResourceError)
+                error = QSerialPort::WriteError;
+            q->setError(error);
+            return false;
+        }
     }
 
+    writeSequenceStarted = true;
     return true;
 }
 
