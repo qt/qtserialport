@@ -116,10 +116,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     port to the desired setting using the setBaudRate(), setDataBits(),
     setParity(), setStopBits(), and setFlowControl() methods.
 
-    The status of the control pinout signals is determined with the
-    isDataTerminalReady(), isRequestToSend, and pinoutSignals() methods. To
-    change the control line status, use the setDataTerminalReady(), and
-    setRequestToSend() methods.
+    There are a couple of properties to work with the pinout signals namely:
+    QSerialPort::dataTerminalReady, QSerialPort::requestToSend. It is also
+    possible to use the pinoutSignals() method to query the current pinout
+    signals set.
 
     Once you know that the ports are ready to read or write, you can
     use the read() or write() methods. Alternatively the
@@ -981,8 +981,7 @@ bool QSerialPort::isRequestToSend()
     \note The serial port has to be open before trying to get the pinout
     signals; otherwise returns NoSignal and sets the NotOpenError error code.
 
-    \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
-    setRequestToSend()
+    \sa QSerialPort::dataTerminalReady, QSerialPort::requestToSend
 */
 QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 {
