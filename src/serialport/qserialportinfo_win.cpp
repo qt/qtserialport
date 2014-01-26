@@ -137,28 +137,37 @@ static QString deviceInstanceIdentifier(HDEVINFO deviceInfoSet,
 
 static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
 {
-    static const wchar_t portKeyName[] = L"PortName";
-
     const HKEY key = ::SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
                                             0, DIREG_DEV, KEY_READ);
     if (key == INVALID_HANDLE_VALUE)
         return QString();
 
-    DWORD dataSize;
-    if (::RegQueryValueEx(key, portKeyName, NULL, NULL, NULL, &dataSize) != ERROR_SUCCESS) {
-        ::RegCloseKey(key);
-        return QString();
-    }
+    static const QStringList portNameRegistryKeyList = QStringList()
+            << QStringLiteral("PortName")
+            << QStringLiteral("PortNumber");
 
-    QByteArray data(dataSize, 0);
-
-    if (::RegQueryValueEx(key, portKeyName, NULL, NULL,
-                reinterpret_cast<unsigned char *>(data.data()), &dataSize) != ERROR_SUCCESS) {
-        ::RegCloseKey(key);
-        return QString();
+    QString portName;
+    foreach (const QString &portNameKey, portNameRegistryKeyList) {
+        DWORD bytesRequired = 0;
+        DWORD dataType = 0;
+        QByteArray outputBuffer;
+        forever {
+            const LONG ret = ::RegQueryValueEx(key, reinterpret_cast<const wchar_t *>(portNameKey.utf16()), NULL, &dataType,
+                                               reinterpret_cast<unsigned char *>(outputBuffer.data()), &bytesRequired);
+            if (ret == ERROR_MORE_DATA) {
+                outputBuffer.resize(bytesRequired);
+                continue;
+            } else if (ret == ERROR_SUCCESS) {
+                if (dataType == REG_SZ)
+                    portName = QString::fromWCharArray((reinterpret_cast<const wchar_t *>(outputBuffer.constData())));
+                else if (dataType == REG_DWORD)
+                    portName = QStringLiteral("COM%1").arg(*(PDWORD(outputBuffer.constData())));
+            }
+            break;
+        }
     }
     ::RegCloseKey(key);
-    return QString::fromWCharArray(((const wchar_t *)data.constData()));
+    return portName;
 }
 
 class SerialPortNameEqualFunctor
