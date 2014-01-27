@@ -46,14 +46,13 @@
 #include "qserialport_win_p.h"
 
 #ifndef Q_OS_WINCE
+#include <QtCore/quuid.h>
+#include <QtCore/qpair.h>
+#include <QtCore/qstringlist.h>
+
 #include <initguid.h>
 #include <setupapi.h>
 #endif
-
-#include <QtCore/qvariant.h>
-#include <QtCore/qstringlist.h>
-#include <QtCore/quuid.h>
-#include <QtCore/qpair.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -104,47 +103,27 @@ static QStringList portNamesFromHardwareDeviceMap()
     return result;
 }
 
-static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
-                                          PSP_DEVINFO_DATA deviceInfoData,
-                                          DWORD property)
+static QString deviceRegistryProperty(HDEVINFO deviceInfoSet,
+                                      PSP_DEVINFO_DATA deviceInfoData,
+                                      DWORD property)
 {
     DWORD dataType = 0;
-    DWORD dataSize = 0;
-    ::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
-                                       property, &dataType, NULL, 0, &dataSize);
-    QByteArray data(dataSize, 0);
-    if (!::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, NULL,
-                                            reinterpret_cast<unsigned char*>(data.data()),
-                                            dataSize, NULL)
-            || !dataSize) {
-        return QVariant();
-    }
-
-    switch (dataType) {
-
-    case REG_EXPAND_SZ:
-    case REG_SZ: {
-        return QVariant(QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData())));
-    }
-
-    case REG_MULTI_SZ: {
-        QStringList list;
-        int i = 0;
-        forever {
-            QString s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()) + i);
-            i += s.length() + 1;
-            if (s.isEmpty())
-                break;
-            list.append(s);
+    QByteArray devicePropertyByteArray;
+    DWORD requiredSize = 0;
+    forever {
+        if (::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, &dataType,
+                                               reinterpret_cast<unsigned char *>(devicePropertyByteArray.data()),
+                                               devicePropertyByteArray.size(), &requiredSize)) {
+            break;
         }
-        return QVariant(list);
-    }
 
-    default:
-        break;
+        if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER
+                || (dataType != REG_SZ && dataType != REG_EXPAND_SZ)) {
+            return QString();
+        }
+        devicePropertyByteArray.resize(requiredSize);
     }
-
-    return QVariant();
+    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(devicePropertyByteArray.constData()));
 }
 
 static QString deviceInstanceIdentifier(HDEVINFO deviceInfoSet,
@@ -253,9 +232,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             serialPortInfo.d_ptr->portName = s;
             serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
             serialPortInfo.d_ptr->description =
-                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
+                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
             serialPortInfo.d_ptr->manufacturer =
-                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
+                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
 
             s = deviceInstanceIdentifier(deviceInfoSet, &deviceInfoData).toUpper();
 
