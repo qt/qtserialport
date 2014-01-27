@@ -115,81 +115,81 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
 
 QList<QSerialPortInfo> availablePortsBySysfs()
 {
-    QList<QSerialPortInfo> serialPortInfoList;
     QDir ttySysClassDir(QStringLiteral("/sys/class/tty"));
-    const bool sysfsEnabled = ttySysClassDir.exists() && ttySysClassDir.isReadable();
 
-    if (sysfsEnabled) {
-        ttySysClassDir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
-        foreach (const QFileInfo &fileInfo, ttySysClassDir.entryInfoList()) {
-            if (!fileInfo.isSymLink())
-                continue;
+    if (!(ttySysClassDir.exists() && ttySysClassDir.isReadable()))
+        return QList<QSerialPortInfo>();
 
-            const QString targetPath = fileInfo.symLinkTarget();
-            const int lastIndexOfSlash = targetPath.lastIndexOf(QLatin1Char('/'));
-            if (lastIndexOfSlash == -1)
-                continue;
+    QList<QSerialPortInfo> serialPortInfoList;
+    ttySysClassDir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach (const QFileInfo &fileInfo, ttySysClassDir.entryInfoList()) {
+        if (!fileInfo.isSymLink())
+            continue;
 
-            QSerialPortInfo serialPortInfo;
+        const QString targetPath = fileInfo.symLinkTarget();
+        const int lastIndexOfSlash = targetPath.lastIndexOf(QLatin1Char('/'));
+        if (lastIndexOfSlash == -1)
+            continue;
 
-            if (targetPath.contains(QStringLiteral("pnp"))) {
-                // TODO: Obtain more information
-            } else if (targetPath.contains(QStringLiteral("platform"))) {
-                continue;
-            } else if (targetPath.contains(QStringLiteral("usb"))) {
+        QSerialPortInfo serialPortInfo;
 
-                QDir targetDir(targetPath);
-                targetDir.setFilter(QDir::Files | QDir::Readable);
-                targetDir.setNameFilters(QStringList(QStringLiteral("uevent")));
+        if (targetPath.contains(QStringLiteral("pnp"))) {
+            // TODO: Obtain more information
+        } else if (targetPath.contains(QStringLiteral("platform"))) {
+            continue;
+        } else if (targetPath.contains(QStringLiteral("usb"))) {
 
-                do {
-                    const QFileInfoList entryInfoList = targetDir.entryInfoList();
-                    if (entryInfoList.isEmpty())
-                        continue;
+            QDir targetDir(targetPath);
+            targetDir.setFilter(QDir::Files | QDir::Readable);
+            targetDir.setNameFilters(QStringList(QStringLiteral("uevent")));
 
-                    QFile uevent(entryInfoList.first().absoluteFilePath());
-                    if (!uevent.open(QIODevice::ReadOnly | QIODevice::Text))
-                        continue;
+            do {
+                const QFileInfoList entryInfoList = targetDir.entryInfoList();
+                if (entryInfoList.isEmpty())
+                    continue;
 
-                    const QString ueventContent = QString::fromLatin1(uevent.readAll());
+                QFile uevent(entryInfoList.first().absoluteFilePath());
+                if (!uevent.open(QIODevice::ReadOnly | QIODevice::Text))
+                    continue;
 
-                    if (ueventContent.contains(QStringLiteral("DEVTYPE=usb_device"))
-                            && ueventContent.contains(QStringLiteral("DRIVER=usb"))) {
+                const QString ueventContent = QString::fromLatin1(uevent.readAll());
 
-                        QFile description(QFileInfo(targetDir, QStringLiteral("product")).absoluteFilePath());
-                        if (description.open(QIODevice::ReadOnly | QIODevice::Text))
-                            serialPortInfo.d_ptr->description = QString::fromLatin1(description.readAll()).simplified();
+                if (ueventContent.contains(QStringLiteral("DEVTYPE=usb_device"))
+                        && ueventContent.contains(QStringLiteral("DRIVER=usb"))) {
 
-                        QFile manufacturer(QFileInfo(targetDir, QStringLiteral("manufacturer")).absoluteFilePath());
-                        if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
-                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
+                    QFile description(QFileInfo(targetDir, QStringLiteral("product")).absoluteFilePath());
+                    if (description.open(QIODevice::ReadOnly | QIODevice::Text))
+                        serialPortInfo.d_ptr->description = QString::fromLatin1(description.readAll()).simplified();
 
-                        QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("idVendor")).absoluteFilePath());
-                        if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                            serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
-                                    .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
-                        }
+                    QFile manufacturer(QFileInfo(targetDir, QStringLiteral("manufacturer")).absoluteFilePath());
+                    if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
+                        serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
 
-                        QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("idProduct")).absoluteFilePath());
-                        if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                            serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
-                                    .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
-                        }
-
-                        break;
+                    QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("idVendor")).absoluteFilePath());
+                    if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                        serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
+                                .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
                     }
-                } while (targetDir.cdUp());
 
-            } else if (targetPath.contains(QStringLiteral("pci"))) {
-                // TODO: Obtain more information about the device
-            } else {
-                continue;
-            }
+                    QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("idProduct")).absoluteFilePath());
+                    if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                        serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
+                                .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+                    }
 
-            serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
-            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
-            serialPortInfoList.append(serialPortInfo);
+                    break;
+                }
+            } while (targetDir.cdUp());
+
+        } else if (targetPath.contains(QStringLiteral("pci"))) {
+            // TODO: Obtain more information about the device
+        } else {
+            continue;
         }
+
+        serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
+        serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
+        serialPortInfoList.append(serialPortInfo);
     }
 
     return serialPortInfoList;
