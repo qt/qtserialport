@@ -175,6 +175,9 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     currentDcb.fNull = FALSE;
     currentDcb.fErrorChar = FALSE;
 
+    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
+        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
+
     if (!updateDcb())
         return false;
 
@@ -290,6 +293,7 @@ bool QSerialPortPrivate::setDataTerminalReady(bool set)
         return false;
     }
 
+    currentDcb.fDtrControl = set ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
     return true;
 }
 
