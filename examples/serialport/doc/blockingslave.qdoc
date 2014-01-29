@@ -62,7 +62,7 @@
     leads to simpler code, but because of its blocking behavior, it should only
     be used in non-GUI threads to prevent the user interface from freezing.
     But contrary to what many think, using threads with QThread does not
-    necessarily add unmanagable complexity to your application.
+    necessarily add unmanageable complexity to your application.
 
     This application is a Slave, that demonstrate the work paired with Master
     application \l{Blocking Master Example}.

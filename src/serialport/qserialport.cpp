@@ -212,12 +212,12 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
 
     \value Data5            The number of data bits in each character is 5. It
                             is used for Baudot code. It generally only makes
-                            sense with older equipments such as teleprinters.
+                            sense with older equipment such as teleprinters.
     \value Data6            The number of data bits in each character is 6. It
                             is rarely used.
     \value Data7            The number of data bits in each character is 7. It
                             is used for true ASCII. It generally only makes
-                            sense with older equipments such as teleprinters.
+                            sense with older equipment such as teleprinters.
     \value Data8            The number of data bits in each character is 8. It
                             is used for most kinds of data, as this size matches
                             the size of a byte. It is almost universally used in
@@ -261,9 +261,9 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This enum describes the number of stop bits used.
 
     \value OneStop          1 stop bit.
-    \value OneAndHalfStop   1.5 stop bits. This is only for Windows platform.
+    \value OneAndHalfStop   1.5 stop bits. This is only for the Windows platform.
     \value TwoStop          2 stop bits.
-    \value UnknownStopBits  Unknown number of stop bit. This value is obsolete.
+    \value UnknownStopBits  Unknown number of stop bits. This value is obsolete.
                             It is provided to keep old source code working. We
                             strongly advise against using it in new code.
 
@@ -314,7 +314,7 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     while parity errors were detected.
 
     \value SkipPolicy           Skips the bad character.
-    \value PassZeroPolicy       Replaces bad character to zero.
+    \value PassZeroPolicy       Replaces bad character with zero.
     \value IgnorePolicy         Ignores the error for a bad character.
     \value StopReceivingPolicy  Stops data reception on error.
     \value UnknownPolicy        Unknown policy.
@@ -422,7 +422,7 @@ QSerialPort::~QSerialPort()
 /*!
     Sets the \a name of the serial port.
 
-    The name of the serial port can be passed on as either a short name or
+    The name of the serial port can be passed as either a short name or
     the long system location if necessary.
 
     \sa portName(), QSerialPortInfo
@@ -445,9 +445,9 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
 }
 
 /*!
-    Returns the name set by setPort() or to the QSerialPort constructors.
-    This name is short, i.e. it extract and convert out from the internal
-    variable system location of the device. Conversion algorithm is
+    Returns the name set by setPort() or passed to the QSerialPort constructor.
+    This name is short, i.e. it is extracted and converted from the internal
+    variable system location of the device. The conversion algorithm is
     platform specific:
     \table
     \header
@@ -459,7 +459,7 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
            and returns the remainder of the string.
     \row
         \li Windows CE
-        \li Removes the postfix ":" from the system location
+        \li Removes the suffix ":" from the system location
            and returns the remainder of the string.
     \row
         \li Symbian
@@ -494,7 +494,7 @@ QString QSerialPort::portName() const
     obtained by calling the error() method.
 
     \note This method has to be called before setting certain serial port
-    parameters. See each property documentation for details when it is
+    parameters. See each property documentation for the details of when it is
     necessary.
 
     \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
@@ -552,11 +552,11 @@ void QSerialPort::close()
 
 /*!
     \property QSerialPort::settingsRestoredOnClose
-    \brief the flag which allows to restore the previous settings while closing
+    \brief the flag which specifies to restore the previous settings when closing
     the serial port.
 
     If this flag is true, the settings will be restored; otherwise not.
-    The default state of the QSerialPort class is configured to restore the
+    The default state of the QSerialPort class is to restore the
     settings.
 */
 void QSerialPort::setSettingsRestoredOnClose(bool restore)
@@ -578,9 +578,9 @@ bool QSerialPort::settingsRestoredOnClose() const
 /*!
     \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
 
-    This signal is emitted after the flag which allows to restore the
+    This signal is emitted after the flag which specifies to restore the
     previous settings while closing the serial port has been changed. The new
-    flag which allows to restore the previous settings while closing the serial
+    flag which specifies to restore the previous settings while closing the serial
     port is passed as \a restore.
 
     \sa QSerialPort::settingsRestoredOnClose
@@ -602,8 +602,8 @@ bool QSerialPort::settingsRestoredOnClose() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 
-    \warning Only the AllDirections flag is support for setting this property on
-    Windows, Windows CE, and Symbian.
+    \warning Setting the AllDirections flag is only supported on
+    the Windows, Windows CE, and Symbian platforms.
 
     \warning Returns equal baud rate in any direction on Windows, Windows CE, and
     Symbian.
@@ -1029,7 +1029,7 @@ bool QSerialPort::flush()
 
 /*!
     Discards all characters from the output or input buffer, depending on
-    given directions \a directions. Including clear an internal class buffers and
+    given directions \a directions. This includes clearing the internal class buffers and
     the UART (driver) buffers. Also terminate pending read or write operations.
     If successful, returns true; otherwise returns false.
 
@@ -1083,8 +1083,8 @@ bool QSerialPort::atEnd() const
 
 /*!
     \property QSerialPort::dataErrorPolicy
-    \brief the error policy how the process receives the character in case of
-    parity error detection.
+    \brief the error policy for how the process receives characters in the case where
+    a parity error is detected.
     \obsolete
 
     If the setting is successful, returns true; otherwise returns false. The
@@ -1126,9 +1126,9 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
     \obsolete
 
-    This signal is emitted after the error policy how the process receives the
-    character in case of parity error detection has been changed. The new error
-    policy how the process receives the character in case of parity error
+    This signal is emitted after the error policy for how the process receives
+    characters in case of parity error detection has been changed. The new error
+    policy for how the process receives the character in case of parity error
     detection is passed as \a policy.
 
     \sa QSerialPort::dataErrorPolicy
@@ -1159,8 +1159,8 @@ void QSerialPort::clearError()
 /*!
     \fn void QSerialPort::error(SerialPortError error)
 
-    This signal is emitted after the error has been changed. The new erroris
-    passed as \a error.
+    This signal is emitted after the error has been changed. The new error
+    is passed as \a error.
 
     \sa QSerialPort::error
 */
@@ -1186,14 +1186,14 @@ qint64 QSerialPort::readBufferSize() const
     size bytes.
 
     If the buffer size is limited to a certain size, QSerialPort
-    will not buffer more than this size of data. Exceptionally, a buffer
+    will not buffer more than this size of data. The special case of a buffer
     size of 0 means that the read buffer is unlimited and all
     incoming data is buffered. This is the default.
 
     This option is useful if the data is only read at certain points
     in time (for instance in a real-time streaming application) or if the serial
     port should be protected against receiving too much data, which may
-    eventually causes that the application runs out of memory.
+    eventually cause the application to run out of memory.
 
     \sa readBufferSize(), read()
 */
