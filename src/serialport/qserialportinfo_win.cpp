@@ -75,6 +75,35 @@ static inline const QList<GuidFlagsPair>& guidFlagsPairs()
     return guidFlagsPairList;
 }
 
+static QStringList portNamesFromHardwareDeviceMap()
+{
+    HKEY hKey = 0;
+    if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        return QStringList();
+
+    QStringList result;
+    DWORD index = 0;
+    static const DWORD maximumValueNameInChars = 16383;
+    QByteArray outputValueName(maximumValueNameInChars * sizeof(wchar_t), 0);
+    QByteArray outputBuffer;
+    DWORD requiredDataBytes = 0;
+    forever {
+        DWORD requiredValueNameChars = maximumValueNameInChars;
+        const LONG ret = ::RegEnumValue(hKey, index, reinterpret_cast<wchar_t *>(outputValueName.data()), &requiredValueNameChars,
+                                        NULL, NULL, reinterpret_cast<unsigned char *>(outputBuffer.data()), &requiredDataBytes);
+        if (ret == ERROR_MORE_DATA) {
+            outputBuffer.resize(requiredDataBytes);
+        } else if (ret == ERROR_SUCCESS) {
+            result.append(QString::fromWCharArray(reinterpret_cast<const wchar_t *>(outputBuffer.constData())));
+            ++index;
+        } else {
+            break;
+        }
+    }
+    ::RegCloseKey(hKey);
+    return result;
+}
+
 static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
                                           PSP_DEVINFO_DATA deviceInfoData,
                                           DWORD property)
@@ -256,6 +285,17 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         }
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
+
+    foreach (const QString &portName, portNamesFromHardwareDeviceMap()) {
+        if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
+                         SerialPortNameEqualFunctor(portName)) == serialPortInfoList.end()) {
+            QSerialPortInfo serialPortInfo;
+            serialPortInfo.d_ptr->portName = portName;
+            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(portName);
+            serialPortInfoList.append(serialPortInfo);
+        }
+    }
+
     return serialPortInfoList;
 }
 
