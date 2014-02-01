@@ -108,8 +108,8 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    qint64 systemInputQueueSize () const;
-    qint64 systemOutputQueueSize () const;
+    qint64 systemInputQueueSize ();
+    qint64 systemOutputQueueSize ();
 
     void startWriting();
 

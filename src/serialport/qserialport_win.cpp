@@ -266,6 +266,7 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
     if (!::DeviceIoControl(descriptor, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
                           &modemStat, sizeof(modemStat),
                           &bytesReturned, NULL)) {
+        q->setError(decodeSystemError());
         return ret;
     }
 
@@ -279,12 +280,26 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 
 bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
-    return ::EscapeCommFunction(descriptor, set ? SETDTR : CLRDTR);
+    Q_Q(QSerialPort);
+
+    if (!::EscapeCommFunction(descriptor, set ? SETDTR : CLRDTR)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::setRequestToSend(bool set)
 {
-    return ::EscapeCommFunction(descriptor, set ? SETRTS : CLRRTS);
+    Q_Q(QSerialPort);
+
+    if (!::EscapeCommFunction(descriptor, set ? SETRTS : CLRRTS)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 #ifndef Q_OS_WINCE
@@ -296,6 +311,8 @@ bool QSerialPortPrivate::flush()
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
+    Q_Q(QSerialPort);
+
     DWORD flags = 0;
     if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
@@ -303,25 +320,39 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
         writeSequenceStarted = false;
     }
-    return ::PurgeComm(descriptor, flags);
+    if (!::PurgeComm(descriptor, flags)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 #endif
 
 bool QSerialPortPrivate::sendBreak(int duration)
 {
-    // FIXME:
-    if (setBreakEnabled(true)) {
-        ::Sleep(duration);
-        if (setBreakEnabled(false))
-            return true;
-    }
-    return false;
+    if (!setBreakEnabled(true))
+        return false;
+
+    ::Sleep(duration);
+
+    if (!setBreakEnabled(false))
+        return false;
+
+    return true;
 }
 
 bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
-    return (set ? ::SetCommBreak(descriptor) : ::ClearCommBreak(descriptor));
+    Q_Q(QSerialPort);
+
+    if (set ? !::SetCommBreak(descriptor) : !::ClearCommBreak(descriptor)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 qint64 QSerialPortPrivate::systemInputQueueSize ()

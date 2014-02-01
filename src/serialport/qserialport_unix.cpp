@@ -227,7 +227,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
 #ifdef TIOCEXCL
-    ::ioctl(descriptor, TIOCEXCL);
+    if (::ioctl(descriptor, TIOCEXCL) == -1)
+        q->setError(decodeSystemError());
 #endif
 
     if (::tcgetattr(descriptor, &restoredTermios) == -1) {
@@ -258,16 +259,23 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
+    Q_Q(QSerialPort);
+
     if (settingsRestoredOnClose) {
-        ::tcsetattr(descriptor, TCSANOW, &restoredTermios);
+        if (::tcsetattr(descriptor, TCSANOW, &restoredTermios) == -1)
+            q->setError(decodeSystemError());
+
 #ifdef Q_OS_LINUX
-        if (isCustomBaudRateSupported)
-            ::ioctl(descriptor, TIOCSSERIAL, &restoredSerialInfo);
+        if (isCustomBaudRateSupported) {
+            if (::ioctl(descriptor, TIOCSSERIAL, &restoredSerialInfo) == -1)
+                q->setError(decodeSystemError());
+        }
 #endif
     }
 
 #ifdef TIOCNXCL
-    ::ioctl(descriptor, TIOCNXCL);
+    if (::ioctl(descriptor, TIOCNXCL) == -1)
+        q->setError(decodeSystemError());
 #endif
 
     if (readNotifier) {
@@ -288,7 +296,8 @@ void QSerialPortPrivate::close()
         exceptionNotifier = 0;
     }
 
-    ::close(descriptor);
+    if (::close(descriptor) == -1)
+        q->setError(decodeSystemError());
 
     if (lockFileScopedPointer->isLocked())
         lockFileScopedPointer->unlock();
@@ -358,14 +367,28 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 
 bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
+    Q_Q(QSerialPort);
+
     int status = TIOCM_DTR;
-    return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
+    if (::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::setRequestToSend(bool set)
 {
+    Q_Q(QSerialPort);
+
     int status = TIOCM_RTS;
-    return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
+    if (::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::flush()
@@ -380,36 +403,65 @@ bool QSerialPortPrivate::flush()
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
-    return ::tcflush(descriptor, (directions == QSerialPort::AllDirections)
-                     ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
+    Q_Q(QSerialPort);
+
+    if (::tcflush(descriptor, (directions == QSerialPort::AllDirections)
+                     ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::sendBreak(int duration)
 {
-    return ::tcsendbreak(descriptor, duration) != -1;
+    Q_Q(QSerialPort);
+
+    if (::tcsendbreak(descriptor, duration) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
-    return ::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) != -1;
+    Q_Q(QSerialPort);
+
+    if (::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
-qint64 QSerialPortPrivate::systemInputQueueSize () const
+qint64 QSerialPortPrivate::systemInputQueueSize ()
 {
+    Q_Q(QSerialPort);
+
     int nbytes = 0;
 #ifdef TIOCINQ
-    if (::ioctl(descriptor, TIOCINQ, &nbytes) == -1)
+    if (::ioctl(descriptor, TIOCINQ, &nbytes) == -1) {
+        q->setError(decodeSystemError());
         return -1;
+    }
 #endif
     return nbytes;
 }
 
-qint64 QSerialPortPrivate::systemOutputQueueSize () const
+qint64 QSerialPortPrivate::systemOutputQueueSize ()
 {
+    Q_Q(QSerialPort);
+
     int nbytes = 0;
 #ifdef TIOCOUTQ
-    if (::ioctl(descriptor, TIOCOUTQ, &nbytes) == -1)
+    if (::ioctl(descriptor, TIOCOUTQ, &nbytes) == -1) {
+        q->setError(decodeSystemError());
         return -1;
+    }
 #endif
     return nbytes;
 }
