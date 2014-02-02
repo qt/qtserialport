@@ -321,9 +321,7 @@ bool QSerialPortPrivate::sendBreak(int duration)
 
 bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
-    if (set)
-        return ::SetCommBreak(descriptor);
-    return ::ClearCommBreak(descriptor);
+    return (set ? ::SetCommBreak(descriptor) : ::ClearCommBreak(descriptor));
 }
 
 qint64 QSerialPortPrivate::systemInputQueueSize ()
