@@ -308,28 +308,28 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
 
 bool QSerialPortInfo::isBusy() const
 {
-    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
                                            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-    if (descriptor == INVALID_HANDLE_VALUE) {
+    if (handle == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_ACCESS_DENIED)
             return true;
     } else {
-        ::CloseHandle(descriptor);
+        ::CloseHandle(handle);
     }
     return false;
 }
 
 bool QSerialPortInfo::isValid() const
 {
-    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
                                            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-    if (descriptor == INVALID_HANDLE_VALUE) {
+    if (handle == INVALID_HANDLE_VALUE) {
         if (::GetLastError() != ERROR_ACCESS_DENIED)
             return false;
     } else {
-        ::CloseHandle(descriptor);
+        ::CloseHandle(handle);
     }
     return true;
 }

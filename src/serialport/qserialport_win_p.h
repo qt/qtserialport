@@ -120,7 +120,7 @@ public:
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
-    HANDLE descriptor;
+    HANDLE handle;
     bool parityErrorOccurred;
 
 #ifndef Q_OS_WINCE
