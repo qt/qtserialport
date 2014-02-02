@@ -438,34 +438,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return true;
 }
 
-qint64 QSerialPortPrivate::systemInputQueueSize ()
-{
-    Q_Q(QSerialPort);
-
-    int nbytes = 0;
-#ifdef TIOCINQ
-    if (::ioctl(descriptor, TIOCINQ, &nbytes) == -1) {
-        q->setError(decodeSystemError());
-        return -1;
-    }
-#endif
-    return nbytes;
-}
-
-qint64 QSerialPortPrivate::systemOutputQueueSize ()
-{
-    Q_Q(QSerialPort);
-
-    int nbytes = 0;
-#ifdef TIOCOUTQ
-    if (::ioctl(descriptor, TIOCOUTQ, &nbytes) == -1) {
-        q->setError(decodeSystemError());
-        return -1;
-    }
-#endif
-    return nbytes;
-}
-
 void QSerialPortPrivate::startWriting()
 {
     if (!isWriteNotificationEnabled())

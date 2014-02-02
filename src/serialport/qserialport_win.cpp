@@ -355,32 +355,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return true;
 }
 
-qint64 QSerialPortPrivate::systemInputQueueSize ()
-{
-    Q_Q(QSerialPort);
-
-    COMSTAT cs;
-    ::ZeroMemory(&cs, sizeof(cs));
-    if (!::ClearCommError(descriptor, NULL, &cs)) {
-        q->setError(decodeSystemError());
-        return -1;
-    }
-    return cs.cbInQue;
-}
-
-qint64 QSerialPortPrivate::systemOutputQueueSize ()
-{
-    Q_Q(QSerialPort);
-
-    COMSTAT cs;
-    ::ZeroMemory(&cs, sizeof(cs));
-    if (!::ClearCommError(descriptor, NULL, &cs)) {
-        q->setError(decodeSystemError());
-        return -1;
-    }
-    return cs.cbOutQue;
-}
-
 #ifndef Q_OS_WINCE
 
 void QSerialPortPrivate::startWriting()
