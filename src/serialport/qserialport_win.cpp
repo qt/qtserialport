@@ -159,6 +159,9 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
+    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
+    restoredDcb.DCBlength = sizeof(restoredDcb);
+
     if (!::GetCommState(handle, &restoredDcb)) {
         q->setError(decodeSystemError());
         return false;
