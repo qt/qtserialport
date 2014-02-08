@@ -102,7 +102,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , parityErrorOccurred(false)
     , readChunkBuffer(ReadChunkSize, 0)
     , readyReadEmitted(0)
-    , writeSequenceStarted(false)
+    , writeStarted(false)
     , communicationNotifier(new QWinEventNotifier(q))
     , readCompletionNotifier(new QWinEventNotifier(q))
     , writeCompletionNotifier(new QWinEventNotifier(q))
@@ -219,7 +219,7 @@ void QSerialPortPrivate::close()
 
     readBuffer.clear();
 
-    writeSequenceStarted = false;
+    writeStarted = false;
     writeBuffer.clear();
 
     readyReadEmitted = false;
@@ -318,7 +318,7 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-        writeSequenceStarted = false;
+        writeStarted = false;
     }
     if (!::PurgeComm(handle, flags)) {
         q->setError(decodeSystemError());
@@ -359,7 +359,7 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 void QSerialPortPrivate::startWriting()
 {
-    if (!writeSequenceStarted)
+    if (!writeStarted)
         startAsyncWrite();
 }
 
@@ -603,7 +603,7 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
         emit q->bytesWritten(numberOfBytesTransferred);
     }
 
-    writeSequenceStarted = false;
+    writeStarted = false;
     startAsyncWrite();
 }
 
@@ -657,7 +657,7 @@ bool QSerialPortPrivate::startAsyncWrite()
 {
     Q_Q(QSerialPort);
 
-    if (writeBuffer.isEmpty() || writeSequenceStarted)
+    if (writeBuffer.isEmpty() || writeStarted)
         return true;
 
     initializeOverlappedStructure(writeCompletionOverlapped);
@@ -674,7 +674,7 @@ bool QSerialPortPrivate::startAsyncWrite()
         }
     }
 
-    writeSequenceStarted = true;
+    writeStarted = true;
     return true;
 }
 

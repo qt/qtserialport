@@ -126,7 +126,7 @@ public:
 #ifndef Q_OS_WINCE
     QByteArray readChunkBuffer;
     bool readyReadEmitted;
-    bool writeSequenceStarted;
+    bool writeStarted;
     QWinEventNotifier *communicationNotifier;
     QWinEventNotifier *readCompletionNotifier;
     QWinEventNotifier *writeCompletionNotifier;
