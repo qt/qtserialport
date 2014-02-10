@@ -237,7 +237,15 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     currentTermios = restoredTermios;
+#ifdef Q_OS_SOLARIS
+    currentTermios.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    currentTermios.c_oflag &= ~OPOST;
+    currentTermios.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    currentTermios.c_cflag &= ~(CSIZE|PARENB);
+    currentTermios.c_cflag |= CS8;
+#else
     ::cfmakeraw(&currentTermios);
+#endif
     currentTermios.c_cflag |= CLOCAL;
     currentTermios.c_cc[VTIME] = 0;
     currentTermios.c_cc[VMIN] = 0;
