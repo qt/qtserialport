@@ -610,7 +610,7 @@ void QSerialPortPrivate::_q_completeAsyncRead()
     }
 
     // start async read for possible remainder into driver queue
-    if ((numberOfBytesTransferred > 0) && (policy == QSerialPort::IgnorePolicy))
+    if ((numberOfBytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
         startAsyncRead();
     else // driver queue is emplty, so startup wait comm event
         startAsyncCommunication();
