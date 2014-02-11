@@ -306,7 +306,7 @@ void QSerialPortPrivate::close()
         exceptionNotifier = 0;
     }
 
-    if (::close(descriptor) == -1)
+    if (qt_safe_close(descriptor) == -1)
         q->setError(decodeSystemError());
 
     if (lockFileScopedPointer->isLocked())
@@ -1078,7 +1078,7 @@ qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
     if (parity != QSerialPort::MarkParity
             && parity != QSerialPort::SpaceParity) {
 #endif
-        bytesRead = ::read(descriptor, data, maxSize);
+        bytesRead = qt_safe_read(descriptor, data, maxSize);
     } else {// Perform parity emulation.
         bytesRead = readPerChar(data, maxSize);
     }
@@ -1090,11 +1090,11 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
 {
     qint64 bytesWritten = 0;
 #if defined (CMSPAR)
-    bytesWritten = ::write(descriptor, data, maxSize);
+    bytesWritten = qt_safe_write(descriptor, data, maxSize);
 #else
     if (parity != QSerialPort::MarkParity
             && parity != QSerialPort::SpaceParity) {
-        bytesWritten = ::write(descriptor, data, maxSize);
+        bytesWritten = qt_safe_write(descriptor, data, maxSize);
     } else {// Perform parity emulation.
         bytesWritten = writePerChar(data, maxSize);
     }
@@ -1131,7 +1131,7 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
                 break;
         }
 
-        int r = ::write(descriptor, data, 1);
+        int r = qt_safe_write(descriptor, data, 1);
         if (r < 0)
             return -1;
         if (r > 0) {
@@ -1157,7 +1157,7 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
     int prefix = 0;
     while (ret < maxSize) {
 
-        qint64 r = ::read(descriptor, data, 1);
+        qint64 r = qt_safe_read(descriptor, data, 1);
         if (r < 0) {
             if (errno == EAGAIN) // It is ok for nonblocking mode.
                 break;
