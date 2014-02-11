@@ -59,6 +59,8 @@
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
 
+#include <private/qcore_unix_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QString serialPortLockFilePath(const QString &portName)
@@ -213,7 +215,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         break;
     }
 
-    descriptor = ::open(systemLocation.toLocal8Bit().constData(), flags);
+    descriptor = qt_safe_open(systemLocation.toLocal8Bit().constData(), flags);
 
     if (descriptor == -1) {
         q->setError(decodeSystemError());
