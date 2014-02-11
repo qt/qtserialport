@@ -116,10 +116,10 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     port to the desired setting using the setBaudRate(), setDataBits(),
     setParity(), setStopBits(), and setFlowControl() methods.
 
-    The status of the control pinout signals is determined with the
-    isDataTerminalReady(), isRequestToSend, and pinoutSignals() methods. To
-    change the control line status, use the setDataTerminalReady(), and
-    setRequestToSend() methods.
+    There are a couple of properties to work with the pinout signals namely:
+    QSerialPort::dataTerminalReady, QSerialPort::requestToSend. It is also
+    possible to use the pinoutSignals() method to query the current pinout
+    signals set.
 
     Once you know that the ports are ready to read or write, you can
     use the read() or write() methods. Alternatively the
@@ -291,8 +291,14 @@ int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
     This enum describes the possible RS-232 pinout signals.
 
     \value NoSignal                       No line active
-    \value TransmittedDataSignal          TxD (Transmitted Data).
-    \value ReceivedDataSignal             RxD (Received Data).
+    \value TransmittedDataSignal          TxD (Transmitted Data). This value is
+                                          obsolete. It is provided to keep old
+                                          source code working. We strongly
+                                          advise against using it in new code.
+    \value ReceivedDataSignal             RxD (Received Data). This value is
+                                          obsolete. It is provided to keep old
+                                          source code working. We strongly
+                                          advise against using it in new code.
     \value DataTerminalReadySignal        DTR (Data Terminal Ready).
     \value DataCarrierDetectSignal        DCD (Data Carrier Detect).
     \value DataSetReadySignal             DSR (Data Set Ready).
@@ -981,8 +987,7 @@ bool QSerialPort::isRequestToSend()
     \note The serial port has to be open before trying to get the pinout
     signals; otherwise returns NoSignal and sets the NotOpenError error code.
 
-    \sa isDataTerminalReady(), isRequestToSend, setDataTerminalReady(),
-    setRequestToSend()
+    \sa QSerialPort::dataTerminalReady, QSerialPort::requestToSend
 */
 QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
 {
@@ -1279,7 +1284,7 @@ bool QSerialPort::waitForReadyRead(int msecs)
 }
 
 /*!
-    \fn QSerialPort::Handle QSerialPort::handle()
+    \fn Handle QSerialPort::handle() const
     \since 5.2
 
     If the platform is supported and the serial port is open, returns the native
