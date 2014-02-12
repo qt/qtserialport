@@ -59,6 +59,8 @@
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
 
+#include <private/qcore_unix_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QString serialPortLockFilePath(const QString &portName)
@@ -213,7 +215,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         break;
     }
 
-    descriptor = ::open(systemLocation.toLocal8Bit().constData(), flags);
+    descriptor = qt_safe_open(systemLocation.toLocal8Bit().constData(), flags);
 
     if (descriptor == -1) {
         q->setError(decodeSystemError());
@@ -227,7 +229,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
 #ifdef TIOCEXCL
-    ::ioctl(descriptor, TIOCEXCL);
+    if (::ioctl(descriptor, TIOCEXCL) == -1)
+        q->setError(decodeSystemError());
 #endif
 
     if (::tcgetattr(descriptor, &restoredTermios) == -1) {
@@ -236,7 +239,15 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     currentTermios = restoredTermios;
+#ifdef Q_OS_SOLARIS
+    currentTermios.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    currentTermios.c_oflag &= ~OPOST;
+    currentTermios.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    currentTermios.c_cflag &= ~(CSIZE|PARENB);
+    currentTermios.c_cflag |= CS8;
+#else
     ::cfmakeraw(&currentTermios);
+#endif
     currentTermios.c_cflag |= CLOCAL;
     currentTermios.c_cc[VTIME] = 0;
     currentTermios.c_cc[VMIN] = 0;
@@ -258,16 +269,23 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
+    Q_Q(QSerialPort);
+
     if (settingsRestoredOnClose) {
-        ::tcsetattr(descriptor, TCSANOW, &restoredTermios);
+        if (::tcsetattr(descriptor, TCSANOW, &restoredTermios) == -1)
+            q->setError(decodeSystemError());
+
 #ifdef Q_OS_LINUX
-        if (isCustomBaudRateSupported)
-            ::ioctl(descriptor, TIOCSSERIAL, &restoredSerialInfo);
+        if (isCustomBaudRateSupported) {
+            if (::ioctl(descriptor, TIOCSSERIAL, &restoredSerialInfo) == -1)
+                q->setError(decodeSystemError());
+        }
 #endif
     }
 
 #ifdef TIOCNXCL
-    ::ioctl(descriptor, TIOCNXCL);
+    if (::ioctl(descriptor, TIOCNXCL) == -1)
+        q->setError(decodeSystemError());
 #endif
 
     if (readNotifier) {
@@ -288,7 +306,8 @@ void QSerialPortPrivate::close()
         exceptionNotifier = 0;
     }
 
-    ::close(descriptor);
+    if (qt_safe_close(descriptor) == -1)
+        q->setError(decodeSystemError());
 
     if (lockFileScopedPointer->isLocked())
         lockFileScopedPointer->unlock();
@@ -358,14 +377,28 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 
 bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
+    Q_Q(QSerialPort);
+
     int status = TIOCM_DTR;
-    return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
+    if (::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::setRequestToSend(bool set)
 {
+    Q_Q(QSerialPort);
+
     int status = TIOCM_RTS;
-    return ::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) != -1;
+    if (::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::flush()
@@ -380,38 +413,39 @@ bool QSerialPortPrivate::flush()
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
-    return ::tcflush(descriptor, (directions == QSerialPort::AllDirections)
-                     ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) != -1;
+    Q_Q(QSerialPort);
+
+    if (::tcflush(descriptor, (directions == QSerialPort::AllDirections)
+                     ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::sendBreak(int duration)
 {
-    return ::tcsendbreak(descriptor, duration) != -1;
+    Q_Q(QSerialPort);
+
+    if (::tcsendbreak(descriptor, duration) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
-    return ::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) != -1;
-}
+    Q_Q(QSerialPort);
 
-qint64 QSerialPortPrivate::systemInputQueueSize () const
-{
-    int nbytes = 0;
-#ifdef TIOCINQ
-    if (::ioctl(descriptor, TIOCINQ, &nbytes) == -1)
-        return -1;
-#endif
-    return nbytes;
-}
+    if (::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
 
-qint64 QSerialPortPrivate::systemOutputQueueSize () const
-{
-    int nbytes = 0;
-#ifdef TIOCOUTQ
-    if (::ioctl(descriptor, TIOCOUTQ, &nbytes) == -1)
-        return -1;
-#endif
-    return nbytes;
+    return true;
 }
 
 void QSerialPortPrivate::startWriting()
@@ -1044,7 +1078,7 @@ qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
     if (parity != QSerialPort::MarkParity
             && parity != QSerialPort::SpaceParity) {
 #endif
-        bytesRead = ::read(descriptor, data, maxSize);
+        bytesRead = qt_safe_read(descriptor, data, maxSize);
     } else {// Perform parity emulation.
         bytesRead = readPerChar(data, maxSize);
     }
@@ -1056,11 +1090,11 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
 {
     qint64 bytesWritten = 0;
 #if defined (CMSPAR)
-    bytesWritten = ::write(descriptor, data, maxSize);
+    bytesWritten = qt_safe_write(descriptor, data, maxSize);
 #else
     if (parity != QSerialPort::MarkParity
             && parity != QSerialPort::SpaceParity) {
-        bytesWritten = ::write(descriptor, data, maxSize);
+        bytesWritten = qt_safe_write(descriptor, data, maxSize);
     } else {// Perform parity emulation.
         bytesWritten = writePerChar(data, maxSize);
     }
@@ -1097,7 +1131,7 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
                 break;
         }
 
-        int r = ::write(descriptor, data, 1);
+        int r = qt_safe_write(descriptor, data, 1);
         if (r < 0)
             return -1;
         if (r > 0) {
@@ -1123,7 +1157,7 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
     int prefix = 0;
     while (ret < maxSize) {
 
-        qint64 r = ::read(descriptor, data, 1);
+        qint64 r = qt_safe_read(descriptor, data, 1);
         if (r < 0) {
             if (errno == EAGAIN) // It is ok for nonblocking mode.
                 break;

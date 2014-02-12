@@ -82,7 +82,7 @@
 
     The serial port is instantiated in the \l{terminal/mainwindow.cpp}{MainWindow}
     constructor. The main widget is passed as the parent, so the object deletion
-    happens automatically according to the the parent and child mechanism in Qt:
+    happens automatically according to the parent and child mechanism in Qt:
 
     \snippet terminal/mainwindow.cpp 0
     \dots

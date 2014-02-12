@@ -62,12 +62,12 @@ public:
     CommEventNotifier(DWORD mask, QSerialPortPrivate *d, QObject *parent)
         : QThread(parent), dptr(d), running(true) {
         connect(this, SIGNAL(eventMask(quint32)), this, SLOT(processNotification(quint32)));
-        ::SetCommMask(dptr->descriptor, mask);
+        ::SetCommMask(dptr->handle, mask);
     }
 
     virtual ~CommEventNotifier() {
         running = false;
-        ::SetCommMask(dptr->descriptor, 0);
+        ::SetCommMask(dptr->handle, 0);
         wait();
     }
 
@@ -75,7 +75,7 @@ protected:
     void run() Q_DECL_OVERRIDE {
         DWORD mask = 0;
         while (running) {
-            if (::WaitCommEvent(dptr->descriptor, &mask, FALSE)) {
+            if (::WaitCommEvent(dptr->handle, &mask, FALSE)) {
                 // Wait until complete the operation changes the port settings,
                 // see updateDcb().
                 dptr->settingsChangeMutex.lock();
@@ -115,8 +115,8 @@ class WaitCommEventBreaker : public QThread
 {
     Q_OBJECT
 public:
-    WaitCommEventBreaker(HANDLE descriptor, int timeout, QObject *parent = 0)
-        : QThread(parent), descriptor(descriptor), timeout(timeout), worked(false) {
+    WaitCommEventBreaker(HANDLE handle, int timeout, QObject *parent = 0)
+        : QThread(parent), handle(handle), timeout(timeout), worked(false) {
         start();
     }
 
@@ -144,12 +144,12 @@ protected:
 
 private slots:
     void processTimeout() {
-        ::SetCommMask(descriptor, 0);
+        ::SetCommMask(handle, 0);
         stop();
     }
 
 private:
-    HANDLE descriptor;
+    HANDLE handle;
     int timeout;
     mutable bool worked;
 };
@@ -158,7 +158,7 @@ private:
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
-    , descriptor(INVALID_HANDLE_VALUE)
+    , handle(INVALID_HANDLE_VALUE)
     , parityErrorOccurred(false)
     , eventNotifier(0)
 {
@@ -180,15 +180,18 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         eventMask |= EV_TXEMPTY;
     }
 
-    descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
+    handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
                               desiredAccess, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-    if (descriptor == INVALID_HANDLE_VALUE) {
+    if (handle == INVALID_HANDLE_VALUE) {
         q->setError(decodeSystemError());
         return false;
     }
 
-    if (!::GetCommState(descriptor, &restoredDcb)) {
+    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
+    restoredDcb.DCBlength = sizeof(restoredDcb);
+
+    if (!::GetCommState(handle, &restoredDcb)) {
         q->setError(decodeSystemError());
         return false;
     }
@@ -201,10 +204,13 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     currentDcb.fNull = false;
     currentDcb.fErrorChar = false;
 
+    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
+        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
+
     if (!updateDcb())
         return false;
 
-    if (!::GetCommTimeouts(descriptor, &restoredCommTimeouts)) {
+    if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
         q->setError(decodeSystemError());
         return false;
     }
@@ -230,17 +236,17 @@ void QSerialPortPrivate::close()
     }
 
     if (settingsRestoredOnClose) {
-        ::SetCommState(descriptor, &restoredDcb);
-        ::SetCommTimeouts(descriptor, &restoredCommTimeouts);
+        ::SetCommState(handle, &restoredDcb);
+        ::SetCommTimeouts(handle, &restoredCommTimeouts);
     }
 
-    ::CloseHandle(descriptor);
-    descriptor = INVALID_HANDLE_VALUE;
+    ::CloseHandle(handle);
+    handle = INVALID_HANDLE_VALUE;
 }
 
 bool QSerialPortPrivate::flush()
 {
-    return notifyWrite() && ::FlushFileBuffers(descriptor);
+    return notifyWrite() && ::FlushFileBuffers(handle);
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
@@ -250,7 +256,7 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
     if (directions & QSerialPort::Output)
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-    return ::PurgeComm(descriptor, flags);
+    return ::PurgeComm(handle, flags);
 }
 
 void QSerialPortPrivate::startWriting()
@@ -337,7 +343,7 @@ bool QSerialPortPrivate::notifyRead()
     char *ptr = readBuffer.reserve(bytesToRead);
 
     DWORD readBytes = 0;
-    BOOL sucessResult = ::ReadFile(descriptor, ptr, bytesToRead, &readBytes, NULL);
+    BOOL sucessResult = ::ReadFile(handle, ptr, bytesToRead, &readBytes, NULL);
 
     if (!sucessResult) {
         readBuffer.truncate(bytesToRead);
@@ -383,7 +389,7 @@ bool QSerialPortPrivate::notifyWrite()
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
-    if (!::WriteFile(descriptor, ptr, nextSize, &bytesWritten, NULL)) {
+    if (!::WriteFile(handle, ptr, nextSize, &bytesWritten, NULL)) {
         q->setError(QSerialPort::WriteError);
         return false;
     }
@@ -406,8 +412,8 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     // FIXME: Here the situation is not properly handled with zero timeout:
     // breaker can work out before you call a method WaitCommEvent()
     // and so it will loop forever!
-    WaitCommEventBreaker breaker(descriptor, qMax(msecs, 0));
-    ::WaitCommEvent(descriptor, &eventMask, NULL);
+    WaitCommEventBreaker breaker(handle, qMax(msecs, 0));
+    ::WaitCommEvent(handle, &eventMask, NULL);
     breaker.stop();
 
     if (breaker.isWorked()) {
@@ -439,17 +445,17 @@ bool QSerialPortPrivate::updateDcb()
 
     DWORD eventMask = 0;
     // Save the event mask
-    if (!::GetCommMask(descriptor, &eventMask))
+    if (!::GetCommMask(handle, &eventMask))
         return false;
 
     // Break event notifier from WaitCommEvent
-    ::SetCommMask(descriptor, 0);
+    ::SetCommMask(handle, 0);
     // Change parameters
-    bool ret = ::SetCommState(descriptor, &currentDcb);
+    bool ret = ::SetCommState(handle, &currentDcb);
     if (!ret)
         q->setError(decodeSystemError());
     // Restore the event mask
-    ::SetCommMask(descriptor, eventMask);
+    ::SetCommMask(handle, eventMask);
 
     return ret;
 }
@@ -458,7 +464,7 @@ bool QSerialPortPrivate::updateCommTimeouts()
 {
     Q_Q(QSerialPort);
 
-    if (!::SetCommTimeouts(descriptor, &currentCommTimeouts)) {
+    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
         q->setError(decodeSystemError());
         return false;
     }

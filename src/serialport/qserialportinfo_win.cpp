@@ -46,14 +46,13 @@
 #include "qserialport_win_p.h"
 
 #ifndef Q_OS_WINCE
+#include <QtCore/quuid.h>
+#include <QtCore/qpair.h>
+#include <QtCore/qstringlist.h>
+
 #include <initguid.h>
 #include <setupapi.h>
 #endif
-
-#include <QtCore/qvariant.h>
-#include <QtCore/qstringlist.h>
-#include <QtCore/quuid.h>
-#include <QtCore/qpair.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -75,47 +74,56 @@ static inline const QList<GuidFlagsPair>& guidFlagsPairs()
     return guidFlagsPairList;
 }
 
-static QVariant deviceRegistryProperty(HDEVINFO deviceInfoSet,
-                                          PSP_DEVINFO_DATA deviceInfoData,
-                                          DWORD property)
+static QStringList portNamesFromHardwareDeviceMap()
+{
+    HKEY hKey = 0;
+    if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+        return QStringList();
+
+    QStringList result;
+    DWORD index = 0;
+    static const DWORD maximumValueNameInChars = 16383;
+    QByteArray outputValueName(maximumValueNameInChars * sizeof(wchar_t), 0);
+    QByteArray outputBuffer;
+    DWORD requiredDataBytes = 0;
+    forever {
+        DWORD requiredValueNameChars = maximumValueNameInChars;
+        const LONG ret = ::RegEnumValue(hKey, index, reinterpret_cast<wchar_t *>(outputValueName.data()), &requiredValueNameChars,
+                                        NULL, NULL, reinterpret_cast<unsigned char *>(outputBuffer.data()), &requiredDataBytes);
+        if (ret == ERROR_MORE_DATA) {
+            outputBuffer.resize(requiredDataBytes);
+        } else if (ret == ERROR_SUCCESS) {
+            result.append(QString::fromWCharArray(reinterpret_cast<const wchar_t *>(outputBuffer.constData())));
+            ++index;
+        } else {
+            break;
+        }
+    }
+    ::RegCloseKey(hKey);
+    return result;
+}
+
+static QString deviceRegistryProperty(HDEVINFO deviceInfoSet,
+                                      PSP_DEVINFO_DATA deviceInfoData,
+                                      DWORD property)
 {
     DWORD dataType = 0;
-    DWORD dataSize = 0;
-    ::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData,
-                                       property, &dataType, NULL, 0, &dataSize);
-    QByteArray data(dataSize, 0);
-    if (!::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, NULL,
-                                            reinterpret_cast<unsigned char*>(data.data()),
-                                            dataSize, NULL)
-            || !dataSize) {
-        return QVariant();
-    }
-
-    switch (dataType) {
-
-    case REG_EXPAND_SZ:
-    case REG_SZ: {
-        return QVariant(QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData())));
-    }
-
-    case REG_MULTI_SZ: {
-        QStringList list;
-        int i = 0;
-        forever {
-            QString s = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()) + i);
-            i += s.length() + 1;
-            if (s.isEmpty())
-                break;
-            list.append(s);
+    QByteArray devicePropertyByteArray;
+    DWORD requiredSize = 0;
+    forever {
+        if (::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, &dataType,
+                                               reinterpret_cast<unsigned char *>(devicePropertyByteArray.data()),
+                                               devicePropertyByteArray.size(), &requiredSize)) {
+            break;
         }
-        return QVariant(list);
-    }
 
-    default:
-        break;
+        if (::GetLastError() != ERROR_INSUFFICIENT_BUFFER
+                || (dataType != REG_SZ && dataType != REG_EXPAND_SZ)) {
+            return QString();
+        }
+        devicePropertyByteArray.resize(requiredSize);
     }
-
-    return QVariant();
+    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(devicePropertyByteArray.constData()));
 }
 
 static QString deviceInstanceIdentifier(HDEVINFO deviceInfoSet,
@@ -137,28 +145,37 @@ static QString deviceInstanceIdentifier(HDEVINFO deviceInfoSet,
 
 static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
 {
-    static const wchar_t portKeyName[] = L"PortName";
-
     const HKEY key = ::SetupDiOpenDevRegKey(deviceInfoSet, deviceInfoData, DICS_FLAG_GLOBAL,
                                             0, DIREG_DEV, KEY_READ);
     if (key == INVALID_HANDLE_VALUE)
         return QString();
 
-    DWORD dataSize;
-    if (::RegQueryValueEx(key, portKeyName, NULL, NULL, NULL, &dataSize) != ERROR_SUCCESS) {
-        ::RegCloseKey(key);
-        return QString();
-    }
+    static const QStringList portNameRegistryKeyList = QStringList()
+            << QStringLiteral("PortName")
+            << QStringLiteral("PortNumber");
 
-    QByteArray data(dataSize, 0);
-
-    if (::RegQueryValueEx(key, portKeyName, NULL, NULL,
-                reinterpret_cast<unsigned char *>(data.data()), &dataSize) != ERROR_SUCCESS) {
-        ::RegCloseKey(key);
-        return QString();
+    QString portName;
+    foreach (const QString &portNameKey, portNameRegistryKeyList) {
+        DWORD bytesRequired = 0;
+        DWORD dataType = 0;
+        QByteArray outputBuffer;
+        forever {
+            const LONG ret = ::RegQueryValueEx(key, reinterpret_cast<const wchar_t *>(portNameKey.utf16()), NULL, &dataType,
+                                               reinterpret_cast<unsigned char *>(outputBuffer.data()), &bytesRequired);
+            if (ret == ERROR_MORE_DATA) {
+                outputBuffer.resize(bytesRequired);
+                continue;
+            } else if (ret == ERROR_SUCCESS) {
+                if (dataType == REG_SZ)
+                    portName = QString::fromWCharArray((reinterpret_cast<const wchar_t *>(outputBuffer.constData())));
+                else if (dataType == REG_DWORD)
+                    portName = QStringLiteral("COM%1").arg(*(PDWORD(outputBuffer.constData())));
+            }
+            break;
+        }
     }
     ::RegCloseKey(key);
-    return QString::fromWCharArray(((const wchar_t *)data.constData()));
+    return portName;
 }
 
 class SerialPortNameEqualFunctor
@@ -215,9 +232,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             serialPortInfo.d_ptr->portName = s;
             serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
             serialPortInfo.d_ptr->description =
-                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC).toString();
+                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
             serialPortInfo.d_ptr->manufacturer =
-                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG).toString();
+                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
 
             s = deviceInstanceIdentifier(deviceInfoSet, &deviceInfoData).toUpper();
 
@@ -247,6 +264,17 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         }
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
+
+    foreach (const QString &portName, portNamesFromHardwareDeviceMap()) {
+        if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
+                         SerialPortNameEqualFunctor(portName)) == serialPortInfoList.end()) {
+            QSerialPortInfo serialPortInfo;
+            serialPortInfo.d_ptr->portName = portName;
+            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(portName);
+            serialPortInfoList.append(serialPortInfo);
+        }
+    }
+
     return serialPortInfoList;
 }
 
@@ -259,28 +287,28 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
 
 bool QSerialPortInfo::isBusy() const
 {
-    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
                                            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-    if (descriptor == INVALID_HANDLE_VALUE) {
+    if (handle == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_ACCESS_DENIED)
             return true;
     } else {
-        ::CloseHandle(descriptor);
+        ::CloseHandle(handle);
     }
     return false;
 }
 
 bool QSerialPortInfo::isValid() const
 {
-    const HANDLE descriptor = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
                                            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-    if (descriptor == INVALID_HANDLE_VALUE) {
+    if (handle == INVALID_HANDLE_VALUE) {
         if (::GetLastError() != ERROR_ACCESS_DENIED)
             return false;
     } else {
-        ::CloseHandle(descriptor);
+        ::CloseHandle(handle);
     }
     return true;
 }

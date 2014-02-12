@@ -237,17 +237,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return false;
 }
 
-qint64 QSerialPortPrivate::systemInputQueueSize () const
-{
-    return descriptor.QueryReceiveBuffer();
-}
-
-qint64 QSerialPortPrivate::systemOutputQueueSize () const
-{
-    // TODO: Implement me
-    return 0;
-}
-
 void QSerialPortPrivate::startWriting()
 {
     // TODO: Implement me

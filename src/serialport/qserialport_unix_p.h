@@ -108,9 +108,6 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    qint64 systemInputQueueSize () const;
-    qint64 systemOutputQueueSize () const;
-
     void startWriting();
 
     bool waitForReadyRead(int msecs);

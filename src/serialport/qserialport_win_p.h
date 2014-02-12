@@ -78,9 +78,6 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    qint64 systemInputQueueSize ();
-    qint64 systemOutputQueueSize ();
-
     void startWriting();
 
     bool waitForReadyRead(int msec);
@@ -123,13 +120,13 @@ public:
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
-    HANDLE descriptor;
+    HANDLE handle;
     bool parityErrorOccurred;
 
 #ifndef Q_OS_WINCE
     QByteArray readChunkBuffer;
     bool readyReadEmitted;
-    bool writeSequenceStarted;
+    bool writeStarted;
     QWinEventNotifier *communicationNotifier;
     QWinEventNotifier *readCompletionNotifier;
     QWinEventNotifier *writeCompletionNotifier;
