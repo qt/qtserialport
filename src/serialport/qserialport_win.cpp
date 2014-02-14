@@ -313,7 +313,20 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return startAsyncWrite() && ::FlushFileBuffers(handle);
+    Q_Q(QSerialPort);
+
+    bool returnValue = true;
+
+    if (!startAsyncWrite())
+        returnValue = false;
+
+    if (!::FlushFileBuffers(handle)) {
+        q->setError(decodeSystemError());
+        returnValue = false;
+    }
+
+    return returnValue;
+
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
