@@ -850,7 +850,6 @@ void QSerialPortPrivate::detectDefaultSettings()
                && !currentDcb.fInX && !currentDcb.fOutX) {
         flow = QSerialPort::HardwareControl;
     } else {
-        qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
         flow = QSerialPort::NoFlowControl;
     }
 }
