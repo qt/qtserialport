@@ -195,10 +195,14 @@ QList<QSerialPortInfo> availablePortsBySysfs()
     return serialPortInfoList;
 }
 
+#ifndef LINK_LIBUDEV
+    Q_GLOBAL_STATIC(QLibrary, udevLibrary)
+#endif
+
 QList<QSerialPortInfo> availablePortsByUdev()
 {
 #ifndef LINK_LIBUDEV
-    static bool symbolsResolved = resolveSymbols();
+    static bool symbolsResolved = resolveSymbols(udevLibrary());
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
 #endif
