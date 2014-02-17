@@ -57,7 +57,7 @@ extern "C"
     fp_##symbolName symbolName;
 
 #define RESOLVE_SYMBOL(symbolName) \
-    symbolName = (fp_##symbolName)resolveSymbol(#symbolName); \
+    symbolName = (fp_##symbolName)resolveSymbol(udevLibrary, #symbolName); \
     if (!symbolName) \
         return false;
 
@@ -89,16 +89,14 @@ GENERATE_SYMBOL_VARIABLE(void, udev_device_unref, struct udev_device *)
 GENERATE_SYMBOL_VARIABLE(void, udev_enumerate_unref, struct udev_enumerate *)
 GENERATE_SYMBOL_VARIABLE(void, udev_unref, struct udev *)
 
-QLibrary udevLibrary;
-
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-inline QFunctionPointer resolveSymbol(const char *symbolName)
+inline QFunctionPointer resolveSymbol(QLibrary *udevLibrary, const char *symbolName)
 {
-    QFunctionPointer symbolFunctionPointer = udevLibrary.resolve(symbolName);
+    QFunctionPointer symbolFunctionPointer = udevLibrary->resolve(symbolName);
 #else
-inline void *resolveSymbol(const char *symbolName)
+inline void *resolveSymbol(QLibrary *udevLibrary, const char *symbolName)
 {
-    void *symbolFunctionPointer = udevLibrary.resolve(symbolName);
+    void *symbolFunctionPointer = udevLibrary->resolve(symbolName);
 #endif
     if (!symbolFunctionPointer)
         qWarning("Failed to resolve the udev symbol: %s", symbolName);
@@ -106,14 +104,14 @@ inline void *resolveSymbol(const char *symbolName)
     return symbolFunctionPointer;
 }
 
-inline bool resolveSymbols()
+inline bool resolveSymbols(QLibrary *udevLibrary)
 {
-    if (!udevLibrary.isLoaded()) {
-        udevLibrary.setFileNameAndVersion(QStringLiteral("udev"), 1);
-        if (!udevLibrary.load()) {
-            udevLibrary.setFileNameAndVersion(QStringLiteral("udev"), 0);
-            if (!udevLibrary.load()) {
-                qWarning("Failed to load the library: %s, supported version(s): %i and %i", qPrintable(udevLibrary.fileName()), 1, 0);
+    if (!udevLibrary->isLoaded()) {
+        udevLibrary->setFileNameAndVersion(QStringLiteral("udev"), 1);
+        if (!udevLibrary->load()) {
+            udevLibrary->setFileNameAndVersion(QStringLiteral("udev"), 0);
+            if (!udevLibrary->load()) {
+                qWarning("Failed to load the library: %s, supported version(s): %i and %i", qPrintable(udevLibrary->fileName()), 1, 0);
                 return false;
             }
         }
