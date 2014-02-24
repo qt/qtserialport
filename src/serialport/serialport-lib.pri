@@ -5,7 +5,7 @@ unix {
         contains(QT_CONFIG, libudev) {
             DEFINES += LINK_LIBUDEV
             INCLUDEPATH += $$QMAKE_INCDIR_LIBUDEV
-            LIBS += $$QMAKE_LIBS_LIBUDEV
+            LIBS_PRIVATE += $$QMAKE_LIBS_LIBUDEV
         }
     } else {
         packagesExist(libudev) {
@@ -38,7 +38,7 @@ win32 {
         $$PWD/qserialportinfo_win.cpp
 
     !wince*: {
-        LIBS += -lsetupapi -ladvapi32
+        LIBS_PRIVATE += -lsetupapi -ladvapi32
     } else {
         SOURCES += \
             $$PWD/qserialport_wince.cpp \
@@ -67,7 +67,7 @@ symbian {
         $$PWD/qserialport_symbian.cpp \
         $$PWD/qserialportinfo_symbian.cpp
 
-    LIBS += -leuser -lefsrv -lc32
+    LIBS_PRIVATE += -leuser -lefsrv -lc32
 }
 
 unix:!symbian {
@@ -81,7 +81,7 @@ unix:!symbian {
     macx {
         SOURCES += $$PWD/qserialportinfo_mac.cpp
 
-        LIBS += -framework IOKit -framework CoreFoundation
+        LIBS_PRIVATE += -framework IOKit -framework CoreFoundation
     }
 }
 

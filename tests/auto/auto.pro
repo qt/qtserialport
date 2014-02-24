@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS += cmake
+SUBDIRS += qserialport cmake
