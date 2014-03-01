@@ -244,7 +244,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     Returns whether this QSerialPortInfo object holds a
     serial port definition.
 
-    \sa isBusy(), isValid()
+    \sa isBusy()
 */
 
 /*!
@@ -253,7 +253,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     Returns true if serial port is busy;
     otherwise returns false.
 
-    \sa isNull(), isValid()
+    \sa isNull()
 */
 
 /*!
