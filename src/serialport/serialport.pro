@@ -15,3 +15,5 @@ greaterThan(QT_MAJOR_VERSION, 4) {
     CONFIG += module create_prl
     mac:QMAKE_FRAMEWORK_BUNDLE_NAME = $$TARGET
 }
+
+PRECOMPILED_HEADER =
