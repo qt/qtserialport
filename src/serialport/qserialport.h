@@ -213,7 +213,7 @@ public:
     bool setStopBits(StopBits stopBits);
     StopBits stopBits() const;
 
-    bool setFlowControl(FlowControl flow);
+    bool setFlowControl(FlowControl flowControl);
     FlowControl flowControl() const;
 
     bool setDataTerminalReady(bool set);
@@ -258,7 +258,7 @@ Q_SIGNALS:
     void dataBitsChanged(QSerialPort::DataBits dataBits);
     void parityChanged(QSerialPort::Parity parity);
     void stopBitsChanged(QSerialPort::StopBits stopBits);
-    void flowControlChanged(QSerialPort::FlowControl flow);
+    void flowControlChanged(QSerialPort::FlowControl flowControl);
     void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);

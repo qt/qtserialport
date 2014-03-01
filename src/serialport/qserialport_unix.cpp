@@ -668,9 +668,9 @@ bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
     return updateTermios();
 }
 
-bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flow)
+bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
-    switch (flow) {
+    switch (flowControl) {
     case QSerialPort::NoFlowControl:
         currentTermios.c_cflag &= ~CRTSCTS;
         currentTermios.c_iflag &= ~(IXON | IXOFF | IXANY);
@@ -944,14 +944,14 @@ void QSerialPortPrivate::detectDefaultSettings()
 
     // Detect flow control.
     if ((!(currentTermios.c_cflag & CRTSCTS)) && (!(currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
-        flow = QSerialPort::NoFlowControl;
+        flowControl = QSerialPort::NoFlowControl;
     else if ((!(currentTermios.c_cflag & CRTSCTS)) && (currentTermios.c_iflag & (IXON | IXOFF | IXANY)))
-        flow = QSerialPort::SoftwareControl;
+        flowControl = QSerialPort::SoftwareControl;
     else if ((currentTermios.c_cflag & CRTSCTS) && (!(currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
-        flow = QSerialPort::HardwareControl;
+        flowControl = QSerialPort::HardwareControl;
     else {
         qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
-        flow = QSerialPort::NoFlowControl;
+        flowControl = QSerialPort::NoFlowControl;
     }
 }
 

@@ -526,13 +526,13 @@ bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
     return updateDcb();
 }
 
-bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flow)
+bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
     currentDcb.fInX = FALSE;
     currentDcb.fOutX = FALSE;
     currentDcb.fOutxCtsFlow = FALSE;
     currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
-    switch (flow) {
+    switch (flowControl) {
     case QSerialPort::NoFlowControl:
         break;
     case QSerialPort::SoftwareControl:
@@ -855,15 +855,15 @@ void QSerialPortPrivate::detectDefaultSettings()
     // Detect flow control.
     if (!currentDcb.fOutxCtsFlow && (currentDcb.fRtsControl == RTS_CONTROL_DISABLE)
             && !currentDcb.fInX && !currentDcb.fOutX) {
-        flow = QSerialPort::NoFlowControl;
+        flowControl = QSerialPort::NoFlowControl;
     } else if (!currentDcb.fOutxCtsFlow && (currentDcb.fRtsControl == RTS_CONTROL_DISABLE)
                && currentDcb.fInX && currentDcb.fOutX) {
-        flow = QSerialPort::SoftwareControl;
+        flowControl = QSerialPort::SoftwareControl;
     } else if (currentDcb.fOutxCtsFlow && (currentDcb.fRtsControl == RTS_CONTROL_HANDSHAKE)
                && !currentDcb.fInX && !currentDcb.fOutX) {
-        flow = QSerialPort::HardwareControl;
+        flowControl = QSerialPort::HardwareControl;
     } else {
-        flow = QSerialPort::NoFlowControl;
+        flowControl = QSerialPort::NoFlowControl;
     }
 }
 

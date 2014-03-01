@@ -340,9 +340,9 @@ bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
     return updateCommConfig();
 }
 
-bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flow)
+bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
-    switch (flow) {
+    switch (flowControl) {
     case QSerialPort::NoFlowControl:
         currentSettings().iHandshake = KConfigFailDSR;
         break;
@@ -455,15 +455,15 @@ void QSerialPortPrivate::detectDefaultSettings()
     // Detect flow control.
     if ((currentSettings().iHandshake & (KConfigObeyXoff | KConfigSendXoff))
             == (KConfigObeyXoff | KConfigSendXoff))
-        flow = QSerialPort::SoftwareControl;
+        flowControl = QSerialPort::SoftwareControl;
     else if ((currentSettings().iHandshake & (KConfigObeyCTS | KConfigFreeRTS))
              == (KConfigObeyCTS | KConfigFreeRTS))
-        flow = QSerialPort::HardwareControl;
+        flowControl = QSerialPort::HardwareControl;
     else if (currentSettings().iHandshake & KConfigFailDSR)
-        flow = QSerialPort::NoFlowControl;
+        flowControl = QSerialPort::NoFlowControl;
     else {
         qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
-        flow = QSerialPort::NoFlowControl;
+        flowControl = QSerialPort::NoFlowControl;
     }
 }
 

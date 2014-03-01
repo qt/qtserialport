@@ -73,7 +73,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , dataBits(QSerialPort::Data8)
     , parity(QSerialPort::NoParity)
     , stopBits(QSerialPort::OneStop)
-    , flow(QSerialPort::NoFlowControl)
+    , flowControl(QSerialPort::NoFlowControl)
     , policy(QSerialPort::IgnorePolicy)
     , settingsRestoredOnClose(true)
     , q_ptr(q)
@@ -835,7 +835,7 @@ QSerialPort::StopBits QSerialPort::stopBits() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 */
-bool QSerialPort::setFlowControl(FlowControl flow)
+bool QSerialPort::setFlowControl(FlowControl flowControl)
 {
     Q_D(QSerialPort);
 
@@ -845,10 +845,10 @@ bool QSerialPort::setFlowControl(FlowControl flow)
         return false;
     }
 
-    if (d->setFlowControl(flow)) {
-        if (d->flow != flow) {
-            d->flow = flow;
-            emit flowControlChanged(d->flow);
+    if (d->setFlowControl(flowControl)) {
+        if (d->flowControl != flowControl) {
+            d->flowControl = flowControl;
+            emit flowControlChanged(d->flowControl);
         }
         return true;
     }
@@ -859,7 +859,7 @@ bool QSerialPort::setFlowControl(FlowControl flow)
 QSerialPort::FlowControl QSerialPort::flowControl() const
 {
     Q_D(const QSerialPort);
-    return d->flow;
+    return d->flowControl;
 }
 
 /*!
