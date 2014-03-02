@@ -113,6 +113,7 @@ public:
     bool waitForReadyRead(int msecs);
     bool waitForBytesWritten(int msecs);
 
+    bool setBaudRate();
     bool setBaudRate(qint32 baudRate, QSerialPort::Directions directions);
     bool setDataBits(QSerialPort::DataBits dataBits);
     bool setParity(QSerialPort::Parity parity);
@@ -161,7 +162,6 @@ public:
 private:
     bool updateTermios();
 
-    void detectDefaultSettings();
     QSerialPort::SerialPortError decodeSystemError() const;
 
     bool isReadNotificationEnabled() const;

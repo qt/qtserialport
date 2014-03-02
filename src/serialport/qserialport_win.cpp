@@ -208,7 +208,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     communicationNotifier->setEnabled(true);
 
-    detectDefaultSettings();
     return true;
 }
 
@@ -460,6 +459,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 }
 
 #endif // #ifndef Q_OS_WINCE
+
+bool QSerialPortPrivate::setBaudRate()
+{
+    return setBaudRate(inputBaudRate, QSerialPort::AllDirections);
+}
 
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
@@ -792,80 +796,6 @@ bool QSerialPortPrivate::updateCommTimeouts()
 }
 
 #endif // #ifndef Q_OS_WINCE
-
-void QSerialPortPrivate::detectDefaultSettings()
-{
-    // Detect baud rate.
-    inputBaudRate = quint32(currentDcb.BaudRate);
-    outputBaudRate = inputBaudRate;
-
-    // Detect databits.
-    switch (currentDcb.ByteSize) {
-    case 5:
-        dataBits = QSerialPort::Data5;
-        break;
-    case 6:
-        dataBits = QSerialPort::Data6;
-        break;
-    case 7:
-        dataBits = QSerialPort::Data7;
-        break;
-    case 8:
-        dataBits = QSerialPort::Data8;
-        break;
-    default:
-        qWarning("%s: Unexpected data bits settings", Q_FUNC_INFO);
-        dataBits = QSerialPort::Data8;
-        break;
-    }
-
-    // Detect parity.
-    if ((currentDcb.Parity == NOPARITY) && !currentDcb.fParity)
-        parity = QSerialPort::NoParity;
-    else if ((currentDcb.Parity == SPACEPARITY) && currentDcb.fParity)
-        parity = QSerialPort::SpaceParity;
-    else if ((currentDcb.Parity == MARKPARITY) && currentDcb.fParity)
-        parity = QSerialPort::MarkParity;
-    else if ((currentDcb.Parity == EVENPARITY) && currentDcb.fParity)
-        parity = QSerialPort::EvenParity;
-    else if ((currentDcb.Parity == ODDPARITY) && currentDcb.fParity)
-        parity = QSerialPort::OddParity;
-    else {
-        qWarning("%s: Unexpected parity settings", Q_FUNC_INFO);
-        parity = QSerialPort::NoParity;
-    }
-
-    // Detect stopbits.
-    switch (currentDcb.StopBits) {
-    case ONESTOPBIT:
-        stopBits = QSerialPort::OneStop;
-        break;
-    case ONE5STOPBITS:
-        stopBits = QSerialPort::OneAndHalfStop;
-        break;
-    case TWOSTOPBITS:
-        stopBits = QSerialPort::TwoStop;
-        break;
-    default:
-        qWarning("%s: Unexpected stop bits settings", Q_FUNC_INFO);
-        stopBits = QSerialPort::OneStop;
-        break;
-    }
-
-    // Detect flow control.
-    if (!currentDcb.fOutxCtsFlow && (currentDcb.fRtsControl == RTS_CONTROL_DISABLE)
-            && !currentDcb.fInX && !currentDcb.fOutX) {
-        flowControl = QSerialPort::NoFlowControl;
-    } else if (!currentDcb.fOutxCtsFlow && (currentDcb.fRtsControl == RTS_CONTROL_DISABLE)
-               && currentDcb.fInX && currentDcb.fOutX) {
-        flowControl = QSerialPort::SoftwareControl;
-    } else if (currentDcb.fOutxCtsFlow && (currentDcb.fRtsControl == RTS_CONTROL_HANDSHAKE)
-               && !currentDcb.fInX && !currentDcb.fOutX) {
-        flowControl = QSerialPort::HardwareControl;
-    } else {
-        flowControl = QSerialPort::NoFlowControl;
-    }
-}
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 {

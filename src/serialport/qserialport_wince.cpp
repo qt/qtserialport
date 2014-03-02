@@ -224,7 +224,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     eventNotifier = new CommEventNotifier(eventMask, this, q);
     eventNotifier->start();
 
-    detectDefaultSettings();
     return true;
 }
 

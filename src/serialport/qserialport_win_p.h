@@ -83,6 +83,7 @@ public:
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);
 
+    bool setBaudRate();
     bool setBaudRate(qint32 baudRate, QSerialPort::Directions directions);
     bool setDataBits(QSerialPort::DataBits dataBits);
     bool setParity(QSerialPort::Parity parity);
@@ -144,7 +145,6 @@ private:
     bool updateDcb();
     bool updateCommTimeouts();
 
-    void detectDefaultSettings();
 
 #ifndef Q_OS_WINCE
     bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);

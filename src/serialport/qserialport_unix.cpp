@@ -265,7 +265,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if ((flags & O_WRONLY) == 0)
         setReadNotificationEnabled(true);
 
-    detectDefaultSettings();
     return true;
 }
 
@@ -518,6 +517,16 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return completeAsyncWrite();
     }
     return false;
+}
+
+bool QSerialPortPrivate::setBaudRate()
+{
+    if (!setBaudRate(inputBaudRate, QSerialPort::Input)
+            && !setBaudRate(outputBaudRate, QSerialPort::Output)) {
+        return false;
+    }
+
+    return true;
 }
 
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
@@ -860,99 +869,6 @@ bool QSerialPortPrivate::updateTermios()
         return false;
     }
     return true;
-}
-
-void QSerialPortPrivate::detectDefaultSettings()
-{
-    // Detect baud rate.
-    const speed_t inputUnixBaudRate = ::cfgetispeed(&currentTermios);
-    const speed_t outputUnixBaudRate = ::cfgetospeed(&currentTermios);
-    bool isCustomBaudRateCurrentSet = false;
-
-#ifdef Q_OS_LINUX
-    // try detect the ability to support custom baud rate
-    isCustomBaudRateSupported = ::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1
-            && ::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) != -1;
-
-    if (isCustomBaudRateSupported) {
-        restoredSerialInfo = currentSerialInfo;
-
-        // assume that the baud rate is a custom
-        isCustomBaudRateCurrentSet = inputUnixBaudRate == B38400 && outputUnixBaudRate == B38400;
-
-        if (isCustomBaudRateCurrentSet) {
-            if ((currentSerialInfo.flags & ASYNC_SPD_CUST)
-                    && currentSerialInfo.custom_divisor > 0) {
-
-                // yes, speed is really custom
-                inputBaudRate = currentSerialInfo.baud_base / currentSerialInfo.custom_divisor;
-                outputBaudRate = inputBaudRate;
-            } else {
-                // no, we were wrong and the speed is a standard 38400 baud
-                isCustomBaudRateCurrentSet = false;
-            }
-        }
-    }
-#else
-    // other *nix
-#endif
-    if (!isCustomBaudRateSupported || !isCustomBaudRateCurrentSet) {
-        inputBaudRate = QSerialPortPrivate::baudRateFromSetting(inputUnixBaudRate);
-        outputBaudRate = QSerialPortPrivate::baudRateFromSetting(outputUnixBaudRate);
-    }
-
-    // Detect databits.
-    switch (currentTermios.c_cflag & CSIZE) {
-    case CS5:
-        dataBits = QSerialPort::Data5;
-        break;
-    case CS6:
-        dataBits = QSerialPort::Data6;
-        break;
-    case CS7:
-        dataBits = QSerialPort::Data7;
-        break;
-    case CS8:
-        dataBits = QSerialPort::Data8;
-        break;
-    default:
-        qWarning("%s: Unexpected data bits settings", Q_FUNC_INFO);
-        dataBits = QSerialPort::Data8;
-        break;
-    }
-
-    // Detect parity.
-#ifdef CMSPAR
-    if (currentTermios.c_cflag & CMSPAR) {
-        parity = currentTermios.c_cflag & PARODD ?
-                    QSerialPort::MarkParity : QSerialPort::SpaceParity;
-    } else {
-#endif
-        if (currentTermios.c_cflag & PARENB) {
-            parity = currentTermios.c_cflag & PARODD ?
-                        QSerialPort::OddParity : QSerialPort::EvenParity;
-        } else {
-            parity = QSerialPort::NoParity;
-        }
-#ifdef CMSPAR
-    }
-#endif
-
-    // Detect stopbits.
-    stopBits = currentTermios.c_cflag & CSTOPB ?
-                QSerialPort::TwoStop : QSerialPort::OneStop;
-
-    // Detect flow control.
-    if ((!(currentTermios.c_cflag & CRTSCTS)) && (!(currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
-        flowControl = QSerialPort::NoFlowControl;
-    else if ((!(currentTermios.c_cflag & CRTSCTS)) && (currentTermios.c_iflag & (IXON | IXOFF | IXANY)))
-        flowControl = QSerialPort::SoftwareControl;
-    else if ((currentTermios.c_cflag & CRTSCTS) && (!(currentTermios.c_iflag & (IXON | IXOFF | IXANY))))
-        flowControl = QSerialPort::HardwareControl;
-    else {
-        qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
-        flowControl = QSerialPort::NoFlowControl;
-    }
 }
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
