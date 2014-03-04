@@ -132,13 +132,15 @@ QList<QSerialPortInfo> availablePortsBySysfs()
             continue;
 
         QSerialPortInfo serialPortInfo;
-
         if (targetPath.contains(QStringLiteral("pnp"))) {
             // TODO: Obtain more information
+#ifndef Q_OS_ANDROID
         } else if (targetPath.contains(QStringLiteral("platform"))) {
+#else
+        } else if (targetPath.contains(QStringLiteral("platform")) && !targetPath.contains(QStringLiteral("ttyUSB")) ) {
+#endif
             continue;
         } else if (targetPath.contains(QStringLiteral("usb"))) {
-
             QDir targetDir(targetPath);
             targetDir.setFilter(QDir::Files | QDir::Readable);
             targetDir.setNameFilters(QStringList(QStringLiteral("uevent")));
