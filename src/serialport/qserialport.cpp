@@ -525,15 +525,15 @@ bool QSerialPort::open(OpenMode mode)
     }
 
     clearError();
-    if (d->open(mode)) {
-        QIODevice::open(mode);
+    if (!d->open(mode))
+        return false;
 
-        d->dataTerminalReady = isDataTerminalReady();
-        d->requestToSend = isRequestToSend();
+    QIODevice::open(mode);
 
-        return true;
-    }
-    return false;
+    d->dataTerminalReady = isDataTerminalReady();
+    d->requestToSend = isRequestToSend();
+
+    return true;
 }
 
 /*!
