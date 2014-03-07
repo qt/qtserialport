@@ -568,6 +568,7 @@ void QSerialPort::close()
     \property QSerialPort::settingsRestoredOnClose
     \brief the flag which specifies to restore the previous settings when closing
     the serial port.
+    \obsolete
 
     If this flag is true, the settings will be restored; otherwise not.
     The default state of the QSerialPort class is to restore the
