@@ -125,6 +125,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 serialPortInfo.d_ptr->description =
                         QString::fromUtf16(nativeSerialInfo.iDescription.Ptr(), nativeSerialInfo.iDescription.Length());
                 serialPortInfo.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                serialPortInfo.d_ptr->serialNumber = QString(QObject::tr("Unknown."));
                 serialPortInfoList.append(serialPortInfo);
             }
         }
@@ -146,6 +147,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 serialPortInfo.d_ptr->description =
                         QString::fromUtf16(nativeSerialInfo.iDescription.Ptr(), nativeSerialInfo.iDescription.Length());
                 serialPortInfo.d_ptr->manufacturer = QString(QObject::tr("Unknown."));
+                serialPortInfo.d_ptr->serialNumber = QString(QObject::tr("Unknown."));
                 serialPortInfoList.append(serialPortInfo);
             }
         }

@@ -149,7 +149,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    detectDefaultSettings();
     return true;
 }
 
@@ -254,6 +253,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
     return false;
 }
 
+bool QSerialPortPrivate::setBaudRate()
+{
+    return setBaudRate(inputBaudRate, QSerialPort::AllDirections);
+}
+
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_Q(QSerialPort);
@@ -340,9 +344,9 @@ bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
     return updateCommConfig();
 }
 
-bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flow)
+bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
-    switch (flow) {
+    switch (flowControl) {
     case QSerialPort::NoFlowControl:
         currentSettings().iHandshake = KConfigFailDSR;
         break;
@@ -387,84 +391,6 @@ bool QSerialPortPrivate::updateCommConfig()
         return false;
     }
     return true;
-}
-
-void QSerialPortPrivate::detectDefaultSettings()
-{
-    // Detect baud rate.
-    inputBaudRate = baudRateFromSetting(currentSettings().iRate);
-    outputBaudRate = inputBaudRate;
-
-    // Detect databits.
-    switch (currentSettings().iDataBits) {
-    case EData5:
-        dataBits = QSerialPort::Data5;
-        break;
-    case EData6:
-        dataBits = QSerialPort::Data6;
-        break;
-    case EData7:
-        dataBits = QSerialPort::Data7;
-        break;
-    case EData8:
-        dataBits = QSerialPort::Data8;
-        break;
-    default:
-        qWarning("%s: Unexpected data bits settings", Q_FUNC_INFO);
-        dataBits = QSerialPort::Data8;
-        break;
-    }
-
-    // Detect parity.
-    switch (currentSettings().iParity) {
-    case EParityNone:
-        parity = QSerialPort::NoParity;
-        break;
-    case EParityEven:
-        parity = QSerialPort::EvenParity;
-        break;
-    case EParityOdd:
-        parity = QSerialPort::OddParity;
-        break;
-    case EParityMark:
-        parity = QSerialPort::MarkParity;
-        break;
-    case EParitySpace:
-        parity = QSerialPort::SpaceParity;
-        break;
-    default:
-        qWarning("%s: Unexpected parity settings", Q_FUNC_INFO);
-        parity = QSerialPort::NoParity;
-        break;
-    }
-
-    // Detect stopbits.
-    switch (currentSettings().iStopBits) {
-    case EStop1:
-        stopBits = QSerialPort::OneStop;
-        break;
-    case EStop2:
-        stopBits = QSerialPort::TwoStop;
-        break;
-    default:
-        qWarning("%s: Unexpected stop bits settings", Q_FUNC_INFO);
-        stopBits = QSerialPort::OneStop;
-        break;
-    }
-
-    // Detect flow control.
-    if ((currentSettings().iHandshake & (KConfigObeyXoff | KConfigSendXoff))
-            == (KConfigObeyXoff | KConfigSendXoff))
-        flow = QSerialPort::SoftwareControl;
-    else if ((currentSettings().iHandshake & (KConfigObeyCTS | KConfigFreeRTS))
-             == (KConfigObeyCTS | KConfigFreeRTS))
-        flow = QSerialPort::HardwareControl;
-    else if (currentSettings().iHandshake & KConfigFailDSR)
-        flow = QSerialPort::NoFlowControl;
-    else {
-        qWarning("%s: Unexpected flow control settings", Q_FUNC_INFO);
-        flow = QSerialPort::NoFlowControl;
-    }
 }
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const

@@ -70,7 +70,7 @@ public:
     QSerialPort::DataBits dataBits;
     QSerialPort::Parity parity;
     QSerialPort::StopBits stopBits;
-    QSerialPort::FlowControl flow;
+    QSerialPort::FlowControl flowControl;
     QSerialPort::DataErrorPolicy policy;
     bool dataTerminalReady;
     bool requestToSend;

@@ -112,12 +112,12 @@ void MainWindow::openSerialPort()
             serial->close();
             QMessageBox::critical(this, tr("Error"), serial->errorString());
 
-            ui->statusBar->showMessage(tr("Open error"));
+            ui->statusBar->showMessage(tr("Configure error"));
         }
     } else {
         QMessageBox::critical(this, tr("Error"), serial->errorString());
 
-        ui->statusBar->showMessage(tr("Configure error"));
+        ui->statusBar->showMessage(tr("Open error"));
     }
 }
 //! [4]

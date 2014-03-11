@@ -132,13 +132,15 @@ QList<QSerialPortInfo> availablePortsBySysfs()
             continue;
 
         QSerialPortInfo serialPortInfo;
-
         if (targetPath.contains(QStringLiteral("pnp"))) {
             // TODO: Obtain more information
+#ifndef Q_OS_ANDROID
         } else if (targetPath.contains(QStringLiteral("platform"))) {
+#else
+        } else if (targetPath.contains(QStringLiteral("platform")) && !targetPath.contains(QStringLiteral("ttyUSB")) ) {
+#endif
             continue;
         } else if (targetPath.contains(QStringLiteral("usb"))) {
-
             QDir targetDir(targetPath);
             targetDir.setFilter(QDir::Files | QDir::Readable);
             targetDir.setNameFilters(QStringList(QStringLiteral("uevent")));
@@ -250,6 +252,9 @@ QList<QSerialPortInfo> availablePortsByUdev()
                                                                                    "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
                             serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev,
                                                                                    "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
+
+                            serialPortInfo.d_ptr->serialNumber = QString(
+                                    QLatin1String(::udev_device_get_property_value(dev, "ID_SERIAL_SHORT")));
 
                             serialPortInfo.d_ptr->vendorIdentifier =
                                     QString::fromLatin1(::udev_device_get_property_value(dev,

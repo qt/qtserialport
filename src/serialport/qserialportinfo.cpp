@@ -170,7 +170,7 @@ QString QSerialPortInfo::systemLocation() const
     Returns the description string of the serial port,
     if available; otherwise returns an empty string.
 
-    \sa manufacturer()
+    \sa manufacturer(), serialNumber()
 */
 QString QSerialPortInfo::description() const
 {
@@ -182,12 +182,28 @@ QString QSerialPortInfo::description() const
     Returns the manufacturer string of the serial port,
     if available; otherwise returns an empty string.
 
-    \sa description()
+    \sa description(), serialNumber()
 */
 QString QSerialPortInfo::manufacturer() const
 {
     Q_D(const QSerialPortInfo);
     return !d ? QString() : d->manufacturer;
+}
+
+/*!
+    \since 5.3
+
+    Returns the serial number string of the serial port,
+    if available; otherwise returns an empty string.
+
+    \note The serial number may include letters.
+
+    \sa description(), manufacturer()
+*/
+QString QSerialPortInfo::serialNumber() const
+{
+    Q_D(const QSerialPortInfo);
+    return !d ? QString() : d->serialNumber;
 }
 
 /*!
@@ -244,7 +260,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     Returns whether this QSerialPortInfo object holds a
     serial port definition.
 
-    \sa isBusy(), isValid()
+    \sa isBusy()
 */
 
 /*!
@@ -253,7 +269,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     Returns true if serial port is busy;
     otherwise returns false.
 
-    \sa isNull(), isValid()
+    \sa isNull()
 */
 
 /*!

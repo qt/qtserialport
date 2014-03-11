@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2013 Laszlo Papp <lpapp@kde.org>
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
@@ -78,6 +79,7 @@ void tst_QSerialPortInfo::assignment()
         QCOMPARE(otherSerialPortInfo.systemLocation(), serialPortInfo.systemLocation());
         QCOMPARE(otherSerialPortInfo.description(), serialPortInfo.description());
         QCOMPARE(otherSerialPortInfo.manufacturer(), serialPortInfo.manufacturer());
+        QCOMPARE(otherSerialPortInfo.serialNumber(), serialPortInfo.serialNumber());
         QCOMPARE(otherSerialPortInfo.vendorIdentifier(), serialPortInfo.vendorIdentifier());
         QCOMPARE(otherSerialPortInfo.productIdentifier(), serialPortInfo.productIdentifier());
     }

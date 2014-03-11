@@ -97,20 +97,27 @@
        </widget>
       </item>
       <item row="3" column="0">
+       <widget class="QLabel" name="serialNumberLabel">
+        <property name="text">
+         <string>Serial number:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
        <widget class="QLabel" name="locationLabel">
         <property name="text">
          <string>Location:</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="vidLabel">
         <property name="text">
          <string>Vendor ID:</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="pidLabel">
         <property name="text">
          <string>Product ID:</string>
