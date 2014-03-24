@@ -92,13 +92,12 @@ void MainWindow::openSerialPort()
 {
     SettingsDialog::Settings p = settings->settings();
     serial->setPortName(p.name);
+    serial->setBaudRate(p.baudRate);
+    serial->setDataBits(p.dataBits);
+    serial->setParity(p.parity);
+    serial->setStopBits(p.stopBits);
+    serial->setFlowControl(p.flowControl);
     if (serial->open(QIODevice::ReadWrite)) {
-        if (serial->setBaudRate(p.baudRate)
-                && serial->setDataBits(p.dataBits)
-                && serial->setParity(p.parity)
-                && serial->setStopBits(p.stopBits)
-                && serial->setFlowControl(p.flowControl)) {
-
             console->setEnabled(true);
             console->setLocalEchoEnabled(p.localEchoEnabled);
             ui->actionConnect->setEnabled(false);
@@ -107,13 +106,6 @@ void MainWindow::openSerialPort()
             ui->statusBar->showMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
                                        .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
                                        .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
-
-        } else {
-            serial->close();
-            QMessageBox::critical(this, tr("Error"), serial->errorString());
-
-            ui->statusBar->showMessage(tr("Configure error"));
-        }
     } else {
         QMessageBox::critical(this, tr("Error"), serial->errorString());
 

@@ -65,34 +65,11 @@ int main(int argc, char *argv[])
     QString serialPortName = argumentList.at(1);
     serialPort.setPortName(serialPortName);
 
+    int serialPortBaudRate = (argumentCount > 2) ? argumentList.at(2).toInt() : QSerialPort::Baud9600;
+    serialPort.setBaudRate(serialPortBaudRate);
+
     if (!serialPort.open(QIODevice::WriteOnly)) {
         standardOutput << QObject::tr("Failed to open port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        return 1;
-    }
-
-    int serialPortBaudRate = (argumentCount > 2) ? argumentList.at(2).toInt() : QSerialPort::Baud9600;
-    if (!serialPort.setBaudRate(serialPortBaudRate)) {
-        standardOutput << QObject::tr("Failed to set 9600 baud for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        return 1;
-    }
-
-    if (!serialPort.setDataBits(QSerialPort::Data8)) {
-        standardOutput << QObject::tr("Failed to set 8 data bits for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        return 1;
-    }
-
-    if (!serialPort.setParity(QSerialPort::NoParity)) {
-        standardOutput << QObject::tr("Failed to set no parity for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        return 1;
-    }
-
-    if (!serialPort.setStopBits(QSerialPort::OneStop)) {
-        standardOutput << QObject::tr("Failed to set 1 stop bit for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
-        return 1;
-    }
-
-    if (!serialPort.setFlowControl(QSerialPort::NoFlowControl)) {
-        standardOutput << QObject::tr("Failed to set no flow control for port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
         return 1;
     }
 

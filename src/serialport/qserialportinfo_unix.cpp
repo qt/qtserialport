@@ -48,6 +48,7 @@
 #include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qscopedpointer.h>
 
 #ifndef Q_OS_MAC
 
@@ -197,6 +198,14 @@ QList<QSerialPortInfo> availablePortsBySysfs()
     return serialPortInfoList;
 }
 
+struct ScopedPointerUdevDeleter
+{
+    static inline void cleanup(struct ::udev_device *pointer)
+    {
+        ::udev_device_unref(pointer);
+    }
+};
+
 #ifndef LINK_LIBUDEV
     Q_GLOBAL_STATIC(QLibrary, udevLibrary)
 #endif
@@ -229,18 +238,17 @@ QList<QSerialPortInfo> availablePortsByUdev()
             struct ::udev_list_entry *dev_list_entry;
             udev_list_entry_foreach(dev_list_entry, devices) {
 
-                struct ::udev_device *dev =
-                        ::udev_device_new_from_syspath(udev,
-                                                       ::udev_list_entry_get_name(dev_list_entry));
+                QScopedPointer<struct ::udev_device, ScopedPointerUdevDeleter> dev(::udev_device_new_from_syspath(udev,
+                                                                                    ::udev_list_entry_get_name(dev_list_entry)));
 
                 if (dev) {
 
                     QSerialPortInfo serialPortInfo;
 
-                    serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev));
-                    serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev));
+                    serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
+                    serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
 
-                    struct ::udev_device *parentdev = ::udev_device_get_parent(dev);
+                    struct ::udev_device *parentdev = ::udev_device_get_parent(dev.data());
 
                     if (parentdev) {
 
@@ -248,20 +256,20 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
                         if (subsys == QStringLiteral("usb-serial")
                                 || subsys == QStringLiteral("usb")) {
-                            serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev,
+                            serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev.data(),
                                                                                    "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
-                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev,
+                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev.data(),
                                                                                    "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
 
                             serialPortInfo.d_ptr->serialNumber = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev, "ID_SERIAL_SHORT")));
+                                    QLatin1String(::udev_device_get_property_value(dev.data(), "ID_SERIAL_SHORT")));
 
                             serialPortInfo.d_ptr->vendorIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                    QString::fromLatin1(::udev_device_get_property_value(dev.data(),
                                                 "ID_VENDOR_ID")).toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
 
                             serialPortInfo.d_ptr->productIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev,
+                                    QString::fromLatin1(::udev_device_get_property_value(dev.data(),
                                                 "ID_MODEL_ID")).toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
 
                         } else if (subsys == QStringLiteral("pnp")) {
@@ -286,8 +294,6 @@ QList<QSerialPortInfo> availablePortsByUdev()
                     }
 
                     serialPortInfoList.append(serialPortInfo);
-
-                    ::udev_device_unref(dev);
                 }
 
             }

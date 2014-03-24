@@ -114,36 +114,6 @@ void Dialog::startSlave()
                          .arg(serial.portName()).arg(serial.error()));
             return;
         }
-
-        if (!serial.setBaudRate(QSerialPort::Baud9600)) {
-            processError(tr("Can't set baud rate 9600 baud to port %1, error code %2")
-                         .arg(serial.portName()).arg(serial.error()));
-            return;
-        }
-
-        if (!serial.setDataBits(QSerialPort::Data8)) {
-            processError(tr("Can't set 8 data bits to port %1, error code %2")
-                         .arg(serial.portName()).arg(serial.error()));
-            return;
-        }
-
-        if (!serial.setParity(QSerialPort::NoParity)) {
-            processError(tr("Can't set no parity to port %1, error code %2")
-                         .arg(serial.portName()).arg(serial.error()));
-            return;
-        }
-
-        if (!serial.setStopBits(QSerialPort::OneStop)) {
-            processError(tr("Can't set 1 stop bit to port %1, error code %2")
-                         .arg(serial.portName()).arg(serial.error()));
-            return;
-        }
-
-        if (!serial.setFlowControl(QSerialPort::NoFlowControl)) {
-            processError(tr("Can't set no flow control to port %1, error code %2")
-                         .arg(serial.portName()).arg(serial.error()));
-            return;
-        }
     }
 
     runButton->setEnabled(false);
