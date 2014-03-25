@@ -33,6 +33,7 @@ headerdirs  += ..
 sourcedirs  += ..
 exampledirs += ../../../examples/serialport
 imagedirs   += images
+excludedirs += ../qt4support
 
 depends += qtcore qtdoc
 
