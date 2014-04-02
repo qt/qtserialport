@@ -1,4 +1,4 @@
-qtAddLibrary(QtSerialPort)
+!mac:qtAddLibrary(QtSerialPort)
 
 !isEmpty(QTSERIALPORT_BUILD_ROOT) {
     INCLUDEPATH -= $$QMAKE_INCDIR_QT/QtSerialPort
@@ -17,7 +17,7 @@ qtAddLibrary(QtSerialPort)
 }
 
 mac {
-    LIBS -= -framework QtSerialPort$${QT_LIBINFIX}
+    INCLUDEPATH += $$[QT_INSTALL_HEADERS]/QtSerialPort
 
    if(!debug_and_release|build_pass):CONFIG(debug, debug|release) {
        LIBS += -lQtSerialPort$${QT_LIBINFIX}_debug
