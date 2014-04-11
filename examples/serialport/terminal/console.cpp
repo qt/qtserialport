@@ -79,7 +79,6 @@ void Console::keyPressEvent(QKeyEvent *e)
     case Qt::Key_Right:
     case Qt::Key_Up:
     case Qt::Key_Down:
-        // skip processing
         break;
     default:
         if (localEchoEnabled)
