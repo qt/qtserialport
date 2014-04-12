@@ -620,10 +620,12 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
 {
     Q_Q(QSerialPort);
 
+    writeStarted = false;
     DWORD numberOfBytesTransferred = 0;
     if (!::GetOverlappedResult(handle, &writeCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
         numberOfBytesTransferred = 0;
         q->setError(decodeSystemError());
+        return;
     }
 
     if (numberOfBytesTransferred > 0) {
@@ -631,7 +633,6 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
         emit q->bytesWritten(numberOfBytesTransferred);
     }
 
-    writeStarted = false;
     startAsyncWrite();
 }
 
