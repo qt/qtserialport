@@ -35,6 +35,8 @@ exampledirs += ../../../examples/serialport
 imagedirs   += images
 excludedirs += ../qt4support
 
+examplesinstallpath = serialport
+
 depends += qtcore qtdoc
 
 navigation.landingpage = "Qt Serial Port"
