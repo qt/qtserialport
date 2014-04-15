@@ -461,7 +461,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             _q_completeAsyncRead();
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
             _q_completeAsyncWrite();
-            return error == QSerialPort::NoError;
+            return writeBuffer.isEmpty();
         } else {
             return false;
         }
