@@ -48,6 +48,7 @@
 #ifndef Q_OS_WINCE
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qtimer.h>
 #endif
 
 #include <QtCore/qwineventnotifier.h>
@@ -106,6 +107,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , communicationNotifier(new QWinEventNotifier(q))
     , readCompletionNotifier(new QWinEventNotifier(q))
     , writeCompletionNotifier(new QWinEventNotifier(q))
+    , startAsyncWriteTimer(0)
     , originalEventMask(0)
     , triggeredEventMask(0)
 {
@@ -378,8 +380,16 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 void QSerialPortPrivate::startWriting()
 {
-    if (!writeStarted)
-        startAsyncWrite();
+    Q_Q(QSerialPort);
+
+    if (!writeStarted) {
+        if (!startAsyncWriteTimer) {
+            startAsyncWriteTimer = new QTimer(q);
+            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_completeAsyncWrite()));
+            startAsyncWriteTimer->setSingleShot(true);
+        }
+        startAsyncWriteTimer->start(0);
+    }
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -431,6 +441,9 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 
     QElapsedTimer stopWatch;
     stopWatch.start();
+
+    if (!writeStarted)
+        startAsyncWrite();
 
     forever {
         bool timedOut = false;
@@ -620,17 +633,19 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
 {
     Q_Q(QSerialPort);
 
-    writeStarted = false;
-    DWORD numberOfBytesTransferred = 0;
-    if (!::GetOverlappedResult(handle, &writeCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
-        numberOfBytesTransferred = 0;
-        q->setError(decodeSystemError());
-        return;
-    }
+    if (writeStarted) {
+        writeStarted = false;
+        DWORD numberOfBytesTransferred = 0;
+        if (!::GetOverlappedResult(handle, &writeCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
+            numberOfBytesTransferred = 0;
+            q->setError(decodeSystemError());
+            return;
+        }
 
-    if (numberOfBytesTransferred > 0) {
-        writeBuffer.free(numberOfBytesTransferred);
-        emit q->bytesWritten(numberOfBytesTransferred);
+        if (numberOfBytesTransferred > 0) {
+            writeBuffer.free(numberOfBytesTransferred);
+            emit q->bytesWritten(numberOfBytesTransferred);
+        }
     }
 
     startAsyncWrite();

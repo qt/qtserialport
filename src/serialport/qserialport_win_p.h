@@ -51,6 +51,7 @@
 #include <QtCore/qhash.h>
 QT_BEGIN_NAMESPACE
 class QWinEventNotifier;
+class QTimer;
 #else
 #include <QtCore/qmutex.h>
 QT_BEGIN_NAMESPACE
@@ -131,6 +132,7 @@ public:
     QWinEventNotifier *communicationNotifier;
     QWinEventNotifier *readCompletionNotifier;
     QWinEventNotifier *writeCompletionNotifier;
+    QTimer *startAsyncWriteTimer;
     OVERLAPPED communicationOverlapped;
     OVERLAPPED readCompletionOverlapped;
     OVERLAPPED writeCompletionOverlapped;
