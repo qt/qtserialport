@@ -406,7 +406,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return startAsyncWrite()
+    return completeAsyncWrite()
 #ifndef Q_OS_ANDROID
             && (::tcdrain(descriptor) != -1);
 #else
