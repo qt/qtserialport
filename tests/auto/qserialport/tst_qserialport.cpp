@@ -86,6 +86,8 @@ private slots:
     void flush();
     void doubleFlush();
 
+    void waitForBytesWritten();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -317,6 +319,20 @@ void tst_QSerialPort::doubleFlush()
     enterLoop(1);
     QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
     QCOMPARE(bytesWrittenSpy.count(), 2);
+}
+
+void tst_QSerialPort::waitForBytesWritten()
+{
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_receiverPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
+
+    QSerialPort serialPort(m_senderPortName);
+    QVERIFY(serialPort.open(QIODevice::WriteOnly));
+    serialPort.write(alphabetArray);
+    const qint64 toWrite = serialPort.bytesToWrite();
+    QVERIFY(serialPort.waitForBytesWritten(1000));
+    QVERIFY(toWrite > serialPort.bytesToWrite());
 }
 
 QTEST_MAIN(tst_QSerialPort)
