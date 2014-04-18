@@ -55,6 +55,10 @@
 #endif
 #endif
 
+#ifdef Q_OS_QNX
+#define CRTSCTS (IHFLOW | OHFLOW)
+#endif
+
 #include <private/qcore_unix_p.h>
 
 #include <QtCore/qelapsedtimer.h>

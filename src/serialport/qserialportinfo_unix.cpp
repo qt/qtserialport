@@ -77,6 +77,8 @@ static QStringList filteredDeviceFilePaths()
     << QStringLiteral("ircomm*"); // IrDA serial device.
 #elif defined (Q_OS_FREEBSD)
     << QStringLiteral("cu*");
+#elif defined (Q_OS_QNX)
+    << QStringLiteral("ser*");
 #else
     ;
 #endif
