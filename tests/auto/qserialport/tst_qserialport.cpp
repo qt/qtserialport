@@ -53,6 +53,24 @@ class tst_QSerialPort : public QObject
 public:
     explicit tst_QSerialPort();
 
+    static void enterLoop(int secs)
+    {
+        ++loopLevel;
+        QTestEventLoop::instance().enterLoop(secs);
+        --loopLevel;
+    }
+
+    static void exitLoop()
+    {
+        if (loopLevel > 0)
+            QTestEventLoop::instance().exitLoop();
+    }
+
+    static bool timeout()
+    {
+        return QTestEventLoop::instance().timeout();
+    }
+
 private slots:
     void initTestCase();
 
@@ -65,11 +83,27 @@ private slots:
     void openNotExisting_data();
     void openNotExisting();
 
+    void flush();
+    void doubleFlush();
+
+protected slots:
+    void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
+    void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
+
 private:
     QString m_senderPortName;
     QString m_receiverPortName;
     QStringList m_availablePortNames;
+
+    static int loopLevel;
+    static const QByteArray alphabetArray;
+    static const QByteArray newlineArray;
 };
+
+int tst_QSerialPort::loopLevel = 0;
+
+const QByteArray tst_QSerialPort::alphabetArray("ABCDEFGHIJKLMNOPQRSTUVWXUZ");
+const QByteArray tst_QSerialPort::newlineArray("\n\r");
 
 tst_QSerialPort::tst_QSerialPort()
 {
@@ -213,6 +247,68 @@ void tst_QSerialPort::openNotExisting()
 
     //QCOMPARE(errorSpy.count(), 1);
     //QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(0).at(0)), errorCode);
+}
+
+void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten)
+{
+    QCOMPARE(bytesWritten, (alphabetArray.size() + newlineArray.size()));
+    exitLoop();
+}
+
+void tst_QSerialPort::flush()
+{
+#ifdef Q_OS_WIN
+    QSKIP("flush() does not work on Windows");
+#endif
+
+    QSerialPort serialPort(m_senderPortName);
+    connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot(qint64)));
+    QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
+
+    QVERIFY(serialPort.open(QIODevice::WriteOnly));
+    serialPort.write(alphabetArray + newlineArray);
+    QCOMPARE(serialPort.bytesToWrite(), (alphabetArray.size() + newlineArray.size()));
+    serialPort.flush();
+    QCOMPARE(serialPort.bytesToWrite(), qint64(0));
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
+    QCOMPARE(bytesWrittenSpy.count(), 1);
+}
+
+void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten)
+{
+    static qint64 bytes = 0;
+    bytes += bytesWritten;
+
+    QVERIFY(bytesWritten == newlineArray.size() || bytesWritten == alphabetArray.size());
+
+    if (bytes == (alphabetArray.size() + newlineArray.size()))
+        exitLoop();
+}
+
+void tst_QSerialPort::doubleFlush()
+{
+#ifdef Q_OS_WIN
+    QSKIP("flush() does not work on Windows");
+#endif
+
+    QSerialPort serialPort(m_senderPortName);
+    connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot2(qint64)));
+    QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
+
+    QVERIFY(serialPort.open(QIODevice::WriteOnly));
+    serialPort.write(alphabetArray);
+    QCOMPARE(serialPort.bytesToWrite(), alphabetArray.size());
+    serialPort.flush();
+    QCOMPARE(serialPort.bytesToWrite(), qint64(0));
+    serialPort.write(newlineArray);
+    QCOMPARE(serialPort.bytesToWrite(), newlineArray.size());
+    serialPort.flush();
+    QCOMPARE(serialPort.bytesToWrite(), qint64(0));
+
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
+    QCOMPARE(bytesWrittenSpy.count(), 2);
 }
 
 QTEST_MAIN(tst_QSerialPort)
