@@ -98,9 +98,10 @@ void tst_QSerialPort::defaultConstruct()
     QVERIFY(!serialPort.errorString().isEmpty());
 
     // properties
-    QCOMPARE(serialPort.baudRate(), qint32(0));
-    QCOMPARE(serialPort.baudRate(QSerialPort::Input), qint32(0));
-    QCOMPARE(serialPort.baudRate(QSerialPort::Output), qint32(0));
+    const qint32 defaultBaudRate = static_cast<qint32>(QSerialPort::Baud9600);
+    QCOMPARE(serialPort.baudRate(), defaultBaudRate);
+    QCOMPARE(serialPort.baudRate(QSerialPort::Input), defaultBaudRate);
+    QCOMPARE(serialPort.baudRate(QSerialPort::Output), defaultBaudRate);
     QCOMPARE(serialPort.dataBits(), QSerialPort::Data8);
     QCOMPARE(serialPort.parity(), QSerialPort::NoParity);
     QCOMPARE(serialPort.stopBits(), QSerialPort::OneStop);
