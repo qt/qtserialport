@@ -136,12 +136,7 @@ public:
 
     struct termios currentTermios;
     struct termios restoredTermios;
-#ifdef Q_OS_LINUX
-    struct serial_struct currentSerialInfo;
-    struct serial_struct restoredSerialInfo;
-#endif
     int descriptor;
-    bool isCustomBaudRateSupported;
 
     QSocketNotifier *readNotifier;
     QSocketNotifier *writeNotifier;
@@ -161,6 +156,10 @@ public:
 
 private:
     bool updateTermios();
+    bool setCustomBaudRate(qint32 baudRate,
+            QSerialPort::Directions directions);
+    bool setStandardBaudRate(qint32 baudRate,
+            QSerialPort::Directions directions);
 
     QSerialPort::SerialPortError decodeSystemError() const;
 
