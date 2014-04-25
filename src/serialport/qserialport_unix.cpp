@@ -596,6 +596,17 @@ bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directi
     return false;
 }
 
+#elif defined (Q_OS_QNX)
+
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    // On QNX, the values of the 'Bxxxx' constants are set to 'xxxx' (i.e.
+    // B115200 is defined to '115200'), which means that literal values can be
+    // passed to cfsetispeed/cfsetospeed, including custom values, provided
+    // that the underlying hardware supports them.
+    return setStandardBaudRate(baudRate, directions);
+}
+
 #else
 
 bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
