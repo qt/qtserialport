@@ -50,6 +50,11 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qscopedpointer.h>
 
+
+#include <errno.h>
+#include <sys/types.h> // kill
+#include <signal.h>    // kill
+
 #ifndef Q_OS_MAC
 
 #include "qtudev_p.h"
@@ -344,8 +349,21 @@ bool QSerialPortInfo::isBusy() const
     if (lockFilePath.isEmpty())
         return false;
 
-    QLockFile lockFile(lockFilePath);
-    return lockFile.isLocked();
+    QFile reader(lockFilePath);
+    if (!reader.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray pidLine = reader.readLine();
+    pidLine.chop(1);
+    if (pidLine.isEmpty())
+        return false;
+
+    qint64 pid = pidLine.toLongLong();
+
+    if (pid && (::kill(pid, 0) == -1) && (errno == ESRCH))
+        return false; // PID doesn't exist anymore
+
+    return true;
 }
 
 bool QSerialPortInfo::isValid() const

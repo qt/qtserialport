@@ -199,9 +199,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
-    lockFileScopedPointer.swap(newLockFileScopedPointer);
 
-    if (lockFileScopedPointer->isLocked()) {
+    if (!newLockFileScopedPointer->tryLock()) {
         q->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -224,12 +223,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     if (descriptor == -1) {
         q->setError(decodeSystemError());
-        return false;
-    }
-
-    lockFileScopedPointer->lock();
-    if (!lockFileScopedPointer->isLocked()) {
-        q->setError(QSerialPort::PermissionError);
         return false;
     }
 
@@ -267,6 +260,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     if ((flags & O_WRONLY) == 0)
         setReadNotificationEnabled(true);
+
+    lockFileScopedPointer.swap(newLockFileScopedPointer);
 
     return true;
 }
@@ -306,8 +301,7 @@ void QSerialPortPrivate::close()
     if (qt_safe_close(descriptor) == -1)
         q->setError(decodeSystemError());
 
-    if (lockFileScopedPointer->isLocked())
-        lockFileScopedPointer->unlock();
+    lockFileScopedPointer.reset(0);
 
     descriptor = -1;
     pendingBytesWritten = 0;
