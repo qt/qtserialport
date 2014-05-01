@@ -64,11 +64,13 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
 #if QT_DEPRECATED_SINCE(5, 2)
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
-    Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 #endif
     Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
+#if QT_DEPRECATED_SINCE(5, 3)
+    Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
+#endif
 
     Q_ENUMS(BaudRate DataBits Parity StopBits FlowControl DataErrorPolicy SerialPortError)
     Q_FLAGS(Directions PinoutSignals)
@@ -198,6 +200,11 @@ public:
     bool open(OpenMode mode) Q_DECL_OVERRIDE;
     void close() Q_DECL_OVERRIDE;
 
+#if QT_DEPRECATED_SINCE(5, 3)
+    QT_DEPRECATED void setSettingsRestoredOnClose(bool restore);
+    QT_DEPRECATED bool settingsRestoredOnClose() const;
+#endif
+
     bool setBaudRate(qint32 baudRate, Directions directions = AllDirections);
     qint32 baudRate(Directions directions = AllDirections) const;
 
@@ -228,8 +235,6 @@ public:
 #if QT_DEPRECATED_SINCE(5, 2)
     QT_DEPRECATED bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
     QT_DEPRECATED DataErrorPolicy dataErrorPolicy() const;
-    void setSettingsRestoredOnClose(bool restore);
-    bool settingsRestoredOnClose() const;
 #endif
 
     SerialPortError error() const;
