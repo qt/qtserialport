@@ -521,12 +521,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 
 bool QSerialPortPrivate::setBaudRate()
 {
-    if (!setBaudRate(inputBaudRate, QSerialPort::Input)
-            && !setBaudRate(outputBaudRate, QSerialPort::Output)) {
-        return false;
-    }
+    if (inputBaudRate == outputBaudRate)
+        return setBaudRate(inputBaudRate, QSerialPort::AllDirections);
 
-    return true;
+    return (setBaudRate(inputBaudRate, QSerialPort::Input)
+        && setBaudRate(outputBaudRate, QSerialPort::Output));
 }
 
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
