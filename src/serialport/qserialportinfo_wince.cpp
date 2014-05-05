@@ -43,7 +43,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qserialport_win_p.h"
+#include "qserialport_wince_p.h"
 
 #include <QtCore/qstringlist.h>
 
@@ -126,6 +126,39 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     }
 
     return serialPortInfoList;
+}
+
+QList<qint32> QSerialPortInfo::standardBaudRates()
+{
+    return QSerialPortPrivate::standardBaudRates();
+}
+
+bool QSerialPortInfo::isBusy() const
+{
+    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+                                           GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+    if (handle == INVALID_HANDLE_VALUE) {
+        if (::GetLastError() == ERROR_ACCESS_DENIED)
+            return true;
+    } else {
+        ::CloseHandle(handle);
+    }
+    return false;
+}
+
+bool QSerialPortInfo::isValid() const
+{
+    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
+                                           GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+    if (handle == INVALID_HANDLE_VALUE) {
+        if (::GetLastError() != ERROR_ACCESS_DENIED)
+            return false;
+    } else {
+        ::CloseHandle(handle);
+    }
+    return true;
 }
 
 QT_END_NAMESPACE

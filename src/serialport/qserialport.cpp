@@ -45,7 +45,9 @@
 #include "qserialport.h"
 #include "qserialportinfo.h"
 
-#ifdef Q_OS_WIN
+#ifdef Q_OS_WINCE
+#include "qserialport_wince_p.h"
+#elif defined (Q_OS_WIN)
 #include "qserialport_win_p.h"
 #elif defined (Q_OS_SYMBIAN)
 #include "qserialport_symbian_p.h"

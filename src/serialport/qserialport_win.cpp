@@ -44,13 +44,9 @@
 #include "qserialport_win_p.h"
 
 #include <QtCore/qcoreevent.h>
-
-#ifndef Q_OS_WINCE
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qtimer.h>
-#endif
-
 #include <QtCore/qwineventnotifier.h>
 #include <algorithm>
 
@@ -86,8 +82,6 @@
 #endif
 
 QT_BEGIN_NAMESPACE
-
-#ifndef Q_OS_WINCE
 
 static void initializeOverlappedStructure(OVERLAPPED &overlapped)
 {
@@ -245,8 +239,6 @@ void QSerialPortPrivate::close()
     handle = INVALID_HANDLE_VALUE;
 }
 
-#endif // #ifndef Q_OS_WINCE
-
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 {
     Q_Q(QSerialPort);
@@ -310,8 +302,6 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
     return true;
 }
 
-#ifndef Q_OS_WINCE
-
 bool QSerialPortPrivate::flush()
 {
     Q_Q(QSerialPort);
@@ -349,8 +339,6 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     return true;
 }
 
-#endif
-
 bool QSerialPortPrivate::sendBreak(int duration)
 {
     if (!setBreakEnabled(true))
@@ -375,8 +363,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
     return true;
 }
-
-#ifndef Q_OS_WINCE
 
 void QSerialPortPrivate::startWriting()
 {
@@ -470,8 +456,6 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 
     return false;
 }
-
-#endif // #ifndef Q_OS_WINCE
 
 bool QSerialPortPrivate::setBaudRate()
 {
@@ -571,8 +555,6 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
     policy = policy;
     return true;
 }
-
-#ifndef Q_OS_WINCE
 
 void QSerialPortPrivate::_q_completeAsyncCommunication()
 {
@@ -758,8 +740,6 @@ void QSerialPortPrivate::emitReadyRead()
     emit q->readyRead();
 }
 
-#endif // #ifndef Q_OS_WINCE
-
 void QSerialPortPrivate::processIoErrors(bool error)
 {
     Q_Q(QSerialPort);
@@ -787,8 +767,6 @@ void QSerialPortPrivate::processIoErrors(bool error)
     }
 }
 
-#ifndef Q_OS_WINCE
-
 bool QSerialPortPrivate::updateDcb()
 {
     Q_Q(QSerialPort);
@@ -810,8 +788,6 @@ bool QSerialPortPrivate::updateCommTimeouts()
     }
     return true;
 }
-
-#endif // #ifndef Q_OS_WINCE
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 {
@@ -850,8 +826,6 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     }
     return error;
 }
-
-#ifndef Q_OS_WINCE
 
 bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent)
 {
@@ -898,8 +872,6 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
         ret.remove(defaultPathPrefix);
     return ret;
 }
-
-#endif // #ifndef Q_OS_WINCE
 
 // This table contains standard values of baud rates that
 // are defined in MSDN and/or in Win SDK file winbase.h
