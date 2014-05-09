@@ -115,7 +115,7 @@ class WaitCommEventBreaker : public QThread
 {
     Q_OBJECT
 public:
-    WaitCommEventBreaker(HANDLE handle, int timeout, QObject *parent = 0)
+    WaitCommEventBreaker(HANDLE handle, int timeout, QObject *parent = Q_NULLPTR)
         : QThread(parent), handle(handle), timeout(timeout), worked(false) {
         start();
     }

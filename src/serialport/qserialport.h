@@ -187,9 +187,9 @@ public:
         NotOpenError
     };
 
-    explicit QSerialPort(QObject *parent = 0);
-    explicit QSerialPort(const QString &name, QObject *parent = 0);
-    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = 0);
+    explicit QSerialPort(QObject *parent = Q_NULLPTR);
+    explicit QSerialPort(const QString &name, QObject *parent = Q_NULLPTR);
+    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = Q_NULLPTR);
     virtual ~QSerialPort();
 
     void setPortName(const QString &name);
