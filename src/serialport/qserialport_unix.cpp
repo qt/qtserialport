@@ -260,6 +260,11 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateTermios())
         return false;
 
+#ifdef Q_OS_LINUX
+    isCustomBaudRateSupported = (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
+            && (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) != -1);
+#endif
+
     setExceptionNotificationEnabled(true);
 
     if ((flags & O_WRONLY) == 0)
