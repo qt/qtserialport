@@ -517,10 +517,23 @@ bool QSerialPortPrivate::setBaudRate()
         && setBaudRate(outputBaudRate, QSerialPort::Output));
 }
 
+QSerialPort::SerialPortError
+QSerialPortPrivate::setBaudRate_helper(qint32 baudRate,
+        QSerialPort::Directions directions)
+{
+    if ((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
+            return decodeSystemError();
+
+    if ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0)
+            return decodeSystemError();
+
+    return QSerialPort::NoError;
+}
+
 #if defined(Q_OS_LINUX)
 
-bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate,
-        QSerialPort::Directions directions)
+QSerialPort::SerialPortError
+QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     struct serial_struct currentSerialInfo;
 
@@ -532,83 +545,85 @@ bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate,
         ::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo);
     }
 
-    return !(((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
-           || ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0));
+    return setBaudRate_helper(baudRate, directions);
 }
+
 #else
 
-bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate,
-        QSerialPort::Directions directions)
+QSerialPort::SerialPortError
+QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
-    return !(((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
-           || ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0));
+    return setBaudRate_helper(baudRate, directions);
 }
 
 #endif
 
 #if defined(Q_OS_LINUX)
 
-bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(directions);
 
     struct serial_struct currentSerialInfo;
 
     if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
-        return false;
+        return decodeSystemError();
 
-    if (currentSerialInfo.baud_base % baudRate != 0) {
-        Q_Q(QSerialPort);
-        q->setError(QSerialPort::UnsupportedOperationError);
-
-        return false;
-    }
+    if (currentSerialInfo.baud_base % baudRate != 0)
+        return QSerialPort::UnsupportedOperationError;
 
     currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
     currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
     currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
 
     if (currentSerialInfo.custom_divisor == 0)
-        currentSerialInfo.custom_divisor = 1;
+        return QSerialPort::UnsupportedOperationError;
 
     if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-        return false;
+        return decodeSystemError();
 
-    return !(((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, B38400) < 0)
-           || ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, B38400) < 0));
+    return setBaudRate_helper(B38400, directions);
 }
 
 #elif defined(Q_OS_MAC)
 
-bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(directions);
 
 #if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-    return (::ioctl(descriptor, IOSSIOSPEED, &baudRate) != -1);
+    if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1)
+        return decodeSystemError();
+
+    return QSerialPort::NoError;
 #endif
-    return false;
+
+    return QSerialPort::UnsupportedOperationError;
 }
 
 #elif defined (Q_OS_QNX)
 
-bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     // On QNX, the values of the 'Bxxxx' constants are set to 'xxxx' (i.e.
     // B115200 is defined to '115200'), which means that literal values can be
     // passed to cfsetispeed/cfsetospeed, including custom values, provided
     // that the underlying hardware supports them.
-    return setStandardBaudRate(baudRate, directions);
+    return setBaudRate_helper(baudRate, directions);
 }
 
 #else
 
-bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(baudRate);
     Q_UNUSED(directions);
 
-    return false;
+    return QSerialPort::UnsupportedOperationError;
 }
 
 #endif
@@ -622,19 +637,14 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
         return false;
     }
 
-    q->setError(QSerialPort::NoError);
-
     const qint32 unixBaudRate = QSerialPortPrivate::settingFromBaudRate(baudRate);
 
-    const bool ok = (unixBaudRate > 0)
+    const QSerialPort::SerialPortError error = (unixBaudRate > 0)
         ? setStandardBaudRate(unixBaudRate, directions)
         : setCustomBaudRate(baudRate, directions);
 
-    if (ok)
+    if (error == QSerialPort::NoError)
         return updateTermios();
-
-    if (q->error() == QSerialPort::NoError)
-        q->setError(decodeSystemError());
 
     return false;
 }

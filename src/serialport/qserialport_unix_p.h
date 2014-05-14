@@ -156,11 +156,13 @@ public:
 
 private:
     bool updateTermios();
-    bool setCustomBaudRate(qint32 baudRate,
-            QSerialPort::Directions directions);
-    bool setStandardBaudRate(qint32 baudRate,
-            QSerialPort::Directions directions);
 
+    QSerialPort::SerialPortError setBaudRate_helper(qint32 baudRate,
+            QSerialPort::Directions directions);
+    QSerialPort::SerialPortError setCustomBaudRate(qint32 baudRate,
+            QSerialPort::Directions directions);
+    QSerialPort::SerialPortError setStandardBaudRate(qint32 baudRate,
+            QSerialPort::Directions directions);
     QSerialPort::SerialPortError decodeSystemError() const;
 
     bool isReadNotificationEnabled() const;
