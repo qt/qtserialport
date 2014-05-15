@@ -192,6 +192,17 @@ QList<QSerialPortInfo> availablePortsBySysfs()
             } while (targetDir.cdUp());
 
         } else if (targetPath.contains(QStringLiteral("pci"))) {
+            QDir targetDir(targetPath + QStringLiteral("/device"));
+            QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("vendor")).absoluteFilePath());
+            if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
+                        .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+            }
+            QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("device")).absoluteFilePath());
+            if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
+                        .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+            }
             // TODO: Obtain more information about the device
         } else {
             continue;
@@ -216,6 +227,12 @@ struct ScopedPointerUdevDeleter
 #ifndef LINK_LIBUDEV
     Q_GLOBAL_STATIC(QLibrary, udevLibrary)
 #endif
+
+static
+QString getUdevPropertyValue(struct ::udev_device *dev, const char *name)
+{
+    return QString::fromLatin1(::udev_device_get_property_value(dev, name));
+}
 
 QList<QSerialPortInfo> availablePortsByUdev()
 {
@@ -263,28 +280,36 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
                         if (subsys == QStringLiteral("usb-serial")
                                 || subsys == QStringLiteral("usb")) {
-                            serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                                                   "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
-                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                                                   "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
+                            serialPortInfo.d_ptr->description =
+                                    getUdevPropertyValue(dev.data(), "ID_MODEL").replace(QLatin1Char('_'), QLatin1Char(' '));
 
-                            serialPortInfo.d_ptr->serialNumber = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev.data(), "ID_SERIAL_SHORT")));
+                            serialPortInfo.d_ptr->manufacturer =
+                                    getUdevPropertyValue(dev.data(), "ID_VENDOR").replace(QLatin1Char('_'), QLatin1Char(' '));
+
+                            serialPortInfo.d_ptr->serialNumber = getUdevPropertyValue(dev.data(),"ID_SERIAL_SHORT");
 
                             serialPortInfo.d_ptr->vendorIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                "ID_VENDOR_ID")).toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+                                    getUdevPropertyValue(dev.data(), "ID_VENDOR_ID").toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
 
                             serialPortInfo.d_ptr->productIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                "ID_MODEL_ID")).toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+                                    getUdevPropertyValue(dev.data(), "ID_MODEL_ID").toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
 
                         } else if (subsys == QStringLiteral("pnp")) {
                             // TODO: Obtain more information
                         } else if (subsys == QStringLiteral("platform")) {
                             continue;
                         } else if (subsys == QStringLiteral("pci")) {
-                            // TODO: Obtain more information about the device
+                            serialPortInfo.d_ptr->description =
+                                    getUdevPropertyValue(dev.data(), "ID_MODEL");
+
+                            serialPortInfo.d_ptr->manufacturer =
+                                    getUdevPropertyValue(dev.data(), "ID_VENDOR");
+
+                            serialPortInfo.d_ptr->vendorIdentifier =
+                                    getUdevPropertyValue(dev.data(), "ID_VENDOR_ID").toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+
+                            serialPortInfo.d_ptr->productIdentifier =
+                                    getUdevPropertyValue(dev.data(), "ID_MODEL_ID").toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
                         } else {
                             // FIXME: Obtain more information
                         }
