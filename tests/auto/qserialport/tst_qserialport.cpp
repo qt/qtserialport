@@ -258,7 +258,11 @@ void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten)
 void tst_QSerialPort::flush()
 {
 #ifdef Q_OS_WIN
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     QSKIP("flush() does not work on Windows");
+#else
+    QSKIP("flush() does not work on Windows", SkipAll);
+#endif
 #endif
 
     QSerialPort serialPort(m_senderPortName);
@@ -289,7 +293,11 @@ void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten)
 void tst_QSerialPort::doubleFlush()
 {
 #ifdef Q_OS_WIN
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     QSKIP("flush() does not work on Windows");
+#else
+    QSKIP("flush() does not work on Windows", SkipAll);
+#endif
 #endif
 
     QSerialPort serialPort(m_senderPortName);
