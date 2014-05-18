@@ -251,7 +251,7 @@ void tst_QSerialPort::openNotExisting()
 
 void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten)
 {
-    QCOMPARE(bytesWritten, (alphabetArray.size() + newlineArray.size()));
+    QCOMPARE(bytesWritten, qint64(alphabetArray.size() + newlineArray.size()));
     exitLoop();
 }
 
@@ -267,7 +267,7 @@ void tst_QSerialPort::flush()
 
     QVERIFY(serialPort.open(QIODevice::WriteOnly));
     serialPort.write(alphabetArray + newlineArray);
-    QCOMPARE(serialPort.bytesToWrite(), (alphabetArray.size() + newlineArray.size()));
+    QCOMPARE(serialPort.bytesToWrite(), qint64(alphabetArray.size() + newlineArray.size()));
     serialPort.flush();
     QCOMPARE(serialPort.bytesToWrite(), qint64(0));
     enterLoop(1);
@@ -298,11 +298,11 @@ void tst_QSerialPort::doubleFlush()
 
     QVERIFY(serialPort.open(QIODevice::WriteOnly));
     serialPort.write(alphabetArray);
-    QCOMPARE(serialPort.bytesToWrite(), alphabetArray.size());
+    QCOMPARE(serialPort.bytesToWrite(), qint64(alphabetArray.size()));
     serialPort.flush();
     QCOMPARE(serialPort.bytesToWrite(), qint64(0));
     serialPort.write(newlineArray);
-    QCOMPARE(serialPort.bytesToWrite(), newlineArray.size());
+    QCOMPARE(serialPort.bytesToWrite(), qint64(newlineArray.size()));
     serialPort.flush();
     QCOMPARE(serialPort.bytesToWrite(), qint64(0));
 
