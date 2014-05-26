@@ -580,9 +580,11 @@ void QSerialPortPrivate::_q_completeAsyncCommunication()
             error = true;
     }
 
-    // Start processing a caught error.
-    if (error || (EV_ERR & triggeredEventMask))
-        processIoErrors(error);
+    if (error)
+        q->setError(QSerialPort::ResourceError);
+
+    if (EV_ERR & triggeredEventMask)
+        handleLineStatusErrors();
 
     if (!error)
         startAsyncRead();
@@ -740,14 +742,9 @@ void QSerialPortPrivate::emitReadyRead()
     emit q->readyRead();
 }
 
-void QSerialPortPrivate::processIoErrors(bool error)
+void QSerialPortPrivate::handleLineStatusErrors()
 {
     Q_Q(QSerialPort);
-
-    if (error) {
-        q->setError(QSerialPort::ResourceError);
-        return;
-    }
 
     DWORD errors = 0;
     if (!::ClearCommError(handle, &errors, NULL)) {

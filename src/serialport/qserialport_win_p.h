@@ -88,7 +88,7 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    void processIoErrors(bool error);
+    void handleLineStatusErrors();
     QSerialPort::SerialPortError decodeSystemError() const;
 
     void _q_completeAsyncCommunication();
