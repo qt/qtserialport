@@ -403,10 +403,15 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
             _q_completeAsyncCommunication();
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
             _q_completeAsyncRead();
-            if (qint64(readBuffer.size()) != currentReadBufferSize)
+            const qint64 readBytesForOneReadOperation = qint64(readBuffer.size()) - currentReadBufferSize;
+            if (readBytesForOneReadOperation == ReadChunkSize) {
                 currentReadBufferSize = readBuffer.size();
-            else if (initialReadBufferSize != currentReadBufferSize)
+            } else if (readBytesForOneReadOperation == 0) {
+                if (initialReadBufferSize != currentReadBufferSize)
+                    return true;
+            } else {
                 return true;
+            }
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
             _q_completeAsyncWrite();
         } else {
