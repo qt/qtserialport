@@ -841,7 +841,7 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut, HANDLE *trigger
                                                 msecs == -1 ? INFINITE : msecs);
     if (waitResult == WAIT_TIMEOUT) {
         *timedOut = true;
-        q->setError(QSerialPort::TimeoutError);
+        q->setError(QSerialPort::TimeoutError, qt_error_string(WAIT_TIMEOUT));
         return false;
     }
 
