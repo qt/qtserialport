@@ -425,7 +425,8 @@ QSerialPort::QSerialPort(const QSerialPortInfo &serialPortInfo, QObject *parent)
 QSerialPort::~QSerialPort()
 {
     /**/
-    close();
+    if (isOpen())
+        close();
     delete d_ptr;
 }
 
