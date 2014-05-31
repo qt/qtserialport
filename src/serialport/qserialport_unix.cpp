@@ -537,12 +537,12 @@ QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions
 {
     struct serial_struct currentSerialInfo;
 
-    if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1) {
-
+    if ((::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
+            && (currentSerialInfo.flags & ASYNC_SPD_CUST)) {
         currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
         currentSerialInfo.custom_divisor = 0;
-
-        ::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo);
+        if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
+            return decodeSystemError();
     }
 
     return setBaudRate_helper(baudRate, directions);
