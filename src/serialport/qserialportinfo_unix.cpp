@@ -234,6 +234,45 @@ QString getUdevPropertyValue(struct ::udev_device *dev, const char *name)
     return QString::fromLatin1(::udev_device_get_property_value(dev, name));
 }
 
+static
+bool checkUdevForSerial8250Driver(struct ::udev_device *dev)
+{
+    const QString driverName = QString::fromLatin1(::udev_device_get_driver(dev));
+    return (driverName == QStringLiteral("serial8250"));
+}
+
+static
+QString getUdevModelName(struct ::udev_device *dev)
+{
+    return getUdevPropertyValue(dev, "ID_MODEL")
+            .replace(QLatin1Char('_'), QLatin1Char(' '));
+}
+
+static
+QString getUdevVendorName(struct ::udev_device *dev)
+{
+    return getUdevPropertyValue(dev, "ID_VENDOR")
+            .replace(QLatin1Char('_'), QLatin1Char(' '));
+}
+
+static
+quint16 getUdevModelIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
+{
+    return getUdevPropertyValue(dev, "ID_MODEL_ID").toInt(&hasIdentifier, 16);
+}
+
+static
+quint16 getUdevVendorIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
+{
+    return getUdevPropertyValue(dev, "ID_VENDOR_ID").toInt(&hasIdentifier, 16);
+}
+
+static
+QString getUdevSerialNumber(struct ::udev_device *dev)
+{
+    return getUdevPropertyValue(dev,"ID_SERIAL_SHORT");
+}
+
 QList<QSerialPortInfo> availablePortsByUdev()
 {
 #ifndef LINK_LIBUDEV
@@ -276,43 +315,18 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
                     if (parentdev) {
 
-                        QString subsys = QString::fromLatin1(::udev_device_get_subsystem(parentdev));
-
-                        if (subsys == QStringLiteral("usb-serial")
-                                || subsys == QStringLiteral("usb")) {
-                            serialPortInfo.d_ptr->description =
-                                    getUdevPropertyValue(dev.data(), "ID_MODEL").replace(QLatin1Char('_'), QLatin1Char(' '));
-
-                            serialPortInfo.d_ptr->manufacturer =
-                                    getUdevPropertyValue(dev.data(), "ID_VENDOR").replace(QLatin1Char('_'), QLatin1Char(' '));
-
-                            serialPortInfo.d_ptr->serialNumber = getUdevPropertyValue(dev.data(),"ID_SERIAL_SHORT");
-
-                            serialPortInfo.d_ptr->vendorIdentifier =
-                                    getUdevPropertyValue(dev.data(), "ID_VENDOR_ID").toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
-
-                            serialPortInfo.d_ptr->productIdentifier =
-                                    getUdevPropertyValue(dev.data(), "ID_MODEL_ID").toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
-
-                        } else if (subsys == QStringLiteral("pnp")) {
-                            // TODO: Obtain more information
-                        } else if (subsys == QStringLiteral("platform")) {
+                        if (checkUdevForSerial8250Driver(parentdev))
                             continue;
-                        } else if (subsys == QStringLiteral("pci")) {
-                            serialPortInfo.d_ptr->description =
-                                    getUdevPropertyValue(dev.data(), "ID_MODEL");
 
-                            serialPortInfo.d_ptr->manufacturer =
-                                    getUdevPropertyValue(dev.data(), "ID_VENDOR");
+                        serialPortInfo.d_ptr->description = getUdevModelName(dev.data());
+                        serialPortInfo.d_ptr->manufacturer = getUdevVendorName(dev.data());
+                        serialPortInfo.d_ptr->serialNumber = getUdevSerialNumber(dev.data());
 
-                            serialPortInfo.d_ptr->vendorIdentifier =
-                                    getUdevPropertyValue(dev.data(), "ID_VENDOR_ID").toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+                        serialPortInfo.d_ptr->vendorIdentifier = getUdevModelIdentifier(
+                                    dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
 
-                            serialPortInfo.d_ptr->productIdentifier =
-                                    getUdevPropertyValue(dev.data(), "ID_MODEL_ID").toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
-                        } else {
-                            // FIXME: Obtain more information
-                        }
+                        serialPortInfo.d_ptr->productIdentifier = getUdevVendorIdentifier(
+                                    dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
                     } else {
                         if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
                             bool ok;
