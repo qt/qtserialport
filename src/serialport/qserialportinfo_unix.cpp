@@ -218,6 +218,22 @@ QList<QSerialPortInfo> availablePortsBySysfs()
 
 struct ScopedPointerUdevDeleter
 {
+    static inline void cleanup(struct ::udev *pointer)
+    {
+        ::udev_unref(pointer);
+    }
+};
+
+struct ScopedPointerUdevEnumeratorDeleter
+{
+    static inline void cleanup(struct ::udev_enumerate *pointer)
+    {
+        ::udev_enumerate_unref(pointer);
+    }
+};
+
+struct ScopedPointerUdevDeviceDeleter
+{
     static inline void cleanup(struct ::udev_device *pointer)
     {
         ::udev_device_unref(pointer);
@@ -284,24 +300,24 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
     static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
-    struct ::udev *udev = ::udev_new();
+    QScopedPointer<struct ::udev, ScopedPointerUdevDeleter> udev(::udev_new());
+
     if (udev) {
 
-        struct ::udev_enumerate *enumerate =
-                ::udev_enumerate_new(udev);
+        QScopedPointer<struct ::udev_enumerate, ScopedPointerUdevEnumeratorDeleter> enumerate(::udev_enumerate_new(udev.data()));
 
         if (enumerate) {
 
-            ::udev_enumerate_add_match_subsystem(enumerate, "tty");
-            ::udev_enumerate_scan_devices(enumerate);
+            ::udev_enumerate_add_match_subsystem(enumerate.data(), "tty");
+            ::udev_enumerate_scan_devices(enumerate.data());
 
             struct ::udev_list_entry *devices =
-                    ::udev_enumerate_get_list_entry(enumerate);
+                    ::udev_enumerate_get_list_entry(enumerate.data());
 
             struct ::udev_list_entry *dev_list_entry;
             udev_list_entry_foreach(dev_list_entry, devices) {
 
-                QScopedPointer<struct ::udev_device, ScopedPointerUdevDeleter> dev(::udev_device_new_from_syspath(udev,
+                QScopedPointer<struct ::udev_device, ScopedPointerUdevDeviceDeleter> dev(::udev_device_new_from_syspath(udev.data(),
                                                                                     ::udev_list_entry_get_name(dev_list_entry)));
 
                 if (dev) {
@@ -344,10 +360,8 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
             }
 
-            ::udev_enumerate_unref(enumerate);
         }
 
-        ::udev_unref(udev);
     }
 
     return serialPortInfoList;
