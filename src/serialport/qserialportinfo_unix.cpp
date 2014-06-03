@@ -296,72 +296,62 @@ QList<QSerialPortInfo> availablePortsByUdev()
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
 #endif
-    QList<QSerialPortInfo> serialPortInfoList;
-
     static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
     QScopedPointer<struct ::udev, ScopedPointerUdevDeleter> udev(::udev_new());
 
-    if (udev) {
+    if (!udev)
+        return QList<QSerialPortInfo>();
 
-        QScopedPointer<struct ::udev_enumerate, ScopedPointerUdevEnumeratorDeleter> enumerate(::udev_enumerate_new(udev.data()));
+    QScopedPointer<udev_enumerate, ScopedPointerUdevEnumeratorDeleter>
+            enumerate(::udev_enumerate_new(udev.data()));
 
-        if (enumerate) {
+    if (!enumerate)
+        return QList<QSerialPortInfo>();
 
-            ::udev_enumerate_add_match_subsystem(enumerate.data(), "tty");
-            ::udev_enumerate_scan_devices(enumerate.data());
+    ::udev_enumerate_add_match_subsystem(enumerate.data(), "tty");
+    ::udev_enumerate_scan_devices(enumerate.data());
 
-            struct ::udev_list_entry *devices =
-                    ::udev_enumerate_get_list_entry(enumerate.data());
+    udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate.data());
 
-            struct ::udev_list_entry *dev_list_entry;
-            udev_list_entry_foreach(dev_list_entry, devices) {
+    QList<QSerialPortInfo> serialPortInfoList;
+    udev_list_entry *dev_list_entry;
+    udev_list_entry_foreach(dev_list_entry, devices) {
 
-                QScopedPointer<struct ::udev_device, ScopedPointerUdevDeviceDeleter> dev(::udev_device_new_from_syspath(udev.data(),
-                                                                                    ::udev_list_entry_get_name(dev_list_entry)));
+        QScopedPointer<udev_device, ScopedPointerUdevDeviceDeleter>
+                dev(::udev_device_new_from_syspath(
+                        udev.data(), ::udev_list_entry_get_name(dev_list_entry)));
 
-                if (dev) {
+        if (!dev)
+            return serialPortInfoList;
 
-                    QSerialPortInfo serialPortInfo;
+        QSerialPortInfo serialPortInfo;
 
-                    serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
-                    serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
+        serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
+        serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
 
-                    struct ::udev_device *parentdev = ::udev_device_get_parent(dev.data());
+        udev_device *parentdev = ::udev_device_get_parent(dev.data());
 
-                    if (parentdev) {
-
-                        if (checkUdevForSerial8250Driver(parentdev))
-                            continue;
-
-                        serialPortInfo.d_ptr->description = getUdevModelName(dev.data());
-                        serialPortInfo.d_ptr->manufacturer = getUdevVendorName(dev.data());
-                        serialPortInfo.d_ptr->serialNumber = getUdevSerialNumber(dev.data());
-
-                        serialPortInfo.d_ptr->vendorIdentifier = getUdevModelIdentifier(
-                                    dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
-
-                        serialPortInfo.d_ptr->productIdentifier = getUdevVendorIdentifier(
-                                    dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
-                    } else {
-                        if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
-                            bool ok;
-                            int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
-
-                            if (!ok || (portNumber < 0) || (portNumber > 255))
-                                continue;
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    serialPortInfoList.append(serialPortInfo);
-                }
-
+        if (parentdev) {
+            if (checkUdevForSerial8250Driver(parentdev))
+                continue;
+            serialPortInfo.d_ptr->description = getUdevModelName(dev.data());
+            serialPortInfo.d_ptr->manufacturer = getUdevVendorName(dev.data());
+            serialPortInfo.d_ptr->serialNumber = getUdevSerialNumber(dev.data());
+            serialPortInfo.d_ptr->vendorIdentifier = getUdevModelIdentifier(dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
+            serialPortInfo.d_ptr->productIdentifier = getUdevVendorIdentifier(dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
+        } else {
+            if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
+                bool ok;
+                int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
+                if (!ok || (portNumber < 0) || (portNumber > 255))
+                    continue;
+            } else {
+                continue;
             }
-
         }
 
+        serialPortInfoList.append(serialPortInfo);
     }
 
     return serialPortInfoList;
