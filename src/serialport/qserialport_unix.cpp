@@ -147,27 +147,6 @@ private:
     QSerialPortPrivate *dptr;
 };
 
-class ExceptionNotifier : public QSocketNotifier
-{
-    Q_OBJECT
-public:
-    ExceptionNotifier(QSerialPortPrivate *d, QObject *parent)
-        : QSocketNotifier(d->descriptor, QSocketNotifier::Exception, parent)
-        , dptr(d)
-    {}
-
-protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE {
-        bool ret = QSocketNotifier::event(e);
-        if (ret)
-            dptr->exceptionNotification();
-        return ret;
-    }
-
-private:
-    QSerialPortPrivate *dptr;
-};
-
 #include "qserialport_unix.moc"
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
@@ -175,7 +154,6 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , descriptor(-1)
     , readNotifier(0)
     , writeNotifier(0)
-    , exceptionNotifier(0)
     , readPortNotifierCalled(false)
     , readPortNotifierState(false)
     , readPortNotifierStateSet(false)
@@ -256,8 +234,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateTermios())
         return false;
 
-    setExceptionNotificationEnabled(true);
-
     if ((flags & O_WRONLY) == 0)
         setReadNotificationEnabled(true);
 
@@ -290,12 +266,6 @@ void QSerialPortPrivate::close()
         writeNotifier->setEnabled(false);
         writeNotifier->deleteLater();
         writeNotifier = 0;
-    }
-
-    if (exceptionNotifier) {
-        exceptionNotifier->setEnabled(false);
-        exceptionNotifier->deleteLater();
-        exceptionNotifier = 0;
     }
 
     if (qt_safe_close(descriptor) == -1)
@@ -816,6 +786,8 @@ bool QSerialPortPrivate::readNotification()
         QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::ResourceError)
             error = QSerialPort::ReadError;
+        else
+            setReadNotificationEnabled(false);
         q->setError(error);
         readBuffer.chop(bytesToRead);
         return false;
@@ -900,14 +872,6 @@ bool QSerialPortPrivate::completeAsyncWrite()
     return startAsyncWrite();
 }
 
-void QSerialPortPrivate::exceptionNotification()
-{
-    Q_Q(QSerialPort);
-
-    QSerialPort::SerialPortError error = decodeSystemError();
-    q->setError(error);
-}
-
 bool QSerialPortPrivate::updateTermios()
 {
     Q_Q(QSerialPort);
@@ -989,23 +953,6 @@ void QSerialPortPrivate::setWriteNotificationEnabled(bool enable)
     } else if (enable) {
         writeNotifier = new WriteNotifier(this, q);
         writeNotifier->setEnabled(true);
-    }
-}
-
-bool QSerialPortPrivate::isExceptionNotificationEnabled() const
-{
-    return exceptionNotifier && exceptionNotifier->isEnabled();
-}
-
-void QSerialPortPrivate::setExceptionNotificationEnabled(bool enable)
-{
-    Q_Q(QSerialPort);
-
-    if (exceptionNotifier) {
-        exceptionNotifier->setEnabled(enable);
-    } else if (enable) {
-        exceptionNotifier = new ExceptionNotifier(this, q);
-        exceptionNotifier->setEnabled(true);
     }
 }
 

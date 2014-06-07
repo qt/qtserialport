@@ -124,7 +124,6 @@ public:
     bool readNotification();
     bool startAsyncWrite();
     bool completeAsyncWrite();
-    void exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -140,7 +139,6 @@ public:
 
     QSocketNotifier *readNotifier;
     QSocketNotifier *writeNotifier;
-    QSocketNotifier *exceptionNotifier;
 
     bool readPortNotifierCalled;
     bool readPortNotifierState;
@@ -169,8 +167,6 @@ private:
     void setReadNotificationEnabled(bool enable);
     bool isWriteNotificationEnabled() const;
     void setWriteNotificationEnabled(bool enable);
-    bool isExceptionNotificationEnabled() const;
-    void setExceptionNotificationEnabled(bool enable);
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
