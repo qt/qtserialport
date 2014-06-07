@@ -926,6 +926,11 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     case ENODEV:
         error = QSerialPort::DeviceNotFoundError;
         break;
+#ifdef ENOENT
+    case ENOENT:
+        error = QSerialPort::DeviceNotFoundError;
+        break;
+#endif
     case EACCES:
         error = QSerialPort::PermissionError;
         break;
