@@ -575,29 +575,10 @@ void QSerialPortPrivate::_q_completeAsyncCommunication()
         }
     }
 
-    bool error = false;
-
-    // Check for unexpected event. This event triggered when pulled previously
-    // opened device from the system, when opened as for not to read and not to
-    // write options and so forth.
-    if (triggeredEventMask == 0)
-        error = true;
-
-    // Workaround for standard CDC ACM serial ports, for which triggered an
-    // unexpected event EV_TXEMPTY at data transmission.
-    if ((originalEventMask & triggeredEventMask) == 0) {
-        if ((triggeredEventMask & EV_TXEMPTY) == 0)
-            error = true;
-    }
-
-    if (error)
-        q->setError(QSerialPort::ResourceError);
-
     if (EV_ERR & triggeredEventMask)
         handleLineStatusErrors();
 
-    if (!error)
-        startAsyncRead();
+    startAsyncRead();
 }
 
 void QSerialPortPrivate::_q_completeAsyncRead()
@@ -663,8 +644,10 @@ bool QSerialPortPrivate::startAsyncCommunication()
 
     initializeOverlappedStructure(communicationOverlapped);
     if (!::WaitCommEvent(handle, &triggeredEventMask, &communicationOverlapped)) {
-        const QSerialPort::SerialPortError error = decodeSystemError();
+        QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::NoError) {
+            if (error == QSerialPort::PermissionError)
+                error = QSerialPort::ResourceError;
             q->setError(error);
             return false;
         }
@@ -693,6 +676,8 @@ bool QSerialPortPrivate::startAsyncRead()
 
     QSerialPort::SerialPortError error = decodeSystemError();
     if (error != QSerialPort::NoError) {
+        if (error == QSerialPort::PermissionError)
+            error = QSerialPort::ResourceError;
         if (error != QSerialPort::ResourceError)
             error = QSerialPort::ReadError;
         q->setError(error);
@@ -836,6 +821,9 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
         error = QSerialPort::ResourceError;
         break;
     case ERROR_DEVICE_REMOVED:
+        error = QSerialPort::ResourceError;
+        break;
+    case ERROR_OPERATION_ABORTED:
         error = QSerialPort::ResourceError;
         break;
     default:
