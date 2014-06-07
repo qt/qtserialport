@@ -567,8 +567,13 @@ void QSerialPortPrivate::_q_completeAsyncCommunication()
 
     DWORD numberOfBytesTransferred = 0;
 
-    if (!::GetOverlappedResult(handle, &communicationOverlapped, &numberOfBytesTransferred, FALSE))
-        q->setError(decodeSystemError());
+    if (!::GetOverlappedResult(handle, &communicationOverlapped, &numberOfBytesTransferred, FALSE)) {
+        const QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::NoError) {
+            q->setError(error);
+            return;
+        }
+    }
 
     bool error = false;
 
@@ -600,8 +605,15 @@ void QSerialPortPrivate::_q_completeAsyncRead()
     Q_Q(QSerialPort);
 
     DWORD numberOfBytesTransferred = 0;
-    if (!::GetOverlappedResult(handle, &readCompletionOverlapped, &numberOfBytesTransferred, FALSE))
-        q->setError(decodeSystemError());
+    if (!::GetOverlappedResult(handle, &readCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
+        QSerialPort::SerialPortError error = decodeSystemError();
+        if (error != QSerialPort::NoError) {
+            if (error != QSerialPort::ResourceError)
+                error = QSerialPort::ReadError;
+            q->setError(error);
+            return;
+        }
+    }
 
     if (numberOfBytesTransferred > 0) {
 
@@ -627,8 +639,13 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
         DWORD numberOfBytesTransferred = 0;
         if (!::GetOverlappedResult(handle, &writeCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
             numberOfBytesTransferred = 0;
-            q->setError(decodeSystemError());
-            return;
+            QSerialPort::SerialPortError error = decodeSystemError();
+            if (error != QSerialPort::NoError) {
+                if (error != QSerialPort::ResourceError)
+                    error = QSerialPort::WriteError;
+                q->setError(error);
+                return;
+            }
         }
 
         if (numberOfBytesTransferred > 0) {
@@ -648,7 +665,7 @@ bool QSerialPortPrivate::startAsyncCommunication()
     if (!::WaitCommEvent(handle, &triggeredEventMask, &communicationOverlapped)) {
         const QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::NoError) {
-            q->setError(decodeSystemError());
+            q->setError(error);
             return false;
         }
     }
@@ -679,7 +696,6 @@ bool QSerialPortPrivate::startAsyncRead()
         if (error != QSerialPort::ResourceError)
             error = QSerialPort::ReadError;
         q->setError(error);
-
         return false;
     }
 
