@@ -51,6 +51,7 @@
 
 #include <initguid.h>
 #include <setupapi.h>
+#include <cfgmgr32.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -122,21 +123,33 @@ static QString deviceRegistryProperty(HDEVINFO deviceInfoSet,
     return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(devicePropertyByteArray.constData()));
 }
 
-static QString deviceInstanceIdentifier(HDEVINFO deviceInfoSet,
-                                        PSP_DEVINFO_DATA deviceInfoData)
+static QString deviceInstanceIdentifier(DEVINST deviceInstanceNumber)
 {
-    DWORD requiredSize = 0;
-    if (::SetupDiGetDeviceInstanceId(deviceInfoSet, deviceInfoData, NULL, 0, &requiredSize))
+    ULONG numberOfChars = 0;
+    if (::CM_Get_Device_ID_Size(&numberOfChars, deviceInstanceNumber, 0) != CR_SUCCESS)
         return QString();
-
-    QByteArray data(requiredSize * sizeof(wchar_t), 0);
-    if (!::SetupDiGetDeviceInstanceId(deviceInfoSet, deviceInfoData,
-                                      reinterpret_cast<wchar_t *>(data.data()), data.size(), NULL)) {
-        // TODO: error handling with GetLastError
+    // The size does not include the terminating null character.
+    ++numberOfChars;
+    QByteArray outputBuffer(numberOfChars * sizeof(wchar_t), 0);
+    if (::CM_Get_Device_ID(deviceInstanceNumber, reinterpret_cast<wchar_t *>(outputBuffer.data()),
+                           outputBuffer.size(), 0) != CR_SUCCESS) {
         return QString();
     }
+    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(outputBuffer.constData()));
+}
 
-    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(data.constData()));
+static DEVINST parentDeviceInstanceNumber(DEVINST childDeviceInstanceNumber)
+{
+    ULONG nodeStatus = 0;
+    ULONG problemNumber = 0;
+    if (::CM_Get_DevNode_Status(&nodeStatus, &problemNumber,
+                                childDeviceInstanceNumber, 0) != CR_SUCCESS) {
+        return 0;
+    }
+    DEVINST parentInstanceNumber = 0;
+    if (::CM_Get_Parent(&parentInstanceNumber, childDeviceInstanceNumber, 0) != CR_SUCCESS)
+        return 0;
+    return parentInstanceNumber;
 }
 
 static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInfoData)
@@ -254,9 +267,14 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             serialPortInfo.d_ptr->manufacturer =
                     deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
 
-            s = deviceInstanceIdentifier(deviceInfoSet, &deviceInfoData).toUpper();
-
-            serialPortInfo.d_ptr->serialNumber = deviceSerialNumber(s);
+            s = deviceInstanceIdentifier(deviceInfoData.DevInst).toUpper();
+            QString serialNumber = deviceSerialNumber(s);
+            if (serialNumber.isEmpty()) {
+                const DEVINST parentDevNumber = parentDeviceInstanceNumber(deviceInfoData.DevInst);
+                const QString parentDevIdentifier = deviceInstanceIdentifier(parentDevNumber).toUpper();
+                serialNumber = deviceSerialNumber(parentDevIdentifier);
+            }
+            serialPortInfo.d_ptr->serialNumber = serialNumber;
 
             int index = s.indexOf(usbVendorIdentifierPrefix);
             if (index != -1) {
