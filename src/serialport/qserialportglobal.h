@@ -71,6 +71,10 @@ QT_BEGIN_NAMESPACE
 #define QStringLiteral(str) QString::fromUtf8(str)
 #endif
 
+#ifndef Q_NULLPTR
+#define Q_NULLPTR NULL
+#endif
+
 QT_END_NAMESPACE
 
 #endif // QSERIALPORTGLOBAL_H

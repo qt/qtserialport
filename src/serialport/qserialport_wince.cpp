@@ -41,12 +41,43 @@
 **
 ****************************************************************************/
 
-#include "qserialport_win_p.h"
+#include "qserialport_wince_p.h"
 
 #include <QtCore/qelapsedtimer.h>
-
 #include <QtCore/qthread.h>
 #include <QtCore/qtimer.h>
+#include <algorithm>
+
+#ifndef CTL_CODE
+#  define CTL_CODE(DeviceType, Function, Method, Access) ( \
+    ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
+    )
+#endif
+
+#ifndef FILE_DEVICE_SERIAL_PORT
+#  define FILE_DEVICE_SERIAL_PORT  27
+#endif
+
+#ifndef METHOD_BUFFERED
+#  define METHOD_BUFFERED  0
+#endif
+
+#ifndef FILE_ANY_ACCESS
+#  define FILE_ANY_ACCESS  0x00000000
+#endif
+
+#ifndef IOCTL_SERIAL_GET_DTRRTS
+#  define IOCTL_SERIAL_GET_DTRRTS \
+    CTL_CODE(FILE_DEVICE_SERIAL_PORT, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
+#ifndef SERIAL_DTR_STATE
+#  define SERIAL_DTR_STATE  0x00000001
+#endif
+
+#ifndef SERIAL_RTS_STATE
+#  define SERIAL_RTS_STATE  0x00000002
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -115,7 +146,7 @@ class WaitCommEventBreaker : public QThread
 {
     Q_OBJECT
 public:
-    WaitCommEventBreaker(HANDLE handle, int timeout, QObject *parent = 0)
+    WaitCommEventBreaker(HANDLE handle, int timeout, QObject *parent = Q_NULLPTR)
         : QThread(parent), handle(handle), timeout(timeout), worked(false) {
         start();
     }
@@ -243,6 +274,69 @@ void QSerialPortPrivate::close()
     handle = INVALID_HANDLE_VALUE;
 }
 
+QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
+{
+    Q_Q(QSerialPort);
+
+    DWORD modemStat = 0;
+
+    if (!::GetCommModemStatus(handle, &modemStat)) {
+        q->setError(decodeSystemError());
+        return QSerialPort::NoSignal;
+    }
+
+    QSerialPort::PinoutSignals ret = QSerialPort::NoSignal;
+
+    if (modemStat & MS_CTS_ON)
+        ret |= QSerialPort::ClearToSendSignal;
+    if (modemStat & MS_DSR_ON)
+        ret |= QSerialPort::DataSetReadySignal;
+    if (modemStat & MS_RING_ON)
+        ret |= QSerialPort::RingIndicatorSignal;
+    if (modemStat & MS_RLSD_ON)
+        ret |= QSerialPort::DataCarrierDetectSignal;
+
+    DWORD bytesReturned = 0;
+    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
+                          &modemStat, sizeof(modemStat),
+                          &bytesReturned, NULL)) {
+        q->setError(decodeSystemError());
+        return ret;
+    }
+
+    if (modemStat & SERIAL_DTR_STATE)
+        ret |= QSerialPort::DataTerminalReadySignal;
+    if (modemStat & SERIAL_RTS_STATE)
+        ret |= QSerialPort::RequestToSendSignal;
+
+    return ret;
+}
+
+bool QSerialPortPrivate::setDataTerminalReady(bool set)
+{
+    Q_Q(QSerialPort);
+
+    if (!::EscapeCommFunction(handle, set ? SETDTR : CLRDTR)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    currentDcb.fDtrControl = set ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
+    return true;
+}
+
+bool QSerialPortPrivate::setRequestToSend(bool set)
+{
+    Q_Q(QSerialPort);
+
+    if (!::EscapeCommFunction(handle, set ? SETRTS : CLRRTS)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
+}
+
 bool QSerialPortPrivate::flush()
 {
     return notifyWrite() && ::FlushFileBuffers(handle);
@@ -256,6 +350,31 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     if (directions & QSerialPort::Output)
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
     return ::PurgeComm(handle, flags);
+}
+
+bool QSerialPortPrivate::sendBreak(int duration)
+{
+    if (!setBreakEnabled(true))
+        return false;
+
+    ::Sleep(duration);
+
+    if (!setBreakEnabled(false))
+        return false;
+
+    return true;
+}
+
+bool QSerialPortPrivate::setBreakEnabled(bool set)
+{
+    Q_Q(QSerialPort);
+
+    if (set ? !::SetCommBreak(handle) : !::ClearCommBreak(handle)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    return true;
 }
 
 void QSerialPortPrivate::startWriting()
@@ -322,6 +441,105 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
         }
     }
     return false;
+}
+
+bool QSerialPortPrivate::setBaudRate()
+{
+    return setBaudRate(inputBaudRate, QSerialPort::AllDirections);
+}
+
+bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    Q_Q(QSerialPort);
+
+    if (directions != QSerialPort::AllDirections) {
+        q->setError(QSerialPort::UnsupportedOperationError);
+        return false;
+    }
+    currentDcb.BaudRate = baudRate;
+    return updateDcb();
+}
+
+bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
+{
+    currentDcb.ByteSize = dataBits;
+    return updateDcb();
+}
+
+bool QSerialPortPrivate::setParity(QSerialPort::Parity parity)
+{
+    currentDcb.fParity = TRUE;
+    switch (parity) {
+    case QSerialPort::NoParity:
+        currentDcb.Parity = NOPARITY;
+        currentDcb.fParity = FALSE;
+        break;
+    case QSerialPort::OddParity:
+        currentDcb.Parity = ODDPARITY;
+        break;
+    case QSerialPort::EvenParity:
+        currentDcb.Parity = EVENPARITY;
+        break;
+    case QSerialPort::MarkParity:
+        currentDcb.Parity = MARKPARITY;
+        break;
+    case QSerialPort::SpaceParity:
+        currentDcb.Parity = SPACEPARITY;
+        break;
+    default:
+        currentDcb.Parity = NOPARITY;
+        currentDcb.fParity = FALSE;
+        break;
+    }
+    return updateDcb();
+}
+
+bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
+{
+    switch (stopBits) {
+    case QSerialPort::OneStop:
+        currentDcb.StopBits = ONESTOPBIT;
+        break;
+    case QSerialPort::OneAndHalfStop:
+        currentDcb.StopBits = ONE5STOPBITS;
+        break;
+    case QSerialPort::TwoStop:
+        currentDcb.StopBits = TWOSTOPBITS;
+        break;
+    default:
+        currentDcb.StopBits = ONESTOPBIT;
+        break;
+    }
+    return updateDcb();
+}
+
+bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
+{
+    currentDcb.fInX = FALSE;
+    currentDcb.fOutX = FALSE;
+    currentDcb.fOutxCtsFlow = FALSE;
+    currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
+    switch (flowControl) {
+    case QSerialPort::NoFlowControl:
+        break;
+    case QSerialPort::SoftwareControl:
+        currentDcb.fInX = TRUE;
+        currentDcb.fOutX = TRUE;
+        break;
+    case QSerialPort::HardwareControl:
+        currentDcb.fOutxCtsFlow = TRUE;
+        currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
+        break;
+    default:
+        break;
+    }
+    return updateDcb();
+}
+
+bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
+{
+    policy = policy;
+    return true;
 }
 
 bool QSerialPortPrivate::notifyRead()
@@ -401,39 +619,31 @@ bool QSerialPortPrivate::notifyWrite()
     return true;
 }
 
-bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
-                                           bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut)
+void QSerialPortPrivate::processIoErrors(bool error)
 {
     Q_Q(QSerialPort);
 
-    DWORD eventMask = 0;
-    // FIXME: Here the situation is not properly handled with zero timeout:
-    // breaker can work out before you call a method WaitCommEvent()
-    // and so it will loop forever!
-    WaitCommEventBreaker breaker(handle, qMax(msecs, 0));
-    ::WaitCommEvent(handle, &eventMask, NULL);
-    breaker.stop();
-
-    if (breaker.isWorked()) {
-        *timedOut = true;
-        q->setError(QSerialPort::TimeoutError);
+    if (error) {
+        q->setError(QSerialPort::ResourceError);
+        return;
     }
 
-    if (!breaker.isWorked()) {
-        if (checkRead) {
-            Q_ASSERT(selectForRead);
-            *selectForRead = eventMask & EV_RXCHAR;
-        }
-        if (checkWrite) {
-            Q_ASSERT(selectForWrite);
-            *selectForWrite = eventMask & EV_TXEMPTY;
-        }
-
-        return true;
+    DWORD errors = 0;
+    if (!::ClearCommError(handle, &errors, NULL)) {
+        q->setError(decodeSystemError());
+        return;
     }
 
-    return false;
+    if (errors & CE_FRAME) {
+        q->setError(QSerialPort::FramingError);
+    } else if (errors & CE_RXPARITY) {
+        q->setError(QSerialPort::ParityError);
+        parityErrorOccurred = true;
+    } else if (errors & CE_BREAK) {
+        q->setError(QSerialPort::BreakConditionError);
+    } else {
+        q->setError(QSerialPort::UnknownError);
+    }
 }
 
 bool QSerialPortPrivate::updateDcb()
@@ -470,6 +680,79 @@ bool QSerialPortPrivate::updateCommTimeouts()
     return true;
 }
 
+QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
+{
+    QSerialPort::SerialPortError error;
+    switch (::GetLastError()) {
+    case ERROR_IO_PENDING:
+        error = QSerialPort::NoError;
+        break;
+    case ERROR_MORE_DATA:
+        error = QSerialPort::NoError;
+        break;
+    case ERROR_FILE_NOT_FOUND:
+        error = QSerialPort::DeviceNotFoundError;
+        break;
+    case ERROR_INVALID_NAME:
+        error = QSerialPort::DeviceNotFoundError;
+        break;
+    case ERROR_ACCESS_DENIED:
+        error = QSerialPort::PermissionError;
+        break;
+    case ERROR_INVALID_HANDLE:
+        error = QSerialPort::ResourceError;
+        break;
+    case ERROR_INVALID_PARAMETER:
+        error = QSerialPort::UnsupportedOperationError;
+        break;
+    case ERROR_BAD_COMMAND:
+        error = QSerialPort::ResourceError;
+        break;
+    case ERROR_DEVICE_REMOVED:
+        error = QSerialPort::ResourceError;
+        break;
+    default:
+        error = QSerialPort::UnknownError;
+        break;
+    }
+    return error;
+}
+
+bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
+                                           bool checkRead, bool checkWrite,
+                                           int msecs, bool *timedOut)
+{
+    Q_Q(QSerialPort);
+
+    DWORD eventMask = 0;
+    // FIXME: Here the situation is not properly handled with zero timeout:
+    // breaker can work out before you call a method WaitCommEvent()
+    // and so it will loop forever!
+    WaitCommEventBreaker breaker(handle, qMax(msecs, 0));
+    ::WaitCommEvent(handle, &eventMask, NULL);
+    breaker.stop();
+
+    if (breaker.isWorked()) {
+        *timedOut = true;
+        q->setError(QSerialPort::TimeoutError);
+    }
+
+    if (!breaker.isWorked()) {
+        if (checkRead) {
+            Q_ASSERT(selectForRead);
+            *selectForRead = eventMask & EV_RXCHAR;
+        }
+        if (checkWrite) {
+            Q_ASSERT(selectForWrite);
+            *selectForWrite = eventMask & EV_TXEMPTY;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
 QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
 {
     QString ret = port;
@@ -484,6 +767,104 @@ QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
     if (ret.contains(QLatin1Char(':')))
         ret.remove(QLatin1Char(':'));
     return ret;
+}
+
+static const QList<qint32> standardBaudRatePairList()
+{
+
+    static const QList<qint32> standardBaudRatesTable = QList<qint32>()
+
+        #ifdef CBR_110
+            << CBR_110
+        #endif
+
+        #ifdef CBR_300
+            << CBR_300
+        #endif
+
+        #ifdef CBR_600
+            << CBR_600
+        #endif
+
+        #ifdef CBR_1200
+            << CBR_1200
+        #endif
+
+        #ifdef CBR_2400
+            << CBR_2400
+        #endif
+
+        #ifdef CBR_4800
+            << CBR_4800
+        #endif
+
+        #ifdef CBR_9600
+            << CBR_9600
+        #endif
+
+        #ifdef CBR_14400
+            << CBR_14400
+        #endif
+
+        #ifdef CBR_19200
+            << CBR_19200
+        #endif
+
+        #ifdef CBR_38400
+            << CBR_38400
+        #endif
+
+        #ifdef CBR_56000
+            << CBR_56000
+        #endif
+
+        #ifdef CBR_57600
+            << CBR_57600
+        #endif
+
+        #ifdef CBR_115200
+            << CBR_115200
+        #endif
+
+        #ifdef CBR_128000
+            << CBR_128000
+        #endif
+
+        #ifdef CBR_256000
+            << CBR_256000
+        #endif
+    ;
+
+    return standardBaudRatesTable;
+};
+
+qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
+{
+    const QList<qint32> baudRatePairs = standardBaudRatePairList();
+    const QList<qint32>::const_iterator baudRatePairListConstIterator
+            = std::find(baudRatePairs.constBegin(), baudRatePairs.constEnd(), setting);
+
+    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
+}
+
+qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
+{
+    const QList<qint32> baudRatePairList = standardBaudRatePairList();
+    const QList<qint32>::const_iterator baudRatePairListConstIterator
+            = std::find(baudRatePairList.constBegin(), baudRatePairList.constEnd(), baudRate);
+
+    return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
+}
+
+QList<qint32> QSerialPortPrivate::standardBaudRates()
+{
+    return standardBaudRatePairList();
+}
+
+QSerialPort::Handle QSerialPort::handle() const
+{
+    Q_D(const QSerialPort);
+    return d->handle;
 }
 
 QT_END_NAMESPACE

@@ -45,18 +45,14 @@
 #include "qserialportinfo_p.h"
 #include "qserialport_win_p.h"
 
-#ifndef Q_OS_WINCE
 #include <QtCore/quuid.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qstringlist.h>
 
 #include <initguid.h>
 #include <setupapi.h>
-#endif
 
 QT_BEGIN_NAMESPACE
-
-#ifndef Q_OS_WINCE
 
 typedef QPair<QUuid, DWORD> GuidFlagsPair;
 
@@ -301,8 +297,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     return serialPortInfoList;
 }
-
-#endif
 
 QList<qint32> QSerialPortInfo::standardBaudRates()
 {

@@ -29,7 +29,7 @@ SOURCES += \
     $$PWD/qserialport.cpp \
     $$PWD/qserialportinfo.cpp
 
-win32 {
+win32:!wince* {
     PRIVATE_HEADERS += \
         $$PWD/qserialport_win_p.h
 
@@ -37,13 +37,16 @@ win32 {
         $$PWD/qserialport_win.cpp \
         $$PWD/qserialportinfo_win.cpp
 
-    !wince*: {
-        LIBS_PRIVATE += -lsetupapi -ladvapi32
-    } else {
-        SOURCES += \
-            $$PWD/qserialport_wince.cpp \
-            $$PWD/qserialportinfo_wince.cpp
-    }
+    LIBS_PRIVATE += -lsetupapi -ladvapi32
+}
+
+wince* {
+    PRIVATE_HEADERS += \
+        $$PWD/qserialport_wince_p.h
+
+    SOURCES += \
+        $$PWD/qserialport_wince.cpp \
+        $$PWD/qserialportinfo_wince.cpp
 }
 
 symbian {

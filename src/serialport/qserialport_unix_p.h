@@ -124,7 +124,6 @@ public:
     bool readNotification();
     bool startAsyncWrite();
     bool completeAsyncWrite();
-    void exceptionNotification();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -136,16 +135,10 @@ public:
 
     struct termios currentTermios;
     struct termios restoredTermios;
-#ifdef Q_OS_LINUX
-    struct serial_struct currentSerialInfo;
-    struct serial_struct restoredSerialInfo;
-#endif
     int descriptor;
-    bool isCustomBaudRateSupported;
 
     QSocketNotifier *readNotifier;
     QSocketNotifier *writeNotifier;
-    QSocketNotifier *exceptionNotifier;
 
     bool readPortNotifierCalled;
     bool readPortNotifierState;
@@ -162,14 +155,18 @@ public:
 private:
     bool updateTermios();
 
+    QSerialPort::SerialPortError setBaudRate_helper(qint32 baudRate,
+            QSerialPort::Directions directions);
+    QSerialPort::SerialPortError setCustomBaudRate(qint32 baudRate,
+            QSerialPort::Directions directions);
+    QSerialPort::SerialPortError setStandardBaudRate(qint32 baudRate,
+            QSerialPort::Directions directions);
     QSerialPort::SerialPortError decodeSystemError() const;
 
     bool isReadNotificationEnabled() const;
     void setReadNotificationEnabled(bool enable);
     bool isWriteNotificationEnabled() const;
     void setWriteNotificationEnabled(bool enable);
-    bool isExceptionNotificationEnabled() const;
-    void setExceptionNotificationEnabled(bool enable);
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,

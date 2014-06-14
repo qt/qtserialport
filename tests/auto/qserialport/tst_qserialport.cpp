@@ -53,6 +53,36 @@ class tst_QSerialPort : public QObject
 public:
     explicit tst_QSerialPort();
 
+    static void enterLoop(int secs)
+    {
+        ++loopLevel;
+        QTestEventLoop::instance().enterLoop(secs);
+        --loopLevel;
+    }
+
+    static void enterLoopMsecs(int msecs)
+    {
+        ++loopLevel;
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        QTestEventLoop::instance().enterLoopMSecs(msecs);
+#else
+        Q_UNUSED(msecs);
+        QTestEventLoop::instance().enterLoop(1);
+#endif
+        --loopLevel;
+    }
+
+    static void exitLoop()
+    {
+        if (loopLevel > 0)
+            QTestEventLoop::instance().exitLoop();
+    }
+
+    static bool timeout()
+    {
+        return QTestEventLoop::instance().timeout();
+    }
+
 private slots:
     void initTestCase();
 
@@ -65,15 +95,60 @@ private slots:
     void openNotExisting_data();
     void openNotExisting();
 
+    void flush();
+    void doubleFlush();
+
+    void waitForBytesWritten();
+
+    void waitForReadyReadWithTimeout();
+    void waitForReadyReadWithOneByte();
+    void waitForReadyReadWithAlphabet();
+
+protected slots:
+    void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
+    void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
+
 private:
+#ifdef Q_OS_WIN
+    void clearReceiver();
+#endif
+
     QString m_senderPortName;
     QString m_receiverPortName;
     QStringList m_availablePortNames;
+
+    static int loopLevel;
+    static const QByteArray alphabetArray;
+    static const QByteArray newlineArray;
 };
+
+int tst_QSerialPort::loopLevel = 0;
+
+const QByteArray tst_QSerialPort::alphabetArray("ABCDEFGHIJKLMNOPQRSTUVWXUZ");
+const QByteArray tst_QSerialPort::newlineArray("\n\r");
 
 tst_QSerialPort::tst_QSerialPort()
 {
 }
+
+#ifdef Q_OS_WIN
+// This method is a workaround for the "com0com" virtual serial port
+// driver, which is installed on CI. The problem is that the close/clear
+// methods have no effect on sender serial port. If any data didn't manage
+// to be transferred before closing, then this data will continue to be
+// transferred at next opening of sender port.
+// Thus, this behavior influences other tests and leads to the wrong results
+// (e.g. the receiver port on other test can receive some data which are
+// not expected). It is recommended to use this method for cleaning of
+// read FIFO of receiver for those tests in which reception of data is
+// required.
+void tst_QSerialPort::clearReceiver()
+{
+    QSerialPort receiver(m_receiverPortName);
+    if (receiver.open(QIODevice::ReadOnly))
+        enterLoopMsecs(100);
+}
+#endif
 
 void tst_QSerialPort::initTestCase()
 {
@@ -98,9 +173,10 @@ void tst_QSerialPort::defaultConstruct()
     QVERIFY(!serialPort.errorString().isEmpty());
 
     // properties
-    QCOMPARE(serialPort.baudRate(), qint32(0));
-    QCOMPARE(serialPort.baudRate(QSerialPort::Input), qint32(0));
-    QCOMPARE(serialPort.baudRate(QSerialPort::Output), qint32(0));
+    const qint32 defaultBaudRate = static_cast<qint32>(QSerialPort::Baud9600);
+    QCOMPARE(serialPort.baudRate(), defaultBaudRate);
+    QCOMPARE(serialPort.baudRate(QSerialPort::Input), defaultBaudRate);
+    QCOMPARE(serialPort.baudRate(QSerialPort::Output), defaultBaudRate);
     QCOMPARE(serialPort.dataBits(), QSerialPort::Data8);
     QCOMPARE(serialPort.parity(), QSerialPort::NoParity);
     QCOMPARE(serialPort.stopBits(), QSerialPort::OneStop);
@@ -212,6 +288,154 @@ void tst_QSerialPort::openNotExisting()
 
     //QCOMPARE(errorSpy.count(), 1);
     //QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(0).at(0)), errorCode);
+}
+
+void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten)
+{
+    QCOMPARE(bytesWritten, qint64(alphabetArray.size() + newlineArray.size()));
+    exitLoop();
+}
+
+void tst_QSerialPort::flush()
+{
+#ifdef Q_OS_WIN
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    QSKIP("flush() does not work on Windows");
+#else
+    QSKIP("flush() does not work on Windows", SkipAll);
+#endif
+#endif
+
+    QSerialPort serialPort(m_senderPortName);
+    connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot(qint64)));
+    QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
+
+    QVERIFY(serialPort.open(QIODevice::WriteOnly));
+    serialPort.write(alphabetArray + newlineArray);
+    QCOMPARE(serialPort.bytesToWrite(), qint64(alphabetArray.size() + newlineArray.size()));
+    serialPort.flush();
+    QCOMPARE(serialPort.bytesToWrite(), qint64(0));
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
+    QCOMPARE(bytesWrittenSpy.count(), 1);
+}
+
+void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten)
+{
+    static qint64 bytes = 0;
+    bytes += bytesWritten;
+
+    QVERIFY(bytesWritten == newlineArray.size() || bytesWritten == alphabetArray.size());
+
+    if (bytes == (alphabetArray.size() + newlineArray.size()))
+        exitLoop();
+}
+
+void tst_QSerialPort::doubleFlush()
+{
+#ifdef Q_OS_WIN
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    QSKIP("flush() does not work on Windows");
+#else
+    QSKIP("flush() does not work on Windows", SkipAll);
+#endif
+#endif
+
+    QSerialPort serialPort(m_senderPortName);
+    connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot2(qint64)));
+    QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
+
+    QVERIFY(serialPort.open(QIODevice::WriteOnly));
+    serialPort.write(alphabetArray);
+    QCOMPARE(serialPort.bytesToWrite(), qint64(alphabetArray.size()));
+    serialPort.flush();
+    QCOMPARE(serialPort.bytesToWrite(), qint64(0));
+    serialPort.write(newlineArray);
+    QCOMPARE(serialPort.bytesToWrite(), qint64(newlineArray.size()));
+    serialPort.flush();
+    QCOMPARE(serialPort.bytesToWrite(), qint64(0));
+
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
+    QCOMPARE(bytesWrittenSpy.count(), 2);
+}
+
+void tst_QSerialPort::waitForBytesWritten()
+{
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_receiverPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
+
+    QSerialPort serialPort(m_senderPortName);
+    QVERIFY(serialPort.open(QIODevice::WriteOnly));
+    serialPort.write(alphabetArray);
+    const qint64 toWrite = serialPort.bytesToWrite();
+    QVERIFY(serialPort.waitForBytesWritten(1000));
+    QVERIFY(toWrite > serialPort.bytesToWrite());
+}
+
+void tst_QSerialPort::waitForReadyReadWithTimeout()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_senderPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::WriteOnly));
+#endif
+
+    QSerialPort receiverSerialPort(m_receiverPortName);
+    QVERIFY(receiverSerialPort.open(QIODevice::ReadOnly));
+    QVERIFY(!receiverSerialPort.waitForReadyRead(5));
+    QCOMPARE(receiverSerialPort.bytesAvailable(), qint64(0));
+    QCOMPARE(receiverSerialPort.error(), QSerialPort::TimeoutError);
+}
+
+void tst_QSerialPort::waitForReadyReadWithOneByte()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    const qint64 oneByte = 1;
+    const int waitMsecs = 50;
+
+    QSerialPort senderSerialPort(m_senderPortName);
+    QVERIFY(senderSerialPort.open(QIODevice::WriteOnly));
+    QSerialPort receiverSerialPort(m_receiverPortName);
+    QSignalSpy readyReadSpy(&receiverSerialPort, SIGNAL(readyRead()));
+    QVERIFY(readyReadSpy.isValid());
+    QVERIFY(receiverSerialPort.open(QIODevice::ReadOnly));
+    QCOMPARE(senderSerialPort.write(alphabetArray.constData(), oneByte), oneByte);
+    QVERIFY(senderSerialPort.waitForBytesWritten(waitMsecs));
+    QVERIFY(receiverSerialPort.waitForReadyRead(waitMsecs));
+    QCOMPARE(receiverSerialPort.bytesAvailable(), oneByte);
+    QCOMPARE(receiverSerialPort.error(), QSerialPort::NoError);
+    QCOMPARE(readyReadSpy.count(), 1);
+}
+
+void tst_QSerialPort::waitForReadyReadWithAlphabet()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    const int waitMsecs = 50;
+
+    QSerialPort senderSerialPort(m_senderPortName);
+    QVERIFY(senderSerialPort.open(QIODevice::WriteOnly));
+    QSerialPort receiverSerialPort(m_receiverPortName);
+    QSignalSpy readyReadSpy(&receiverSerialPort, SIGNAL(readyRead()));
+    QVERIFY(readyReadSpy.isValid());
+    QVERIFY(receiverSerialPort.open(QIODevice::ReadOnly));
+    QCOMPARE(senderSerialPort.write(alphabetArray), qint64(alphabetArray.size()));
+    QVERIFY(senderSerialPort.waitForBytesWritten(waitMsecs));
+
+    do {
+        QVERIFY(receiverSerialPort.waitForReadyRead(waitMsecs));
+    } while (receiverSerialPort.bytesAvailable() < qint64(alphabetArray.size()));
+
+    QCOMPARE(receiverSerialPort.error(), QSerialPort::NoError);
+    QVERIFY(readyReadSpy.count() > 0);
 }
 
 QTEST_MAIN(tst_QSerialPort)

@@ -55,6 +55,10 @@
 #endif
 #endif
 
+#ifdef Q_OS_QNX
+#define CRTSCTS (IHFLOW | OHFLOW)
+#endif
+
 #include <private/qcore_unix_p.h>
 
 #include <QtCore/qelapsedtimer.h>
@@ -143,36 +147,13 @@ private:
     QSerialPortPrivate *dptr;
 };
 
-class ExceptionNotifier : public QSocketNotifier
-{
-    Q_OBJECT
-public:
-    ExceptionNotifier(QSerialPortPrivate *d, QObject *parent)
-        : QSocketNotifier(d->descriptor, QSocketNotifier::Exception, parent)
-        , dptr(d)
-    {}
-
-protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE {
-        bool ret = QSocketNotifier::event(e);
-        if (ret)
-            dptr->exceptionNotification();
-        return ret;
-    }
-
-private:
-    QSerialPortPrivate *dptr;
-};
-
 #include "qserialport_unix.moc"
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , descriptor(-1)
-    , isCustomBaudRateSupported(false)
     , readNotifier(0)
     , writeNotifier(0)
-    , exceptionNotifier(0)
     , readPortNotifierCalled(false)
     , readPortNotifierState(false)
     , readPortNotifierStateSet(false)
@@ -196,9 +177,8 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
-    lockFileScopedPointer.swap(newLockFileScopedPointer);
 
-    if (lockFileScopedPointer->isLocked()) {
+    if (!newLockFileScopedPointer->tryLock()) {
         q->setError(QSerialPort::PermissionError);
         return false;
     }
@@ -221,12 +201,6 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
     if (descriptor == -1) {
         q->setError(decodeSystemError());
-        return false;
-    }
-
-    lockFileScopedPointer->lock();
-    if (!lockFileScopedPointer->isLocked()) {
-        q->setError(QSerialPort::PermissionError);
         return false;
     }
 
@@ -260,10 +234,10 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     if (!updateTermios())
         return false;
 
-    setExceptionNotificationEnabled(true);
-
     if ((flags & O_WRONLY) == 0)
         setReadNotificationEnabled(true);
+
+    lockFileScopedPointer.swap(newLockFileScopedPointer);
 
     return true;
 }
@@ -275,13 +249,6 @@ void QSerialPortPrivate::close()
     if (settingsRestoredOnClose) {
         if (::tcsetattr(descriptor, TCSANOW, &restoredTermios) == -1)
             q->setError(decodeSystemError());
-
-#ifdef Q_OS_LINUX
-        if (isCustomBaudRateSupported) {
-            if (::ioctl(descriptor, TIOCSSERIAL, &restoredSerialInfo) == -1)
-                q->setError(decodeSystemError());
-        }
-#endif
     }
 
 #ifdef TIOCNXCL
@@ -301,20 +268,12 @@ void QSerialPortPrivate::close()
         writeNotifier = 0;
     }
 
-    if (exceptionNotifier) {
-        exceptionNotifier->setEnabled(false);
-        exceptionNotifier->deleteLater();
-        exceptionNotifier = 0;
-    }
-
     if (qt_safe_close(descriptor) == -1)
         q->setError(decodeSystemError());
 
-    if (lockFileScopedPointer->isLocked())
-        lockFileScopedPointer->unlock();
+    lockFileScopedPointer.reset(0);
 
     descriptor = -1;
-    isCustomBaudRateSupported = false;
     pendingBytesWritten = 0;
     writeSequenceStarted = false;
 }
@@ -406,7 +365,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return startAsyncWrite()
+    return completeAsyncWrite()
 #ifndef Q_OS_ANDROID
             && (::tcdrain(descriptor) != -1);
 #else
@@ -521,84 +480,143 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 
 bool QSerialPortPrivate::setBaudRate()
 {
-    if (!setBaudRate(inputBaudRate, QSerialPort::Input)
-            && !setBaudRate(outputBaudRate, QSerialPort::Output)) {
-        return false;
+    if (inputBaudRate == outputBaudRate)
+        return setBaudRate(inputBaudRate, QSerialPort::AllDirections);
+
+    return (setBaudRate(inputBaudRate, QSerialPort::Input)
+        && setBaudRate(outputBaudRate, QSerialPort::Output));
+}
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setBaudRate_helper(qint32 baudRate,
+        QSerialPort::Directions directions)
+{
+    if ((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
+            return decodeSystemError();
+
+    if ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0)
+            return decodeSystemError();
+
+    return QSerialPort::NoError;
+}
+
+#if defined(Q_OS_LINUX)
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    struct serial_struct currentSerialInfo;
+
+    if ((::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
+            && (currentSerialInfo.flags & ASYNC_SPD_CUST)) {
+        currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
+        currentSerialInfo.custom_divisor = 0;
+        if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
+            return decodeSystemError();
     }
 
-    return true;
+    return setBaudRate_helper(baudRate, directions);
 }
+
+#else
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    return setBaudRate_helper(baudRate, directions);
+}
+
+#endif
+
+#if defined(Q_OS_LINUX)
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    Q_UNUSED(directions);
+
+    struct serial_struct currentSerialInfo;
+
+    if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
+        return decodeSystemError();
+
+    if (currentSerialInfo.baud_base % baudRate != 0)
+        return QSerialPort::UnsupportedOperationError;
+
+    currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
+    currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+    currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
+
+    if (currentSerialInfo.custom_divisor == 0)
+        return QSerialPort::UnsupportedOperationError;
+
+    if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
+        return decodeSystemError();
+
+    return setBaudRate_helper(B38400, directions);
+}
+
+#elif defined(Q_OS_MAC)
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    Q_UNUSED(directions);
+
+#if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+    if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1)
+        return decodeSystemError();
+
+    return QSerialPort::NoError;
+#endif
+
+    return QSerialPort::UnsupportedOperationError;
+}
+
+#elif defined (Q_OS_QNX)
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    // On QNX, the values of the 'Bxxxx' constants are set to 'xxxx' (i.e.
+    // B115200 is defined to '115200'), which means that literal values can be
+    // passed to cfsetispeed/cfsetospeed, including custom values, provided
+    // that the underlying hardware supports them.
+    return setBaudRate_helper(baudRate, directions);
+}
+
+#else
+
+QSerialPort::SerialPortError
+QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    Q_UNUSED(baudRate);
+    Q_UNUSED(directions);
+
+    return QSerialPort::UnsupportedOperationError;
+}
+
+#endif
 
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_Q(QSerialPort);
 
-    bool ret = baudRate > 0;
-
-    // prepare section
-
-    if (ret) {
-        const qint32 unixBaudRate = QSerialPortPrivate::settingFromBaudRate(baudRate);
-        if (unixBaudRate > 0) {
-            // try prepate to set standard baud rate
-#ifdef Q_OS_LINUX
-            // prepare to forcefully reset the custom mode
-            if (isCustomBaudRateSupported) {
-                //currentSerialInfo.flags |= ASYNC_SPD_MASK;
-                currentSerialInfo.flags &= ~(ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-                currentSerialInfo.custom_divisor = 0;
-            }
-#endif
-            // prepare to set standard baud rate
-            ret = !(((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, unixBaudRate) < 0)
-                    || ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, unixBaudRate) < 0));
-        } else {
-            // try prepate to set custom baud rate
-#ifdef Q_OS_LINUX
-            // prepare to forcefully set the custom mode
-            if (isCustomBaudRateSupported) {
-                currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
-                currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-                currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
-                if (currentSerialInfo.custom_divisor == 0)
-                    currentSerialInfo.custom_divisor = 1;
-                // for custom mode needed prepare to set B38400 baud rate
-                ret = (::cfsetispeed(&currentTermios, B38400) != -1) && (::cfsetospeed(&currentTermios, B38400) != -1);
-            } else {
-                ret = false;
-            }
-#elif defined(Q_OS_MAC)
-
-#  if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-            // Starting with Tiger, the IOSSIOSPEED ioctl can be used to set arbitrary baud rates
-            // other than those specified by POSIX. The driver for the underlying serial hardware
-            // ultimately determines which baud rates can be used. This ioctl sets both the input
-            // and output speed.
-            ret = ::ioctl(descriptor, IOSSIOSPEED, &baudRate) != -1;
-#  else
-            // others MacOSX version, can't prepare to set custom baud rate
-            ret = false;
-#  endif
-
-#else
-            // others *nix OS, can't prepare to set custom baud rate
-            ret = false;
-#endif
-        }
+    if (baudRate <= 0) {
+        q->setError(QSerialPort::UnsupportedOperationError);
+        return false;
     }
 
-    // finally section
+    const qint32 unixBaudRate = QSerialPortPrivate::settingFromBaudRate(baudRate);
 
-#ifdef Q_OS_LINUX
-    if (ret && isCustomBaudRateSupported) // finally, set or reset the custom mode
-        ret = ::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) != -1;
-#endif
+    const QSerialPort::SerialPortError error = (unixBaudRate > 0)
+        ? setStandardBaudRate(unixBaudRate, directions)
+        : setCustomBaudRate(baudRate, directions);
 
-    if (ret) // finally, set baud rate
-        ret = updateTermios();
-    else
-        q->setError(decodeSystemError());
-    return ret;
+    if (error == QSerialPort::NoError)
+        return updateTermios();
+
+    return false;
 }
 
 bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
@@ -768,6 +786,8 @@ bool QSerialPortPrivate::readNotification()
         QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::ResourceError)
             error = QSerialPort::ReadError;
+        else
+            setReadNotificationEnabled(false);
         q->setError(error);
         readBuffer.chop(bytesToRead);
         return false;
@@ -852,14 +872,6 @@ bool QSerialPortPrivate::completeAsyncWrite()
     return startAsyncWrite();
 }
 
-void QSerialPortPrivate::exceptionNotification()
-{
-    Q_Q(QSerialPort);
-
-    QSerialPort::SerialPortError error = decodeSystemError();
-    q->setError(error);
-}
-
 bool QSerialPortPrivate::updateTermios()
 {
     Q_Q(QSerialPort);
@@ -878,6 +890,11 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     case ENODEV:
         error = QSerialPort::DeviceNotFoundError;
         break;
+#ifdef ENOENT
+    case ENOENT:
+        error = QSerialPort::DeviceNotFoundError;
+        break;
+#endif
     case EACCES:
         error = QSerialPort::PermissionError;
         break;
@@ -936,23 +953,6 @@ void QSerialPortPrivate::setWriteNotificationEnabled(bool enable)
     } else if (enable) {
         writeNotifier = new WriteNotifier(this, q);
         writeNotifier->setEnabled(true);
-    }
-}
-
-bool QSerialPortPrivate::isExceptionNotificationEnabled() const
-{
-    return exceptionNotifier && exceptionNotifier->isEnabled();
-}
-
-void QSerialPortPrivate::setExceptionNotificationEnabled(bool enable)
-{
-    Q_Q(QSerialPort);
-
-    if (exceptionNotifier) {
-        exceptionNotifier->setEnabled(enable);
-    } else if (enable) {
-        exceptionNotifier = new ExceptionNotifier(this, q);
-        exceptionNotifier->setEnabled(true);
     }
 }
 

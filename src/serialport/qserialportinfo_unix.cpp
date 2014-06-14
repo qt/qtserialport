@@ -50,6 +50,11 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qscopedpointer.h>
 
+
+#include <errno.h>
+#include <sys/types.h> // kill
+#include <signal.h>    // kill
+
 #ifndef Q_OS_MAC
 
 #include "qtudev_p.h"
@@ -77,6 +82,8 @@ static QStringList filteredDeviceFilePaths()
     << QStringLiteral("ircomm*"); // IrDA serial device.
 #elif defined (Q_OS_FREEBSD)
     << QStringLiteral("cu*");
+#elif defined (Q_OS_QNX)
+    << QStringLiteral("ser*");
 #else
     ;
 #endif
@@ -185,6 +192,17 @@ QList<QSerialPortInfo> availablePortsBySysfs()
             } while (targetDir.cdUp());
 
         } else if (targetPath.contains(QStringLiteral("pci"))) {
+            QDir targetDir(targetPath + QStringLiteral("/device"));
+            QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("vendor")).absoluteFilePath());
+            if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
+                        .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+            }
+            QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("device")).absoluteFilePath());
+            if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
+                        .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+            }
             // TODO: Obtain more information about the device
         } else {
             continue;
@@ -200,6 +218,22 @@ QList<QSerialPortInfo> availablePortsBySysfs()
 
 struct ScopedPointerUdevDeleter
 {
+    static inline void cleanup(struct ::udev *pointer)
+    {
+        ::udev_unref(pointer);
+    }
+};
+
+struct ScopedPointerUdevEnumeratorDeleter
+{
+    static inline void cleanup(struct ::udev_enumerate *pointer)
+    {
+        ::udev_enumerate_unref(pointer);
+    }
+};
+
+struct ScopedPointerUdevDeviceDeleter
+{
     static inline void cleanup(struct ::udev_device *pointer)
     {
         ::udev_device_unref(pointer);
@@ -210,6 +244,51 @@ struct ScopedPointerUdevDeleter
     Q_GLOBAL_STATIC(QLibrary, udevLibrary)
 #endif
 
+static
+QString getUdevPropertyValue(struct ::udev_device *dev, const char *name)
+{
+    return QString::fromLatin1(::udev_device_get_property_value(dev, name));
+}
+
+static
+bool checkUdevForSerial8250Driver(struct ::udev_device *dev)
+{
+    const QString driverName = QString::fromLatin1(::udev_device_get_driver(dev));
+    return (driverName == QStringLiteral("serial8250"));
+}
+
+static
+QString getUdevModelName(struct ::udev_device *dev)
+{
+    return getUdevPropertyValue(dev, "ID_MODEL")
+            .replace(QLatin1Char('_'), QLatin1Char(' '));
+}
+
+static
+QString getUdevVendorName(struct ::udev_device *dev)
+{
+    return getUdevPropertyValue(dev, "ID_VENDOR")
+            .replace(QLatin1Char('_'), QLatin1Char(' '));
+}
+
+static
+quint16 getUdevModelIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
+{
+    return getUdevPropertyValue(dev, "ID_MODEL_ID").toInt(&hasIdentifier, 16);
+}
+
+static
+quint16 getUdevVendorIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
+{
+    return getUdevPropertyValue(dev, "ID_VENDOR_ID").toInt(&hasIdentifier, 16);
+}
+
+static
+QString getUdevSerialNumber(struct ::udev_device *dev)
+{
+    return getUdevPropertyValue(dev,"ID_SERIAL_SHORT");
+}
+
 QList<QSerialPortInfo> availablePortsByUdev()
 {
 #ifndef LINK_LIBUDEV
@@ -217,91 +296,62 @@ QList<QSerialPortInfo> availablePortsByUdev()
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
 #endif
-    QList<QSerialPortInfo> serialPortInfoList;
-
     static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
-    struct ::udev *udev = ::udev_new();
-    if (udev) {
+    QScopedPointer<struct ::udev, ScopedPointerUdevDeleter> udev(::udev_new());
 
-        struct ::udev_enumerate *enumerate =
-                ::udev_enumerate_new(udev);
+    if (!udev)
+        return QList<QSerialPortInfo>();
 
-        if (enumerate) {
+    QScopedPointer<udev_enumerate, ScopedPointerUdevEnumeratorDeleter>
+            enumerate(::udev_enumerate_new(udev.data()));
 
-            ::udev_enumerate_add_match_subsystem(enumerate, "tty");
-            ::udev_enumerate_scan_devices(enumerate);
+    if (!enumerate)
+        return QList<QSerialPortInfo>();
 
-            struct ::udev_list_entry *devices =
-                    ::udev_enumerate_get_list_entry(enumerate);
+    ::udev_enumerate_add_match_subsystem(enumerate.data(), "tty");
+    ::udev_enumerate_scan_devices(enumerate.data());
 
-            struct ::udev_list_entry *dev_list_entry;
-            udev_list_entry_foreach(dev_list_entry, devices) {
+    udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate.data());
 
-                QScopedPointer<struct ::udev_device, ScopedPointerUdevDeleter> dev(::udev_device_new_from_syspath(udev,
-                                                                                    ::udev_list_entry_get_name(dev_list_entry)));
+    QList<QSerialPortInfo> serialPortInfoList;
+    udev_list_entry *dev_list_entry;
+    udev_list_entry_foreach(dev_list_entry, devices) {
 
-                if (dev) {
+        QScopedPointer<udev_device, ScopedPointerUdevDeviceDeleter>
+                dev(::udev_device_new_from_syspath(
+                        udev.data(), ::udev_list_entry_get_name(dev_list_entry)));
 
-                    QSerialPortInfo serialPortInfo;
+        if (!dev)
+            return serialPortInfoList;
 
-                    serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
-                    serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
+        QSerialPortInfo serialPortInfo;
 
-                    struct ::udev_device *parentdev = ::udev_device_get_parent(dev.data());
+        serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
+        serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
 
-                    if (parentdev) {
+        udev_device *parentdev = ::udev_device_get_parent(dev.data());
 
-                        QString subsys = QString::fromLatin1(::udev_device_get_subsystem(parentdev));
-
-                        if (subsys == QStringLiteral("usb-serial")
-                                || subsys == QStringLiteral("usb")) {
-                            serialPortInfo.d_ptr->description = QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                                                   "ID_MODEL")).replace(QLatin1Char('_'), QLatin1Char(' '));
-                            serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                                                   "ID_VENDOR")).replace(QLatin1Char('_'), QLatin1Char(' '));
-
-                            serialPortInfo.d_ptr->serialNumber = QString(
-                                    QLatin1String(::udev_device_get_property_value(dev.data(), "ID_SERIAL_SHORT")));
-
-                            serialPortInfo.d_ptr->vendorIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                "ID_VENDOR_ID")).toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
-
-                            serialPortInfo.d_ptr->productIdentifier =
-                                    QString::fromLatin1(::udev_device_get_property_value(dev.data(),
-                                                "ID_MODEL_ID")).toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
-
-                        } else if (subsys == QStringLiteral("pnp")) {
-                            // TODO: Obtain more information
-                        } else if (subsys == QStringLiteral("platform")) {
-                            continue;
-                        } else if (subsys == QStringLiteral("pci")) {
-                            // TODO: Obtain more information about the device
-                        } else {
-                            // FIXME: Obtain more information
-                        }
-                    } else {
-                        if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
-                            bool ok;
-                            int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
-
-                            if (!ok || (portNumber < 0) || (portNumber > 255))
-                                continue;
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    serialPortInfoList.append(serialPortInfo);
-                }
-
+        if (parentdev) {
+            if (checkUdevForSerial8250Driver(parentdev))
+                continue;
+            serialPortInfo.d_ptr->description = getUdevModelName(dev.data());
+            serialPortInfo.d_ptr->manufacturer = getUdevVendorName(dev.data());
+            serialPortInfo.d_ptr->serialNumber = getUdevSerialNumber(dev.data());
+            serialPortInfo.d_ptr->vendorIdentifier = getUdevModelIdentifier(dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
+            serialPortInfo.d_ptr->productIdentifier = getUdevVendorIdentifier(dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
+        } else {
+            if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
+                bool ok;
+                int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
+                if (!ok || (portNumber < 0) || (portNumber > 255))
+                    continue;
+            } else {
+                continue;
             }
-
-            ::udev_enumerate_unref(enumerate);
         }
 
-        ::udev_unref(udev);
+        serialPortInfoList.append(serialPortInfo);
     }
 
     return serialPortInfoList;
@@ -342,8 +392,21 @@ bool QSerialPortInfo::isBusy() const
     if (lockFilePath.isEmpty())
         return false;
 
-    QLockFile lockFile(lockFilePath);
-    return lockFile.isLocked();
+    QFile reader(lockFilePath);
+    if (!reader.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray pidLine = reader.readLine();
+    pidLine.chop(1);
+    if (pidLine.isEmpty())
+        return false;
+
+    qint64 pid = pidLine.toLongLong();
+
+    if (pid && (::kill(pid, 0) == -1) && (errno == ESRCH))
+        return false; // PID doesn't exist anymore
+
+    return true;
 }
 
 bool QSerialPortInfo::isValid() const

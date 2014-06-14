@@ -40,19 +40,18 @@
 **
 ****************************************************************************/
 
-#ifndef QSERIALPORT_WIN_P_H
-#define QSERIALPORT_WIN_P_H
+#ifndef QSERIALPORT_WINCE_P_H
+#define QSERIALPORT_WINCE_P_H
 
 #include "qserialport_p.h"
 
-#include <QtCore/qhash.h>
+#include <QtCore/qmutex.h>
 
 #include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
 
-class QWinEventNotifier;
-class QTimer;
+class QThread;
 
 class QSerialPortPrivate : public QSerialPortPrivateData
 {
@@ -88,19 +87,11 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    void handleLineStatusErrors();
+    void processIoErrors(bool error);
     QSerialPort::SerialPortError decodeSystemError() const;
 
-    void _q_completeAsyncCommunication();
-    void _q_completeAsyncRead();
-    void _q_completeAsyncWrite();
-
-    bool startAsyncCommunication();
-    bool startAsyncRead();
-    bool startAsyncWrite();
-
-    bool emulateErrorPolicy();
-    void emitReadyRead();
+    bool notifyRead();
+    bool notifyWrite();
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
@@ -116,28 +107,20 @@ public:
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE handle;
     bool parityErrorOccurred;
-    QByteArray readChunkBuffer;
-    bool readyReadEmitted;
-    bool writeStarted;
-    QWinEventNotifier *communicationNotifier;
-    QWinEventNotifier *readCompletionNotifier;
-    QWinEventNotifier *writeCompletionNotifier;
-    QTimer *startAsyncWriteTimer;
-    OVERLAPPED communicationOverlapped;
-    OVERLAPPED readCompletionOverlapped;
-    OVERLAPPED writeCompletionOverlapped;
-    DWORD originalEventMask;
-    DWORD triggeredEventMask;
+
+    QThread *eventNotifier;
+    QMutex settingsChangeMutex;
 
 private:
     bool updateDcb();
     bool updateCommTimeouts();
 
-
-    bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);
+    bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
+                            bool checkRead, bool checkWrite,
+                            int msecs, bool *timedOut);
 
 };
 
 QT_END_NAMESPACE
 
-#endif // QSERIALPORT_WIN_P_H
+#endif // QSERIALPORT_WINCE_P_H
