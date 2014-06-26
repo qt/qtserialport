@@ -338,8 +338,8 @@ QList<QSerialPortInfo> availablePortsByUdev()
             serialPortInfo.d_ptr->description = getUdevModelName(dev.data());
             serialPortInfo.d_ptr->manufacturer = getUdevVendorName(dev.data());
             serialPortInfo.d_ptr->serialNumber = getUdevSerialNumber(dev.data());
-            serialPortInfo.d_ptr->vendorIdentifier = getUdevModelIdentifier(dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
-            serialPortInfo.d_ptr->productIdentifier = getUdevVendorIdentifier(dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
+            serialPortInfo.d_ptr->vendorIdentifier = getUdevVendorIdentifier(dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
+            serialPortInfo.d_ptr->productIdentifier = getUdevModelIdentifier(dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
         } else {
             if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
                 bool ok;
