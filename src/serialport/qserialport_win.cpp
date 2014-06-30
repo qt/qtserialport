@@ -563,18 +563,8 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
 
 void QSerialPortPrivate::_q_completeAsyncCommunication()
 {
-    Q_Q(QSerialPort);
-
-    DWORD numberOfBytesTransferred = 0;
-
-    if (!::GetOverlappedResult(handle, &communicationOverlapped, &numberOfBytesTransferred, FALSE)) {
-        const QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::NoError) {
-            q->setError(error);
-            return;
-        }
-    }
-
+    if (handleOverlappedResult(0, communicationOverlapped) == qint64(-1))
+        return;
     if (EV_ERR & triggeredEventMask)
         handleLineStatusErrors();
 
@@ -583,29 +573,17 @@ void QSerialPortPrivate::_q_completeAsyncCommunication()
 
 void QSerialPortPrivate::_q_completeAsyncRead()
 {
-    Q_Q(QSerialPort);
-
-    DWORD numberOfBytesTransferred = 0;
-    if (!::GetOverlappedResult(handle, &readCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::NoError) {
-            if (error != QSerialPort::ResourceError)
-                error = QSerialPort::ReadError;
-            q->setError(error);
-            return;
-        }
-    }
-
-    if (numberOfBytesTransferred > 0) {
-
-        readBuffer.append(readChunkBuffer.left(numberOfBytesTransferred));
-
+    const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Input, readCompletionOverlapped);
+    if (bytesTransferred == qint64(-1))
+        return;
+    if (bytesTransferred > 0) {
+        readBuffer.append(readChunkBuffer.left(bytesTransferred));
         if (!emulateErrorPolicy())
             emitReadyRead();
     }
 
     // start async read for possible remainder into driver queue
-    if ((numberOfBytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
+    if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
         startAsyncRead();
     else // driver queue is emplty, so startup wait comm event
         startAsyncCommunication();
@@ -617,21 +595,12 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
 
     if (writeStarted) {
         writeStarted = false;
-        DWORD numberOfBytesTransferred = 0;
-        if (!::GetOverlappedResult(handle, &writeCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
-            numberOfBytesTransferred = 0;
-            QSerialPort::SerialPortError error = decodeSystemError();
-            if (error != QSerialPort::NoError) {
-                if (error != QSerialPort::ResourceError)
-                    error = QSerialPort::WriteError;
-                q->setError(error);
-                return;
-            }
-        }
-
-        if (numberOfBytesTransferred > 0) {
-            writeBuffer.free(numberOfBytesTransferred);
-            emit q->bytesWritten(numberOfBytesTransferred);
+        const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Output, writeCompletionOverlapped);
+        if (bytesTransferred == qint64(-1))
+            return;
+        if (bytesTransferred > 0) {
+            writeBuffer.free(bytesTransferred);
+            emit q->bytesWritten(bytesTransferred);
         }
     }
 
@@ -790,6 +759,28 @@ bool QSerialPortPrivate::updateCommTimeouts()
         return false;
     }
     return true;
+}
+
+qint64 QSerialPortPrivate::handleOverlappedResult(int direction, OVERLAPPED &overlapped)
+{
+    Q_Q(QSerialPort);
+
+    DWORD bytesTransferred = 0;
+    if (!::GetOverlappedResult(handle, &overlapped, &bytesTransferred, FALSE)) {
+        const QSerialPort::SerialPortError error = decodeSystemError();
+        if (error == QSerialPort::NoError)
+            return qint64(0);
+        if (error != QSerialPort::ResourceError) {
+            if (direction == QSerialPort::Input)
+                q->setError(QSerialPort::ReadError);
+            else if (direction == QSerialPort::Output)
+                q->setError(QSerialPort::WriteError);
+            else
+                q->setError(error);
+            return qint64(-1);
+        }
+    }
+    return bytesTransferred;
 }
 
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const

@@ -132,7 +132,7 @@ public:
 private:
     bool updateDcb();
     bool updateCommTimeouts();
-
+    qint64 handleOverlappedResult(int direction, OVERLAPPED &overlapped);
 
     bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);
 
