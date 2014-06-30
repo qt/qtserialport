@@ -400,9 +400,11 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
-            _q_completeAsyncCommunication();
+            if (!_q_completeAsyncCommunication())
+                return false;
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
-            _q_completeAsyncRead();
+            if (!_q_completeAsyncRead())
+                return false;
             const qint64 readBytesForOneReadOperation = qint64(readBuffer.size()) - currentReadBufferSize;
             if (readBytesForOneReadOperation == ReadChunkSize) {
                 currentReadBufferSize = readBuffer.size();
@@ -413,7 +415,8 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
                 return true;
             }
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
-            _q_completeAsyncWrite();
+            if (!_q_completeAsyncWrite())
+                return false;
         } else {
             return false;
         }
@@ -433,8 +436,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    if (!writeStarted)
-        startAsyncWrite();
+    if (!writeStarted && !startAsyncWrite())
+        return false;
 
     forever {
         bool timedOut = false;
@@ -446,13 +449,12 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return false;
         }
 
-        if (triggeredEvent == communicationOverlapped.hEvent) {
-             _q_completeAsyncRead();
-        } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
-            _q_completeAsyncRead();
+        if (triggeredEvent == communicationOverlapped.hEvent
+                || triggeredEvent == readCompletionOverlapped.hEvent) {
+            if (!_q_completeAsyncRead())
+                return false;
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
-            _q_completeAsyncWrite();
-            return writeBuffer.isEmpty();
+            return _q_completeAsyncWrite();
         } else {
             return false;
         }
@@ -561,21 +563,21 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
     return true;
 }
 
-void QSerialPortPrivate::_q_completeAsyncCommunication()
+bool QSerialPortPrivate::_q_completeAsyncCommunication()
 {
     if (handleOverlappedResult(0, communicationOverlapped) == qint64(-1))
-        return;
+        return false;
     if (EV_ERR & triggeredEventMask)
         handleLineStatusErrors();
 
-    startAsyncRead();
+    return startAsyncRead();
 }
 
-void QSerialPortPrivate::_q_completeAsyncRead()
+bool QSerialPortPrivate::_q_completeAsyncRead()
 {
     const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Input, readCompletionOverlapped);
     if (bytesTransferred == qint64(-1))
-        return;
+        return false;
     if (bytesTransferred > 0) {
         readBuffer.append(readChunkBuffer.left(bytesTransferred));
         if (!emulateErrorPolicy())
@@ -584,12 +586,12 @@ void QSerialPortPrivate::_q_completeAsyncRead()
 
     // start async read for possible remainder into driver queue
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
-        startAsyncRead();
+        return startAsyncRead();
     else // driver queue is emplty, so startup wait comm event
-        startAsyncCommunication();
+        return startAsyncCommunication();
 }
 
-void QSerialPortPrivate::_q_completeAsyncWrite()
+bool QSerialPortPrivate::_q_completeAsyncWrite()
 {
     Q_Q(QSerialPort);
 
@@ -597,14 +599,14 @@ void QSerialPortPrivate::_q_completeAsyncWrite()
         writeStarted = false;
         const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Output, writeCompletionOverlapped);
         if (bytesTransferred == qint64(-1))
-            return;
+            return false;
         if (bytesTransferred > 0) {
             writeBuffer.free(bytesTransferred);
             emit q->bytesWritten(bytesTransferred);
         }
     }
 
-    startAsyncWrite();
+    return startAsyncWrite();
 }
 
 bool QSerialPortPrivate::startAsyncCommunication()
