@@ -54,6 +54,7 @@ class tst_QSerialPortInfo : public QObject
 
 private slots:
     void serialPortInfoList();
+    void standardBaudRateList();
     void constructors();
     void assignment();
 };
@@ -64,9 +65,27 @@ void tst_QSerialPortInfo::serialPortInfoList()
     QCOMPARE(list.isEmpty(), false);
 }
 
+void tst_QSerialPortInfo::standardBaudRateList()
+{
+    QList<qint32> list(QSerialPortInfo::standardBaudRates());
+    QCOMPARE(list.isEmpty(), false);
+}
+
 void tst_QSerialPortInfo::constructors()
 {
-    // FIXME
+    QSerialPortInfo serialPortInfo;
+    QCOMPARE(serialPortInfo.portName().isEmpty(), true);
+    QCOMPARE(serialPortInfo.systemLocation().isEmpty(), true);
+    QCOMPARE(serialPortInfo.description().isEmpty(), true);
+    QCOMPARE(serialPortInfo.manufacturer().isEmpty(), true);
+    QCOMPARE(serialPortInfo.serialNumber().isEmpty(), true);
+    QCOMPARE(serialPortInfo.vendorIdentifier(), quint16(0));
+    QCOMPARE(serialPortInfo.productIdentifier(), quint16(0));
+    QCOMPARE(serialPortInfo.hasVendorIdentifier(), false);
+    QCOMPARE(serialPortInfo.hasProductIdentifier(), false);
+    QCOMPARE(serialPortInfo.isNull(), false);
+    QCOMPARE(serialPortInfo.isBusy(), false);
+    QCOMPARE(serialPortInfo.isValid(), false);
 }
 
 void tst_QSerialPortInfo::assignment()

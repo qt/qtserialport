@@ -78,11 +78,14 @@ unix:!symbian {
         $$PWD/qserialport_unix_p.h
 
     SOURCES += \
-        $$PWD/qserialport_unix.cpp \
-        $$PWD/qserialportinfo_unix.cpp
+        $$PWD/qserialport_unix.cpp
 
-    macx {
-        SOURCES += $$PWD/qserialportinfo_mac.cpp
+    !mac {
+        SOURCES += \
+            $$PWD/qserialportinfo_unix.cpp
+    } else {
+        SOURCES += \
+            $$PWD/qserialportinfo_mac.cpp
 
         LIBS_PRIVATE += -framework IOKit -framework CoreFoundation
     }

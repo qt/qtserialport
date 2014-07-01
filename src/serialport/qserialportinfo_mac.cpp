@@ -43,6 +43,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
+#include "qserialport_unix_p.h"
 
 #include <sys/param.h>
 
@@ -288,6 +289,40 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     (void) ::IOObjectRelease(iter);
 
     return serialPortInfoList;
+}
+
+QList<qint32> QSerialPortInfo::standardBaudRates()
+{
+    return QSerialPortPrivate::standardBaudRates();
+}
+
+bool QSerialPortInfo::isBusy() const
+{
+    QString lockFilePath = serialPortLockFilePath(portName());
+    if (lockFilePath.isEmpty())
+        return false;
+
+    QFile reader(lockFilePath);
+    if (!reader.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray pidLine = reader.readLine();
+    pidLine.chop(1);
+    if (pidLine.isEmpty())
+        return false;
+
+    qint64 pid = pidLine.toLongLong();
+
+    if (pid && (::kill(pid, 0) == -1) && (errno == ESRCH))
+        return false; // PID doesn't exist anymore
+
+    return true;
+}
+
+bool QSerialPortInfo::isValid() const
+{
+    QFile f(systemLocation());
+    return f.exists();
 }
 
 QT_END_NAMESPACE
