@@ -204,7 +204,51 @@ private:
     const QString &m_serialPortName;
 };
 
-static QString deviceSerialNumber(const QString &instanceIdentifier)
+static QString deviceDescription(HDEVINFO deviceInfoSet,
+                                 PSP_DEVINFO_DATA deviceInfoData)
+{
+    return deviceRegistryProperty(deviceInfoSet, deviceInfoData, SPDRP_DEVICEDESC);
+}
+
+static QString deviceManufacturer(HDEVINFO deviceInfoSet,
+                                  PSP_DEVINFO_DATA deviceInfoData)
+{
+    return deviceRegistryProperty(deviceInfoSet, deviceInfoData, SPDRP_MFG);
+}
+
+static quint16 parseDeviceIdentifier(const QString &instanceIdentifier,
+                                     const QString &identifierPrefix,
+                                     int identifierSize, bool &ok)
+{
+    const int index = instanceIdentifier.indexOf(identifierPrefix);
+    if (index == -1)
+        return quint16(0);
+    return instanceIdentifier.mid(index + identifierPrefix.size(), identifierSize).toInt(&ok, 16);
+}
+
+static quint16 deviceVendorIdentifier(const QString &instanceIdentifier, bool &ok)
+{
+    static const int vendorIdentifierSize = 4;
+    quint16 result = parseDeviceIdentifier(
+                instanceIdentifier, QStringLiteral("VID_"), vendorIdentifierSize, ok);
+    if (!ok)
+        result = parseDeviceIdentifier(
+                    instanceIdentifier, QStringLiteral("VEN_"), vendorIdentifierSize, ok);
+    return result;
+}
+
+static quint16 deviceProductIdentifier(const QString &instanceIdentifier, bool &ok)
+{
+    static const int productIdentifierSize = 4;
+    quint16 result = parseDeviceIdentifier(
+                instanceIdentifier, QStringLiteral("PID_"), productIdentifierSize, ok);
+    if (!ok)
+        result = parseDeviceIdentifier(
+                    instanceIdentifier, QStringLiteral("DEV_"), productIdentifierSize, ok);
+    return result;
+}
+
+static QString parseDeviceSerialNumber(const QString &instanceIdentifier)
 {
     int firstbound = instanceIdentifier.lastIndexOf(QLatin1Char('\\'));
     int lastbound = instanceIdentifier.indexOf(QLatin1Char('_'), firstbound);
@@ -226,16 +270,20 @@ static QString deviceSerialNumber(const QString &instanceIdentifier)
     return instanceIdentifier.mid(firstbound + 1, lastbound - firstbound - 1);
 }
 
+static QString deviceSerialNumber(const QString &instanceIdentifier,
+                                  DEVINST deviceInstanceNumber)
+{
+    QString result = parseDeviceSerialNumber(instanceIdentifier);
+    if (result.isEmpty()) {
+        const DEVINST parentNumber = parentDeviceInstanceNumber(deviceInstanceNumber);
+        const QString parentInstanceIdentifier = deviceInstanceIdentifier(parentNumber).toUpper();
+        result = parseDeviceSerialNumber(parentInstanceIdentifier);
+    }
+    return result;
+}
+
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    static const QString usbVendorIdentifierPrefix(QStringLiteral("VID_"));
-    static const QString usbProductIdentifierPrefix(QStringLiteral("PID_"));
-    static const QString pciVendorIdentifierPrefix(QStringLiteral("VEN_"));
-    static const QString pciDeviceIdentifierPrefix(QStringLiteral("DEV_"));
-
-    static const int vendorIdentifierSize = 4;
-    static const int productIdentifierSize = 4;
-
     QList<QSerialPortInfo> serialPortInfoList;
 
     foreach (const GuidFlagsPair &uniquePair, guidFlagsPairs()) {
@@ -249,54 +297,30 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
         DWORD index = 0;
         while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
-            QSerialPortInfo serialPortInfo;
-
-            QString s = devicePortName(deviceInfoSet, &deviceInfoData);
-            if (s.isEmpty() || s.contains(QStringLiteral("LPT")))
+            const QString portName = devicePortName(deviceInfoSet, &deviceInfoData);
+            if (portName.isEmpty() || portName.contains(QStringLiteral("LPT")))
                 continue;
 
             if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
-                             SerialPortNameEqualFunctor(s)) != serialPortInfoList.end()) {
+                             SerialPortNameEqualFunctor(portName)) != serialPortInfoList.end()) {
                 continue;
             }
 
-            serialPortInfo.d_ptr->portName = s;
-            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(s);
-            serialPortInfo.d_ptr->description =
-                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_DEVICEDESC);
-            serialPortInfo.d_ptr->manufacturer =
-                    deviceRegistryProperty(deviceInfoSet, &deviceInfoData, SPDRP_MFG);
+            QSerialPortInfo serialPortInfo;
 
-            s = deviceInstanceIdentifier(deviceInfoData.DevInst).toUpper();
-            QString serialNumber = deviceSerialNumber(s);
-            if (serialNumber.isEmpty()) {
-                const DEVINST parentDevNumber = parentDeviceInstanceNumber(deviceInfoData.DevInst);
-                const QString parentDevIdentifier = deviceInstanceIdentifier(parentDevNumber).toUpper();
-                serialNumber = deviceSerialNumber(parentDevIdentifier);
-            }
-            serialPortInfo.d_ptr->serialNumber = serialNumber;
+            serialPortInfo.d_ptr->portName = portName;
+            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(portName);
+            serialPortInfo.d_ptr->description = deviceDescription(deviceInfoSet, &deviceInfoData);
+            serialPortInfo.d_ptr->manufacturer = deviceManufacturer(deviceInfoSet, &deviceInfoData);
 
-            int index = s.indexOf(usbVendorIdentifierPrefix);
-            if (index != -1) {
-                serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + usbVendorIdentifierPrefix.size(), vendorIdentifierSize)
-                        .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
-            } else {
-                index = s.indexOf(pciVendorIdentifierPrefix);
-                if (index != -1)
-                    serialPortInfo.d_ptr->vendorIdentifier = s.mid(index + pciVendorIdentifierPrefix.size(), vendorIdentifierSize)
-                            .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
-            }
+            const QString instanceIdentifier = deviceInstanceIdentifier(deviceInfoData.DevInst).toUpper();
 
-            index = s.indexOf(usbProductIdentifierPrefix);
-            if (index != -1) {
-                serialPortInfo.d_ptr->productIdentifier = s.mid(index + usbProductIdentifierPrefix.size(), productIdentifierSize)
-                        .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
-            } else {
-                index = s.indexOf(pciDeviceIdentifierPrefix);
-                if (index != -1)
-                    serialPortInfo.d_ptr->productIdentifier = s.mid(index + pciDeviceIdentifierPrefix.size(), productIdentifierSize)
-                            .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
-            }
+            serialPortInfo.d_ptr->serialNumber =
+                    deviceSerialNumber(instanceIdentifier, deviceInfoData.DevInst);
+            serialPortInfo.d_ptr->vendorIdentifier =
+                    deviceVendorIdentifier(instanceIdentifier, serialPortInfo.d_ptr->hasVendorIdentifier);
+            serialPortInfo.d_ptr->productIdentifier =
+                    deviceProductIdentifier(instanceIdentifier, serialPortInfo.d_ptr->hasProductIdentifier);
 
             serialPortInfoList.append(serialPortInfo);
         }
