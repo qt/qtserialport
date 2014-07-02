@@ -424,7 +424,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
     stopWatch.start();
 
-    error = QSerialPort::NoError;
     do {
         bool readyToRead = false;
         bool readyToWrite = false;
@@ -436,17 +435,11 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
             return false;
         }
 
-        if (readyToRead) {
-            if (readNotification())
-                return true;
-        }
+        if (readyToRead)
+            return readNotification();
 
-        if (readyToWrite)
-            completeAsyncWrite();
-
-        if (error != QSerialPort::NoError)
+        if (readyToWrite && !completeAsyncWrite())
             return false;
-
     } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
     return false;
 }
