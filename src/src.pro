@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
 
-!winrt:SUBDIRS = serialport
+SUBDIRS = serialport
