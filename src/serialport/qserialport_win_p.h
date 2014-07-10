@@ -91,9 +91,9 @@ public:
     void handleLineStatusErrors();
     QSerialPort::SerialPortError decodeSystemError() const;
 
-    void _q_completeAsyncCommunication();
-    void _q_completeAsyncRead();
-    void _q_completeAsyncWrite();
+    bool _q_completeAsyncCommunication();
+    bool _q_completeAsyncRead();
+    bool _q_completeAsyncWrite();
 
     bool startAsyncCommunication();
     bool startAsyncRead();
@@ -132,7 +132,7 @@ public:
 private:
     bool updateDcb();
     bool updateCommTimeouts();
-
+    qint64 handleOverlappedResult(int direction, OVERLAPPED &overlapped);
 
     bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);
 

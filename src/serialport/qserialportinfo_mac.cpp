@@ -43,6 +43,9 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
+#include "qserialport_unix_p.h"
+
+#include "private/qcore_mac_p.h"
 
 #include <sys/param.h>
 
@@ -59,235 +62,193 @@
 
 QT_BEGIN_NAMESPACE
 
+static QCFType<CFTypeRef> searchProperty(io_registry_entry_t ioRegistryEntry,
+                                         const QCFString &propertyKey)
+{
+    return ::IORegistryEntrySearchCFProperty(
+                ioRegistryEntry, kIOServicePlane, propertyKey, kCFAllocatorDefault, 0);
+}
+
+static QString searchStringProperty(io_registry_entry_t ioRegistryEntry,
+                                    const QCFString &propertyKey)
+{
+    const QCFString result(searchProperty(ioRegistryEntry, propertyKey).as<CFStringRef>());
+    return QCFString::toQString(result);
+}
+
+static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
+                                      const QCFString &propertyKey,
+                                      bool &ok)
+{
+    const QCFType<CFTypeRef> result(searchProperty(ioRegistryEntry, propertyKey));
+    quint16 value = 0;
+    ok = result.as<CFNumberRef>()
+            && (::CFNumberGetValue(result.as<CFNumberRef>(), kCFNumberShortType, &value) > 0);
+    return value;
+}
+
+static bool isCompleteInfo(const QSerialPortInfo &portInfo)
+{
+    return !portInfo.portName().isEmpty()
+            && !portInfo.systemLocation().isEmpty()
+            && !portInfo.manufacturer().isEmpty()
+            && !portInfo.description().isEmpty()
+            && !portInfo.serialNumber().isEmpty()
+            && portInfo.hasProductIdentifier()
+            && portInfo.hasVendorIdentifier();
+}
+
+static QString devicePortName(io_registry_entry_t ioRegistryEntry)
+{
+    return searchStringProperty(ioRegistryEntry, QCFString(kIOTTYDeviceKey));
+}
+
+static QString deviceSystemLocation(io_registry_entry_t ioRegistryEntry)
+{
+    return searchStringProperty(ioRegistryEntry, QCFString(kIOCalloutDeviceKey));
+}
+
+static QString deviceDescription(io_registry_entry_t ioRegistryEntry)
+{
+    QString result = searchStringProperty(ioRegistryEntry, QCFString(kIOPropertyProductNameKey));
+    if (result.isEmpty())
+        result = searchStringProperty(ioRegistryEntry, QCFString(kUSBProductString));
+    if (result.isEmpty())
+        result = searchStringProperty(ioRegistryEntry, QCFString("BTName"));
+    return result;
+}
+
+static QString deviceManufacturer(io_registry_entry_t ioRegistryEntry)
+{
+    return searchStringProperty(ioRegistryEntry, QCFString(kUSBVendorString));
+}
+
+static QString deviceSerialNumber(io_registry_entry_t ioRegistryEntry)
+{
+    return searchStringProperty(ioRegistryEntry, QCFString(kUSBSerialNumberString));
+}
+
+static quint16 deviceVendorIdentifier(io_registry_entry_t ioRegistryEntry, bool &ok)
+{
+    return searchShortIntProperty(ioRegistryEntry, QCFString(kUSBVendorID), ok);
+}
+
+static quint16 deviceProductIdentifier(io_registry_entry_t ioRegistryEntry, bool &ok)
+{
+    return searchShortIntProperty(ioRegistryEntry, QCFString(kUSBProductID), ok);
+}
+
+static io_registry_entry_t parentSerialPortService(io_registry_entry_t currentSerialPortService)
+{
+    io_registry_entry_t result = 0;
+    ::IORegistryEntryGetParentEntry(currentSerialPortService, kIOServicePlane, &result);
+    ::IOObjectRelease(currentSerialPortService);
+    return result;
+}
+
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> serialPortInfoList;
+    CFMutableDictionaryRef serialPortDictionary = ::IOServiceMatching(kIOSerialBSDServiceValue);
+    if (!serialPortDictionary)
+        return QList<QSerialPortInfo>();
 
-    static const int propertyCount = 7;
-
-
-    ::CFMutableDictionaryRef matching = ::IOServiceMatching(kIOSerialBSDServiceValue);
-    if (!matching)
-        return serialPortInfoList;
-
-    ::CFDictionaryAddValue(matching,
+    ::CFDictionaryAddValue(serialPortDictionary,
                            CFSTR(kIOSerialBSDTypeKey),
                            CFSTR(kIOSerialBSDAllTypes));
 
-    io_iterator_t iter = 0;
-    kern_return_t kr = ::IOServiceGetMatchingServices(kIOMasterPortDefault,
-                                                      matching,
-                                                      &iter);
-
-    if (kr != kIOReturnSuccess)
-        return serialPortInfoList;
-
-    io_registry_entry_t service;
-
-    while ((service = ::IOIteratorNext(iter))) {
-
-        ::CFTypeRef device = 0;
-        ::CFTypeRef portName = 0;
-        ::CFTypeRef description = 0;
-        ::CFTypeRef manufacturer = 0;
-        ::CFTypeRef serialNumber = 0;
-        ::CFTypeRef vendorIdentifier = 0;
-        ::CFTypeRef productIdentifier = 0;
-
-        int matchingPropertiesCounter = 0;
-
-        io_registry_entry_t entry = service;
-
-        do {
-
-            if (!device) {
-                device =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kIOCalloutDeviceKey),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (device)
-                    ++matchingPropertiesCounter;
-            }
-
-            if (!portName) {
-                portName =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kIOTTYDeviceKey),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (portName)
-                    ++matchingPropertiesCounter;
-            }
-
-            if (!description) {
-                description =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kIOPropertyProductNameKey),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (!description)
-                    description =
-                            ::IORegistryEntrySearchCFProperty(entry,
-                                                              kIOServicePlane,
-                                                              CFSTR(kUSBProductString),
-                                                              kCFAllocatorDefault,
-                                                              0);
-                if (!description)
-                    description =
-                            ::IORegistryEntrySearchCFProperty(entry,
-                                                              kIOServicePlane,
-                                                              CFSTR("BTName"),
-                                                              kCFAllocatorDefault,
-                                                              0);
-
-                if (description)
-                    ++matchingPropertiesCounter;
-            }
-
-            if (!manufacturer) {
-                manufacturer =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kUSBVendorString),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (manufacturer)
-                    ++matchingPropertiesCounter;
-
-            }
-
-            if (!serialNumber) {
-                serialNumber =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kUSBSerialNumberString),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (serialNumber)
-                    ++matchingPropertiesCounter;
-
-            }
-
-
-            if (!vendorIdentifier) {
-                vendorIdentifier =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kUSBVendorID),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (vendorIdentifier)
-                    ++matchingPropertiesCounter;
-
-            }
-
-            if (!productIdentifier) {
-                productIdentifier =
-                        ::IORegistryEntrySearchCFProperty(entry,
-                                                          kIOServicePlane,
-                                                          CFSTR(kUSBProductID),
-                                                          kCFAllocatorDefault,
-                                                          0);
-                if (productIdentifier)
-                    ++matchingPropertiesCounter;
-
-            }
-
-            if (matchingPropertiesCounter == propertyCount)
-                break;
-
-            kr = ::IORegistryEntryGetParentEntry(entry, kIOServicePlane, &entry);
-
-        } while (kr == kIOReturnSuccess);
-
-        (void) ::IOObjectRelease(entry);
-
-        if (matchingPropertiesCounter > 0) {
-
-            QSerialPortInfo serialPortInfo;
-            QByteArray buffer(MAXPATHLEN, 0);
-
-            if (device) {
-                if (::CFStringGetCString(CFStringRef(device),
-                                         buffer.data(),
-                                         buffer.size(),
-                                         kCFStringEncodingUTF8)) {
-                    serialPortInfo.d_ptr->device = QString::fromUtf8(buffer);
-                }
-                ::CFRelease(device);
-            }
-
-            if (portName) {
-                if (::CFStringGetCString(CFStringRef(portName),
-                                         buffer.data(),
-                                         buffer.size(),
-                                         kCFStringEncodingUTF8)) {
-                    serialPortInfo.d_ptr->portName = QString::fromUtf8(buffer);
-                }
-                ::CFRelease(portName);
-            }
-
-            if (description) {
-                if (::CFStringGetCString(CFStringRef(description),
-                                         buffer.data(),
-                                         buffer.size(),
-                                         kCFStringEncodingUTF8)) {
-                    serialPortInfo.d_ptr->description = QString::fromUtf8(buffer);
-                }
-                ::CFRelease(description);
-            }
-
-            if (manufacturer) {
-                if (::CFStringGetCString(CFStringRef(manufacturer),
-                                         buffer.data(),
-                                         buffer.size(),
-                                         kCFStringEncodingUTF8)) {
-                    serialPortInfo.d_ptr->manufacturer = QString::fromUtf8(buffer);
-                }
-                ::CFRelease(manufacturer);
-            }
-
-            if (serialNumber) {
-                if (::CFStringGetCString(CFStringRef(serialNumber),
-                                         buffer.data(),
-                                         buffer.size(),
-                                         kCFStringEncodingUTF8)) {
-                    serialPortInfo.d_ptr->serialNumber = QString::fromUtf8(buffer);
-                }
-                ::CFRelease(serialNumber);
-            }
-
-            quint16 value = 0;
-
-            if (vendorIdentifier) {
-                serialPortInfo.d_ptr->hasVendorIdentifier = ::CFNumberGetValue(CFNumberRef(vendorIdentifier), kCFNumberIntType, &value);
-                if (serialPortInfo.d_ptr->hasVendorIdentifier)
-                    serialPortInfo.d_ptr->vendorIdentifier = value;
-
-                ::CFRelease(vendorIdentifier);
-            }
-
-            if (productIdentifier) {
-                serialPortInfo.d_ptr->hasProductIdentifier = ::CFNumberGetValue(CFNumberRef(productIdentifier), kCFNumberIntType, &value);
-                if (serialPortInfo.d_ptr->hasProductIdentifier)
-                    serialPortInfo.d_ptr->productIdentifier = value;
-
-                ::CFRelease(productIdentifier);
-            }
-
-            serialPortInfoList.append(serialPortInfo);
-        }
-
-        (void) ::IOObjectRelease(service);
+    io_iterator_t serialPortIterator = 0;
+    if (::IOServiceGetMatchingServices(kIOMasterPortDefault, serialPortDictionary,
+                                       &serialPortIterator) != KERN_SUCCESS) {
+        return QList<QSerialPortInfo>();
     }
 
-    (void) ::IOObjectRelease(iter);
+    QList<QSerialPortInfo> serialPortInfoList;
+
+    forever {
+        io_registry_entry_t serialPortService = ::IOIteratorNext(serialPortIterator);
+        if (!serialPortService)
+            break;
+
+        QSerialPortInfo serialPortInfo;
+
+        forever {
+            if (serialPortInfo.portName().isEmpty())
+                serialPortInfo.d_ptr->portName = devicePortName(serialPortService);
+
+            if (serialPortInfo.systemLocation().isEmpty())
+                serialPortInfo.d_ptr->device = deviceSystemLocation(serialPortService);
+
+            if (serialPortInfo.description().isEmpty())
+                serialPortInfo.d_ptr->description = deviceDescription(serialPortService);
+
+            if (serialPortInfo.manufacturer().isEmpty())
+                serialPortInfo.d_ptr->manufacturer = deviceManufacturer(serialPortService);
+
+            if (serialPortInfo.serialNumber().isEmpty())
+                serialPortInfo.d_ptr->serialNumber = deviceSerialNumber(serialPortService);
+
+            if (!serialPortInfo.hasVendorIdentifier()) {
+                serialPortInfo.d_ptr->vendorIdentifier =
+                        deviceVendorIdentifier(serialPortService,
+                                               serialPortInfo.d_ptr->hasVendorIdentifier);
+            }
+
+            if (!serialPortInfo.hasProductIdentifier()) {
+                serialPortInfo.d_ptr->productIdentifier =
+                        deviceProductIdentifier(serialPortService,
+                                                serialPortInfo.d_ptr->hasProductIdentifier);
+            }
+
+            if (isCompleteInfo(serialPortInfo)) {
+                ::IOObjectRelease(serialPortService);
+                break;
+            }
+
+            serialPortService = parentSerialPortService(serialPortService);
+            if (!serialPortService)
+                break;
+        }
+
+        serialPortInfoList.append(serialPortInfo);
+    }
+
+    ::IOObjectRelease(serialPortIterator);
 
     return serialPortInfoList;
+}
+
+QList<qint32> QSerialPortInfo::standardBaudRates()
+{
+    return QSerialPortPrivate::standardBaudRates();
+}
+
+bool QSerialPortInfo::isBusy() const
+{
+    QString lockFilePath = serialPortLockFilePath(portName());
+    if (lockFilePath.isEmpty())
+        return false;
+
+    QFile reader(lockFilePath);
+    if (!reader.open(QIODevice::ReadOnly))
+        return false;
+
+    QByteArray pidLine = reader.readLine();
+    pidLine.chop(1);
+    if (pidLine.isEmpty())
+        return false;
+
+    qint64 pid = pidLine.toLongLong();
+
+    if (pid && (::kill(pid, 0) == -1) && (errno == ESRCH))
+        return false; // PID doesn't exist anymore
+
+    return true;
+}
+
+bool QSerialPortInfo::isValid() const
+{
+    QFile f(systemLocation());
+    return f.exists();
 }
 
 QT_END_NAMESPACE

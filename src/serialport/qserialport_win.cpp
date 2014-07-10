@@ -400,9 +400,11 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         }
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
-            _q_completeAsyncCommunication();
+            if (!_q_completeAsyncCommunication())
+                return false;
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
-            _q_completeAsyncRead();
+            if (!_q_completeAsyncRead())
+                return false;
             const qint64 readBytesForOneReadOperation = qint64(readBuffer.size()) - currentReadBufferSize;
             if (readBytesForOneReadOperation == ReadChunkSize) {
                 currentReadBufferSize = readBuffer.size();
@@ -413,7 +415,8 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
                 return true;
             }
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
-            _q_completeAsyncWrite();
+            if (!_q_completeAsyncWrite())
+                return false;
         } else {
             return false;
         }
@@ -433,8 +436,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    if (!writeStarted)
-        startAsyncWrite();
+    if (!writeStarted && !startAsyncWrite())
+        return false;
 
     forever {
         bool timedOut = false;
@@ -446,13 +449,12 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return false;
         }
 
-        if (triggeredEvent == communicationOverlapped.hEvent) {
-             _q_completeAsyncRead();
-        } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
-            _q_completeAsyncRead();
+        if (triggeredEvent == communicationOverlapped.hEvent
+                || triggeredEvent == readCompletionOverlapped.hEvent) {
+            if (!_q_completeAsyncRead())
+                return false;
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
-            _q_completeAsyncWrite();
-            return writeBuffer.isEmpty();
+            return _q_completeAsyncWrite();
         } else {
             return false;
         }
@@ -561,83 +563,50 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
     return true;
 }
 
-void QSerialPortPrivate::_q_completeAsyncCommunication()
+bool QSerialPortPrivate::_q_completeAsyncCommunication()
 {
-    Q_Q(QSerialPort);
-
-    DWORD numberOfBytesTransferred = 0;
-
-    if (!::GetOverlappedResult(handle, &communicationOverlapped, &numberOfBytesTransferred, FALSE))
-        q->setError(decodeSystemError());
-
-    bool error = false;
-
-    // Check for unexpected event. This event triggered when pulled previously
-    // opened device from the system, when opened as for not to read and not to
-    // write options and so forth.
-    if (triggeredEventMask == 0)
-        error = true;
-
-    // Workaround for standard CDC ACM serial ports, for which triggered an
-    // unexpected event EV_TXEMPTY at data transmission.
-    if ((originalEventMask & triggeredEventMask) == 0) {
-        if ((triggeredEventMask & EV_TXEMPTY) == 0)
-            error = true;
-    }
-
-    if (error)
-        q->setError(QSerialPort::ResourceError);
-
+    if (handleOverlappedResult(0, communicationOverlapped) == qint64(-1))
+        return false;
     if (EV_ERR & triggeredEventMask)
         handleLineStatusErrors();
 
-    if (!error)
-        startAsyncRead();
+    return startAsyncRead();
 }
 
-void QSerialPortPrivate::_q_completeAsyncRead()
+bool QSerialPortPrivate::_q_completeAsyncRead()
 {
-    Q_Q(QSerialPort);
-
-    DWORD numberOfBytesTransferred = 0;
-    if (!::GetOverlappedResult(handle, &readCompletionOverlapped, &numberOfBytesTransferred, FALSE))
-        q->setError(decodeSystemError());
-
-    if (numberOfBytesTransferred > 0) {
-
-        readBuffer.append(readChunkBuffer.left(numberOfBytesTransferred));
-
+    const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Input, readCompletionOverlapped);
+    if (bytesTransferred == qint64(-1))
+        return false;
+    if (bytesTransferred > 0) {
+        readBuffer.append(readChunkBuffer.left(bytesTransferred));
         if (!emulateErrorPolicy())
             emitReadyRead();
     }
 
     // start async read for possible remainder into driver queue
-    if ((numberOfBytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
-        startAsyncRead();
+    if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
+        return startAsyncRead();
     else // driver queue is emplty, so startup wait comm event
-        startAsyncCommunication();
+        return startAsyncCommunication();
 }
 
-void QSerialPortPrivate::_q_completeAsyncWrite()
+bool QSerialPortPrivate::_q_completeAsyncWrite()
 {
     Q_Q(QSerialPort);
 
     if (writeStarted) {
         writeStarted = false;
-        DWORD numberOfBytesTransferred = 0;
-        if (!::GetOverlappedResult(handle, &writeCompletionOverlapped, &numberOfBytesTransferred, FALSE)) {
-            numberOfBytesTransferred = 0;
-            q->setError(decodeSystemError());
-            return;
-        }
-
-        if (numberOfBytesTransferred > 0) {
-            writeBuffer.free(numberOfBytesTransferred);
-            emit q->bytesWritten(numberOfBytesTransferred);
+        const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Output, writeCompletionOverlapped);
+        if (bytesTransferred == qint64(-1))
+            return false;
+        if (bytesTransferred > 0) {
+            writeBuffer.free(bytesTransferred);
+            emit q->bytesWritten(bytesTransferred);
         }
     }
 
-    startAsyncWrite();
+    return startAsyncWrite();
 }
 
 bool QSerialPortPrivate::startAsyncCommunication()
@@ -646,9 +615,11 @@ bool QSerialPortPrivate::startAsyncCommunication()
 
     initializeOverlappedStructure(communicationOverlapped);
     if (!::WaitCommEvent(handle, &triggeredEventMask, &communicationOverlapped)) {
-        const QSerialPort::SerialPortError error = decodeSystemError();
+        QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::NoError) {
-            q->setError(decodeSystemError());
+            if (error == QSerialPort::PermissionError)
+                error = QSerialPort::ResourceError;
+            q->setError(error);
             return false;
         }
     }
@@ -676,10 +647,11 @@ bool QSerialPortPrivate::startAsyncRead()
 
     QSerialPort::SerialPortError error = decodeSystemError();
     if (error != QSerialPort::NoError) {
+        if (error == QSerialPort::PermissionError)
+            error = QSerialPort::ResourceError;
         if (error != QSerialPort::ResourceError)
             error = QSerialPort::ReadError;
         q->setError(error);
-
         return false;
     }
 
@@ -791,6 +763,28 @@ bool QSerialPortPrivate::updateCommTimeouts()
     return true;
 }
 
+qint64 QSerialPortPrivate::handleOverlappedResult(int direction, OVERLAPPED &overlapped)
+{
+    Q_Q(QSerialPort);
+
+    DWORD bytesTransferred = 0;
+    if (!::GetOverlappedResult(handle, &overlapped, &bytesTransferred, FALSE)) {
+        const QSerialPort::SerialPortError error = decodeSystemError();
+        if (error == QSerialPort::NoError)
+            return qint64(0);
+        if (error != QSerialPort::ResourceError) {
+            if (direction == QSerialPort::Input)
+                q->setError(QSerialPort::ReadError);
+            else if (direction == QSerialPort::Output)
+                q->setError(QSerialPort::WriteError);
+            else
+                q->setError(error);
+            return qint64(-1);
+        }
+    }
+    return bytesTransferred;
+}
+
 QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 {
     QSerialPort::SerialPortError error;
@@ -820,6 +814,9 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
         error = QSerialPort::ResourceError;
         break;
     case ERROR_DEVICE_REMOVED:
+        error = QSerialPort::ResourceError;
+        break;
+    case ERROR_OPERATION_ABORTED:
         error = QSerialPort::ResourceError;
         break;
     default:

@@ -55,15 +55,9 @@
 #include <sys/types.h> // kill
 #include <signal.h>    // kill
 
-#ifndef Q_OS_MAC
-
 #include "qtudev_p.h"
 
-#endif
-
 QT_BEGIN_NAMESPACE
-
-#ifndef Q_OS_MAC
 
 static QStringList filteredDeviceFilePaths()
 {
@@ -378,8 +372,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     return serialPortInfoList;
 }
-
-#endif
 
 QList<qint32> QSerialPortInfo::standardBaudRates()
 {
