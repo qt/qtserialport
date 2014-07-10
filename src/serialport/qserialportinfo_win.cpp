@@ -71,6 +71,15 @@ static inline const QList<GuidFlagsPair>& guidFlagsPairs()
     return guidFlagsPairList;
 }
 
+static QString toStringAndTrimNullCharacter(const QByteArray &buffer)
+{
+    QString result = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(buffer.constData()),
+                                             buffer.size() / sizeof(wchar_t));
+    while (!result.isEmpty() && (result.at(result.size() - 1).unicode() == 0))
+        result.chop(1);
+    return result;
+}
+
 static QStringList portNamesFromHardwareDeviceMap()
 {
     HKEY hKey = 0;
@@ -80,7 +89,8 @@ static QStringList portNamesFromHardwareDeviceMap()
     QStringList result;
     DWORD index = 0;
     static const DWORD maximumValueNameInChars = 16383;
-    QByteArray outputValueName(maximumValueNameInChars * sizeof(wchar_t), 0);
+    QByteArray outputValueName;
+    outputValueName.resize(maximumValueNameInChars * sizeof(wchar_t));
     QByteArray outputBuffer;
     DWORD requiredDataBytes = 0;
     forever {
@@ -90,7 +100,7 @@ static QStringList portNamesFromHardwareDeviceMap()
         if (ret == ERROR_MORE_DATA) {
             outputBuffer.resize(requiredDataBytes);
         } else if (ret == ERROR_SUCCESS) {
-            result.append(QString::fromWCharArray(reinterpret_cast<const wchar_t *>(outputBuffer.constData())));
+            result.append(toStringAndTrimNullCharacter(outputBuffer));
             ++index;
         } else {
             break;
@@ -120,7 +130,7 @@ static QString deviceRegistryProperty(HDEVINFO deviceInfoSet,
         }
         devicePropertyByteArray.resize(requiredSize);
     }
-    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(devicePropertyByteArray.constData()));
+    return toStringAndTrimNullCharacter(devicePropertyByteArray);
 }
 
 static QString deviceInstanceIdentifier(DEVINST deviceInstanceNumber)
@@ -130,12 +140,13 @@ static QString deviceInstanceIdentifier(DEVINST deviceInstanceNumber)
         return QString();
     // The size does not include the terminating null character.
     ++numberOfChars;
-    QByteArray outputBuffer(numberOfChars * sizeof(wchar_t), 0);
+    QByteArray outputBuffer;
+    outputBuffer.resize(numberOfChars * sizeof(wchar_t));
     if (::CM_Get_Device_ID(deviceInstanceNumber, reinterpret_cast<wchar_t *>(outputBuffer.data()),
                            outputBuffer.size(), 0) != CR_SUCCESS) {
         return QString();
     }
-    return QString::fromWCharArray(reinterpret_cast<const wchar_t *>(outputBuffer.constData()));
+    return toStringAndTrimNullCharacter(outputBuffer);
 }
 
 static DEVINST parentDeviceInstanceNumber(DEVINST childDeviceInstanceNumber)
@@ -176,7 +187,7 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
                 continue;
             } else if (ret == ERROR_SUCCESS) {
                 if (dataType == REG_SZ)
-                    portName = QString::fromWCharArray((reinterpret_cast<const wchar_t *>(outputBuffer.constData())));
+                    portName = toStringAndTrimNullCharacter(outputBuffer);
                 else if (dataType == REG_DWORD)
                     portName = QStringLiteral("COM%1").arg(*(PDWORD(outputBuffer.constData())));
             }
