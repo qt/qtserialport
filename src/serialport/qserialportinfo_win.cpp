@@ -182,6 +182,9 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
             }
             break;
         }
+
+        if (!portName.isEmpty())
+            break;
     }
     ::RegCloseKey(key);
     return portName;
