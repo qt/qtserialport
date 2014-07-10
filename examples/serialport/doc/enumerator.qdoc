@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,15 +30,18 @@
     \example enumerator
     \title Enumerator Example
     \ingroup qtserialport-examples
+    \brief Shows how to display information about serial devices in a system.
 
-    The Enumerator example shows how to use the class QSerialPortInfo for
+    \e Enumerator shows how to use the class QSerialPortInfo for
     getting information about serial devices that are present in the system.
 
-    \image enumerator-example.png Screenshot of the Enumerator example
+    \image enumerator-example.png
 
     This GUI example displays information about serial ports in a widget,
     provided by the class QSerialPortInfo.
 
     For getting information about the available ports, use the static method
     \l{QSerialPortInfo::availablePorts()}{availablePorts()}.
+
+    \include examples-run.qdocinc
 */

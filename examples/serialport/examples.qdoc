@@ -2,6 +2,7 @@
 **
 ** Copyright (C) 2011-2012 Denis Shienkov <denis.shienkov@gmail.com>
 ** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -28,21 +29,17 @@
 
 /*!
     \title Qt Serial Port Examples
-    \page examples.html
+    \group qtserialport-examples
     \brief List of serial port examples
 
-    The module provides the following examples for reference to
-    help understand the API usage:
+    The \l{Qt Serial Port} module provides the following examples for reference
+    to help understand the API usage.
 
-    \list
-    \li \l blockingmaster
-    \li \l blockingslave
-    \li \l cenumerator
-    \li \l cwriterasync
-    \li \l cwritersync
-    \li \l creaderasync
-    \li \l creadersync
-    \li \l enumerator
-    \li \l terminal
-    \endlist
+    \section1 Running the Examples
+
+    To run the examples from \l{Qt Creator Manual}{Qt Creator}, open the \gui
+    Welcome mode and select the example from \gui Examples.
+    For more information, visit
+    \l{Qt Creator: Building and Running an Example}{Building and Running an Example}.
+
 */
