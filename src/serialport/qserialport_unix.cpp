@@ -337,12 +337,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return completeAsyncWrite()
-#ifndef Q_OS_ANDROID
-            && (::tcdrain(descriptor) != -1);
-#else
-            && (::ioctl(descriptor, TCSBRK, 1) != -1);
-#endif
+    return completeAsyncWrite();
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
