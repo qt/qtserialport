@@ -105,6 +105,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , startAsyncWriteTimer(0)
     , originalEventMask(0)
     , triggeredEventMask(0)
+    , actualBytesToWrite(0)
 {
     ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
     communicationOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -179,6 +180,7 @@ void QSerialPortPrivate::close()
 
     writeStarted = false;
     writeBuffer.clear();
+    actualBytesToWrite = 0;
 
     readyReadEmitted = false;
     parityErrorOccurred = false;
@@ -276,6 +278,7 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
         writeStarted = false;
+        actualBytesToWrite = 0;
     }
     if (!::PurgeComm(handle, flags)) {
         q->setError(decodeSystemError());
@@ -314,20 +317,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     }
 
     return true;
-}
-
-void QSerialPortPrivate::startWriting()
-{
-    Q_Q(QSerialPort);
-
-    if (!writeStarted) {
-        if (!startAsyncWriteTimer) {
-            startAsyncWriteTimer = new QTimer(q);
-            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_startAsyncWrite()));
-            startAsyncWriteTimer->setSingleShot(true);
-        }
-        startAsyncWriteTimer->start(0);
-    }
 }
 
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
@@ -649,8 +638,10 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
         return true;
 
     initializeOverlappedStructure(writeCompletionOverlapped);
+
+    const int writeBytes = writeBuffer.nextDataBlockSize();
     if (!::WriteFile(handle, writeBuffer.readPointer(),
-                     writeBuffer.nextDataBlockSize(),
+                     writeBytes,
                      NULL, &writeCompletionOverlapped)) {
 
         QSerialPort::SerialPortError error = decodeSystemError();
@@ -662,6 +653,7 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
         }
     }
 
+    actualBytesToWrite -= writeBytes;
     writeStarted = true;
     return true;
 }
@@ -700,6 +692,29 @@ void QSerialPortPrivate::emitReadyRead()
 
     readyReadEmitted = true;
     emit q->readyRead();
+}
+
+qint64 QSerialPortPrivate::bytesToWrite() const
+{
+    return actualBytesToWrite;
+}
+
+qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
+{
+    Q_Q(QSerialPort);
+
+    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    actualBytesToWrite += maxSize;
+
+    if (!writeBuffer.isEmpty() && !writeStarted) {
+        if (!startAsyncWriteTimer) {
+            startAsyncWriteTimer = new QTimer(q);
+            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_completeAsyncWrite()));
+            startAsyncWriteTimer->setSingleShot(true);
+        }
+        startAsyncWriteTimer->start(0);
+    }
+    return maxSize;
 }
 
 void QSerialPortPrivate::handleLineStatusErrors()

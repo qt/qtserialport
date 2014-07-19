@@ -119,7 +119,6 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    void startWriting();
     qint64 readData(char *data, qint64 maxSize);
 
     bool waitForReadyRead(int msecs);
@@ -136,6 +135,9 @@ public:
     bool readNotification();
     bool startAsyncWrite();
     bool completeAsyncWrite();
+
+    qint64 bytesToWrite() const;
+    qint64 writeData(const char *data, qint64 maxSize);
 
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);

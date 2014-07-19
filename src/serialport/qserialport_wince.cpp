@@ -345,12 +345,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return true;
 }
 
-void QSerialPortPrivate::startWriting()
-{
-    // trigger write sequence
-    notifyWrite();
-}
-
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
     return readBuffer.read(data, maxSize);
@@ -590,6 +584,19 @@ bool QSerialPortPrivate::notifyWrite()
         emit q->bytesWritten(bytesWritten);
 
     return true;
+}
+
+qint64 QSerialPortPrivate::bytesToWrite() const
+{
+    return writeBuffer.size();
+}
+
+qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
+{
+    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    if (!writeBuffer.isEmpty())
+        notifyWrite();
+    return maxSize;
 }
 
 void QSerialPortPrivate::processIoErrors(bool error)

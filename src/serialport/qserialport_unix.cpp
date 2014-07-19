@@ -377,12 +377,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return true;
 }
 
-void QSerialPortPrivate::startWriting()
-{
-    if (!isWriteNotificationEnabled())
-        setWriteNotificationEnabled(true);
-}
-
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
     return readBuffer.read(data, maxSize);
@@ -883,6 +877,19 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
         setReadNotificationEnabled(true);
 
     return true;
+}
+
+qint64 QSerialPortPrivate::bytesToWrite() const
+{
+    return writeBuffer.size();
+}
+
+qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
+{
+    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    if (!writeBuffer.isEmpty() && !isWriteNotificationEnabled())
+        setWriteNotificationEnabled(true);
+    return maxSize;
 }
 
 bool QSerialPortPrivate::updateTermios()
