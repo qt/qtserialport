@@ -449,8 +449,10 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return false;
         }
 
-        if (triggeredEvent == communicationOverlapped.hEvent
-                || triggeredEvent == readCompletionOverlapped.hEvent) {
+        if (triggeredEvent == communicationOverlapped.hEvent) {
+            if (!_q_completeAsyncCommunication())
+                return false;
+        } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
             if (!_q_completeAsyncRead())
                 return false;
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
