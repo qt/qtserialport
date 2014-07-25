@@ -204,38 +204,10 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-#ifdef TIOCEXCL
-    if (::ioctl(descriptor, TIOCEXCL) == -1)
-        q->setError(decodeSystemError());
-#endif
-
-    if (::tcgetattr(descriptor, &restoredTermios) == -1) {
-        q->setError(decodeSystemError());
+    if (!initialize(mode)) {
+        qt_safe_close(descriptor);
         return false;
     }
-
-    currentTermios = restoredTermios;
-#ifdef Q_OS_SOLARIS
-    currentTermios.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-    currentTermios.c_oflag &= ~OPOST;
-    currentTermios.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-    currentTermios.c_cflag &= ~(CSIZE|PARENB);
-    currentTermios.c_cflag |= CS8;
-#else
-    ::cfmakeraw(&currentTermios);
-#endif
-    currentTermios.c_cflag |= CLOCAL;
-    currentTermios.c_cc[VTIME] = 0;
-    currentTermios.c_cc[VMIN] = 0;
-
-    if (mode & QIODevice::ReadOnly)
-        currentTermios.c_cflag |= CREAD;
-
-    if (!updateTermios())
-        return false;
-
-    if ((flags & O_WRONLY) == 0)
-        setReadNotificationEnabled(true);
 
     lockFileScopedPointer.swap(newLockFileScopedPointer);
 
@@ -867,6 +839,46 @@ bool QSerialPortPrivate::completeAsyncWrite()
     }
 
     return startAsyncWrite();
+}
+
+inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
+{
+    Q_Q(QSerialPort);
+
+#ifdef TIOCEXCL
+    if (::ioctl(descriptor, TIOCEXCL) == -1)
+        q->setError(decodeSystemError());
+#endif
+
+    if (::tcgetattr(descriptor, &restoredTermios) == -1) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    currentTermios = restoredTermios;
+#ifdef Q_OS_SOLARIS
+    currentTermios.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    currentTermios.c_oflag &= ~OPOST;
+    currentTermios.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    currentTermios.c_cflag &= ~(CSIZE|PARENB);
+    currentTermios.c_cflag |= CS8;
+#else
+    ::cfmakeraw(&currentTermios);
+#endif
+    currentTermios.c_cflag |= CLOCAL;
+    currentTermios.c_cc[VTIME] = 0;
+    currentTermios.c_cc[VMIN] = 0;
+
+    if (mode & QIODevice::ReadOnly)
+        currentTermios.c_cflag |= CREAD;
+
+    if (!updateTermios())
+        return false;
+
+    if (mode & QIODevice::ReadOnly)
+        setReadNotificationEnabled(true);
+
+    return true;
 }
 
 bool QSerialPortPrivate::updateTermios()
