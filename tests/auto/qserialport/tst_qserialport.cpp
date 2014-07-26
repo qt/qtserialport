@@ -106,6 +106,8 @@ private slots:
 
     void twoStageSynchronousLoopback();
 
+    void synchronousReadWrite();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -481,6 +483,32 @@ void tst_QSerialPort::twoStageSynchronousLoopback()
     senderPort.waitForReadyRead(waitMsecs);
     QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
     QCOMPARE(newlineArray, senderPort.readAll());
+}
+
+void tst_QSerialPort::synchronousReadWrite()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+
+    QByteArray writeData;
+    for (int i = 0; i < 1024; ++i)
+        writeData.append(static_cast<char>(i));
+
+    senderPort.write(writeData);
+    senderPort.waitForBytesWritten(-1);
+
+    QByteArray readData;
+    while ((readData.size() < writeData.size()) && receiverPort.waitForReadyRead(100))
+        readData.append(receiverPort.readAll());
+
+    QCOMPARE(writeData, readData);
 }
 
 QTEST_MAIN(tst_QSerialPort)
