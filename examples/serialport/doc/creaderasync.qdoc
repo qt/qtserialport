@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2013 Laszlo Papp <lpapp@kde.org>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,12 +30,13 @@
     \example creaderasync
     \title Command Line Reader Async Example
     \ingroup qtserialport-examples
+    \brief Shows how to receive data asynchronously over serial port.
 
-    The Command Line Reader Async example shows how to use the QSerialPort class for
+    \e{Command Line Reader Async} shows how to use the QSerialPort class for
     receiving data asynchronously over the selected serial port with the desired
     settings.
 
-    \image creaderasync-example.png Screenshot of the Command Line Reader Async example
+    \image creaderasync-example.png
 
     This command line reader async example receives data asynchronously over the
     selected serial port in a console, provided by the QSerialPort class.
@@ -42,4 +44,6 @@
     For receiving data synchronously over the selected serial port, use the
     \l{QSerialPort::read()}{read()} or \l{QSerialPort::readAll()}{readAll()}
     methods, and \l{QIODevice::readyRead()}{readyRead()} signal.
+
+    \include examples-run.qdocinc
 */

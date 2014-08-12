@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,11 +30,12 @@
     \example terminal
     \title Terminal Example
     \ingroup qtserialport-examples
+    \brief Shows how to use various features of QSerialPort.
 
-    The Terminal example shows how to create a terminal for a simple serial
-    interface by using Qt Serial Port.
+    \e Terminal  shows how to create a terminal for a simple serial interface by
+    using \l{Qt Serial Port}.
 
-    \image terminal-example.png Screenshot of the Terminal example
+    \image terminal-example.png
 
     This example shows the main features of the QSerialPort class, like
     configuration, I/O implementation and so forth. Also, the class
@@ -143,4 +145,6 @@
     port.
 
     \sa {Blocking Slave Example}
+
+    \include examples-run.qdocinc
 */

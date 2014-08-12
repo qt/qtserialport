@@ -1,6 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -29,11 +30,12 @@
     \example blockingslave
     \title Blocking Slave Example
     \ingroup qtserialport-examples
+    \brief Shows how to use the synchronous API of QSerialPort in a non-GUI thread.
 
-    The Blocking Slave example shows how to create a application for a
-    serial interface using QSerialPort's synchronous API in a non-GUI thread.
+    \e{Blocking Slave} shows how to create an application for a serial interface
+    using QSerialPort's synchronous API in a non-GUI thread.
 
-    \image blockingslave-example.png Screenshot of the Blocking Slave example
+    \image blockingslave-example.png
 
     QSerialPort supports two general programming approaches:
 
@@ -160,4 +162,6 @@
     \snippet blockingslave/slavethread.cpp 13
 
     \sa {Terminal Example}, {Blocking Master Example}
+
+    \include examples-run.qdocinc
 */

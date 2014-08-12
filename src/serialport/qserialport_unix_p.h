@@ -153,6 +153,7 @@ public:
     QScopedPointer<QLockFile> lockFileScopedPointer;
 
 private:
+    bool initialize(QIODevice::OpenMode mode);
     bool updateTermios();
 
     QSerialPort::SerialPortError setBaudRate_helper(qint32 baudRate,
