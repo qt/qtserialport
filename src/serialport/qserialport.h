@@ -287,6 +287,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncCommunication())
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncRead())
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncWrite())
+    Q_PRIVATE_SLOT(d_func(), bool _q_startAsyncWrite())
 #endif
 };
 
