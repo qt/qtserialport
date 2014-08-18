@@ -104,13 +104,17 @@ private slots:
     void waitForReadyReadWithOneByte();
     void waitForReadyReadWithAlphabet();
 
+    void twoStageSynchronousLoopback();
+
+    void synchronousReadWrite();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
 
 private:
 #ifdef Q_OS_WIN
-    void clearReceiver();
+    void clearReceiver(const QString &customReceiverName = QString());
 #endif
 
     QString m_senderPortName;
@@ -142,9 +146,10 @@ tst_QSerialPort::tst_QSerialPort()
 // not expected). It is recommended to use this method for cleaning of
 // read FIFO of receiver for those tests in which reception of data is
 // required.
-void tst_QSerialPort::clearReceiver()
+void tst_QSerialPort::clearReceiver(const QString &customReceiverName)
 {
-    QSerialPort receiver(m_receiverPortName);
+    QSerialPort receiver(customReceiverName.isEmpty()
+                         ? m_receiverPortName : customReceiverName);
     if (receiver.open(QIODevice::ReadOnly))
         enterLoopMsecs(100);
 }
@@ -436,6 +441,74 @@ void tst_QSerialPort::waitForReadyReadWithAlphabet()
 
     QCOMPARE(receiverSerialPort.error(), QSerialPort::NoError);
     QVERIFY(readyReadSpy.count() > 0);
+}
+
+void tst_QSerialPort::twoStageSynchronousLoopback()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+    clearReceiver(m_senderPortName);
+#endif
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::ReadWrite));
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadWrite));
+
+    const int waitMsecs = 50;
+
+    // first stage
+    senderPort.write(newlineArray);
+    senderPort.waitForBytesWritten(waitMsecs);
+    QTest::qSleep(waitMsecs);
+    receiverPort.waitForReadyRead(waitMsecs);
+    QCOMPARE(newlineArray.size(), receiverPort.bytesAvailable());
+    receiverPort.write(receiverPort.readAll());
+    receiverPort.waitForBytesWritten(waitMsecs);
+    QTest::qSleep(waitMsecs);
+    senderPort.waitForReadyRead(waitMsecs);
+    QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
+    QCOMPARE(newlineArray, senderPort.readAll());
+
+    // second stage
+    senderPort.write(newlineArray);
+    senderPort.waitForBytesWritten(waitMsecs);
+    QTest::qSleep(waitMsecs);
+    receiverPort.waitForReadyRead(waitMsecs);
+    QCOMPARE(newlineArray.size(), receiverPort.bytesAvailable());
+    receiverPort.write(receiverPort.readAll());
+    receiverPort.waitForBytesWritten(waitMsecs);
+    QTest::qSleep(waitMsecs);
+    senderPort.waitForReadyRead(waitMsecs);
+    QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
+    QCOMPARE(newlineArray, senderPort.readAll());
+}
+
+void tst_QSerialPort::synchronousReadWrite()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+
+    QByteArray writeData;
+    for (int i = 0; i < 1024; ++i)
+        writeData.append(static_cast<char>(i));
+
+    senderPort.write(writeData);
+    senderPort.waitForBytesWritten(-1);
+
+    QByteArray readData;
+    while ((readData.size() < writeData.size()) && receiverPort.waitForReadyRead(100))
+        readData.append(receiverPort.readAll());
+
+    QCOMPARE(writeData, readData);
 }
 
 QTEST_MAIN(tst_QSerialPort)

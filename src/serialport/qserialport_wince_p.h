@@ -112,6 +112,7 @@ public:
     QMutex settingsChangeMutex;
 
 private:
+    bool initialize(DWORD eventMask);
     bool updateDcb();
     bool updateCommTimeouts();
 

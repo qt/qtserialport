@@ -155,56 +155,11 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
-    restoredDcb.DCBlength = sizeof(restoredDcb);
+    if (initialize(mode))
+        return true;
 
-    if (!::GetCommState(handle, &restoredDcb)) {
-        q->setError(decodeSystemError());
-        return false;
-    }
-
-    currentDcb = restoredDcb;
-    currentDcb.fBinary = TRUE;
-    currentDcb.fInX = FALSE;
-    currentDcb.fOutX = FALSE;
-    currentDcb.fAbortOnError = FALSE;
-    currentDcb.fNull = FALSE;
-    currentDcb.fErrorChar = FALSE;
-
-    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
-        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
-
-    if (!updateDcb())
-        return false;
-
-    if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
-        q->setError(decodeSystemError());
-        return false;
-    }
-
-    ::ZeroMemory(&currentCommTimeouts, sizeof(currentCommTimeouts));
-    currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
-
-    if (!updateCommTimeouts())
-        return false;
-
-    if (mode & QIODevice::ReadOnly)
-        readCompletionNotifier->setEnabled(true);
-
-    if (mode & QIODevice::WriteOnly)
-        writeCompletionNotifier->setEnabled(true);
-
-    if (!::SetCommMask(handle, originalEventMask)) {
-        q->setError(decodeSystemError());
-        return false;
-    }
-
-    if (!startAsyncCommunication())
-        return false;
-
-    communicationNotifier->setEnabled(true);
-
-    return true;
+    ::CloseHandle(handle);
+    return false;
 }
 
 void QSerialPortPrivate::close()
@@ -304,20 +259,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    Q_Q(QSerialPort);
-
-    bool returnValue = true;
-
-    if (!startAsyncWrite())
-        returnValue = false;
-
-    if (!::FlushFileBuffers(handle)) {
-        q->setError(decodeSystemError());
-        returnValue = false;
-    }
-
-    return returnValue;
-
+    return startAsyncWrite();
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
@@ -449,8 +391,10 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
             return false;
         }
 
-        if (triggeredEvent == communicationOverlapped.hEvent
-                || triggeredEvent == readCompletionOverlapped.hEvent) {
+        if (triggeredEvent == communicationOverlapped.hEvent) {
+            if (!_q_completeAsyncCommunication())
+                return false;
+        } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
             if (!_q_completeAsyncRead())
                 return false;
         } else if (triggeredEvent == writeCompletionOverlapped.hEvent) {
@@ -739,6 +683,62 @@ void QSerialPortPrivate::handleLineStatusErrors()
     } else {
         q->setError(QSerialPort::UnknownError);
     }
+}
+
+inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
+{
+    Q_Q(QSerialPort);
+
+    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
+    restoredDcb.DCBlength = sizeof(restoredDcb);
+
+    if (!::GetCommState(handle, &restoredDcb)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    currentDcb = restoredDcb;
+    currentDcb.fBinary = TRUE;
+    currentDcb.fInX = FALSE;
+    currentDcb.fOutX = FALSE;
+    currentDcb.fAbortOnError = FALSE;
+    currentDcb.fNull = FALSE;
+    currentDcb.fErrorChar = FALSE;
+
+    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
+        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
+
+    if (!updateDcb())
+        return false;
+
+    if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    ::ZeroMemory(&currentCommTimeouts, sizeof(currentCommTimeouts));
+    currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
+
+    if (!updateCommTimeouts())
+        return false;
+
+    if (mode & QIODevice::ReadOnly)
+        readCompletionNotifier->setEnabled(true);
+
+    if (mode & QIODevice::WriteOnly)
+        writeCompletionNotifier->setEnabled(true);
+
+    if (!::SetCommMask(handle, originalEventMask)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    if (!startAsyncCommunication())
+        return false;
+
+    communicationNotifier->setEnabled(true);
+
+    return true;
 }
 
 bool QSerialPortPrivate::updateDcb()

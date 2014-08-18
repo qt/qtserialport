@@ -219,43 +219,11 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
-    restoredDcb.DCBlength = sizeof(restoredDcb);
+    if (initialize(eventMask))
+        return true;
 
-    if (!::GetCommState(handle, &restoredDcb)) {
-        q->setError(decodeSystemError());
-        return false;
-    }
-
-    currentDcb = restoredDcb;
-    currentDcb.fBinary = true;
-    currentDcb.fInX = false;
-    currentDcb.fOutX = false;
-    currentDcb.fAbortOnError = false;
-    currentDcb.fNull = false;
-    currentDcb.fErrorChar = false;
-
-    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
-        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
-
-    if (!updateDcb())
-        return false;
-
-    if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
-        q->setError(decodeSystemError());
-        return false;
-    }
-
-    ::memset(&currentCommTimeouts, 0, sizeof(currentCommTimeouts));
-    currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
-
-    if (!updateCommTimeouts())
-        return false;
-
-    eventNotifier = new CommEventNotifier(eventMask, this, q);
-    eventNotifier->start();
-
-    return true;
+    ::CloseHandle(handle);
+    return false;
 }
 
 void QSerialPortPrivate::close()
@@ -644,6 +612,49 @@ void QSerialPortPrivate::processIoErrors(bool error)
     } else {
         q->setError(QSerialPort::UnknownError);
     }
+}
+
+inline bool QSerialPortPrivate::initialize(DWORD eventMask)
+{
+    Q_Q(QSerialPort);
+
+    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
+    restoredDcb.DCBlength = sizeof(restoredDcb);
+
+    if (!::GetCommState(handle, &restoredDcb)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    currentDcb = restoredDcb;
+    currentDcb.fBinary = true;
+    currentDcb.fInX = false;
+    currentDcb.fOutX = false;
+    currentDcb.fAbortOnError = false;
+    currentDcb.fNull = false;
+    currentDcb.fErrorChar = false;
+
+    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
+        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
+
+    if (!updateDcb())
+        return false;
+
+    if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
+        q->setError(decodeSystemError());
+        return false;
+    }
+
+    ::memset(&currentCommTimeouts, 0, sizeof(currentCommTimeouts));
+    currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
+
+    if (!updateCommTimeouts())
+        return false;
+
+    eventNotifier = new CommEventNotifier(eventMask, this, q);
+    eventNotifier->start();
+
+    return true;
 }
 
 bool QSerialPortPrivate::updateDcb()
