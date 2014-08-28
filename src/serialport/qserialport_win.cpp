@@ -327,6 +327,9 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
+    if (!writeStarted && !startAsyncWrite())
+        return false;
+
     const qint64 initialReadBufferSize = readBuffer.size();
     qint64 currentReadBufferSize = initialReadBufferSize;
 
