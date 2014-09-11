@@ -470,12 +470,13 @@ void tst_QSerialPort::twoStageSynchronousLoopback()
     senderPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     receiverPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), receiverPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
+
     receiverPort.write(receiverPort.readAll());
     receiverPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     senderPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
     QCOMPARE(newlineArray, senderPort.readAll());
 
     // second stage
@@ -483,12 +484,12 @@ void tst_QSerialPort::twoStageSynchronousLoopback()
     senderPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     receiverPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), receiverPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
     receiverPort.write(receiverPort.readAll());
     receiverPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     senderPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
     QCOMPARE(newlineArray, senderPort.readAll());
 }
 
