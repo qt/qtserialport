@@ -251,7 +251,7 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
 
 bool QSerialPortPrivate::flush()
 {
-    return startAsyncWrite();
+    return _q_startAsyncWrite();
 }
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
@@ -305,7 +305,7 @@ void QSerialPortPrivate::startWriting()
     if (!writeStarted) {
         if (!startAsyncWriteTimer) {
             startAsyncWriteTimer = new QTimer(q);
-            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_completeAsyncWrite()));
+            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_startAsyncWrite()));
             startAsyncWriteTimer->setSingleShot(true);
         }
         startAsyncWriteTimer->start(0);
@@ -319,7 +319,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    if (!writeStarted && !startAsyncWrite())
+    if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
     const qint64 initialReadBufferSize = readBuffer.size();
@@ -373,7 +373,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    if (!writeStarted && !startAsyncWrite())
+    if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
     forever {
@@ -535,17 +535,18 @@ bool QSerialPortPrivate::_q_completeAsyncWrite()
     Q_Q(QSerialPort);
 
     if (writeStarted) {
-        writeStarted = false;
         const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Output, writeCompletionOverlapped);
-        if (bytesTransferred == qint64(-1))
+        if (bytesTransferred == qint64(-1)) {
+            writeStarted = false;
             return false;
-        if (bytesTransferred > 0) {
+        } else if (bytesTransferred > 0) {
             writeBuffer.free(bytesTransferred);
             emit q->bytesWritten(bytesTransferred);
         }
+        writeStarted = false;
     }
 
-    return startAsyncWrite();
+    return _q_startAsyncWrite();
 }
 
 bool QSerialPortPrivate::startAsyncCommunication()
@@ -597,7 +598,7 @@ bool QSerialPortPrivate::startAsyncRead()
     return true;
 }
 
-bool QSerialPortPrivate::startAsyncWrite()
+bool QSerialPortPrivate::_q_startAsyncWrite()
 {
     Q_Q(QSerialPort);
 

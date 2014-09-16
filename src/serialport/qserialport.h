@@ -255,9 +255,7 @@ Q_SIGNALS:
     void parityChanged(QSerialPort::Parity parity);
     void stopBitsChanged(QSerialPort::StopBits stopBits);
     void flowControlChanged(QSerialPort::FlowControl flowControl);
-#if QT_DEPRECATED_SINCE(5, 2)
     void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
-#endif
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
@@ -279,6 +277,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncCommunication())
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncRead())
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncWrite())
+    Q_PRIVATE_SLOT(d_func(), bool _q_startAsyncWrite())
 #endif
 };
 

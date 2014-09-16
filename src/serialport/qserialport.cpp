@@ -71,7 +71,9 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , policy(QSerialPort::IgnorePolicy)
     , dataTerminalReady(false)
     , requestToSend(false)
+#if QT_DEPRECATED_SINCE(5,3)
     , settingsRestoredOnClose(true)
+#endif
     , q_ptr(q)
 {
 }
@@ -572,6 +574,7 @@ void QSerialPort::close()
     The default state of the QSerialPort class is to restore the
     settings.
 */
+#if QT_DEPRECATED_SINCE(5,3)
 void QSerialPort::setSettingsRestoredOnClose(bool restore)
 {
     Q_D(QSerialPort);
@@ -587,9 +590,10 @@ bool QSerialPort::settingsRestoredOnClose() const
     Q_D(const QSerialPort);
     return d->settingsRestoredOnClose;
 }
-
+#endif // QT_DEPRECATED_SINCE(5,3)
 /*!
     \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
+    \obsolete
 
     This signal is emitted after the flag which specifies to restore the
     previous settings while closing the serial port has been changed. The new
@@ -1069,6 +1073,7 @@ bool QSerialPort::atEnd() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 */
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);
@@ -1093,7 +1098,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     Q_D(const QSerialPort);
     return d->policy;
 }
-
+#endif // QT_DEPRECATED_SINCE(5, 2)
 /*!
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
     \obsolete

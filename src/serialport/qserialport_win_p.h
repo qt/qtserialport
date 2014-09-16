@@ -100,7 +100,7 @@ public:
 
     bool startAsyncCommunication();
     bool startAsyncRead();
-    bool startAsyncWrite();
+    bool _q_startAsyncWrite();
 
     bool emulateErrorPolicy();
     void emitReadyRead();
