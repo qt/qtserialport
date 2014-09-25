@@ -169,6 +169,10 @@ QList<QSerialPortInfo> availablePortsBySysfs()
                     if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
                         serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
 
+                    QFile serialNumber(QFileInfo(targetDir, QStringLiteral("serial")).absoluteFilePath());
+                    if (serialNumber.open(QIODevice::ReadOnly | QIODevice::Text))
+                        serialPortInfo.d_ptr->serialNumber = QString::fromLatin1(serialNumber.readAll()).simplified();
+
                     QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("idVendor")).absoluteFilePath());
                     if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
                         serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
