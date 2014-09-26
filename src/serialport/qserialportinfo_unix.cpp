@@ -360,12 +360,7 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> serialPortInfoList;
-    // TODO: Remove this condition once the udev runtime symbol resolution crash
-    // is fixed for Qt 4.
-#if defined(LINK_LIBUDEV) || (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    serialPortInfoList = availablePortsByUdev();
-#endif
+    QList<QSerialPortInfo> serialPortInfoList = availablePortsByUdev();
 
 #ifdef Q_OS_LINUX
     if (serialPortInfoList.isEmpty())
