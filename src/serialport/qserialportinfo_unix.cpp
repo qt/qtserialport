@@ -202,6 +202,9 @@ QList<QSerialPortInfo> availablePortsBySysfs()
                         .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
             }
             // TODO: Obtain more information about the device
+        } else if (targetPath.contains(QStringLiteral(".serial/tty/tty"))) {
+            // This condition matches onboard serial port on embedded devices.
+            // Keep those devices in the list
         } else {
             continue;
         }
