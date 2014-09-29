@@ -86,6 +86,7 @@ public:
     bool setBreakEnabled(bool set);
 
     void startWriting();
+    qint64 readData(char *data, qint64 maxSize);
 
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);

@@ -120,6 +120,7 @@ public:
     bool setBreakEnabled(bool set);
 
     void startWriting();
+    qint64 readData(char *data, qint64 maxSize);
 
     bool waitForReadyRead(int msecs);
     bool waitForBytesWritten(int msecs);

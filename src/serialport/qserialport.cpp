@@ -1343,7 +1343,7 @@ bool QSerialPort::setBreakEnabled(bool set)
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->readBuffer.read(data, maxSize);
+    return d->readData(data, maxSize);
 }
 
 /*!

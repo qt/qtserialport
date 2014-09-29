@@ -383,6 +383,11 @@ void QSerialPortPrivate::startWriting()
         setWriteNotificationEnabled(true);
 }
 
+qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
+{
+    return readBuffer.read(data, maxSize);
+}
+
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
     Q_Q(QSerialPort);

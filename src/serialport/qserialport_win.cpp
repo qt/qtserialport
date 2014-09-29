@@ -98,6 +98,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , readChunkBuffer(ReadChunkSize, 0)
     , readyReadEmitted(0)
     , writeStarted(false)
+    , readStarted(false)
     , communicationNotifier(new QWinEventNotifier(q))
     , readCompletionNotifier(new QWinEventNotifier(q))
     , writeCompletionNotifier(new QWinEventNotifier(q))
@@ -173,6 +174,7 @@ void QSerialPortPrivate::close()
     writeCompletionNotifier->setEnabled(false);
     communicationNotifier->setEnabled(false);
 
+    readStarted = false;
     readBuffer.clear();
 
     writeStarted = false;
@@ -267,8 +269,10 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     Q_Q(QSerialPort);
 
     DWORD flags = 0;
-    if (directions & QSerialPort::Input)
+    if (directions & QSerialPort::Input) {
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
+        readStarted = false;
+    }
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
         writeStarted = false;
@@ -318,6 +322,21 @@ void QSerialPortPrivate::startWriting()
         }
         startAsyncWriteTimer->start(0);
     }
+}
+
+qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
+{
+    const qint64 result = readBuffer.read(data, maxSize);
+    // We need try to start async reading to read a remainder from a driver's queue
+    // in case we have a limited read buffer size. Because the read notification can
+    // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
+    // buffer has a remainder of data ready to read until a new data will be received.
+    if (readBufferMaxSize
+            && result > 0
+            && (result == readBufferMaxSize || flowControl == QSerialPort::HardwareControl)) {
+        startAsyncRead();
+    }
+    return result;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -523,13 +542,17 @@ bool QSerialPortPrivate::_q_completeAsyncCommunication()
 bool QSerialPortPrivate::_q_completeAsyncRead()
 {
     const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Input, readCompletionOverlapped);
-    if (bytesTransferred == qint64(-1))
+    if (bytesTransferred == qint64(-1)) {
+        readStarted = false;
         return false;
+    }
     if (bytesTransferred > 0) {
         readBuffer.append(readChunkBuffer.left(bytesTransferred));
         if (!emulateErrorPolicy())
             emitReadyRead();
     }
+
+    readStarted = false;
 
     // start async read for possible remainder into driver queue
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
@@ -578,6 +601,9 @@ bool QSerialPortPrivate::startAsyncRead()
 {
     Q_Q(QSerialPort);
 
+    if (readStarted)
+        return true;
+
     DWORD bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
@@ -590,8 +616,10 @@ bool QSerialPortPrivate::startAsyncRead()
     }
 
     initializeOverlappedStructure(readCompletionOverlapped);
-    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped))
+    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped)) {
+        readStarted = true;
         return true;
+    }
 
     QSerialPort::SerialPortError error = decodeSystemError();
     if (error != QSerialPort::NoError) {
@@ -603,6 +631,7 @@ bool QSerialPortPrivate::startAsyncRead()
         return false;
     }
 
+    readStarted = true;
     return true;
 }
 
