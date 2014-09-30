@@ -146,7 +146,7 @@ static QString deviceInstanceIdentifier(DEVINST deviceInstanceNumber)
                            outputBuffer.size(), 0) != CR_SUCCESS) {
         return QString();
     }
-    return toStringAndTrimNullCharacter(outputBuffer);
+    return toStringAndTrimNullCharacter(outputBuffer).toUpper();
 }
 
 static DEVINST parentDeviceInstanceNumber(DEVINST childDeviceInstanceNumber)
@@ -290,7 +290,7 @@ static QString deviceSerialNumber(const QString &instanceIdentifier,
     QString result = parseDeviceSerialNumber(instanceIdentifier);
     if (result.isEmpty()) {
         const DEVINST parentNumber = parentDeviceInstanceNumber(deviceInstanceNumber);
-        const QString parentInstanceIdentifier = deviceInstanceIdentifier(parentNumber).toUpper();
+        const QString parentInstanceIdentifier = deviceInstanceIdentifier(parentNumber);
         result = parseDeviceSerialNumber(parentInstanceIdentifier);
     }
     return result;
@@ -327,7 +327,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             serialPortInfo.d_ptr->description = deviceDescription(deviceInfoSet, &deviceInfoData);
             serialPortInfo.d_ptr->manufacturer = deviceManufacturer(deviceInfoSet, &deviceInfoData);
 
-            const QString instanceIdentifier = deviceInstanceIdentifier(deviceInfoData.DevInst).toUpper();
+            const QString instanceIdentifier = deviceInstanceIdentifier(deviceInfoData.DevInst);
 
             serialPortInfo.d_ptr->serialNumber =
                     deviceSerialNumber(instanceIdentifier, deviceInfoData.DevInst);
