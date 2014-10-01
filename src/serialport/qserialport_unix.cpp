@@ -504,15 +504,19 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
         return decodeSystemError();
 
-    if (currentSerialInfo.baud_base % baudRate != 0)
-        return QSerialPort::UnsupportedOperationError;
-
     currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
     currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
     currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
 
     if (currentSerialInfo.custom_divisor == 0)
         return QSerialPort::UnsupportedOperationError;
+
+    if (currentSerialInfo.custom_divisor * baudRate != currentSerialInfo.baud_base) {
+        qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
+            qPrintable(systemLocation),
+            currentSerialInfo.baud_base / currentSerialInfo.custom_divisor,
+            baudRate, (float)currentSerialInfo.baud_base / baudRate);
+    }
 
     if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
         return decodeSystemError();
