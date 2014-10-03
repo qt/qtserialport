@@ -117,6 +117,7 @@ private slots:
 
 #ifdef Q_OS_WIN
     void readBufferOverflow();
+    void readAfterInputClear();
 #endif
 
 protected slots:
@@ -696,6 +697,47 @@ void tst_QSerialPort::readBufferOverflow()
     }
 
     QCOMPARE(readData, alphabetArray);
+
+    // No more bytes available
+    QVERIFY(receiverPort.bytesAvailable() == 0);
+}
+
+void tst_QSerialPort::readAfterInputClear()
+{
+    clearReceiver();
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+
+    const int readBufferSize = alphabetArray.size() / 2;
+    receiverPort.setReadBufferSize(readBufferSize);
+    QCOMPARE(receiverPort.readBufferSize(), qint64(readBufferSize));
+
+    const int waitMsecs = 100;
+
+    // First write more than read buffer size
+    QCOMPARE(senderPort.write(alphabetArray), qint64(alphabetArray.size()));
+    QVERIFY2(senderPort.waitForBytesWritten(waitMsecs), "Waiting for bytes written failed");
+
+    // Wait for first part of data into read buffer
+    while (receiverPort.waitForReadyRead(waitMsecs));
+    QCOMPARE(receiverPort.bytesAvailable(), qint64(readBufferSize));
+    // Wait for second part of data into driver's FIFO
+    QTest::qSleep(waitMsecs);
+
+    QVERIFY(receiverPort.clear(QSerialPort::Input));
+    QCOMPARE(receiverPort.bytesAvailable(), qint64(0));
+
+    // Second write less than read buffer size
+    QCOMPARE(senderPort.write(newlineArray), qint64(newlineArray.size()));
+    QVERIFY2(senderPort.waitForBytesWritten(waitMsecs), "Waiting for bytes written failed");
+
+    while (receiverPort.waitForReadyRead(waitMsecs));
+    QCOMPARE(receiverPort.bytesAvailable(), qint64(newlineArray.size()));
+    QCOMPARE(receiverPort.readAll(), newlineArray);
 
     // No more bytes available
     QVERIFY(receiverPort.bytesAvailable() == 0);

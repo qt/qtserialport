@@ -282,6 +282,12 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
         return false;
     }
 
+    // We need start async read because a reading can be stalled. Since the
+    // PurgeComm can abort of current reading sequence, or a port is in hardware
+    // flow control mode, or a port has a limited read buffer size.
+    if (directions & QSerialPort::Input)
+        startAsyncRead();
+
     return true;
 }
 
