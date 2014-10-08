@@ -57,7 +57,7 @@
     QT += serialport
     \endcode
 
-    \section1 Related information
+    \section1 Related Information
     \list
     \li \l{Qt Serial Port C++ Classes}{C++ Classes}
     \li \l{Qt Serial Port Examples}{Examples}
