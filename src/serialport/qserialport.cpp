@@ -8,35 +8,27 @@
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -79,7 +71,9 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , policy(QSerialPort::IgnorePolicy)
     , dataTerminalReady(false)
     , requestToSend(false)
+#if QT_DEPRECATED_SINCE(5,3)
     , settingsRestoredOnClose(true)
+#endif
     , q_ptr(q)
 {
 }
@@ -580,6 +574,7 @@ void QSerialPort::close()
     The default state of the QSerialPort class is to restore the
     settings.
 */
+#if QT_DEPRECATED_SINCE(5,3)
 void QSerialPort::setSettingsRestoredOnClose(bool restore)
 {
     Q_D(QSerialPort);
@@ -595,9 +590,10 @@ bool QSerialPort::settingsRestoredOnClose() const
     Q_D(const QSerialPort);
     return d->settingsRestoredOnClose;
 }
-
+#endif // QT_DEPRECATED_SINCE(5,3)
 /*!
     \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
+    \obsolete
 
     This signal is emitted after the flag which specifies to restore the
     previous settings while closing the serial port has been changed. The new
@@ -1077,6 +1073,7 @@ bool QSerialPort::atEnd() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 */
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);
@@ -1101,7 +1098,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     Q_D(const QSerialPort);
     return d->policy;
 }
-
+#endif // QT_DEPRECATED_SINCE(5, 2)
 /*!
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
     \obsolete

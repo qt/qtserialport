@@ -5,35 +5,27 @@
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL$
+** $QT_BEGIN_LICENSE:LGPL21$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Digia.  For licensing terms and
-** conditions see http://qt.digia.com/licensing.  For further information
+** a written agreement between you and Digia. For licensing terms and
+** conditions see http://qt.digia.com/licensing. For further information
 ** use the contact form at http://qt.digia.com/contact-us.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 2.1 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU Lesser General Public License version 2.1 requirements
-** will be met: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file. Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
+** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
 ** In addition, as a special exception, Digia gives you certain additional
-** rights.  These rights are described in the Digia Qt LGPL Exception
+** rights. These rights are described in the Digia Qt LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
-**
-** GNU General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 3.0 as published by the Free Software
-** Foundation and appearing in the file LICENSE.GPL included in the
-** packaging of this file.  Please review the following information to
-** ensure the GNU General Public License version 3.0 requirements will be
-** met: http://www.gnu.org/copyleft/gpl.html.
-**
 **
 ** $QT_END_LICENSE$
 **
@@ -46,6 +38,7 @@
 Q_DECLARE_METATYPE(QSerialPort::SerialPortError);
 Q_DECLARE_METATYPE(QIODevice::OpenMode);
 Q_DECLARE_METATYPE(QIODevice::OpenModeFlag);
+Q_DECLARE_METATYPE(Qt::ConnectionType);
 
 class tst_QSerialPort : public QObject
 {
@@ -107,6 +100,12 @@ private slots:
     void twoStageSynchronousLoopback();
 
     void synchronousReadWrite();
+
+    void asynchronousWriteByBytesWritten_data();
+    void asynchronousWriteByBytesWritten();
+
+    void asynchronousWriteByTimer_data();
+    void asynchronousWriteByTimer();
 
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
@@ -463,12 +462,13 @@ void tst_QSerialPort::twoStageSynchronousLoopback()
     senderPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     receiverPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), receiverPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
+
     receiverPort.write(receiverPort.readAll());
     receiverPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     senderPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
     QCOMPARE(newlineArray, senderPort.readAll());
 
     // second stage
@@ -476,12 +476,12 @@ void tst_QSerialPort::twoStageSynchronousLoopback()
     senderPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     receiverPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), receiverPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
     receiverPort.write(receiverPort.readAll());
     receiverPort.waitForBytesWritten(waitMsecs);
     QTest::qSleep(waitMsecs);
     senderPort.waitForReadyRead(waitMsecs);
-    QCOMPARE(newlineArray.size(), senderPort.bytesAvailable());
+    QCOMPARE(qint64(newlineArray.size()), receiverPort.bytesAvailable());
     QCOMPARE(newlineArray, senderPort.readAll());
 }
 
@@ -509,6 +509,154 @@ void tst_QSerialPort::synchronousReadWrite()
         readData.append(receiverPort.readAll());
 
     QCOMPARE(writeData, readData);
+}
+
+class AsyncReader : public QObject
+{
+    Q_OBJECT
+public:
+    explicit AsyncReader(QSerialPort &port, Qt::ConnectionType connectionType, int expectedBytesCount)
+        : serialPort(port), expectedBytesCount(expectedBytesCount)
+    {
+        connect(&serialPort, SIGNAL(readyRead()), this, SLOT(receive()), connectionType);
+    }
+
+private slots:
+    void receive()
+    {
+        if (serialPort.bytesAvailable() < expectedBytesCount)
+            return;
+        tst_QSerialPort::exitLoop();
+    }
+
+private:
+    QSerialPort &serialPort;
+    const int expectedBytesCount;
+};
+
+class AsyncWriterByBytesWritten : public QObject
+{
+    Q_OBJECT
+public:
+    explicit AsyncWriterByBytesWritten(
+            QSerialPort &port, Qt::ConnectionType connectionType, const QByteArray &dataToWrite)
+        : serialPort(port), writeChunkSize(0)
+    {
+        writeBuffer.setData(dataToWrite);
+        writeBuffer.open(QIODevice::ReadOnly);
+        connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(send()), connectionType);
+        send();
+    }
+
+private slots:
+    void send()
+    {
+        if (writeBuffer.bytesAvailable() > 0)
+            serialPort.write(writeBuffer.read(++writeChunkSize));
+    }
+
+private:
+    QSerialPort &serialPort;
+    QBuffer writeBuffer;
+    int writeChunkSize;
+};
+
+void tst_QSerialPort::asynchronousWriteByBytesWritten_data()
+{
+    QTest::addColumn<Qt::ConnectionType>("readConnectionType");
+    QTest::addColumn<Qt::ConnectionType>("writeConnectionType");
+
+    QTest::newRow("BothQueued") << Qt::QueuedConnection << Qt::QueuedConnection;
+    QTest::newRow("BothDirect") << Qt::DirectConnection << Qt::DirectConnection;
+    QTest::newRow("ReadDirectWriteQueued") << Qt::DirectConnection << Qt::QueuedConnection;
+    QTest::newRow("ReadQueuedWriteDirect") << Qt::QueuedConnection << Qt::DirectConnection;
+}
+
+void tst_QSerialPort::asynchronousWriteByBytesWritten()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    QFETCH(Qt::ConnectionType, readConnectionType);
+    QFETCH(Qt::ConnectionType, writeConnectionType);
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+    AsyncReader reader(receiverPort, readConnectionType, alphabetArray.size());
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+    AsyncWriterByBytesWritten writer(senderPort, writeConnectionType, alphabetArray);
+
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the read or write.");
+    QCOMPARE(receiverPort.bytesAvailable(), qint64(alphabetArray.size()));
+    QCOMPARE(receiverPort.readAll(), alphabetArray);
+}
+
+class AsyncWriterByTimer : public QObject
+{
+    Q_OBJECT
+public:
+    explicit AsyncWriterByTimer(
+            QSerialPort &port, Qt::ConnectionType connectionType, const QByteArray &dataToWrite)
+        : serialPort(port), writeChunkSize(0)
+    {
+        writeBuffer.setData(dataToWrite);
+        writeBuffer.open(QIODevice::ReadOnly);
+        connect(&timer, SIGNAL(timeout()), this, SLOT(send()), connectionType);
+        timer.start(0);
+    }
+
+private slots:
+    void send()
+    {
+        if (writeBuffer.bytesAvailable() > 0)
+            serialPort.write(writeBuffer.read(++writeChunkSize));
+        else
+            timer.stop();
+    }
+
+private:
+    QSerialPort &serialPort;
+    QBuffer writeBuffer;
+    int writeChunkSize;
+    QTimer timer;
+};
+
+void tst_QSerialPort::asynchronousWriteByTimer_data()
+{
+    QTest::addColumn<Qt::ConnectionType>("readConnectionType");
+    QTest::addColumn<Qt::ConnectionType>("writeConnectionType");
+
+    QTest::newRow("BothQueued") << Qt::QueuedConnection << Qt::QueuedConnection;
+    QTest::newRow("BothDirect") << Qt::DirectConnection << Qt::DirectConnection;
+    QTest::newRow("ReadDirectWriteQueued") << Qt::DirectConnection << Qt::QueuedConnection;
+    QTest::newRow("ReadQueuedWriteDirect") << Qt::QueuedConnection << Qt::DirectConnection;
+}
+
+void tst_QSerialPort::asynchronousWriteByTimer()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    QFETCH(Qt::ConnectionType, readConnectionType);
+    QFETCH(Qt::ConnectionType, writeConnectionType);
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+    AsyncReader reader(receiverPort, readConnectionType, alphabetArray.size());
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+    AsyncWriterByTimer writer(senderPort, writeConnectionType, alphabetArray);
+
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the read or write.");
+    QCOMPARE(receiverPort.bytesAvailable(), qint64(alphabetArray.size()));
+    QCOMPARE(receiverPort.readAll(), alphabetArray);
 }
 
 QTEST_MAIN(tst_QSerialPort)
