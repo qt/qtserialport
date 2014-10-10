@@ -271,13 +271,10 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     Q_Q(QSerialPort);
 
     DWORD flags = 0;
-    if (directions & QSerialPort::Input) {
+    if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-        readStarted = false;
-    }
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-        writeStarted = false;
         actualBytesToWrite = 0;
     }
     if (!::PurgeComm(handle, flags)) {
@@ -289,7 +286,7 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     // PurgeComm can abort of current reading sequence, or a port is in hardware
     // flow control mode, or a port has a limited read buffer size.
     if (directions & QSerialPort::Input)
-        startAsyncRead();
+        startAsyncCommunication();
 
     return true;
 }
