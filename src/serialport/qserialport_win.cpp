@@ -549,11 +549,12 @@ bool QSerialPortPrivate::_q_completeAsyncRead()
 
     readStarted = false;
 
-    // start async read for possible remainder into driver queue
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
         return startAsyncRead();
-    else // driver queue is emplty, so startup wait comm event
+    else if (readBufferMaxSize == 0 || readBufferMaxSize > readBuffer.size())
         return startAsyncCommunication();
+    else
+        return true;
 }
 
 bool QSerialPortPrivate::_q_completeAsyncWrite()
