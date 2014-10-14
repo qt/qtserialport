@@ -90,12 +90,14 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , readChunkBuffer(ReadChunkSize, 0)
     , readyReadEmitted(0)
     , writeStarted(false)
+    , readStarted(false)
     , communicationNotifier(new QWinEventNotifier(q))
     , readCompletionNotifier(new QWinEventNotifier(q))
     , writeCompletionNotifier(new QWinEventNotifier(q))
     , startAsyncWriteTimer(0)
     , originalEventMask(0)
     , triggeredEventMask(0)
+    , actualBytesToWrite(0)
 {
     ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
     communicationOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -165,10 +167,12 @@ void QSerialPortPrivate::close()
     writeCompletionNotifier->setEnabled(false);
     communicationNotifier->setEnabled(false);
 
+    readStarted = false;
     readBuffer.clear();
 
     writeStarted = false;
     writeBuffer.clear();
+    actualBytesToWrite = 0;
 
     readyReadEmitted = false;
     parityErrorOccurred = false;
@@ -259,16 +263,25 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     Q_Q(QSerialPort);
 
     DWORD flags = 0;
-    if (directions & QSerialPort::Input)
+    if (directions & QSerialPort::Input) {
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
+        readStarted = false;
+    }
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
         writeStarted = false;
+        actualBytesToWrite = 0;
     }
     if (!::PurgeComm(handle, flags)) {
         q->setError(decodeSystemError());
         return false;
     }
+
+    // We need start async read because a reading can be stalled. Since the
+    // PurgeComm can abort of current reading sequence, or a port is in hardware
+    // flow control mode, or a port has a limited read buffer size.
+    if (directions & QSerialPort::Input)
+        startAsyncRead();
 
     return true;
 }
@@ -298,18 +311,19 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return true;
 }
 
-void QSerialPortPrivate::startWriting()
+qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
-    Q_Q(QSerialPort);
-
-    if (!writeStarted) {
-        if (!startAsyncWriteTimer) {
-            startAsyncWriteTimer = new QTimer(q);
-            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_startAsyncWrite()));
-            startAsyncWriteTimer->setSingleShot(true);
-        }
-        startAsyncWriteTimer->start(0);
+    const qint64 result = readBuffer.read(data, maxSize);
+    // We need try to start async reading to read a remainder from a driver's queue
+    // in case we have a limited read buffer size. Because the read notification can
+    // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
+    // buffer has a remainder of data ready to read until a new data will be received.
+    if (readBufferMaxSize
+            && result > 0
+            && (result == readBufferMaxSize || flowControl == QSerialPort::HardwareControl)) {
+        startAsyncRead();
     }
+    return result;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -515,13 +529,17 @@ bool QSerialPortPrivate::_q_completeAsyncCommunication()
 bool QSerialPortPrivate::_q_completeAsyncRead()
 {
     const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Input, readCompletionOverlapped);
-    if (bytesTransferred == qint64(-1))
+    if (bytesTransferred == qint64(-1)) {
+        readStarted = false;
         return false;
+    }
     if (bytesTransferred > 0) {
         readBuffer.append(readChunkBuffer.left(bytesTransferred));
         if (!emulateErrorPolicy())
             emitReadyRead();
     }
+
+    readStarted = false;
 
     // start async read for possible remainder into driver queue
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
@@ -570,6 +588,9 @@ bool QSerialPortPrivate::startAsyncRead()
 {
     Q_Q(QSerialPort);
 
+    if (readStarted)
+        return true;
+
     DWORD bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
@@ -582,8 +603,10 @@ bool QSerialPortPrivate::startAsyncRead()
     }
 
     initializeOverlappedStructure(readCompletionOverlapped);
-    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped))
+    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped)) {
+        readStarted = true;
         return true;
+    }
 
     QSerialPort::SerialPortError error = decodeSystemError();
     if (error != QSerialPort::NoError) {
@@ -595,6 +618,7 @@ bool QSerialPortPrivate::startAsyncRead()
         return false;
     }
 
+    readStarted = true;
     return true;
 }
 
@@ -606,8 +630,10 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
         return true;
 
     initializeOverlappedStructure(writeCompletionOverlapped);
+
+    const int writeBytes = writeBuffer.nextDataBlockSize();
     if (!::WriteFile(handle, writeBuffer.readPointer(),
-                     writeBuffer.nextDataBlockSize(),
+                     writeBytes,
                      NULL, &writeCompletionOverlapped)) {
 
         QSerialPort::SerialPortError error = decodeSystemError();
@@ -619,6 +645,7 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
         }
     }
 
+    actualBytesToWrite -= writeBytes;
     writeStarted = true;
     return true;
 }
@@ -657,6 +684,29 @@ void QSerialPortPrivate::emitReadyRead()
 
     readyReadEmitted = true;
     emit q->readyRead();
+}
+
+qint64 QSerialPortPrivate::bytesToWrite() const
+{
+    return actualBytesToWrite;
+}
+
+qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
+{
+    Q_Q(QSerialPort);
+
+    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    actualBytesToWrite += maxSize;
+
+    if (!writeBuffer.isEmpty() && !writeStarted) {
+        if (!startAsyncWriteTimer) {
+            startAsyncWriteTimer = new QTimer(q);
+            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_completeAsyncWrite()));
+            startAsyncWriteTimer->setSingleShot(true);
+        }
+        startAsyncWriteTimer->start(0);
+    }
+    return maxSize;
 }
 
 void QSerialPortPrivate::handleLineStatusErrors()

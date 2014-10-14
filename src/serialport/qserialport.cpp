@@ -1218,7 +1218,7 @@ qint64 QSerialPort::bytesAvailable() const
 qint64 QSerialPort::bytesToWrite() const
 {
     Q_D(const QSerialPort);
-    return d->writeBuffer.size() + QIODevice::bytesToWrite();
+    return d->bytesToWrite() + QIODevice::bytesToWrite();
 }
 
 /*!
@@ -1335,7 +1335,7 @@ bool QSerialPort::setBreakEnabled(bool set)
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->readBuffer.read(data, maxSize);
+    return d->readData(data, maxSize);
 }
 
 /*!
@@ -1352,11 +1352,7 @@ qint64 QSerialPort::readLineData(char *data, qint64 maxSize)
 qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-
-    ::memcpy(d->writeBuffer.reserve(maxSize), data, maxSize);
-    if (!d->writeBuffer.isEmpty())
-        d->startWriting();
-    return maxSize;
+    return d->writeData(data, maxSize);
 }
 
 void QSerialPort::setError(QSerialPort::SerialPortError serialPortError, const QString &errorString)

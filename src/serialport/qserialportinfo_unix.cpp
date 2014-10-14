@@ -161,6 +161,10 @@ QList<QSerialPortInfo> availablePortsBySysfs()
                     if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
                         serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
 
+                    QFile serialNumber(QFileInfo(targetDir, QStringLiteral("serial")).absoluteFilePath());
+                    if (serialNumber.open(QIODevice::ReadOnly | QIODevice::Text))
+                        serialPortInfo.d_ptr->serialNumber = QString::fromLatin1(serialNumber.readAll()).simplified();
+
                     QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("idVendor")).absoluteFilePath());
                     if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
                         serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
@@ -190,6 +194,9 @@ QList<QSerialPortInfo> availablePortsBySysfs()
                         .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
             }
             // TODO: Obtain more information about the device
+        } else if (targetPath.contains(QStringLiteral(".serial/tty/tty"))) {
+            // This condition matches onboard serial port on embedded devices.
+            // Keep those devices in the list
         } else {
             continue;
         }
@@ -345,12 +352,7 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> serialPortInfoList;
-    // TODO: Remove this condition once the udev runtime symbol resolution crash
-    // is fixed for Qt 4.
-#if defined(LINK_LIBUDEV) || (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    serialPortInfoList = availablePortsByUdev();
-#endif
+    QList<QSerialPortInfo> serialPortInfoList = availablePortsByUdev();
 
 #ifdef Q_OS_LINUX
     if (serialPortInfoList.isEmpty())

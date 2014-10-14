@@ -78,7 +78,7 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    void startWriting();
+    qint64 readData(char *data, qint64 maxSize);
 
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);
@@ -105,6 +105,9 @@ public:
     bool emulateErrorPolicy();
     void emitReadyRead();
 
+    qint64 bytesToWrite() const;
+    qint64 writeData(const char *data, qint64 maxSize);
+
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
 
@@ -122,6 +125,7 @@ public:
     QByteArray readChunkBuffer;
     bool readyReadEmitted;
     bool writeStarted;
+    bool readStarted;
     QWinEventNotifier *communicationNotifier;
     QWinEventNotifier *readCompletionNotifier;
     QWinEventNotifier *writeCompletionNotifier;
@@ -131,6 +135,7 @@ public:
     OVERLAPPED writeCompletionOverlapped;
     DWORD originalEventMask;
     DWORD triggeredEventMask;
+    qint64 actualBytesToWrite;
 
 private:
     bool initialize(QIODevice::OpenMode mode);
