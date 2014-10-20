@@ -64,8 +64,7 @@ static QCFType<CFTypeRef> searchProperty(io_registry_entry_t ioRegistryEntry,
 static QString searchStringProperty(io_registry_entry_t ioRegistryEntry,
                                     const QCFString &propertyKey)
 {
-    const QCFString result(searchProperty(ioRegistryEntry, propertyKey).as<CFStringRef>());
-    return QCFString::toQString(result);
+    return QCFString::toQString(searchProperty(ioRegistryEntry, propertyKey).as<CFStringRef>());
 }
 
 static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,

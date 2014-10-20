@@ -57,7 +57,7 @@ extern "C"
 
 #define GENERATE_SYMBOL_VARIABLE(returnType, symbolName, ...) \
     typedef returnType (*fp_##symbolName)(__VA_ARGS__); \
-    fp_##symbolName symbolName;
+    static fp_##symbolName symbolName;
 
 #define RESOLVE_SYMBOL(symbolName) \
     symbolName = (fp_##symbolName)resolveSymbol(udevLibrary, #symbolName); \
