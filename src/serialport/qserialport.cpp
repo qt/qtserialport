@@ -41,8 +41,6 @@
 #include "qserialport_wince_p.h"
 #elif defined (Q_OS_WIN)
 #include "qserialport_win_p.h"
-#elif defined (Q_OS_SYMBIAN)
-#include "qserialport_symbian_p.h"
 #elif defined (Q_OS_UNIX)
 #include "qserialport_unix_p.h"
 #else
@@ -467,10 +465,6 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
         \li Removes the suffix ":" from the system location
            and returns the remainder of the string.
     \row
-        \li Symbian
-        \li Returns the system location as it is,
-           as it is equivalent to the port name.
-    \row
         \li GNU/Linux
         \li Removes the prefix "/dev/" from the system location
            and returns the remainder of the string.
@@ -618,10 +612,9 @@ bool QSerialPort::settingsRestoredOnClose() const
     after that the opening of the port succeeds.
 
     \warning Setting the AllDirections flag is only supported on
-    the Windows, Windows CE, and Symbian platforms.
+    the Windows, Windows CE platforms.
 
-    \warning Returns equal baud rate in any direction on Windows, Windows CE, and
-    Symbian.
+    \warning Returns equal baud rate in any direction on Windows, Windows CE.
 
     The default value is Baud9600, i.e. 9600 bits per second.
 */
