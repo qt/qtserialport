@@ -72,13 +72,21 @@ QString serialPortLockFilePath(const QString &portName)
 #endif
     ;
 
+    QString fileName = portName;
+    fileName.replace(QLatin1Char('/'), QLatin1Char('_'));
+    fileName.prepend(QStringLiteral("/LCK.."));
+
     QString lockFilePath;
 
     foreach (const QString &lockDirectoryPath, lockDirectoryPaths) {
+        const QString filePath = lockDirectoryPath + fileName;
+
         QFileInfo lockDirectoryInfo(lockDirectoryPath);
-        if (lockDirectoryInfo.isReadable() && lockDirectoryInfo.isWritable()) {
-            lockFilePath = lockDirectoryPath;
-            break;
+        if (lockDirectoryInfo.isReadable()) {
+            if (QFile::exists(filePath) || lockDirectoryInfo.isWritable()) {
+                lockFilePath = filePath;
+                break;
+            }
         }
     }
 
@@ -88,11 +96,6 @@ QString serialPortLockFilePath(const QString &portName)
             qWarning("\t%s\n", qPrintable(lockDirectoryPath));
         return QString();
     }
-
-    QString replacedPortName = portName;
-
-    lockFilePath.append(QStringLiteral("/LCK.."));
-    lockFilePath.append(replacedPortName.replace(QLatin1Char('/'), QLatin1Char('_')));
 
     return lockFilePath;
 }
