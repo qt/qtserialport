@@ -33,7 +33,7 @@
 **
 ****************************************************************************/
 
-#include "qserialport_wince_p.h"
+#include "qserialport_p.h"
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qthread.h>
@@ -178,14 +178,6 @@ private:
 };
 
 #include "qserialport_wince.moc"
-
-QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
-    : QSerialPortPrivateData(q)
-    , handle(INVALID_HANDLE_VALUE)
-    , parityErrorOccurred(false)
-    , eventNotifier(0)
-{
-}
 
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {

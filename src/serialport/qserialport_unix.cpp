@@ -33,7 +33,7 @@
 **
 ****************************************************************************/
 
-#include "qserialport_unix_p.h"
+#include "qserialport_p.h"
 
 #include <errno.h>
 #include <sys/time.h>
@@ -143,21 +143,6 @@ private:
 };
 
 #include "qserialport_unix.moc"
-
-QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
-    : QSerialPortPrivateData(q)
-    , descriptor(-1)
-    , readNotifier(0)
-    , writeNotifier(0)
-    , readPortNotifierCalled(false)
-    , readPortNotifierState(false)
-    , readPortNotifierStateSet(false)
-    , emittedReadyRead(false)
-    , emittedBytesWritten(false)
-    , pendingBytesWritten(0)
-    , writeSequenceStarted(false)
-{
-}
 
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {

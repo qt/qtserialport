@@ -35,7 +35,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qserialport_wince_p.h"
+#include "qserialport_p.h"
 
 #include <QtCore/qstringlist.h>
 

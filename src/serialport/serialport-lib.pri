@@ -20,9 +20,6 @@ SOURCES += \
     $$PWD/qserialportinfo.cpp
 
 win32:!wince* {
-    PRIVATE_HEADERS += \
-        $$PWD/qserialport_win_p.h
-
     SOURCES += \
         $$PWD/qserialport_win.cpp \
         $$PWD/qserialportinfo_win.cpp
@@ -31,18 +28,12 @@ win32:!wince* {
 }
 
 wince* {
-    PRIVATE_HEADERS += \
-        $$PWD/qserialport_wince_p.h
-
     SOURCES += \
         $$PWD/qserialport_wince.cpp \
         $$PWD/qserialportinfo_wince.cpp
 }
 
 unix:!symbian {
-    PRIVATE_HEADERS += \
-        $$PWD/qserialport_unix_p.h
-
     SOURCES += \
         $$PWD/qserialport_unix.cpp
 

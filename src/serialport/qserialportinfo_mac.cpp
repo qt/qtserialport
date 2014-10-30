@@ -35,7 +35,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qserialport_unix_p.h"
+#include "qserialport_p.h"
 
 #include "private/qcore_mac_p.h"
 

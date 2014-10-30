@@ -37,25 +37,13 @@
 #include "qserialport.h"
 #include "qserialportinfo.h"
 
-#ifdef Q_OS_WINCE
-#include "qserialport_wince_p.h"
-#elif defined (Q_OS_WIN)
-#include "qserialport_win_p.h"
-#elif defined (Q_OS_UNIX)
-#include "qserialport_unix_p.h"
-#else
-#error Unsupported OS
-#endif
-
-#ifndef SERIALPORT_BUFFERSIZE
-#  define SERIALPORT_BUFFERSIZE 16384
-#endif
+#include "qserialport_p.h"
 
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
-QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
+QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : readBufferMaxSize(0)
     , readBuffer(SERIALPORT_BUFFERSIZE)
     , writeBuffer(SERIALPORT_BUFFERSIZE)
@@ -73,10 +61,68 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , settingsRestoredOnClose(true)
 #endif
     , q_ptr(q)
+#if defined (Q_OS_WINCE)
+    , handle(INVALID_HANDLE_VALUE)
+    , parityErrorOccurred(false)
+    , eventNotifier(0)
+#elif defined (Q_OS_WIN32)
+    , handle(INVALID_HANDLE_VALUE)
+    , parityErrorOccurred(false)
+    , readChunkBuffer(ReadChunkSize, 0)
+    , readyReadEmitted(0)
+    , writeStarted(false)
+    , readStarted(false)
+    , communicationNotifier(new QWinEventNotifier(q))
+    , readCompletionNotifier(new QWinEventNotifier(q))
+    , writeCompletionNotifier(new QWinEventNotifier(q))
+    , startAsyncWriteTimer(0)
+    , originalEventMask(0)
+    , triggeredEventMask(0)
+    , actualBytesToWrite(0)
+#elif defined (Q_OS_UNIX)
+    , descriptor(-1)
+    , readNotifier(0)
+    , writeNotifier(0)
+    , readPortNotifierCalled(false)
+    , readPortNotifierState(false)
+    , readPortNotifierStateSet(false)
+    , emittedReadyRead(false)
+    , emittedBytesWritten(false)
+    , pendingBytesWritten(0)
+    , writeSequenceStarted(false)
+#endif
 {
+#ifdef Q_OS_WIN32
+    ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
+    communicationOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!communicationOverlapped.hEvent) {
+        q->setError(decodeSystemError());
+    } else {
+        communicationNotifier->setHandle(communicationOverlapped.hEvent);
+        q->connect(communicationNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncCommunication()));
+    }
+
+    ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
+    readCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!readCompletionOverlapped.hEvent) {
+        q->setError(decodeSystemError());
+    } else {
+        readCompletionNotifier->setHandle(readCompletionOverlapped.hEvent);
+        q->connect(readCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncRead()));
+    }
+
+    ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
+    writeCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (!writeCompletionOverlapped.hEvent) {
+        q->setError(decodeSystemError());
+    } else {
+        writeCompletionNotifier->setHandle(writeCompletionOverlapped.hEvent);
+        q->connect(writeCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncWrite()));
+    }
+#endif
 }
 
-int QSerialPortPrivateData::timeoutValue(int msecs, int elapsed)
+int QSerialPortPrivate::timeoutValue(int msecs, int elapsed)
 {
     if (msecs == -1)
         return msecs;

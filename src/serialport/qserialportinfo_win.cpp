@@ -35,7 +35,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qserialport_win_p.h"
+#include "qserialport_p.h"
 
 #include <QtCore/quuid.h>
 #include <QtCore/qpair.h>

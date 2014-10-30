@@ -35,7 +35,7 @@
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
-#include "qserialport_unix_p.h"
+#include "qserialport_p.h"
 
 #include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>

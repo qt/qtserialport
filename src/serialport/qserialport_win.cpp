@@ -33,7 +33,7 @@
 **
 ****************************************************************************/
 
-#include "qserialport_win_p.h"
+#include "qserialport_p.h"
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qelapsedtimer.h>
@@ -81,50 +81,6 @@ static void initializeOverlappedStructure(OVERLAPPED &overlapped)
     overlapped.InternalHigh = 0;
     overlapped.Offset = 0;
     overlapped.OffsetHigh = 0;
-}
-
-QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
-    : QSerialPortPrivateData(q)
-    , handle(INVALID_HANDLE_VALUE)
-    , parityErrorOccurred(false)
-    , readChunkBuffer(ReadChunkSize, 0)
-    , readyReadEmitted(0)
-    , writeStarted(false)
-    , readStarted(false)
-    , communicationNotifier(new QWinEventNotifier(q))
-    , readCompletionNotifier(new QWinEventNotifier(q))
-    , writeCompletionNotifier(new QWinEventNotifier(q))
-    , startAsyncWriteTimer(0)
-    , originalEventMask(0)
-    , triggeredEventMask(0)
-    , actualBytesToWrite(0)
-{
-    ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
-    communicationOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!communicationOverlapped.hEvent)
-        q->setError(decodeSystemError());
-    else {
-        communicationNotifier->setHandle(communicationOverlapped.hEvent);
-        q->connect(communicationNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncCommunication()));
-    }
-
-    ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
-    readCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!readCompletionOverlapped.hEvent)
-        q->setError(decodeSystemError());
-    else {
-        readCompletionNotifier->setHandle(readCompletionOverlapped.hEvent);
-        q->connect(readCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncRead()));
-    }
-
-    ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
-    writeCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!writeCompletionOverlapped.hEvent)
-        q->setError(decodeSystemError());
-    else {
-        writeCompletionNotifier->setHandle(writeCompletionOverlapped.hEvent);
-        q->connect(writeCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncWrite()));
-    }
 }
 
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
