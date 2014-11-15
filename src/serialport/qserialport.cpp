@@ -72,9 +72,9 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , readyReadEmitted(0)
     , writeStarted(false)
     , readStarted(false)
-    , communicationNotifier(new QWinEventNotifier(q))
-    , readCompletionNotifier(new QWinEventNotifier(q))
-    , writeCompletionNotifier(new QWinEventNotifier(q))
+    , communicationNotifier(0)
+    , readCompletionNotifier(0)
+    , writeCompletionNotifier(0)
     , startAsyncWriteTimer(0)
     , originalEventMask(0)
     , triggeredEventMask(0)
@@ -92,34 +92,6 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , writeSequenceStarted(false)
 #endif
 {
-#ifdef Q_OS_WIN32
-    ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
-    communicationOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!communicationOverlapped.hEvent) {
-        q->setError(decodeSystemError());
-    } else {
-        communicationNotifier->setHandle(communicationOverlapped.hEvent);
-        q->connect(communicationNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncCommunication()));
-    }
-
-    ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
-    readCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!readCompletionOverlapped.hEvent) {
-        q->setError(decodeSystemError());
-    } else {
-        readCompletionNotifier->setHandle(readCompletionOverlapped.hEvent);
-        q->connect(readCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncRead()));
-    }
-
-    ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
-    writeCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (!writeCompletionOverlapped.hEvent) {
-        q->setError(decodeSystemError());
-    } else {
-        writeCompletionNotifier->setHandle(writeCompletionOverlapped.hEvent);
-        q->connect(writeCompletionNotifier, SIGNAL(activated(HANDLE)), q, SLOT(_q_completeAsyncWrite()));
-    }
-#endif
 }
 
 int QSerialPortPrivate::timeoutValue(int msecs, int elapsed)

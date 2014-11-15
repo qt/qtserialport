@@ -55,7 +55,6 @@
 #  include <QtCore/qmutex.h>
 #  include <qt_windows.h>
 #elif defined (Q_OS_WIN32)
-#  include <QtCore/qwineventnotifier.h>
 #  include <qt_windows.h>
 #elif defined (Q_OS_UNIX)
 #  include <QtCore/qlockfile.h>
@@ -204,7 +203,7 @@ public:
 
 #elif defined (Q_OS_WIN32)
 
-    bool initialize(QIODevice::OpenMode mode);
+    bool initialize();
     bool updateDcb();
     bool updateCommTimeouts();
     qint64 handleOverlappedResult(int direction, OVERLAPPED &overlapped);
@@ -221,6 +220,10 @@ public:
 
     bool emulateErrorPolicy();
     void emitReadyRead();
+
+    bool setCommunicationNotificationEnabled(bool enable);
+    bool setReadNotificationEnabled(bool enable);
+    bool setWriteNotificationEnabled(bool enable);
 
     DCB currentDcb;
     DCB restoredDcb;
