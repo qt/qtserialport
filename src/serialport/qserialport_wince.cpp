@@ -331,12 +331,12 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
-    return readBuffer.read(data, maxSize);
+    return buffer.read(data, maxSize);
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msec)
 {
-    if (!readBuffer.isEmpty())
+    if (!buffer.isEmpty())
         return true;
 
     QElapsedTimer stopWatch;
@@ -499,8 +499,8 @@ bool QSerialPortPrivate::notifyRead()
 
     DWORD bytesToRead = (policy == QSerialPort::IgnorePolicy) ? ReadChunkSize : 1;
 
-    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
-        bytesToRead = readBufferMaxSize - readBuffer.size();
+    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
+        bytesToRead = readBufferMaxSize - buffer.size();
         if (bytesToRead == 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
@@ -508,18 +508,18 @@ bool QSerialPortPrivate::notifyRead()
         }
     }
 
-    char *ptr = readBuffer.reserve(bytesToRead);
+    char *ptr = buffer.reserve(bytesToRead);
 
     DWORD readBytes = 0;
     BOOL sucessResult = ::ReadFile(handle, ptr, bytesToRead, &readBytes, NULL);
 
     if (!sucessResult) {
-        readBuffer.truncate(bytesToRead);
+        buffer.chop(bytesToRead);
         q->setError(QSerialPort::ReadError);
         return false;
     }
 
-    readBuffer.truncate(readBytes);
+    buffer.chop(readBytes);
 
     // Process emulate policy.
     if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
@@ -528,11 +528,11 @@ bool QSerialPortPrivate::notifyRead()
 
         switch (policy) {
         case QSerialPort::SkipPolicy:
-            readBuffer.getChar();
+            buffer.getChar();
             return true;
         case QSerialPort::PassZeroPolicy:
-            readBuffer.getChar();
-            readBuffer.putChar('\0');
+            buffer.getChar();
+            buffer.ungetChar('\0');
             break;
         case QSerialPort::StopReceivingPolicy:
             // FIXME: Maybe need disable read notifier?

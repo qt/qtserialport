@@ -359,7 +359,7 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
-    return readBuffer.read(data, maxSize);
+    return buffer.read(data, maxSize);
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -714,11 +714,11 @@ bool QSerialPortPrivate::readNotification()
     readPortNotifierCalled = true;
 
     // Always buffered, read data from the port into the read buffer
-    qint64 newBytes = readBuffer.size();
+    qint64 newBytes = buffer.size();
     qint64 bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
 
-    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
-        bytesToRead = readBufferMaxSize - readBuffer.size();
+    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
+        bytesToRead = readBufferMaxSize - buffer.size();
         if (bytesToRead == 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
@@ -726,7 +726,7 @@ bool QSerialPortPrivate::readNotification()
         }
     }
 
-    char *ptr = readBuffer.reserve(bytesToRead);
+    char *ptr = buffer.reserve(bytesToRead);
     const qint64 readBytes = readFromPort(ptr, bytesToRead);
 
     if (readBytes <= 0) {
@@ -736,16 +736,16 @@ bool QSerialPortPrivate::readNotification()
         else
             setReadNotificationEnabled(false);
         q->setError(error);
-        readBuffer.chop(bytesToRead);
+        buffer.chop(bytesToRead);
         return false;
     }
 
-    readBuffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
+    buffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
 
-    newBytes = readBuffer.size() - newBytes;
+    newBytes = buffer.size() - newBytes;
 
     // If read buffer is full, disable the read port notifier.
-    if (readBufferMaxSize && readBuffer.size() == readBufferMaxSize)
+    if (readBufferMaxSize && buffer.size() == readBufferMaxSize)
         setReadNotificationEnabled(false);
 
     // only emit readyRead() when not recursing, and only if there is data available

@@ -162,7 +162,6 @@ public:
     static QList<qint32> standardBaudRates();
 
     qint64 readBufferMaxSize;
-    QRingBuffer readBuffer;
     QRingBuffer writeBuffer;
     QSerialPort::SerialPortError error;
     QString systemLocation;

@@ -124,8 +124,6 @@ void QSerialPortPrivate::close()
     setCommunicationNotificationEnabled(false);
 
     readStarted = false;
-    readBuffer.clear();
-
     writeStarted = false;
     writeBuffer.clear();
     actualBytesToWrite = 0;
@@ -269,7 +267,7 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
-    const qint64 result = readBuffer.read(data, maxSize);
+    const qint64 result = buffer.read(data, maxSize);
     // We need try to start async reading to read a remainder from a driver's queue
     // in case we have a limited read buffer size. Because the read notification can
     // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
@@ -292,7 +290,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
-    const qint64 initialReadBufferSize = readBuffer.size();
+    const qint64 initialReadBufferSize = buffer.size();
     qint64 currentReadBufferSize = initialReadBufferSize;
 
     do {
@@ -312,9 +310,9 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         } else if (triggeredEvent == readCompletionOverlapped.hEvent) {
             if (!_q_completeAsyncRead())
                 return false;
-            const qint64 readBytesForOneReadOperation = qint64(readBuffer.size()) - currentReadBufferSize;
+            const qint64 readBytesForOneReadOperation = qint64(buffer.size()) - currentReadBufferSize;
             if (readBytesForOneReadOperation == ReadChunkSize) {
-                currentReadBufferSize = readBuffer.size();
+                currentReadBufferSize = buffer.size();
             } else if (readBytesForOneReadOperation == 0) {
                 if (initialReadBufferSize != currentReadBufferSize)
                     return true;
@@ -490,7 +488,8 @@ bool QSerialPortPrivate::_q_completeAsyncRead()
         return false;
     }
     if (bytesTransferred > 0) {
-        readBuffer.append(readChunkBuffer.left(bytesTransferred));
+        char *ptr = buffer.reserve(bytesTransferred);
+        ::memcpy(ptr, readChunkBuffer.constData(), bytesTransferred);
         if (!emulateErrorPolicy())
             emitReadyRead();
     }
@@ -552,8 +551,8 @@ bool QSerialPortPrivate::startAsyncRead()
 
     DWORD bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
 
-    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
-        bytesToRead = readBufferMaxSize - readBuffer.size();
+    if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
+        bytesToRead = readBufferMaxSize - buffer.size();
         if (bytesToRead == 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
@@ -624,11 +623,11 @@ bool QSerialPortPrivate::emulateErrorPolicy()
 
     switch (policy) {
     case QSerialPort::SkipPolicy:
-        readBuffer.getChar();
+        buffer.getChar();
         break;
     case QSerialPort::PassZeroPolicy:
-        readBuffer.getChar();
-        readBuffer.putChar('\0');
+        buffer.getChar();
+        buffer.ungetChar('\0');
         emitReadyRead();
         break;
     case QSerialPort::IgnorePolicy:
