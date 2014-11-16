@@ -50,6 +50,7 @@
 #include "qserialport.h"
 
 #include <private/qringbuffer_p.h>
+#include <private/qiodevice_p.h>
 
 #if defined (Q_OS_WINCE)
 #  include <QtCore/qmutex.h>
@@ -108,7 +109,7 @@ class QSocketNotifier;
 QString serialPortLockFilePath(const QString &portName);
 #endif
 
-class QSerialPortPrivate
+class QSerialPortPrivate : public QIODevicePrivate
 {
     Q_DECLARE_PUBLIC(QSerialPort)
 public:
@@ -116,7 +117,7 @@ public:
         ReadChunkSize = 512
     };
 
-    QSerialPortPrivate(QSerialPort *q);
+    QSerialPortPrivate();
 
     int timeoutValue(int msecs, int elapsed);
 
@@ -175,7 +176,6 @@ public:
     bool dataTerminalReady;
     bool requestToSend;
     bool settingsRestoredOnClose;
-    QSerialPort * const q_ptr;
 
 #if defined (Q_OS_WINCE)
 

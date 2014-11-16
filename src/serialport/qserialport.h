@@ -269,7 +269,8 @@ protected:
 private:
     void setError(QSerialPort::SerialPortError error, const QString &errorString = QString());
 
-    QSerialPortPrivate * const d_ptr;
+    // ### Qt6: remove me.
+    QSerialPortPrivate * const d_dummy;
 
     Q_DISABLE_COPY(QSerialPort)
 

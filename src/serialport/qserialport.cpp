@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
+QSerialPortPrivate::QSerialPortPrivate()
     : readBufferMaxSize(0)
     , readBuffer(SERIALPORT_BUFFERSIZE)
     , writeBuffer(SERIALPORT_BUFFERSIZE)
@@ -60,7 +60,6 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
 #if QT_DEPRECATED_SINCE(5,3)
     , settingsRestoredOnClose(true)
 #endif
-    , q_ptr(q)
 #if defined (Q_OS_WINCE)
     , handle(INVALID_HANDLE_VALUE)
     , parityErrorOccurred(false)
@@ -400,9 +399,10 @@ int QSerialPortPrivate::timeoutValue(int msecs, int elapsed)
     Constructs a new serial port object with the given \a parent.
 */
 QSerialPort::QSerialPort(QObject *parent)
-    : QIODevice(parent)
-    , d_ptr(new QSerialPortPrivate(this))
-{}
+    : QIODevice(*new QSerialPortPrivate, parent)
+    , d_dummy(0)
+{
+}
 
 /*!
     Constructs a new serial port object with the given \a parent
@@ -411,8 +411,8 @@ QSerialPort::QSerialPort(QObject *parent)
     The name should have a specific format; see the setPort() method.
 */
 QSerialPort::QSerialPort(const QString &name, QObject *parent)
-    : QIODevice(parent)
-    , d_ptr(new QSerialPortPrivate(this))
+    : QIODevice(*new QSerialPortPrivate, parent)
+    , d_dummy(0)
 {
     setPortName(name);
 }
@@ -423,8 +423,8 @@ QSerialPort::QSerialPort(const QString &name, QObject *parent)
     \a serialPortInfo.
 */
 QSerialPort::QSerialPort(const QSerialPortInfo &serialPortInfo, QObject *parent)
-    : QIODevice(parent)
-    , d_ptr(new QSerialPortPrivate(this))
+    : QIODevice(*new QSerialPortPrivate, parent)
+    , d_dummy(0)
 {
     setPort(serialPortInfo);
 }
@@ -437,7 +437,6 @@ QSerialPort::~QSerialPort()
     /**/
     if (isOpen())
         close();
-    delete d_ptr;
 }
 
 /*!
