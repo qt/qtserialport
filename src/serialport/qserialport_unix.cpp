@@ -883,8 +883,10 @@ bool QSerialPortPrivate::updateTermios()
     return true;
 }
 
-QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
+QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError(int systemErrorCode) const
 {
+    Q_UNUSED(systemErrorCode);
+
     QSerialPort::SerialPortError error;
     switch (errno) {
     case ENODEV:

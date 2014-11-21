@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
 #endif
 
 class QThread;
-class QWinEventNotifier;
+class QWinOverlappedIoNotifier;
 class QTimer;
 class QSocketNotifier;
 
@@ -148,7 +148,7 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    QSerialPort::SerialPortError decodeSystemError() const;
+    QSerialPort::SerialPortError decodeSystemError(int systemErrorCode = -1) const;
 
     qint64 bytesToWrite() const;
     qint64 writeData(const char *data, qint64 maxSize);
@@ -205,24 +205,21 @@ public:
     bool initialize();
     bool updateDcb();
     bool updateCommTimeouts();
-    qint64 handleOverlappedResult(int direction, OVERLAPPED &overlapped);
+    qint64 overlappedResult(OVERLAPPED *overlapped);
     void handleLineStatusErrors();
-    bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);
+    OVERLAPPED *waitForNotified(int msecs);
 
-    bool _q_completeAsyncCommunication();
-    bool _q_completeAsyncRead();
-    bool _q_completeAsyncWrite();
+    bool completeAsyncCommunication(qint64 bytesTransferred);
+    bool completeAsyncRead(qint64 bytesTransferred);
+    bool completeAsyncWrite(qint64 bytesTransferred);
 
     bool startAsyncCommunication();
     bool startAsyncRead();
     bool _q_startAsyncWrite();
+    void _q_notified(DWORD numberOfBytes, DWORD errorCode, OVERLAPPED *overlapped);
 
     bool emulateErrorPolicy();
     void emitReadyRead();
-
-    bool setCommunicationNotificationEnabled(bool enable);
-    bool setReadNotificationEnabled(bool enable);
-    bool setWriteNotificationEnabled(bool enable);
 
     DCB currentDcb;
     DCB restoredDcb;
@@ -234,9 +231,7 @@ public:
     bool readyReadEmitted;
     bool writeStarted;
     bool readStarted;
-    QWinEventNotifier *communicationNotifier;
-    QWinEventNotifier *readCompletionNotifier;
-    QWinEventNotifier *writeCompletionNotifier;
+    QWinOverlappedIoNotifier *notifier;
     QTimer *startAsyncWriteTimer;
     OVERLAPPED communicationOverlapped;
     OVERLAPPED readCompletionOverlapped;
