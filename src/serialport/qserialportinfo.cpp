@@ -65,7 +65,6 @@ QT_BEGIN_NAMESPACE
     \sa isNull()
 */
 QSerialPortInfo::QSerialPortInfo()
-    : d_ptr(new QSerialPortInfoPrivate)
 {
 }
 
@@ -81,7 +80,6 @@ QSerialPortInfo::QSerialPortInfo(const QSerialPortInfo &other)
     Constructs a QSerialPortInfo object from serial \a port.
 */
 QSerialPortInfo::QSerialPortInfo(const QSerialPort &port)
-    : d_ptr(new QSerialPortInfoPrivate)
 {
     foreach (const QSerialPortInfo &serialPortInfo, availablePorts()) {
         if (port.portName() == serialPortInfo.portName()) {
@@ -99,7 +97,6 @@ QSerialPortInfo::QSerialPortInfo(const QSerialPort &port)
     instance for that port.
 */
 QSerialPortInfo::QSerialPortInfo(const QString &name)
-    : d_ptr(new QSerialPortInfoPrivate)
 {
     foreach (const QSerialPortInfo &serialPortInfo, availablePorts()) {
         if (name == serialPortInfo.portName()) {
@@ -107,6 +104,11 @@ QSerialPortInfo::QSerialPortInfo(const QString &name)
             break;
         }
     }
+}
+
+QSerialPortInfo::QSerialPortInfo(const QSerialPortInfoPrivate &dd)
+    : d_ptr(new QSerialPortInfoPrivate(dd))
+{
 }
 
 /*!
