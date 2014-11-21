@@ -380,19 +380,14 @@ qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
-    Q_Q(QSerialPort);
-
     QElapsedTimer stopWatch;
     stopWatch.start();
 
     do {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
-            if (!timedOut)
-                q->setError(decodeSystemError());
+                                timeoutValue(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -407,8 +402,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
 bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 {
-    Q_Q(QSerialPort);
-
     if (writeBuffer.isEmpty() && pendingBytesWritten <= 0)
         return false;
 
@@ -418,11 +411,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
-            if (!timedOut)
-                q->setError(decodeSystemError());
+                                timeoutValue(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -992,13 +982,12 @@ void QSerialPortPrivate::setWriteNotificationEnabled(bool enable)
 
 bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                                            bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut)
+                                           int msecs)
 {
     Q_Q(QSerialPort);
 
     Q_ASSERT(selectForRead);
     Q_ASSERT(selectForWrite);
-    Q_ASSERT(timedOut);
 
     fd_set fdread;
     FD_ZERO(&fdread);
@@ -1014,19 +1003,19 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     tv.tv_sec = msecs / 1000;
     tv.tv_usec = (msecs % 1000) * 1000;
 
-    int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
-    if (ret < 0)
+    const int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
+    if (ret < 0) {
+        q->setError(decodeSystemError());
         return false;
+    }
     if (ret == 0) {
-        *timedOut = true;
         q->setError(QSerialPort::TimeoutError);
         return false;
     }
 
     *selectForRead = FD_ISSET(descriptor, &fdread);
     *selectForWrite = FD_ISSET(descriptor, &fdwrite);
-
-    return ret;
+    return true;
 }
 
 qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)

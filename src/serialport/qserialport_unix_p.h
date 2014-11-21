@@ -174,7 +174,7 @@ private:
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+                            int msecs);
 
     qint64 readFromPort(char *data, qint64 maxSize);
     qint64 writeToPort(const char *data, qint64 maxSize);

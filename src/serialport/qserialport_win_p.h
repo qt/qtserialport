@@ -141,7 +141,7 @@ private:
     bool updateCommTimeouts();
     qint64 overlappedResult(OVERLAPPED &overlapped);
 
-    bool waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent);
+    bool waitAnyEvent(int msecs, HANDLE *triggeredEvent);
 
 };
 
