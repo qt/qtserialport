@@ -121,7 +121,7 @@ private:
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+                            int msecs);
 
 };
 

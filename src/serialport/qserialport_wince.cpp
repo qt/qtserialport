@@ -353,11 +353,9 @@ bool QSerialPortPrivate::waitForReadyRead(int msec)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite,
                                 true, !writeBuffer.isEmpty(),
-                                timeoutValue(msec, stopWatch.elapsed()),
-                                &timedOut)) {
+                                timeoutValue(msec, stopWatch.elapsed()))) {
             return false;
         }
         if (readyToRead) {
@@ -381,11 +379,9 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite,
                                 true, !writeBuffer.isEmpty(),
-                                timeoutValue(msec, stopWatch.elapsed()),
-                                &timedOut)) {
+                                timeoutValue(msec, stopWatch.elapsed()))) {
             return false;
         }
         if (readyToRead) {
@@ -733,7 +729,7 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 
 bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                                            bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut)
+                                           int msecs)
 {
     Q_Q(QSerialPort);
 
@@ -746,11 +742,8 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     breaker.stop();
 
     if (breaker.isWorked()) {
-        *timedOut = true;
         q->setError(QSerialPort::TimeoutError);
-    }
-
-    if (!breaker.isWorked()) {
+    } else {
         if (checkRead) {
             Q_ASSERT(selectForRead);
             *selectForRead = eventMask & EV_RXCHAR;

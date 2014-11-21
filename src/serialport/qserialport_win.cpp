@@ -309,8 +309,6 @@ qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
-    Q_Q(QSerialPort);
-
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
@@ -321,15 +319,9 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     stopWatch.start();
 
     do {
-        bool timedOut = false;
         HANDLE triggeredEvent = 0;
-
-        if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &triggeredEvent) || !triggeredEvent) {
-            // This is occur timeout or another error
-            if (!timedOut)
-                q->setError(decodeSystemError());
+        if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &triggeredEvent) || !triggeredEvent)
             return false;
-        }
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
             if (!_q_completeAsyncCommunication())
@@ -360,8 +352,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
 bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 {
-    Q_Q(QSerialPort);
-
     if (writeBuffer.isEmpty())
         return false;
 
@@ -372,14 +362,9 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     stopWatch.start();
 
     forever {
-        bool timedOut = false;
         HANDLE triggeredEvent = 0;
-
-        if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &timedOut, &triggeredEvent) || !triggeredEvent) {
-            if (!timedOut)
-                q->setError(decodeSystemError());
+        if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &triggeredEvent) || !triggeredEvent)
             return false;
-        }
 
         if (triggeredEvent == communicationOverlapped.hEvent) {
             if (!_q_completeAsyncCommunication())
@@ -855,11 +840,9 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
     return error;
 }
 
-bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut, HANDLE *triggeredEvent)
+bool QSerialPortPrivate::waitAnyEvent(int msecs, HANDLE *triggeredEvent)
 {
     Q_Q(QSerialPort);
-
-    Q_ASSERT(timedOut);
 
     QVector<HANDLE> handles = QVector<HANDLE>()
             << communicationOverlapped.hEvent
@@ -871,13 +854,13 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, bool *timedOut, HANDLE *trigger
                                                 FALSE, // wait any event
                                                 msecs == -1 ? INFINITE : msecs);
     if (waitResult == WAIT_TIMEOUT) {
-        *timedOut = true;
         q->setError(QSerialPort::TimeoutError, qt_error_string(WAIT_TIMEOUT));
         return false;
     }
-
-    if (waitResult >= DWORD(WAIT_OBJECT_0 + handles.count()))
+    if (waitResult >= DWORD(WAIT_OBJECT_0 + handles.count())) {
+        q->setError(decodeSystemError());
         return false;
+    }
 
     *triggeredEvent = handles.at(waitResult - WAIT_OBJECT_0);
     return true;
