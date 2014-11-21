@@ -304,14 +304,14 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
     Q_Q(QSerialPort);
 
-    QElapsedTimer stopWatch;
-    stopWatch.start();
-
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
     const qint64 initialReadBufferSize = readBuffer.size();
     qint64 currentReadBufferSize = initialReadBufferSize;
+
+    QElapsedTimer stopWatch;
+    stopWatch.start();
 
     do {
         bool timedOut = false;
@@ -358,11 +358,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     if (writeBuffer.isEmpty())
         return false;
 
-    QElapsedTimer stopWatch;
-    stopWatch.start();
-
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
+
+    QElapsedTimer stopWatch;
+    stopWatch.start();
 
     forever {
         bool timedOut = false;
