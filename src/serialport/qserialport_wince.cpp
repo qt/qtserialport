@@ -348,7 +348,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msec)
         return true;
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     forever {
@@ -377,7 +376,6 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
         return false;
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     forever {
