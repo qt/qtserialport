@@ -312,23 +312,23 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 continue;
             }
 
-            QSerialPortInfo serialPortInfo;
+            QSerialPortInfoPrivate priv;
 
-            serialPortInfo.d_ptr->portName = portName;
-            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(portName);
-            serialPortInfo.d_ptr->description = deviceDescription(deviceInfoSet, &deviceInfoData);
-            serialPortInfo.d_ptr->manufacturer = deviceManufacturer(deviceInfoSet, &deviceInfoData);
+            priv.portName = portName;
+            priv.device = QSerialPortPrivate::portNameToSystemLocation(portName);
+            priv.description = deviceDescription(deviceInfoSet, &deviceInfoData);
+            priv.manufacturer = deviceManufacturer(deviceInfoSet, &deviceInfoData);
 
             const QString instanceIdentifier = deviceInstanceIdentifier(deviceInfoData.DevInst);
 
-            serialPortInfo.d_ptr->serialNumber =
+            priv.serialNumber =
                     deviceSerialNumber(instanceIdentifier, deviceInfoData.DevInst);
-            serialPortInfo.d_ptr->vendorIdentifier =
-                    deviceVendorIdentifier(instanceIdentifier, serialPortInfo.d_ptr->hasVendorIdentifier);
-            serialPortInfo.d_ptr->productIdentifier =
-                    deviceProductIdentifier(instanceIdentifier, serialPortInfo.d_ptr->hasProductIdentifier);
+            priv.vendorIdentifier =
+                    deviceVendorIdentifier(instanceIdentifier, priv.hasVendorIdentifier);
+            priv.productIdentifier =
+                    deviceProductIdentifier(instanceIdentifier, priv.hasProductIdentifier);
 
-            serialPortInfoList.append(serialPortInfo);
+            serialPortInfoList.append(priv);
         }
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }

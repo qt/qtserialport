@@ -105,13 +105,13 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                              &di);
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
-            QSerialPortInfo serialPortInfo;
-            serialPortInfo.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
-            serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(serialPortInfo.d_ptr->device);
-            serialPortInfo.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
-                                                      QString::fromWCharArray(di.szDeviceKey));
+            QSerialPortInfoPrivate priv;
+            priv.device = QString::fromWCharArray(di.szLegacyName);
+            priv.portName = QSerialPortPrivate::portNameFromSystemLocation(priv.device);
+            priv.description = findDescription(HKEY_LOCAL_MACHINE,
+                                               QString::fromWCharArray(di.szDeviceKey));
 
-            serialPortInfoList.append(serialPortInfo);
+            serialPortInfoList.append(priv);
 
         } while (::FindNextDevice(hSearch, &di));
         ::FindClose(hSearch);
