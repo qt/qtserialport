@@ -105,6 +105,10 @@ public:
     bool emulateErrorPolicy();
     void emitReadyRead();
 
+    bool setCommunicationNotificationEnabled(bool enable);
+    bool setReadNotificationEnabled(bool enable);
+    bool setWriteNotificationEnabled(bool enable);
+
     qint64 bytesToWrite() const;
     qint64 writeData(const char *data, qint64 maxSize);
 
@@ -138,7 +142,7 @@ public:
     qint64 actualBytesToWrite;
 
 private:
-    bool initialize(QIODevice::OpenMode mode);
+    bool initialize();
     bool updateDcb();
     bool updateCommTimeouts();
     qint64 handleOverlappedResult(int direction, OVERLAPPED &overlapped);
