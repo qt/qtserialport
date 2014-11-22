@@ -492,7 +492,7 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
 
 bool QSerialPortPrivate::_q_completeAsyncCommunication()
 {
-    if (handleOverlappedResult(0, communicationOverlapped) == qint64(-1))
+    if (overlappedResult(communicationOverlapped) == qint64(-1))
         return false;
     if (EV_ERR & triggeredEventMask)
         handleLineStatusErrors();
@@ -502,7 +502,7 @@ bool QSerialPortPrivate::_q_completeAsyncCommunication()
 
 bool QSerialPortPrivate::_q_completeAsyncRead()
 {
-    const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Input, readCompletionOverlapped);
+    const qint64 bytesTransferred = overlappedResult(readCompletionOverlapped);
     if (bytesTransferred == qint64(-1)) {
         readStarted = false;
         return false;
@@ -527,7 +527,7 @@ bool QSerialPortPrivate::_q_completeAsyncWrite()
     Q_Q(QSerialPort);
 
     if (writeStarted) {
-        const qint64 bytesTransferred = handleOverlappedResult(QSerialPort::Output, writeCompletionOverlapped);
+        const qint64 bytesTransferred = overlappedResult(writeCompletionOverlapped);
         if (bytesTransferred == qint64(-1)) {
             writeStarted = false;
             return false;
@@ -784,7 +784,7 @@ bool QSerialPortPrivate::updateCommTimeouts()
     return true;
 }
 
-qint64 QSerialPortPrivate::handleOverlappedResult(int direction, OVERLAPPED &overlapped)
+qint64 QSerialPortPrivate::overlappedResult(OVERLAPPED &overlapped)
 {
     Q_Q(QSerialPort);
 
@@ -794,9 +794,9 @@ qint64 QSerialPortPrivate::handleOverlappedResult(int direction, OVERLAPPED &ove
         if (error == QSerialPort::NoError)
             return qint64(0);
         if (error != QSerialPort::ResourceError) {
-            if (direction == QSerialPort::Input)
+            if (&overlapped == &readCompletionOverlapped)
                 q->setError(QSerialPort::ReadError);
-            else if (direction == QSerialPort::Output)
+            else if (&overlapped == &writeCompletionOverlapped)
                 q->setError(QSerialPort::WriteError);
             else
                 q->setError(error);
