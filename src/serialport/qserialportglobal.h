@@ -50,18 +50,6 @@ QT_BEGIN_NAMESPACE
 #  define Q_SERIALPORT_EXPORT
 #endif
 
-#ifndef Q_DECL_OVERRIDE
-#define Q_DECL_OVERRIDE
-#endif
-
-#ifndef QStringLiteral
-#define QStringLiteral(str) QString::fromUtf8(str)
-#endif
-
-#ifndef Q_NULLPTR
-#define Q_NULLPTR NULL
-#endif
-
 QT_END_NAMESPACE
 
 #endif // QSERIALPORTGLOBAL_H
