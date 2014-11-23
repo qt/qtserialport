@@ -273,7 +273,7 @@ private:
 
     Q_DISABLE_COPY(QSerialPort)
 
-#if defined (Q_OS_WIN32) || defined(Q_OS_WIN64)
+#if defined (Q_OS_WIN32)
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncCommunication())
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncRead())
     Q_PRIVATE_SLOT(d_func(), bool _q_completeAsyncWrite())
