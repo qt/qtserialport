@@ -72,7 +72,7 @@ static inline int qt_safe_open(const char *pathname, int flags, mode_t mode = 07
 #ifdef O_CLOEXEC
     flags |= O_CLOEXEC;
 #endif
-    register int fd;
+    int fd;
     EINTR_LOOP(fd, QT_OPEN(pathname, flags, mode));
 
     // unknown flags are ignored, so we have no way of verifying if
@@ -104,7 +104,7 @@ static inline qint64 qt_safe_write(int fd, const void *data, qint64 len)
 
 static inline int qt_safe_close(int fd)
 {
-    register int ret;
+    int ret;
     EINTR_LOOP(ret, QT_CLOSE(fd));
     return ret;
 }
