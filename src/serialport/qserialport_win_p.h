@@ -108,9 +108,6 @@ public:
     qint64 bytesToWrite() const;
     qint64 writeData(const char *data, qint64 maxSize);
 
-    static QString portNameToSystemLocation(const QString &port);
-    static QString portNameFromSystemLocation(const QString &location);
-
     static qint32 baudRateFromSetting(qint32 setting);
     static qint32 settingFromBaudRate(qint32 baudRate);
 

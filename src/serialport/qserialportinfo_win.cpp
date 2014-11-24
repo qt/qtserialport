@@ -315,7 +315,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             QSerialPortInfoPrivate priv;
 
             priv.portName = portName;
-            priv.device = QSerialPortPrivate::portNameToSystemLocation(portName);
+            priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(portName);
             priv.description = deviceDescription(deviceInfoSet, &deviceInfoData);
             priv.manufacturer = deviceManufacturer(deviceInfoSet, &deviceInfoData);
 
@@ -336,10 +336,10 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     foreach (const QString &portName, portNamesFromHardwareDeviceMap()) {
         if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
                          SerialPortNameEqualFunctor(portName)) == serialPortInfoList.end()) {
-            QSerialPortInfo serialPortInfo;
-            serialPortInfo.d_ptr->portName = portName;
-            serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(portName);
-            serialPortInfoList.append(serialPortInfo);
+            QSerialPortInfoPrivate priv;
+            priv.portName = portName;
+            priv.device =  QSerialPortInfoPrivate::portNameToSystemLocation(portName);
+            serialPortInfoList.append(priv);
         }
     }
 
@@ -377,6 +377,19 @@ bool QSerialPortInfo::isValid() const
         ::CloseHandle(handle);
     }
     return true;
+}
+
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return source.startsWith(QStringLiteral("COM"))
+            ? (QStringLiteral("\\\\.\\") + source) : source;
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return (source.startsWith(QStringLiteral("\\\\.\\"))
+            || source.startsWith(QStringLiteral("//./")))
+            ? source.mid(4) : source;
 }
 
 QT_END_NAMESPACE

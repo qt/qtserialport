@@ -242,4 +242,18 @@ bool QSerialPortInfo::isValid() const
     return f.exists();
 }
 
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return (source.startsWith(QLatin1Char('/'))
+            || source.startsWith(QStringLiteral("./"))
+            || source.startsWith(QStringLiteral("../")))
+            ? source : (QStringLiteral("/dev/") + source);
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return source.startsWith(QStringLiteral("/dev/"))
+            ? source.mid(5) : source;
+}
+
 QT_END_NAMESPACE
