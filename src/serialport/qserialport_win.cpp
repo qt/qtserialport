@@ -941,24 +941,6 @@ bool QSerialPortPrivate::setWriteNotificationEnabled(bool enable)
     return true;
 }
 
-static const QString defaultPathPrefix = QStringLiteral("\\\\.\\");
-
-QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
-{
-    QString ret = port;
-    if (!ret.contains(defaultPathPrefix))
-        ret.prepend(defaultPathPrefix);
-    return ret;
-}
-
-QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
-{
-    QString ret = location;
-    if (ret.contains(defaultPathPrefix))
-        ret.remove(defaultPathPrefix);
-    return ret;
-}
-
 // This table contains standard values of baud rates that
 // are defined in MSDN and/or in Win SDK file winbase.h
 

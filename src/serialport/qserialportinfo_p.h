@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSerialPortInfoPrivate
+class Q_AUTOTEST_EXPORT QSerialPortInfoPrivate
 {
 public:
     QSerialPortInfoPrivate()
@@ -59,9 +59,15 @@ public:
         , productIdentifier(0)
         , hasVendorIdentifier(false)
         , hasProductIdentifier(false)
-    {}
+    {
+    }
 
-    ~QSerialPortInfoPrivate() {}
+    ~QSerialPortInfoPrivate()
+    {
+    }
+
+    static QString portNameToSystemLocation(const QString &source);
+    static QString portNameFromSystemLocation(const QString &source);
 
     QString portName;
     QString device;

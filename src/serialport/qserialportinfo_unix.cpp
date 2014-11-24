@@ -100,7 +100,7 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
     foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
         QSerialPortInfoPrivate priv;
         priv.device = deviceFilePath;
-        priv.portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
+        priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(deviceFilePath);
         serialPortInfoList.append(priv);
     }
 
@@ -202,7 +202,7 @@ QList<QSerialPortInfo> availablePortsBySysfs()
         }
 
         priv.portName = targetPath.mid(lastIndexOfSlash + 1);
-        priv.device = QSerialPortPrivate::portNameToSystemLocation(priv.portName);
+        priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(priv.portName);
         serialPortInfoList.append(priv);
     }
 
@@ -399,6 +399,20 @@ bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();
+}
+
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return (source.startsWith(QLatin1Char('/'))
+            || source.startsWith(QStringLiteral("./"))
+            || source.startsWith(QStringLiteral("../")))
+            ? source : (QStringLiteral("/dev/") + source);
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return source.startsWith(QStringLiteral("/dev/"))
+            ? source.mid(5) : source;
 }
 
 QT_END_NAMESPACE

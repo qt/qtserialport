@@ -107,7 +107,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         do {
             QSerialPortInfoPrivate priv;
             priv.device = QString::fromWCharArray(di.szLegacyName);
-            priv.portName = QSerialPortPrivate::portNameFromSystemLocation(priv.device);
+            priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(priv.device);
             priv.description = findDescription(HKEY_LOCAL_MACHINE,
                                                QString::fromWCharArray(di.szDeviceKey));
 
@@ -151,6 +151,18 @@ bool QSerialPortInfo::isValid() const
         ::CloseHandle(handle);
     }
     return true;
+}
+
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return source.endsWith(QLatin1Char(':'))
+            ? source : (source + QLatin1Char(':'));
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return source.endsWith(QLatin1Char(':'))
+            ? source.mid(0, source.size() - 1) : source;
 }
 
 QT_END_NAMESPACE
