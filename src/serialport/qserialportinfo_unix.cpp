@@ -98,10 +98,10 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
     QList<QSerialPortInfo> serialPortInfoList;
 
     foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
-        QSerialPortInfo serialPortInfo;
-        serialPortInfo.d_ptr->device = deviceFilePath;
-        serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(deviceFilePath);
-        serialPortInfoList.append(serialPortInfo);
+        QSerialPortInfoPrivate priv;
+        priv.device = deviceFilePath;
+        priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(deviceFilePath);
+        serialPortInfoList.append(priv);
     }
 
     return serialPortInfoList;
@@ -125,7 +125,7 @@ QList<QSerialPortInfo> availablePortsBySysfs()
         if (lastIndexOfSlash == -1)
             continue;
 
-        QSerialPortInfo serialPortInfo;
+        QSerialPortInfoPrivate priv;
         if (targetPath.contains(QStringLiteral("pnp"))) {
             // TODO: Obtain more information
 #ifndef Q_OS_ANDROID
@@ -155,26 +155,26 @@ QList<QSerialPortInfo> availablePortsBySysfs()
 
                     QFile description(QFileInfo(targetDir, QStringLiteral("product")).absoluteFilePath());
                     if (description.open(QIODevice::ReadOnly | QIODevice::Text))
-                        serialPortInfo.d_ptr->description = QString::fromLatin1(description.readAll()).simplified();
+                        priv.description = QString::fromLatin1(description.readAll()).simplified();
 
                     QFile manufacturer(QFileInfo(targetDir, QStringLiteral("manufacturer")).absoluteFilePath());
                     if (manufacturer.open(QIODevice::ReadOnly | QIODevice::Text))
-                        serialPortInfo.d_ptr->manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
+                        priv.manufacturer = QString::fromLatin1(manufacturer.readAll()).simplified();
 
                     QFile serialNumber(QFileInfo(targetDir, QStringLiteral("serial")).absoluteFilePath());
                     if (serialNumber.open(QIODevice::ReadOnly | QIODevice::Text))
-                        serialPortInfo.d_ptr->serialNumber = QString::fromLatin1(serialNumber.readAll()).simplified();
+                        priv.serialNumber = QString::fromLatin1(serialNumber.readAll()).simplified();
 
                     QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("idVendor")).absoluteFilePath());
                     if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                        serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
-                                .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+                        priv.vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
+                                .toInt(&priv.hasVendorIdentifier, 16);
                     }
 
                     QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("idProduct")).absoluteFilePath());
                     if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                        serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
-                                .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+                        priv.productIdentifier = QString::fromLatin1(productIdentifier.readAll())
+                                .toInt(&priv.hasProductIdentifier, 16);
                     }
 
                     break;
@@ -185,13 +185,13 @@ QList<QSerialPortInfo> availablePortsBySysfs()
             QDir targetDir(targetPath + QStringLiteral("/device"));
             QFile vendorIdentifier(QFileInfo(targetDir, QStringLiteral("vendor")).absoluteFilePath());
             if (vendorIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                serialPortInfo.d_ptr->vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
-                        .toInt(&serialPortInfo.d_ptr->hasVendorIdentifier, 16);
+                priv.vendorIdentifier = QString::fromLatin1(vendorIdentifier.readAll())
+                        .toInt(&priv.hasVendorIdentifier, 16);
             }
             QFile productIdentifier(QFileInfo(targetDir, QStringLiteral("device")).absoluteFilePath());
             if (productIdentifier.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                serialPortInfo.d_ptr->productIdentifier = QString::fromLatin1(productIdentifier.readAll())
-                        .toInt(&serialPortInfo.d_ptr->hasProductIdentifier, 16);
+                priv.productIdentifier = QString::fromLatin1(productIdentifier.readAll())
+                        .toInt(&priv.hasProductIdentifier, 16);
             }
             // TODO: Obtain more information about the device
         } else if (targetPath.contains(QStringLiteral(".serial/tty/tty"))) {
@@ -201,9 +201,9 @@ QList<QSerialPortInfo> availablePortsBySysfs()
             continue;
         }
 
-        serialPortInfo.d_ptr->portName = targetPath.mid(lastIndexOfSlash + 1);
-        serialPortInfo.d_ptr->device = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.d_ptr->portName);
-        serialPortInfoList.append(serialPortInfo);
+        priv.portName = targetPath.mid(lastIndexOfSlash + 1);
+        priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(priv.portName);
+        serialPortInfoList.append(priv);
     }
 
     return serialPortInfoList;
@@ -318,25 +318,25 @@ QList<QSerialPortInfo> availablePortsByUdev()
         if (!dev)
             return serialPortInfoList;
 
-        QSerialPortInfo serialPortInfo;
+        QSerialPortInfoPrivate priv;
 
-        serialPortInfo.d_ptr->device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
-        serialPortInfo.d_ptr->portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
+        priv.device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
+        priv.portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
 
         udev_device *parentdev = ::udev_device_get_parent(dev.data());
 
         if (parentdev) {
             if (checkUdevForSerial8250Driver(parentdev))
                 continue;
-            serialPortInfo.d_ptr->description = getUdevModelName(dev.data());
-            serialPortInfo.d_ptr->manufacturer = getUdevVendorName(dev.data());
-            serialPortInfo.d_ptr->serialNumber = getUdevSerialNumber(dev.data());
-            serialPortInfo.d_ptr->vendorIdentifier = getUdevVendorIdentifier(dev.data(), serialPortInfo.d_ptr->hasVendorIdentifier);
-            serialPortInfo.d_ptr->productIdentifier = getUdevModelIdentifier(dev.data(), serialPortInfo.d_ptr->hasProductIdentifier);
+            priv.description = getUdevModelName(dev.data());
+            priv.manufacturer = getUdevVendorName(dev.data());
+            priv.serialNumber = getUdevSerialNumber(dev.data());
+            priv.vendorIdentifier = getUdevVendorIdentifier(dev.data(), priv.hasVendorIdentifier);
+            priv.productIdentifier = getUdevModelIdentifier(dev.data(), priv.hasProductIdentifier);
         } else {
-            if (serialPortInfo.d_ptr->portName.startsWith(rfcommDeviceName)) {
+            if (priv.portName.startsWith(rfcommDeviceName)) {
                 bool ok;
-                int portNumber = serialPortInfo.d_ptr->portName.mid(rfcommDeviceName.length()).toInt(&ok);
+                int portNumber = priv.portName.mid(rfcommDeviceName.length()).toInt(&ok);
                 if (!ok || (portNumber < 0) || (portNumber > 255))
                     continue;
             } else {
@@ -344,7 +344,7 @@ QList<QSerialPortInfo> availablePortsByUdev()
             }
         }
 
-        serialPortInfoList.append(serialPortInfo);
+        serialPortInfoList.append(priv);
     }
 
     return serialPortInfoList;
@@ -399,6 +399,20 @@ bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();
+}
+
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return (source.startsWith(QLatin1Char('/'))
+            || source.startsWith(QStringLiteral("./"))
+            || source.startsWith(QStringLiteral("../")))
+            ? source : (QStringLiteral("/dev/") + source);
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return source.startsWith(QStringLiteral("/dev/"))
+            ? source.mid(5) : source;
 }
 
 QT_END_NAMESPACE

@@ -78,15 +78,15 @@ static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
     return value;
 }
 
-static bool isCompleteInfo(const QSerialPortInfo &portInfo)
+static bool isCompleteInfo(const QSerialPortInfoPrivate &priv)
 {
-    return !portInfo.portName().isEmpty()
-            && !portInfo.systemLocation().isEmpty()
-            && !portInfo.manufacturer().isEmpty()
-            && !portInfo.description().isEmpty()
-            && !portInfo.serialNumber().isEmpty()
-            && portInfo.hasProductIdentifier()
-            && portInfo.hasVendorIdentifier();
+    return !priv.portName.isEmpty()
+            && !priv.device.isEmpty()
+            && !priv.manufacturer.isEmpty()
+            && !priv.description.isEmpty()
+            && !priv.serialNumber.isEmpty()
+            && priv.hasProductIdentifier
+            && priv.hasVendorIdentifier;
 }
 
 static QString devicePortName(io_registry_entry_t ioRegistryEntry)
@@ -160,37 +160,37 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         if (!serialPortService)
             break;
 
-        QSerialPortInfo serialPortInfo;
+        QSerialPortInfoPrivate priv;
 
         forever {
-            if (serialPortInfo.portName().isEmpty())
-                serialPortInfo.d_ptr->portName = devicePortName(serialPortService);
+            if (priv.portName.isEmpty())
+                priv.portName = devicePortName(serialPortService);
 
-            if (serialPortInfo.systemLocation().isEmpty())
-                serialPortInfo.d_ptr->device = deviceSystemLocation(serialPortService);
+            if (priv.device.isEmpty())
+                priv.device = deviceSystemLocation(serialPortService);
 
-            if (serialPortInfo.description().isEmpty())
-                serialPortInfo.d_ptr->description = deviceDescription(serialPortService);
+            if (priv.description.isEmpty())
+                priv.description = deviceDescription(serialPortService);
 
-            if (serialPortInfo.manufacturer().isEmpty())
-                serialPortInfo.d_ptr->manufacturer = deviceManufacturer(serialPortService);
+            if (priv.manufacturer.isEmpty())
+                priv.manufacturer = deviceManufacturer(serialPortService);
 
-            if (serialPortInfo.serialNumber().isEmpty())
-                serialPortInfo.d_ptr->serialNumber = deviceSerialNumber(serialPortService);
+            if (priv.serialNumber.isEmpty())
+                priv.serialNumber = deviceSerialNumber(serialPortService);
 
-            if (!serialPortInfo.hasVendorIdentifier()) {
-                serialPortInfo.d_ptr->vendorIdentifier =
+            if (!priv.hasVendorIdentifier) {
+                priv.vendorIdentifier =
                         deviceVendorIdentifier(serialPortService,
-                                               serialPortInfo.d_ptr->hasVendorIdentifier);
+                                               priv.hasVendorIdentifier);
             }
 
-            if (!serialPortInfo.hasProductIdentifier()) {
-                serialPortInfo.d_ptr->productIdentifier =
+            if (!priv.hasProductIdentifier) {
+                priv.productIdentifier =
                         deviceProductIdentifier(serialPortService,
-                                                serialPortInfo.d_ptr->hasProductIdentifier);
+                                                priv.hasProductIdentifier);
             }
 
-            if (isCompleteInfo(serialPortInfo)) {
+            if (isCompleteInfo(priv)) {
                 ::IOObjectRelease(serialPortService);
                 break;
             }
@@ -200,7 +200,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 break;
         }
 
-        serialPortInfoList.append(serialPortInfo);
+        serialPortInfoList.append(priv);
     }
 
     ::IOObjectRelease(serialPortIterator);
@@ -240,6 +240,20 @@ bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();
+}
+
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return (source.startsWith(QLatin1Char('/'))
+            || source.startsWith(QStringLiteral("./"))
+            || source.startsWith(QStringLiteral("../")))
+            ? source : (QStringLiteral("/dev/") + source);
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return source.startsWith(QStringLiteral("/dev/"))
+            ? source.mid(5) : source;
 }
 
 QT_END_NAMESPACE

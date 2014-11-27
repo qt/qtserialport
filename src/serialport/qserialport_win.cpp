@@ -273,14 +273,14 @@ qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
-    QElapsedTimer stopWatch;
-    stopWatch.start();
-
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
     const qint64 initialReadBufferSize = buffer.size();
     qint64 currentReadBufferSize = initialReadBufferSize;
+
+    QElapsedTimer stopWatch;
+    stopWatch.start();
 
     do {
         OVERLAPPED *overlapped = waitForNotified(timeoutValue(msecs, stopWatch.elapsed()));
@@ -321,11 +321,11 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     if (writeBuffer.isEmpty())
         return false;
 
-    QElapsedTimer stopWatch;
-    stopWatch.start();
-
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
+
+    QElapsedTimer stopWatch;
+    stopWatch.start();
 
     forever {
         OVERLAPPED *overlapped = waitForNotified(timeoutValue(msecs, stopWatch.elapsed()));
@@ -841,24 +841,6 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError(int systemErr
         break;
     }
     return error;
-}
-
-static const QString defaultPathPrefix = QStringLiteral("\\\\.\\");
-
-QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
-{
-    QString ret = port;
-    if (!ret.contains(defaultPathPrefix))
-        ret.prepend(defaultPathPrefix);
-    return ret;
-}
-
-QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
-{
-    QString ret = location;
-    if (ret.contains(defaultPathPrefix))
-        ret.remove(defaultPathPrefix);
-    return ret;
 }
 
 // This table contains standard values of baud rates that

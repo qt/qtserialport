@@ -81,6 +81,7 @@ public:
     static QList<QSerialPortInfo> availablePorts();
 
 private:
+    QSerialPortInfo(const QSerialPortInfoPrivate &dd);
     friend QList<QSerialPortInfo> availablePortsByUdev();
     friend QList<QSerialPortInfo> availablePortsBySysfs();
     friend QList<QSerialPortInfo> availablePortsByFiltersOfDevices();

@@ -36,6 +36,7 @@
 
 #include "qserialport.h"
 #include "qserialportinfo.h"
+#include "qserialportinfo_p.h"
 
 #include "qserialport_p.h"
 
@@ -447,7 +448,7 @@ QSerialPort::~QSerialPort()
 void QSerialPort::setPortName(const QString &name)
 {
     Q_D(QSerialPort);
-    d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(name);
+    d->systemLocation = QSerialPortInfoPrivate::portNameToSystemLocation(name);
 }
 
 /*!
@@ -458,7 +459,7 @@ void QSerialPort::setPortName(const QString &name)
 void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
 {
     Q_D(QSerialPort);
-    d->systemLocation = QSerialPortPrivate::portNameToSystemLocation(serialPortInfo.systemLocation());
+    d->systemLocation = serialPortInfo.systemLocation();
 }
 
 /*!
@@ -472,23 +473,16 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
         \li Brief Description
     \row
         \li Windows
-        \li Removes the prefix "\\\\.\\" from the system location
+        \li Removes the prefix "\\\\.\\" or "//./" from the system location
            and returns the remainder of the string.
     \row
         \li Windows CE
         \li Removes the suffix ":" from the system location
            and returns the remainder of the string.
     \row
-        \li GNU/Linux
+        \li Unix, BSD
         \li Removes the prefix "/dev/" from the system location
            and returns the remainder of the string.
-    \row
-        \li Mac OSX
-        \li Removes the prefix "/dev/cu." and "/dev/tty." from the
-           system location and returns the remainder of the string.
-    \row
-        \li Other *nix
-        \li  The same as for GNU/Linux.
     \endtable
 
     \sa setPort(), QSerialPortInfo::portName()
@@ -496,7 +490,7 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
 QString QSerialPort::portName() const
 {
     Q_D(const QSerialPort);
-    return QSerialPortPrivate::portNameFromSystemLocation(d->systemLocation);
+    return QSerialPortInfoPrivate::portNameFromSystemLocation(d->systemLocation);
 }
 
 /*!

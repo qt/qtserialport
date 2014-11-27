@@ -105,13 +105,13 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                              &di);
     if (hSearch != INVALID_HANDLE_VALUE) {
         do {
-            QSerialPortInfo serialPortInfo;
-            serialPortInfo.d_ptr->device = QString::fromWCharArray(di.szLegacyName);
-            serialPortInfo.d_ptr->portName = QSerialPortPrivate::portNameFromSystemLocation(serialPortInfo.d_ptr->device);
-            serialPortInfo.d_ptr->description = findDescription(HKEY_LOCAL_MACHINE,
-                                                      QString::fromWCharArray(di.szDeviceKey));
+            QSerialPortInfoPrivate priv;
+            priv.device = QString::fromWCharArray(di.szLegacyName);
+            priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(priv.device);
+            priv.description = findDescription(HKEY_LOCAL_MACHINE,
+                                               QString::fromWCharArray(di.szDeviceKey));
 
-            serialPortInfoList.append(serialPortInfo);
+            serialPortInfoList.append(priv);
 
         } while (::FindNextDevice(hSearch, &di));
         ::FindClose(hSearch);
@@ -151,6 +151,18 @@ bool QSerialPortInfo::isValid() const
         ::CloseHandle(handle);
     }
     return true;
+}
+
+QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
+{
+    return source.endsWith(QLatin1Char(':'))
+            ? source : (source + QLatin1Char(':'));
+}
+
+QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
+{
+    return source.endsWith(QLatin1Char(':'))
+            ? source.mid(0, source.size() - 1) : source;
 }
 
 QT_END_NAMESPACE

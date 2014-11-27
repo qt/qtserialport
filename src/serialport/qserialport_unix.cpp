@@ -34,6 +34,7 @@
 ****************************************************************************/
 
 #include "qserialport_p.h"
+#include "qserialportinfo_p.h"
 
 #include <errno.h>
 #include <sys/time.h>
@@ -148,7 +149,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     Q_Q(QSerialPort);
 
-    QString lockFilePath = serialPortLockFilePath(portNameFromSystemLocation(systemLocation));
+    QString lockFilePath = serialPortLockFilePath(QSerialPortInfoPrivate::portNameFromSystemLocation(systemLocation));
     bool isLockFileEmpty = lockFilePath.isEmpty();
     if (isLockFileEmpty) {
         qWarning("Failed to create a lock file for opening the device");
@@ -367,7 +368,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     Q_Q(QSerialPort);
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     do {
@@ -398,7 +398,6 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         return false;
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     forever {
@@ -1142,38 +1141,6 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
         ++data;
         ++ret;
     }
-    return ret;
-}
-
-#ifdef Q_OS_MAC
-static const QString defaultFilePathPrefix = QStringLiteral("/dev/cu.");
-static const QString unusedFilePathPrefix = QStringLiteral("/dev/tty.");
-#else
-static const QString defaultFilePathPrefix = QStringLiteral("/dev/");
-#endif
-
-QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
-{
-    QString ret = port;
-
-#ifdef Q_OS_MAC
-    ret.remove(unusedFilePathPrefix);
-#endif
-
-    if (!ret.contains(defaultFilePathPrefix))
-        ret.prepend(defaultFilePathPrefix);
-    return ret;
-}
-
-QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
-{
-    QString ret = location;
-
-#ifdef Q_OS_MAC
-    ret.remove(unusedFilePathPrefix);
-#endif
-
-    ret.remove(defaultFilePathPrefix);
     return ret;
 }
 
