@@ -929,6 +929,26 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
         error = QSerialPort::ResourceError;
         break;
 #endif
+#ifdef EINVAL
+    case EINVAL:
+        error = QSerialPort::UnsupportedOperationError;
+        break;
+#endif
+#ifdef ENOIOCTLCMD
+    case ENOIOCTLCMD:
+        error = QSerialPort::UnsupportedOperationError;
+        break;
+#endif
+#ifdef ENOTTY
+    case ENOTTY:
+        error = QSerialPort::ResourceError;
+        break;
+#endif
+#ifdef EPERM
+    case EPERM:
+        error = QSerialPort::PermissionError;
+        break;
+#endif
     default:
         error = QSerialPort::UnknownError;
         break;
