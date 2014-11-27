@@ -127,6 +127,16 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     }
 }
 
+QSerialPortPrivate::~QSerialPortPrivate()
+{
+    if (communicationOverlapped.hEvent)
+        CloseHandle(communicationOverlapped.hEvent);
+    if (readCompletionOverlapped.hEvent)
+        CloseHandle(readCompletionOverlapped.hEvent);
+    if (writeCompletionOverlapped.hEvent)
+        CloseHandle(writeCompletionOverlapped.hEvent);
+}
+
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     Q_Q(QSerialPort);
