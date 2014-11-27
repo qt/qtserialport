@@ -63,6 +63,7 @@ class QSerialPortPrivate : public QSerialPortPrivateData
 
 public:
     QSerialPortPrivate(QSerialPort *q);
+    ~QSerialPortPrivate();
 
     bool open(QIODevice::OpenMode mode);
     void close();
