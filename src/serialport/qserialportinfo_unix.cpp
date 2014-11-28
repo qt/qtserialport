@@ -93,7 +93,7 @@ static QStringList filteredDeviceFilePaths()
     return result;
 }
 
-QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
+QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok)
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
@@ -104,15 +104,18 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices()
         serialPortInfoList.append(priv);
     }
 
+    ok = true;
     return serialPortInfoList;
 }
 
-QList<QSerialPortInfo> availablePortsBySysfs()
+QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
 {
     QDir ttySysClassDir(QStringLiteral("/sys/class/tty"));
 
-    if (!(ttySysClassDir.exists() && ttySysClassDir.isReadable()))
+    if (!(ttySysClassDir.exists() && ttySysClassDir.isReadable())) {
+        ok = false;
         return QList<QSerialPortInfo>();
+    }
 
     QList<QSerialPortInfo> serialPortInfoList;
     ttySysClassDir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -206,6 +209,7 @@ QList<QSerialPortInfo> availablePortsBySysfs()
         serialPortInfoList.append(priv);
     }
 
+    ok = true;
     return serialPortInfoList;
 }
 
@@ -282,8 +286,10 @@ QString getUdevSerialNumber(struct ::udev_device *dev)
     return getUdevPropertyValue(dev,"ID_SERIAL_SHORT");
 }
 
-QList<QSerialPortInfo> availablePortsByUdev()
+QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
 {
+    ok = false;
+
 #ifndef LINK_LIBUDEV
     static bool symbolsResolved = resolveSymbols(udevLibrary());
     if (!symbolsResolved)
@@ -310,6 +316,8 @@ QList<QSerialPortInfo> availablePortsByUdev()
     QList<QSerialPortInfo> serialPortInfoList;
     udev_list_entry *dev_list_entry;
     udev_list_entry_foreach(dev_list_entry, devices) {
+
+        ok = true;
 
         QScopedPointer<udev_device, ScopedPointerUdevDeviceDeleter>
                 dev(::udev_device_new_from_syspath(
@@ -352,17 +360,17 @@ QList<QSerialPortInfo> availablePortsByUdev()
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    QList<QSerialPortInfo> serialPortInfoList = availablePortsByUdev();
+    bool ok;
+
+    QList<QSerialPortInfo> serialPortInfoList = availablePortsByUdev(ok);
 
 #ifdef Q_OS_LINUX
-    if (serialPortInfoList.isEmpty())
-        serialPortInfoList = availablePortsBySysfs();
-    else
-        return serialPortInfoList;
+    if (!ok)
+        serialPortInfoList = availablePortsBySysfs(ok);
 #endif
 
-    if (serialPortInfoList.isEmpty())
-        serialPortInfoList = availablePortsByFiltersOfDevices();
+    if (!ok)
+        serialPortInfoList = availablePortsByFiltersOfDevices(ok);
 
     return serialPortInfoList;
 }
