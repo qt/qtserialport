@@ -241,49 +241,54 @@ struct ScopedPointerUdevDeviceDeleter
     Q_GLOBAL_STATIC(QLibrary, udevLibrary)
 #endif
 
-static
-QString getUdevPropertyValue(struct ::udev_device *dev, const char *name)
+static bool isSerial8250Driver(const QString &driverName)
+{
+    return (driverName == QStringLiteral("serial8250"));
+}
+
+static QString deviceProperty(struct ::udev_device *dev, const char *name)
 {
     return QString::fromLatin1(::udev_device_get_property_value(dev, name));
 }
 
-static
-bool checkUdevForSerial8250Driver(struct ::udev_device *dev)
+static QString deviceDriver(struct ::udev_device *dev)
 {
-    const QString driverName = QString::fromLatin1(::udev_device_get_driver(dev));
-    return (driverName == QStringLiteral("serial8250"));
+    return QString::fromLatin1(::udev_device_get_driver(dev));
 }
 
-static
-QString getUdevModelName(struct ::udev_device *dev)
+static QString deviceDescription(struct ::udev_device *dev)
 {
-    return getUdevPropertyValue(dev, "ID_MODEL")
-            .replace(QLatin1Char('_'), QLatin1Char(' '));
+    return deviceProperty(dev, "ID_MODEL").replace(QLatin1Char('_'), QLatin1Char(' '));
 }
 
-static
-QString getUdevVendorName(struct ::udev_device *dev)
+static QString deviceManufacturer(struct ::udev_device *dev)
 {
-    return getUdevPropertyValue(dev, "ID_VENDOR")
-            .replace(QLatin1Char('_'), QLatin1Char(' '));
+    return deviceProperty(dev, "ID_VENDOR").replace(QLatin1Char('_'), QLatin1Char(' '));
 }
 
-static
-quint16 getUdevModelIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
+static quint16 deviceProductIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
 {
-    return getUdevPropertyValue(dev, "ID_MODEL_ID").toInt(&hasIdentifier, 16);
+    return deviceProperty(dev, "ID_MODEL_ID").toInt(&hasIdentifier, 16);
 }
 
-static
-quint16 getUdevVendorIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
+static quint16 deviceVendorIdentifier(struct ::udev_device *dev, bool &hasIdentifier)
 {
-    return getUdevPropertyValue(dev, "ID_VENDOR_ID").toInt(&hasIdentifier, 16);
+    return deviceProperty(dev, "ID_VENDOR_ID").toInt(&hasIdentifier, 16);
 }
 
-static
-QString getUdevSerialNumber(struct ::udev_device *dev)
+static QString deviceSerialNumber(struct ::udev_device *dev)
 {
-    return getUdevPropertyValue(dev,"ID_SERIAL_SHORT");
+    return deviceProperty(dev,"ID_SERIAL_SHORT");
+}
+
+static QString deviceName(struct ::udev_device *dev)
+{
+    return QString::fromLatin1(::udev_device_get_sysname(dev));
+}
+
+static QString deviceLocation(struct ::udev_device *dev)
+{
+    return QString::fromLatin1(::udev_device_get_devnode(dev));
 }
 
 QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
@@ -328,19 +333,20 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
 
         QSerialPortInfoPrivate priv;
 
-        priv.device = QString::fromLatin1(::udev_device_get_devnode(dev.data()));
-        priv.portName = QString::fromLatin1(::udev_device_get_sysname(dev.data()));
+        priv.device = deviceLocation(dev.data());
+        priv.portName = deviceName(dev.data());
 
         udev_device *parentdev = ::udev_device_get_parent(dev.data());
 
         if (parentdev) {
-            if (checkUdevForSerial8250Driver(parentdev))
+            const QString driverName = deviceDriver(parentdev);
+            if (isSerial8250Driver(driverName))
                 continue;
-            priv.description = getUdevModelName(dev.data());
-            priv.manufacturer = getUdevVendorName(dev.data());
-            priv.serialNumber = getUdevSerialNumber(dev.data());
-            priv.vendorIdentifier = getUdevVendorIdentifier(dev.data(), priv.hasVendorIdentifier);
-            priv.productIdentifier = getUdevModelIdentifier(dev.data(), priv.hasProductIdentifier);
+            priv.description = deviceDescription(dev.data());
+            priv.manufacturer = deviceManufacturer(dev.data());
+            priv.serialNumber = deviceSerialNumber(dev.data());
+            priv.vendorIdentifier = deviceVendorIdentifier(dev.data(), priv.hasVendorIdentifier);
+            priv.productIdentifier = deviceProductIdentifier(dev.data(), priv.hasProductIdentifier);
         } else {
             if (priv.portName.startsWith(rfcommDeviceName)) {
                 bool ok;
