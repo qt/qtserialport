@@ -37,6 +37,3 @@ information about a particular change.
      method.
    * Now the bytesToWrite() on Windows returns the zero after WriteFile()
      was called.
-   * [QTBUG-41262] Fixed QSPI::isNull() method, which should returns false
-     when QSPI is empty.
-   * [QTBUG-38639] Allow to use custom devices paths.
