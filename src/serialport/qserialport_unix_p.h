@@ -82,6 +82,7 @@ struct serial_struct {
 };
 #define ASYNC_SPD_CUST  0x0030
 #define ASYNC_SPD_MASK  0x1030
+#define PORT_UNKNOWN    0
 #endif
 
 QT_BEGIN_NAMESPACE
