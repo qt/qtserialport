@@ -42,6 +42,7 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qscopedpointer.h>
 
+#include <private/qcore_unix_p.h>
 
 #include <errno.h>
 #include <sys/types.h> // kill
@@ -111,6 +112,24 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok)
 static bool isSerial8250Driver(const QString &driverName)
 {
     return (driverName == QStringLiteral("serial8250"));
+}
+
+static bool isValidSerial8250(const QString &systemLocation)
+{
+#ifdef Q_OS_LINUX
+    const mode_t flags = O_RDWR | O_NONBLOCK | O_NOCTTY;
+    const int fd = qt_safe_open(systemLocation.toLocal8Bit().constData(), flags);
+    if (fd != -1) {
+        struct serial_struct serinfo;
+        const int retval = ::ioctl(fd, TIOCGSERIAL, &serinfo);
+        qt_safe_close(fd);
+        if (retval != -1 && serinfo.type != PORT_UNKNOWN)
+            return true;
+    }
+#else
+    Q_UNUSED(systemLocation);
+#endif
+    return false;
 }
 
 static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
@@ -200,17 +219,18 @@ QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
         QDir targetDir(fileInfo.symLinkTarget());
 
         const QString driverName = deviceDriver(targetDir);
-        if (driverName.isEmpty() || isSerial8250Driver(driverName))
-            continue;
-
-        const QString portName = deviceName(targetDir);
-        if (portName.isEmpty())
+        if (driverName.isEmpty())
             continue;
 
         QSerialPortInfoPrivate priv;
 
-        priv.portName = portName;
-        priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(portName);
+        priv.portName = deviceName(targetDir);
+        if (priv.portName.isEmpty())
+            continue;
+
+        priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(priv.portName);
+        if (isSerial8250Driver(driverName) && !isValidSerial8250(priv.device))
+            continue;
 
         do {
             if (priv.description.isEmpty())
@@ -366,7 +386,7 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
 
         if (parentdev) {
             const QString driverName = deviceDriver(parentdev);
-            if (isSerial8250Driver(driverName))
+            if (isSerial8250Driver(driverName) && !isValidSerial8250(priv.portName))
                 continue;
             priv.description = deviceDescription(dev.data());
             priv.manufacturer = deviceManufacturer(dev.data());
