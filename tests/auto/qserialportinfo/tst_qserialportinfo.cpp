@@ -70,10 +70,23 @@ void tst_QSerialPortInfo::initTestCase()
     m_senderPortName = QString::fromLocal8Bit(qgetenv("QTEST_SERIALPORT_SENDER"));
     m_receiverPortName = QString::fromLocal8Bit(qgetenv("QTEST_SERIALPORT_RECEIVER"));
     if (m_senderPortName.isEmpty() || m_receiverPortName.isEmpty()) {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-        QSKIP("Test doesn't work because the names of serial ports aren't found in env.");
+        static const char message[] =
+              "Test doesn't work because the names of serial ports aren't found in env.\n"
+              "Please set environment variables:\n"
+              " QTEST_SERIALPORT_SENDER to name of output serial port\n"
+              " QTEST_SERIALPORT_RECEIVER to name of input serial port\n"
+              "Specify short names of port"
+#if defined(Q_OS_UNIX)
+              ", like 'ttyS0'\n";
+#elif defined(Q_OS_WIN32)
+              ", like 'COM1'\n";
 #else
-        QSKIP("Test doesn't work because the names of serial ports aren't set found env.", SkipAll);
+              "\n";
+#endif
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        QSKIP(message);
+#else
+        QSKIP(message, SkipAll);
 #endif
     } else {
         m_availablePortNames << m_senderPortName << m_receiverPortName;
