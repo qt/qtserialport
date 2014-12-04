@@ -132,6 +132,18 @@ static bool isValidSerial8250(const QString &systemLocation)
     return false;
 }
 
+static bool isRfcommDevice(const QString &portName)
+{
+    if (!portName.startsWith(QStringLiteral("rfcomm")))
+        return false;
+
+    bool ok;
+    const int portNumber = portName.mid(6).toInt(&ok);
+    if (!ok || (portNumber < 0) || (portNumber > 255))
+        return false;
+    return true;
+}
+
 static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
 {
     QFile f(QFileInfo(targetDir, QStringLiteral("uevent")).absoluteFilePath());
@@ -218,15 +230,17 @@ QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
 
         QDir targetDir(fileInfo.symLinkTarget());
 
-        const QString driverName = deviceDriver(targetDir);
-        if (driverName.isEmpty())
-            continue;
-
         QSerialPortInfoPrivate priv;
 
         priv.portName = deviceName(targetDir);
         if (priv.portName.isEmpty())
             continue;
+
+        const QString driverName = deviceDriver(targetDir);
+        if (driverName.isEmpty()) {
+            if (!isRfcommDevice(priv.portName))
+                continue;
+        }
 
         priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(priv.portName);
         if (isSerial8250Driver(driverName) && !isValidSerial8250(priv.device))
@@ -394,14 +408,8 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
             priv.vendorIdentifier = deviceVendorIdentifier(dev.data(), priv.hasVendorIdentifier);
             priv.productIdentifier = deviceProductIdentifier(dev.data(), priv.hasProductIdentifier);
         } else {
-            if (priv.portName.startsWith(rfcommDeviceName)) {
-                bool ok;
-                int portNumber = priv.portName.mid(rfcommDeviceName.length()).toInt(&ok);
-                if (!ok || (portNumber < 0) || (portNumber > 255))
-                    continue;
-            } else {
+            if (!isRfcommDevice(priv.portName))
                 continue;
-            }
         }
 
         serialPortInfoList.append(priv);
