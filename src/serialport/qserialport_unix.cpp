@@ -932,7 +932,7 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError() const
 #endif
 #ifdef ENOTTY
     case ENOTTY:
-        error = QSerialPort::ResourceError;
+        error = QSerialPort::UnsupportedOperationError;
         break;
 #endif
 #ifdef EPERM
