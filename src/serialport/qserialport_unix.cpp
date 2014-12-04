@@ -567,6 +567,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
     if (error == QSerialPort::NoError)
         return updateTermios();
 
+    q->setError(error);
     return false;
 }
 
