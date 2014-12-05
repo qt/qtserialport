@@ -70,8 +70,6 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , stopBits(QSerialPort::OneStop)
     , flowControl(QSerialPort::NoFlowControl)
     , policy(QSerialPort::IgnorePolicy)
-    , dataTerminalReady(false)
-    , requestToSend(false)
 #if QT_DEPRECATED_SINCE(5,3)
     , settingsRestoredOnClose(true)
 #endif
@@ -531,10 +529,6 @@ bool QSerialPort::open(OpenMode mode)
     }
 
     QIODevice::open(mode);
-
-    d->dataTerminalReady = isDataTerminalReady();
-    d->requestToSend = isRequestToSend();
-
     return true;
 }
 
@@ -865,11 +859,10 @@ bool QSerialPort::setDataTerminalReady(bool set)
         return false;
     }
 
+    const bool dataTerminalReady = isDataTerminalReady();
     const bool retval = d->setDataTerminalReady(set);
-    if (retval && (d->dataTerminalReady != set)) {
-        d->dataTerminalReady = set;
+    if (retval && (dataTerminalReady != set))
         emit dataTerminalReadyChanged(set);
-    }
 
     return retval;
 }
@@ -913,11 +906,10 @@ bool QSerialPort::setRequestToSend(bool set)
         return false;
     }
 
+    const bool requestToSend = isRequestToSend();
     const bool retval = d->setRequestToSend(set);
-    if (retval && (d->requestToSend != set)) {
-        d->requestToSend = set;
+    if (retval && (requestToSend != set))
         emit requestToSendChanged(set);
-    }
 
     return retval;
 }
