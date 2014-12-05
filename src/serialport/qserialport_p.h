@@ -75,8 +75,6 @@ public:
     QSerialPort::StopBits stopBits;
     QSerialPort::FlowControl flowControl;
     QSerialPort::DataErrorPolicy policy;
-    bool dataTerminalReady;
-    bool requestToSend;
     bool settingsRestoredOnClose;
     QSerialPort * const q_ptr;
 };
