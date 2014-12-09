@@ -148,8 +148,8 @@ private:
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , descriptor(-1)
-    , readNotifier(0)
-    , writeNotifier(0)
+    , readNotifier(Q_NULLPTR)
+    , writeNotifier(Q_NULLPTR)
     , readPortNotifierCalled(false)
     , readPortNotifierState(false)
     , readPortNotifierStateSet(false)
@@ -227,19 +227,19 @@ void QSerialPortPrivate::close()
     if (readNotifier) {
         readNotifier->setEnabled(false);
         readNotifier->deleteLater();
-        readNotifier = 0;
+        readNotifier = Q_NULLPTR;
     }
 
     if (writeNotifier) {
         writeNotifier->setEnabled(false);
         writeNotifier->deleteLater();
-        writeNotifier = 0;
+        writeNotifier = Q_NULLPTR;
     }
 
     if (qt_safe_close(descriptor) == -1)
         q->setError(decodeSystemError());
 
-    lockFileScopedPointer.reset(0);
+    lockFileScopedPointer.reset(Q_NULLPTR);
 
     descriptor = -1;
     pendingBytesWritten = 0;

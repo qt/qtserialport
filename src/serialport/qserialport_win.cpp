@@ -94,13 +94,13 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , communicationNotifier(new QWinEventNotifier(q))
     , readCompletionNotifier(new QWinEventNotifier(q))
     , writeCompletionNotifier(new QWinEventNotifier(q))
-    , startAsyncWriteTimer(0)
+    , startAsyncWriteTimer(Q_NULLPTR)
     , originalEventMask(0)
     , triggeredEventMask(0)
     , actualBytesToWrite(0)
 {
     ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
-    communicationOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    communicationOverlapped.hEvent = ::CreateEvent(Q_NULLPTR, FALSE, FALSE, Q_NULLPTR);
     if (!communicationOverlapped.hEvent)
         q->setError(decodeSystemError());
     else {
@@ -109,7 +109,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     }
 
     ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
-    readCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    readCompletionOverlapped.hEvent = ::CreateEvent(Q_NULLPTR, FALSE, FALSE, Q_NULLPTR);
     if (!readCompletionOverlapped.hEvent)
         q->setError(decodeSystemError());
     else {
@@ -118,7 +118,7 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     }
 
     ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
-    writeCompletionOverlapped.hEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+    writeCompletionOverlapped.hEvent = ::CreateEvent(Q_NULLPTR, FALSE, FALSE, Q_NULLPTR);
     if (!writeCompletionOverlapped.hEvent)
         q->setError(decodeSystemError());
     else {
@@ -152,7 +152,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         desiredAccess |= GENERIC_WRITE;
 
     handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+                              desiredAccess, 0, Q_NULLPTR, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, Q_NULLPTR);
 
     if (handle == INVALID_HANDLE_VALUE) {
         q->setError(decodeSystemError());
@@ -223,9 +223,9 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
         ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
-    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
+    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, Q_NULLPTR, 0,
                           &modemStat, sizeof(modemStat),
-                          &bytesReturned, NULL)) {
+                          &bytesReturned, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return ret;
     }
@@ -348,7 +348,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     stopWatch.start();
 
     do {
-        HANDLE triggeredEvent = 0;
+        HANDLE triggeredEvent = Q_NULLPTR;
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &triggeredEvent) || !triggeredEvent)
             return false;
 
@@ -391,7 +391,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     stopWatch.start();
 
     forever {
-        HANDLE triggeredEvent = 0;
+        HANDLE triggeredEvent = Q_NULLPTR;
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &triggeredEvent) || !triggeredEvent)
             return false;
 
@@ -598,7 +598,7 @@ bool QSerialPortPrivate::startAsyncRead()
     }
 
     initializeOverlappedStructure(readCompletionOverlapped);
-    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped)) {
+    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, Q_NULLPTR, &readCompletionOverlapped)) {
         readStarted = true;
         return true;
     }
@@ -629,7 +629,7 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
     const int writeBytes = writeBuffer.nextDataBlockSize();
     if (!::WriteFile(handle, writeBuffer.readPointer(),
                      writeBytes,
-                     NULL, &writeCompletionOverlapped)) {
+                     Q_NULLPTR, &writeCompletionOverlapped)) {
 
         QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::NoError) {
@@ -709,7 +709,7 @@ void QSerialPortPrivate::handleLineStatusErrors()
     Q_Q(QSerialPort);
 
     DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, NULL)) {
+    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return;
     }
