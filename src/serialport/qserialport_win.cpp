@@ -273,13 +273,10 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     Q_Q(QSerialPort);
 
     DWORD flags = 0;
-    if (directions & QSerialPort::Input) {
+    if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-        readStarted = false;
-    }
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-        writeStarted = false;
         actualBytesToWrite = 0;
     }
     if (!::PurgeComm(handle, flags)) {
@@ -291,7 +288,7 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     // PurgeComm can abort of current reading sequence, or a port is in hardware
     // flow control mode, or a port has a limited read buffer size.
     if (directions & QSerialPort::Input)
-        startAsyncRead();
+        startAsyncCommunication();
 
     return true;
 }
@@ -536,11 +533,12 @@ bool QSerialPortPrivate::_q_completeAsyncRead()
 
     readStarted = false;
 
-    // start async read for possible remainder into driver queue
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
         return startAsyncRead();
-    else // driver queue is emplty, so startup wait comm event
+    else if (readBufferMaxSize == 0 || readBufferMaxSize > readBuffer.size())
         return startAsyncCommunication();
+    else
+        return true;
 }
 
 bool QSerialPortPrivate::_q_completeAsyncWrite()
@@ -696,7 +694,7 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     if (!writeBuffer.isEmpty() && !writeStarted) {
         if (!startAsyncWriteTimer) {
             startAsyncWriteTimer = new QTimer(q);
-            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_completeAsyncWrite()));
+            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_startAsyncWrite()));
             startAsyncWriteTimer->setSingleShot(true);
         }
         startAsyncWriteTimer->start(0);
