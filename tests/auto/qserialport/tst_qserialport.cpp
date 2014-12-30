@@ -112,6 +112,8 @@ private slots:
     void readAfterInputClear();
 #endif
 
+    void controlBreak();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -735,6 +737,63 @@ void tst_QSerialPort::readAfterInputClear()
     QVERIFY(receiverPort.bytesAvailable() == 0);
 }
 #endif
+
+class BreakReader : public QObject
+{
+    Q_OBJECT
+public:
+    explicit BreakReader(QSerialPort &port)
+        : serialPort(port)
+    {
+        connect(&serialPort, SIGNAL(readyRead()), this, SLOT(receive()));
+    }
+
+private slots:
+    void receive()
+    {
+        tst_QSerialPort::exitLoop();
+    }
+
+private:
+    QSerialPort &serialPort;
+};
+
+void tst_QSerialPort::controlBreak()
+{
+#ifdef Q_OS_WIN
+    clearReceiver();
+#endif
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+    QCOMPARE(senderPort.isBreakEnabled(), false);
+
+    QSignalSpy breakSpy(&senderPort, SIGNAL(breakEnabledChanged(bool)));
+    QVERIFY(breakSpy.isValid());
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+
+    BreakReader reader(receiverPort);
+
+    QVERIFY(senderPort.setBreakEnabled(true));
+    QCOMPARE(senderPort.isBreakEnabled(), true);
+
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the read of break state.");
+    QVERIFY(receiverPort.bytesAvailable() > 0);
+
+    foreach (const char c, receiverPort.readAll()) {
+        QCOMPARE(c, char(0));
+    }
+
+    QVERIFY(senderPort.setBreakEnabled(false));
+    QCOMPARE(senderPort.isBreakEnabled(), false);
+
+    QCOMPARE(breakSpy.count(), 2);
+    QCOMPARE(qvariant_cast<bool>(breakSpy.at(0).at(0)), true);
+    QCOMPARE(qvariant_cast<bool>(breakSpy.at(1).at(0)), false);
+}
 
 QTEST_MAIN(tst_QSerialPort)
 #include "tst_qserialport.moc"

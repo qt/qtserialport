@@ -175,6 +175,7 @@ public:
     bool dataTerminalReady;
     bool requestToSend;
     bool settingsRestoredOnClose;
+    bool isBreakEnabled;
 
 #if defined (Q_OS_WINCE)
 
