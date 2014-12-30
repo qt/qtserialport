@@ -73,6 +73,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
 #if QT_DEPRECATED_SINCE(5,3)
     , settingsRestoredOnClose(true)
 #endif
+    , isBreakEnabled(false)
     , q_ptr(q)
 {
 }
@@ -550,6 +551,7 @@ void QSerialPort::close()
 
     QIODevice::close();
     d->close();
+    d->isBreakEnabled = false;
 }
 
 /*!
@@ -1292,15 +1294,20 @@ bool QSerialPort::sendBreak(int duration)
 }
 
 /*!
-    Controls the signal break, depending on the flag \a set.
-    If successful, returns true; otherwise returns false.
+    \property QSerialPort::breakEnabled
+    \since 5.5
+    \brief the state of the transmission line in break
 
-    If \a set is true then enables the break transmission; otherwise disables.
+    Returns true on success, false otherwise.
+    If the flag is true then the transmission line is in break state;
+    otherwise is in non-break state.
 
-    \note The serial port has to be open before trying to set break enabled;
-    otherwise returns false and sets the NotOpenError error code.
-
-    \sa sendBreak()
+    \note The serial port has to be open before trying to set or get this
+    property; otherwise returns false and sets the NotOpenError error code.
+    This is a bit unusual as opposed to the regular Qt property settings of
+    a class. However, this is a special use case since the property is set
+    through the interaction with the kernel and hardware. Hence, the two
+    scenarios cannot be completely compared to each other.
 */
 bool QSerialPort::setBreakEnabled(bool set)
 {
@@ -1312,7 +1319,20 @@ bool QSerialPort::setBreakEnabled(bool set)
         return false;
     }
 
-    return d->setBreakEnabled(set);
+    if (d->setBreakEnabled(set)) {
+        if (d->isBreakEnabled != set) {
+            d->isBreakEnabled = set;
+            emit breakEnabledChanged(d->isBreakEnabled);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool QSerialPort::isBreakEnabled() const
+{
+    Q_D(const QSerialPort);
+    return d->isBreakEnabled;
 }
 
 /*!

@@ -63,6 +63,7 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
 #if QT_DEPRECATED_SINCE(5, 3)
     Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 #endif
+    Q_PROPERTY(bool breakEnabled READ isBreakEnabled WRITE setBreakEnabled NOTIFY breakEnabledChanged)
 
     Q_ENUMS(BaudRate DataBits Parity StopBits FlowControl DataErrorPolicy SerialPortError)
     Q_FLAGS(Directions PinoutSignals)
@@ -244,8 +245,11 @@ public:
     bool waitForReadyRead(int msecs) Q_DECL_OVERRIDE;
     bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
 
+#if QT_DEPRECATED_SINCE(5, 5)
     bool sendBreak(int duration = 0);
+#endif
     bool setBreakEnabled(bool set = true);
+    bool isBreakEnabled() const;
 
     Handle handle() const;
 
@@ -260,6 +264,7 @@ Q_SIGNALS:
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
     void settingsRestoredOnCloseChanged(bool restore);
+    void breakEnabledChanged(bool set);
 
 protected:
     qint64 readData(char *data, qint64 maxSize) Q_DECL_OVERRIDE;

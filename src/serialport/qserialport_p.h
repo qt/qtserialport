@@ -76,6 +76,7 @@ public:
     QSerialPort::FlowControl flowControl;
     QSerialPort::DataErrorPolicy policy;
     bool settingsRestoredOnClose;
+    bool isBreakEnabled;
     QSerialPort * const q_ptr;
 };
 
