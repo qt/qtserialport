@@ -150,9 +150,6 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , descriptor(-1)
     , readNotifier(Q_NULLPTR)
     , writeNotifier(Q_NULLPTR)
-    , readPortNotifierCalled(false)
-    , readPortNotifierState(false)
-    , readPortNotifierStateSet(false)
     , emittedReadyRead(false)
     , emittedBytesWritten(false)
     , pendingBytesWritten(0)
@@ -707,17 +704,6 @@ bool QSerialPortPrivate::readNotification()
 {
     Q_Q(QSerialPort);
 
-    // Prevent recursive calls
-    if (readPortNotifierCalled) {
-        if (!readPortNotifierStateSet) {
-            readPortNotifierStateSet = true;
-            readPortNotifierState = isReadNotificationEnabled();
-            setReadNotificationEnabled(false);
-        }
-    }
-
-    readPortNotifierCalled = true;
-
     // Always buffered, read data from the port into the read buffer
     qint64 newBytes = readBuffer.size();
     qint64 bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
@@ -762,16 +748,6 @@ bool QSerialPortPrivate::readNotification()
         emittedReadyRead = false;
     }
 
-    if (!hasData)
-        setReadNotificationEnabled(true);
-
-    // reset the read port notifier state if we reentered inside the
-    // readyRead() connected slot.
-    if (readPortNotifierStateSet
-            && readPortNotifierState != isReadNotificationEnabled()) {
-        setReadNotificationEnabled(readPortNotifierState);
-        readPortNotifierStateSet = false;
-    }
     return true;
 }
 
