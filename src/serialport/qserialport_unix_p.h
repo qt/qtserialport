@@ -144,10 +144,6 @@ public:
     QSocketNotifier *readNotifier;
     QSocketNotifier *writeNotifier;
 
-    bool readPortNotifierCalled;
-    bool readPortNotifierState;
-    bool readPortNotifierStateSet;
-
     bool emittedReadyRead;
     bool emittedBytesWritten;
 
