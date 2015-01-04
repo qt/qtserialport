@@ -117,9 +117,7 @@ protected slots:
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
 
 private:
-#ifdef Q_OS_WIN
     void clearReceiver(const QString &customReceiverName = QString());
-#endif
 
     QString m_senderPortName;
     QString m_receiverPortName;
@@ -139,9 +137,8 @@ tst_QSerialPort::tst_QSerialPort()
 {
 }
 
-#ifdef Q_OS_WIN
 // This method is a workaround for the "com0com" virtual serial port
-// driver, which is installed on CI. The problem is that the close/clear
+// driver or for the SOCAT utility. The problem is that the close/clear
 // methods have no effect on sender serial port. If any data didn't manage
 // to be transferred before closing, then this data will continue to be
 // transferred at next opening of sender port.
@@ -157,7 +154,6 @@ void tst_QSerialPort::clearReceiver(const QString &customReceiverName)
     if (receiver.open(QIODevice::ReadOnly))
         enterLoopMsecs(100);
 }
-#endif
 
 void tst_QSerialPort::initTestCase()
 {
@@ -399,8 +395,8 @@ void tst_QSerialPort::waitForBytesWritten()
 
 void tst_QSerialPort::waitForReadyReadWithTimeout()
 {
-#ifdef Q_OS_WIN
     clearReceiver();
+#ifdef Q_OS_WIN
     // the dummy device on other side also has to be open
     QSerialPort dummySerialPort(m_senderPortName);
     QVERIFY(dummySerialPort.open(QIODevice::WriteOnly));
