@@ -234,9 +234,23 @@ void tst_QSerialPort::constructByName()
 void tst_QSerialPort::constructByInfo()
 {
     QSerialPortInfo senderPortInfo(m_senderPortName);
+    QSerialPortInfo receiverPortInfo(m_receiverPortName);
+
+#if defined(Q_OS_UNIX)
+    if (senderPortInfo.isNull() || receiverPortInfo.isNull()) {
+        static const char message[] =
+                "Test doesn't work because the specified serial ports aren't"
+                " found in system and can't be constructed by QSerialPortInfo.\n";
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        QSKIP(message);
+#else
+        QSKIP(message, SkipAll);
+#endif
+    }
+#endif
+
     QSerialPort serialPort(senderPortInfo);
     QCOMPARE(serialPort.portName(), m_senderPortName);
-    QSerialPortInfo receiverPortInfo(m_receiverPortName);
     serialPort.setPort(receiverPortInfo);
     QCOMPARE(serialPort.portName(), m_receiverPortName);
 }
