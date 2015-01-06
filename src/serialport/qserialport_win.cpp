@@ -91,10 +91,10 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , readyReadEmitted(0)
     , writeStarted(false)
     , readStarted(false)
-    , communicationNotifier(0)
-    , readCompletionNotifier(0)
-    , writeCompletionNotifier(0)
-    , startAsyncWriteTimer(0)
+    , communicationNotifier(Q_NULLPTR)
+    , readCompletionNotifier(Q_NULLPTR)
+    , writeCompletionNotifier(Q_NULLPTR)
+    , startAsyncWriteTimer(Q_NULLPTR)
     , originalEventMask(0)
     , triggeredEventMask(0)
     , actualBytesToWrite(0)
@@ -126,7 +126,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         desiredAccess |= GENERIC_WRITE;
 
     handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+                              desiredAccess, 0, Q_NULLPTR, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, Q_NULLPTR);
 
     if (handle == INVALID_HANDLE_VALUE) {
         q->setError(decodeSystemError());
@@ -197,9 +197,9 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
         ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
-    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
+    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, Q_NULLPTR, 0,
                           &modemStat, sizeof(modemStat),
-                          &bytesReturned, NULL)) {
+                          &bytesReturned, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return ret;
     }
@@ -319,7 +319,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     stopWatch.start();
 
     do {
-        HANDLE triggeredEvent = 0;
+        HANDLE triggeredEvent = Q_NULLPTR;
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &triggeredEvent) || !triggeredEvent)
             return false;
 
@@ -362,7 +362,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     stopWatch.start();
 
     forever {
-        HANDLE triggeredEvent = 0;
+        HANDLE triggeredEvent = Q_NULLPTR;
         if (!waitAnyEvent(timeoutValue(msecs, stopWatch.elapsed()), &triggeredEvent) || !triggeredEvent)
             return false;
 
@@ -576,7 +576,7 @@ bool QSerialPortPrivate::startAsyncRead()
         return false;
 
     initializeOverlappedStructure(readCompletionOverlapped);
-    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped)) {
+    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, Q_NULLPTR, &readCompletionOverlapped)) {
         readStarted = true;
         return true;
     }
@@ -610,7 +610,7 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
     const int writeBytes = writeBuffer.nextDataBlockSize();
     if (!::WriteFile(handle, writeBuffer.readPointer(),
                      writeBytes,
-                     NULL, &writeCompletionOverlapped)) {
+                     Q_NULLPTR, &writeCompletionOverlapped)) {
 
         QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::NoError) {
@@ -690,7 +690,7 @@ void QSerialPortPrivate::handleLineStatusErrors()
     Q_Q(QSerialPort);
 
     DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, NULL)) {
+    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return;
     }
