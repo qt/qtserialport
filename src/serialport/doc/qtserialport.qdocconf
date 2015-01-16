@@ -36,7 +36,7 @@ excludedirs += ../qt4support
 
 examplesinstallpath = serialport
 
-depends += qtcore qtdoc
+depends += qtcore qtdoc qtnetwork qmake
 
 navigation.landingpage = "Qt Serial Port"
 navigation.cppclassespage = "Qt Serial Port C++ Classes"
