@@ -29,7 +29,6 @@
 
 /*!
     \title Qt Serial Port Examples
-    \page examples-serialport.html
     \group qtserialport-examples
     \brief List of serial port examples
 
