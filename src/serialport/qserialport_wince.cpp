@@ -340,7 +340,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msec)
         return true;
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     forever {
@@ -369,7 +368,6 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
         return false;
 
     QElapsedTimer stopWatch;
-
     stopWatch.start();
 
     forever {
@@ -760,22 +758,6 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     }
 
     return false;
-}
-
-QString QSerialPortPrivate::portNameToSystemLocation(const QString &port)
-{
-    QString ret = port;
-    if (!ret.contains(QLatin1Char(':')))
-        ret.append(QLatin1Char(':'));
-    return ret;
-}
-
-QString QSerialPortPrivate::portNameFromSystemLocation(const QString &location)
-{
-    QString ret = location;
-    if (ret.contains(QLatin1Char(':')))
-        ret.remove(QLatin1Char(':'));
-    return ret;
 }
 
 static const QList<qint32> standardBaudRatePairList()
