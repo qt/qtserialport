@@ -847,10 +847,14 @@ bool QSerialPortPrivate::waitAnyEvent(int msecs, HANDLE *triggeredEvent)
 {
     Q_Q(QSerialPort);
 
-    QVector<HANDLE> handles = QVector<HANDLE>()
-            << communicationOverlapped.hEvent
-            << readCompletionOverlapped.hEvent
-            << writeCompletionOverlapped.hEvent;
+    QVector<HANDLE> handles;
+
+    if (communicationOverlapped.hEvent)
+        handles.append(communicationOverlapped.hEvent);
+    if (readCompletionOverlapped.hEvent)
+        handles.append(readCompletionOverlapped.hEvent);
+    if (writeCompletionOverlapped.hEvent)
+        handles.append(writeCompletionOverlapped.hEvent);
 
     DWORD waitResult = ::WaitForMultipleObjects(handles.count(),
                                                 handles.constData(),
