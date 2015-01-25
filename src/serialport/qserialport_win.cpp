@@ -99,6 +99,9 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , triggeredEventMask(0)
     , actualBytesToWrite(0)
 {
+    communicationOverlapped.hEvent = Q_NULLPTR;
+    readCompletionOverlapped.hEvent = Q_NULLPTR;
+    writeCompletionOverlapped.hEvent = Q_NULLPTR;
 }
 
 QSerialPortPrivate::~QSerialPortPrivate()
