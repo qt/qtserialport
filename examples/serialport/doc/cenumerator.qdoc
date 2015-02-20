@@ -29,7 +29,7 @@
 /*!
     \example cenumerator
     \title Command Line Enumerator Example
-    \ingroup qtserialport-example
+    \ingroup qtserialport-examples
     \brief Shows how to get information about serial devices in a system.
 
     \e{Command Line Enumerator} shows how to use the class QSerialPortInfo for

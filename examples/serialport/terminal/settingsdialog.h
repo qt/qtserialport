@@ -79,6 +79,7 @@ private slots:
     void showPortInfo(int idx);
     void apply();
     void checkCustomBaudRatePolicy(int idx);
+    void checkCustomDevicePathPolicy(int idx);
 
 private:
     void fillPortsParameters();

@@ -172,8 +172,6 @@ public:
     QSerialPort::StopBits stopBits;
     QSerialPort::FlowControl flowControl;
     QSerialPort::DataErrorPolicy policy;
-    bool dataTerminalReady;
-    bool requestToSend;
     bool settingsRestoredOnClose;
     bool isBreakEnabled;
 
@@ -185,7 +183,7 @@ public:
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+                            int msecs);
     void processIoErrors(bool error);
 
     bool notifyRead();
@@ -260,7 +258,7 @@ public:
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+                            int msecs);
 
     qint64 readFromPort(char *data, qint64 maxSize);
     qint64 writeToPort(const char *data, qint64 maxSize);

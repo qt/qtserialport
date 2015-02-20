@@ -196,7 +196,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     }
 
     handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, NULL, OPEN_EXISTING, 0, NULL);
+                              desiredAccess, 0, Q_NULLPTR, OPEN_EXISTING, 0, Q_NULLPTR);
 
     if (handle == INVALID_HANDLE_VALUE) {
         q->setError(decodeSystemError());
@@ -214,7 +214,7 @@ void QSerialPortPrivate::close()
 {
     if (eventNotifier) {
         eventNotifier->deleteLater();
-        eventNotifier = 0;
+        eventNotifier = Q_NULLPTR;
     }
 
     if (settingsRestoredOnClose) {
@@ -249,9 +249,9 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
         ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
-    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
+    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, Q_NULLPTR, 0,
                           &modemStat, sizeof(modemStat),
-                          &bytesReturned, NULL)) {
+                          &bytesReturned, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return ret;
     }
@@ -345,11 +345,9 @@ bool QSerialPortPrivate::waitForReadyRead(int msec)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite,
                                 true, !writeBuffer.isEmpty(),
-                                timeoutValue(msec, stopWatch.elapsed()),
-                                &timedOut)) {
+                                timeoutValue(msec, stopWatch.elapsed()))) {
             return false;
         }
         if (readyToRead) {
@@ -373,11 +371,9 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite,
                                 true, !writeBuffer.isEmpty(),
-                                timeoutValue(msec, stopWatch.elapsed()),
-                                &timedOut)) {
+                                timeoutValue(msec, stopWatch.elapsed()))) {
             return false;
         }
         if (readyToRead) {
@@ -509,7 +505,7 @@ bool QSerialPortPrivate::notifyRead()
     char *ptr = buffer.reserve(bytesToRead);
 
     DWORD readBytes = 0;
-    BOOL sucessResult = ::ReadFile(handle, ptr, bytesToRead, &readBytes, NULL);
+    BOOL sucessResult = ::ReadFile(handle, ptr, bytesToRead, &readBytes, Q_NULLPTR);
 
     if (!sucessResult) {
         buffer.chop(bytesToRead);
@@ -555,7 +551,7 @@ bool QSerialPortPrivate::notifyWrite()
     const char *ptr = writeBuffer.readPointer();
 
     DWORD bytesWritten = 0;
-    if (!::WriteFile(handle, ptr, nextSize, &bytesWritten, NULL)) {
+    if (!::WriteFile(handle, ptr, nextSize, &bytesWritten, Q_NULLPTR)) {
         q->setError(QSerialPort::WriteError);
         return false;
     }
@@ -591,7 +587,7 @@ void QSerialPortPrivate::processIoErrors(bool error)
     }
 
     DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, NULL)) {
+    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return;
     }
@@ -727,7 +723,7 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError(int systemErr
 
 bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                                            bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut)
+                                           int msecs)
 {
     Q_Q(QSerialPort);
 
@@ -736,15 +732,12 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     // breaker can work out before you call a method WaitCommEvent()
     // and so it will loop forever!
     WaitCommEventBreaker breaker(handle, qMax(msecs, 0));
-    ::WaitCommEvent(handle, &eventMask, NULL);
+    ::WaitCommEvent(handle, &eventMask, Q_NULLPTR);
     breaker.stop();
 
     if (breaker.isWorked()) {
-        *timedOut = true;
         q->setError(QSerialPort::TimeoutError);
-    }
-
-    if (!breaker.isWorked()) {
+    } else {
         if (checkRead) {
             Q_ASSERT(selectForRead);
             *selectForRead = eventMask & EV_RXCHAR;

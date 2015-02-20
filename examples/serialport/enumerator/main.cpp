@@ -36,6 +36,7 @@
 #include <QWidget>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <QScrollArea>
 #include <QtSerialPort/QSerialPortInfo>
 
 QT_USE_NAMESPACE
@@ -44,8 +45,6 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QWidget w;
-    w.setWindowTitle(QObject::tr("Info about all available serial ports."));
     QVBoxLayout *layout = new QVBoxLayout;
 
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
@@ -62,8 +61,13 @@ int main(int argc, char *argv[])
         layout->addWidget(label);
     }
 
-    w.setLayout(layout);
-    w.show();
+    QWidget *workPage = new QWidget;
+    workPage->setLayout(layout);
+
+    QScrollArea area;
+    area.setWindowTitle(QObject::tr("Info about all available serial ports."));
+    area.setWidget(workPage);
+    area.show();
 
     return a.exec();
 }

@@ -119,9 +119,7 @@ protected slots:
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
 
 private:
-#ifdef Q_OS_WIN
     void clearReceiver(const QString &customReceiverName = QString());
-#endif
 
     QString m_senderPortName;
     QString m_receiverPortName;
@@ -141,9 +139,8 @@ tst_QSerialPort::tst_QSerialPort()
 {
 }
 
-#ifdef Q_OS_WIN
 // This method is a workaround for the "com0com" virtual serial port
-// driver, which is installed on CI. The problem is that the close/clear
+// driver or for the SOCAT utility. The problem is that the close/clear
 // methods have no effect on sender serial port. If any data didn't manage
 // to be transferred before closing, then this data will continue to be
 // transferred at next opening of sender port.
@@ -159,17 +156,30 @@ void tst_QSerialPort::clearReceiver(const QString &customReceiverName)
     if (receiver.open(QIODevice::ReadOnly))
         enterLoopMsecs(100);
 }
-#endif
 
 void tst_QSerialPort::initTestCase()
 {
     m_senderPortName = QString::fromLocal8Bit(qgetenv("QTEST_SERIALPORT_SENDER"));
     m_receiverPortName = QString::fromLocal8Bit(qgetenv("QTEST_SERIALPORT_RECEIVER"));
     if (m_senderPortName.isEmpty() || m_receiverPortName.isEmpty()) {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-        QSKIP("Test doesn't work because the names of serial ports aren't found in env.");
+        static const char message[] =
+              "Test doesn't work because the names of serial ports aren't found in env.\n"
+              "Please set environment variables:\n"
+              " QTEST_SERIALPORT_SENDER to name of output serial port\n"
+              " QTEST_SERIALPORT_RECEIVER to name of input serial port\n"
+              "Specify short names of port"
+#if defined(Q_OS_UNIX)
+              ", like: ttyS0\n";
+#elif defined(Q_OS_WIN32)
+              ", like: COM1\n";
 #else
-        QSKIP("Test doesn't work because the names of serial ports aren't set found env.", SkipAll);
+              "\n";
+#endif
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        QSKIP(message);
+#else
+        QSKIP(message, SkipAll);
 #endif
     } else {
         m_availablePortNames << m_senderPortName << m_receiverPortName;
@@ -226,9 +236,23 @@ void tst_QSerialPort::constructByName()
 void tst_QSerialPort::constructByInfo()
 {
     QSerialPortInfo senderPortInfo(m_senderPortName);
+    QSerialPortInfo receiverPortInfo(m_receiverPortName);
+
+#if defined(Q_OS_UNIX)
+    if (senderPortInfo.isNull() || receiverPortInfo.isNull()) {
+        static const char message[] =
+                "Test doesn't work because the specified serial ports aren't"
+                " found in system and can't be constructed by QSerialPortInfo.\n";
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+        QSKIP(message);
+#else
+        QSKIP(message, SkipAll);
+#endif
+    }
+#endif
+
     QSerialPort serialPort(senderPortInfo);
     QCOMPARE(serialPort.portName(), m_senderPortName);
-    QSerialPortInfo receiverPortInfo(m_receiverPortName);
     serialPort.setPort(receiverPortInfo);
     QCOMPARE(serialPort.portName(), m_receiverPortName);
 }
@@ -387,8 +411,8 @@ void tst_QSerialPort::waitForBytesWritten()
 
 void tst_QSerialPort::waitForReadyReadWithTimeout()
 {
-#ifdef Q_OS_WIN
     clearReceiver();
+#ifdef Q_OS_WIN
     // the dummy device on other side also has to be open
     QSerialPort dummySerialPort(m_senderPortName);
     QVERIFY(dummySerialPort.open(QIODevice::WriteOnly));

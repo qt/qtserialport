@@ -90,7 +90,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         desiredAccess |= GENERIC_WRITE;
 
     handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+                              desiredAccess, 0, Q_NULLPTR, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, Q_NULLPTR);
 
     if (handle == INVALID_HANDLE_VALUE) {
         q->setError(decodeSystemError());
@@ -158,9 +158,9 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
         ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
-    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, NULL, 0,
+    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, Q_NULLPTR, 0,
                           &modemStat, sizeof(modemStat),
-                          &bytesReturned, NULL)) {
+                          &bytesReturned, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return ret;
     }
@@ -208,13 +208,10 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     Q_Q(QSerialPort);
 
     DWORD flags = 0;
-    if (directions & QSerialPort::Input) {
+    if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-        readStarted = false;
-    }
     if (directions & QSerialPort::Output) {
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-        writeStarted = false;
         actualBytesToWrite = 0;
     }
     if (!::PurgeComm(handle, flags)) {
@@ -226,7 +223,7 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     // PurgeComm can abort of current reading sequence, or a port is in hardware
     // flow control mode, or a port has a limited read buffer size.
     if (directions & QSerialPort::Input)
-        startAsyncRead();
+        startAsyncCommunication();
 
     return true;
 }
@@ -475,11 +472,12 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
 
     readStarted = false;
 
-    // start async read for possible remainder into driver queue
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
         return startAsyncRead();
-    else // driver queue is emplty, so startup wait comm event
+    else if (readBufferMaxSize == 0 || readBufferMaxSize > buffer.size())
         return startAsyncCommunication();
+    else
+        return true;
 }
 
 bool QSerialPortPrivate::completeAsyncWrite(qint64 bytesTransferred)
@@ -536,7 +534,7 @@ bool QSerialPortPrivate::startAsyncRead()
     }
 
     ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
-    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, NULL, &readCompletionOverlapped)) {
+    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, Q_NULLPTR, &readCompletionOverlapped)) {
         readStarted = true;
         return true;
     }
@@ -565,7 +563,7 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
     const int writeBytes = writeBuffer.nextDataBlockSize();
     ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
     if (!::WriteFile(handle, writeBuffer.readPointer(),
-                     writeBytes, NULL, &writeCompletionOverlapped)) {
+                     writeBytes, Q_NULLPTR, &writeCompletionOverlapped)) {
 
         QSerialPort::SerialPortError error = decodeSystemError();
         if (error != QSerialPort::NoError) {
@@ -665,7 +663,7 @@ void QSerialPortPrivate::handleLineStatusErrors()
     Q_Q(QSerialPort);
 
     DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, NULL)) {
+    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
         q->setError(decodeSystemError());
         return;
     }

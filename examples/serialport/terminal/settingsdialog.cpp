@@ -41,6 +41,8 @@
 
 QT_USE_NAMESPACE
 
+static const char blankString[] = QT_TRANSLATE_NOOP("SettingsDialog", "N/A");
+
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)
@@ -57,6 +59,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
             this, SLOT(showPortInfo(int)));
     connect(ui->baudRateBox, SIGNAL(currentIndexChanged(int)),
             this, SLOT(checkCustomBaudRatePolicy(int)));
+    connect(ui->serialPortInfoListBox, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(checkCustomDevicePathPolicy(int)));
 
     fillPortsParameters();
     fillPortsInfo();
@@ -76,15 +80,16 @@ SettingsDialog::Settings SettingsDialog::settings() const
 
 void SettingsDialog::showPortInfo(int idx)
 {
-    if (idx != -1) {
-        QStringList list = ui->serialPortInfoListBox->itemData(idx).toStringList();
-        ui->descriptionLabel->setText(tr("Description: %1").arg(list.at(1)));
-        ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.at(2)));
-        ui->serialNumberLabel->setText(tr("Serial number: %1").arg(list.at(3)));
-        ui->locationLabel->setText(tr("Location: %1").arg(list.at(4)));
-        ui->vidLabel->setText(tr("Vendor Identifier: %1").arg(list.at(5)));
-        ui->pidLabel->setText(tr("Product Identifier: %1").arg(list.at(6)));
-    }
+    if (idx == -1)
+        return;
+
+    QStringList list = ui->serialPortInfoListBox->itemData(idx).toStringList();
+    ui->descriptionLabel->setText(tr("Description: %1").arg(list.count() > 1 ? list.at(1) : tr(blankString)));
+    ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.count() > 2 ? list.at(2) : tr(blankString)));
+    ui->serialNumberLabel->setText(tr("Serial number: %1").arg(list.count() > 3 ? list.at(3) : tr(blankString)));
+    ui->locationLabel->setText(tr("Location: %1").arg(list.count() > 4 ? list.at(4) : tr(blankString)));
+    ui->vidLabel->setText(tr("Vendor Identifier: %1").arg(list.count() > 5 ? list.at(5) : tr(blankString)));
+    ui->pidLabel->setText(tr("Product Identifier: %1").arg(list.count() > 6 ? list.at(6) : tr(blankString)));
 }
 
 void SettingsDialog::apply()
@@ -104,13 +109,21 @@ void SettingsDialog::checkCustomBaudRatePolicy(int idx)
     }
 }
 
+void SettingsDialog::checkCustomDevicePathPolicy(int idx)
+{
+    bool isCustomPath = !ui->serialPortInfoListBox->itemData(idx).isValid();
+    ui->serialPortInfoListBox->setEditable(isCustomPath);
+    if (isCustomPath)
+        ui->serialPortInfoListBox->clearEditText();
+}
+
 void SettingsDialog::fillPortsParameters()
 {
     ui->baudRateBox->addItem(QStringLiteral("9600"), QSerialPort::Baud9600);
     ui->baudRateBox->addItem(QStringLiteral("19200"), QSerialPort::Baud19200);
     ui->baudRateBox->addItem(QStringLiteral("38400"), QSerialPort::Baud38400);
     ui->baudRateBox->addItem(QStringLiteral("115200"), QSerialPort::Baud115200);
-    ui->baudRateBox->addItem(QStringLiteral("Custom"));
+    ui->baudRateBox->addItem(tr("Custom"));
 
     ui->dataBitsBox->addItem(QStringLiteral("5"), QSerialPort::Data5);
     ui->dataBitsBox->addItem(QStringLiteral("6"), QSerialPort::Data6);
@@ -118,27 +131,26 @@ void SettingsDialog::fillPortsParameters()
     ui->dataBitsBox->addItem(QStringLiteral("8"), QSerialPort::Data8);
     ui->dataBitsBox->setCurrentIndex(3);
 
-    ui->parityBox->addItem(QStringLiteral("None"), QSerialPort::NoParity);
-    ui->parityBox->addItem(QStringLiteral("Even"), QSerialPort::EvenParity);
-    ui->parityBox->addItem(QStringLiteral("Odd"), QSerialPort::OddParity);
-    ui->parityBox->addItem(QStringLiteral("Mark"), QSerialPort::MarkParity);
-    ui->parityBox->addItem(QStringLiteral("Space"), QSerialPort::SpaceParity);
+    ui->parityBox->addItem(tr("None"), QSerialPort::NoParity);
+    ui->parityBox->addItem(tr("Even"), QSerialPort::EvenParity);
+    ui->parityBox->addItem(tr("Odd"), QSerialPort::OddParity);
+    ui->parityBox->addItem(tr("Mark"), QSerialPort::MarkParity);
+    ui->parityBox->addItem(tr("Space"), QSerialPort::SpaceParity);
 
     ui->stopBitsBox->addItem(QStringLiteral("1"), QSerialPort::OneStop);
 #ifdef Q_OS_WIN
-    ui->stopBitsBox->addItem(QStringLiteral("1.5"), QSerialPort::OneAndHalfStop);
+    ui->stopBitsBox->addItem(tr("1.5"), QSerialPort::OneAndHalfStop);
 #endif
     ui->stopBitsBox->addItem(QStringLiteral("2"), QSerialPort::TwoStop);
 
-    ui->flowControlBox->addItem(QStringLiteral("None"), QSerialPort::NoFlowControl);
-    ui->flowControlBox->addItem(QStringLiteral("RTS/CTS"), QSerialPort::HardwareControl);
-    ui->flowControlBox->addItem(QStringLiteral("XON/XOFF"), QSerialPort::SoftwareControl);
+    ui->flowControlBox->addItem(tr("None"), QSerialPort::NoFlowControl);
+    ui->flowControlBox->addItem(tr("RTS/CTS"), QSerialPort::HardwareControl);
+    ui->flowControlBox->addItem(tr("XON/XOFF"), QSerialPort::SoftwareControl);
 }
 
 void SettingsDialog::fillPortsInfo()
 {
     ui->serialPortInfoListBox->clear();
-    static const QString blankString = QObject::tr("N/A");
     QString description;
     QString manufacturer;
     QString serialNumber;
@@ -157,6 +169,8 @@ void SettingsDialog::fillPortsInfo()
 
         ui->serialPortInfoListBox->addItem(list.first(), list);
     }
+
+    ui->serialPortInfoListBox->addItem(tr("Custom"));
 }
 
 void SettingsDialog::updateSettings()
