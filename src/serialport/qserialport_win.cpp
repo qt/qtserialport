@@ -255,17 +255,18 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
-    const qint64 result = buffer.read(data, maxSize);
+    Q_UNUSED(data);
+    Q_UNUSED(maxSize);
+
     // We need try to start async reading to read a remainder from a driver's queue
     // in case we have a limited read buffer size. Because the read notification can
     // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
     // buffer has a remainder of data ready to read until a new data will be received.
-    if (readBufferMaxSize
-            && result > 0
-            && (result == readBufferMaxSize || flowControl == QSerialPort::HardwareControl)) {
+    if (readBufferMaxSize || flowControl == QSerialPort::HardwareControl)
         startAsyncRead();
-    }
-    return result;
+
+    // return 0 indicating there may be more data in the future
+    return qint64(0);
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
