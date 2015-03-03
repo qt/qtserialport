@@ -212,19 +212,19 @@ void QSerialPortPrivate::close()
     if (readNotifier) {
         readNotifier->setEnabled(false);
         readNotifier->deleteLater();
-        readNotifier = 0;
+        readNotifier = Q_NULLPTR;
     }
 
     if (writeNotifier) {
         writeNotifier->setEnabled(false);
         writeNotifier->deleteLater();
-        writeNotifier = 0;
+        writeNotifier = Q_NULLPTR;
     }
 
     if (qt_safe_close(descriptor) == -1)
         q->setError(decodeSystemError());
 
-    lockFileScopedPointer.reset(0);
+    lockFileScopedPointer.reset(Q_NULLPTR);
 
     descriptor = -1;
     pendingBytesWritten = 0;
@@ -365,19 +365,14 @@ qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
-    Q_Q(QSerialPort);
-
     QElapsedTimer stopWatch;
     stopWatch.start();
 
     do {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
-            if (!timedOut)
-                q->setError(decodeSystemError());
+                                timeoutValue(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -392,8 +387,6 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
 bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 {
-    Q_Q(QSerialPort);
-
     if (writeBuffer.isEmpty() && pendingBytesWritten <= 0)
         return false;
 
@@ -403,11 +396,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     forever {
         bool readyToRead = false;
         bool readyToWrite = false;
-        bool timedOut = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()), &timedOut)) {
-            if (!timedOut)
-                q->setError(decodeSystemError());
+                                timeoutValue(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -562,6 +552,7 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
     if (error == QSerialPort::NoError)
         return updateTermios();
 
+    q->setError(error);
     return false;
 }
 
@@ -701,17 +692,6 @@ bool QSerialPortPrivate::readNotification()
 {
     Q_Q(QSerialPort);
 
-    // Prevent recursive calls
-    if (readPortNotifierCalled) {
-        if (!readPortNotifierStateSet) {
-            readPortNotifierStateSet = true;
-            readPortNotifierState = isReadNotificationEnabled();
-            setReadNotificationEnabled(false);
-        }
-    }
-
-    readPortNotifierCalled = true;
-
     // Always buffered, read data from the port into the read buffer
     qint64 newBytes = buffer.size();
     qint64 bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
@@ -756,16 +736,6 @@ bool QSerialPortPrivate::readNotification()
         emittedReadyRead = false;
     }
 
-    if (!hasData)
-        setReadNotificationEnabled(true);
-
-    // reset the read port notifier state if we reentered inside the
-    // readyRead() connected slot.
-    if (readPortNotifierStateSet
-            && readPortNotifierState != isReadNotificationEnabled()) {
-        setReadNotificationEnabled(readPortNotifierState);
-        readPortNotifierStateSet = false;
-    }
     return true;
 }
 
@@ -916,6 +886,26 @@ QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError(int systemErr
         error = QSerialPort::ResourceError;
         break;
 #endif
+#ifdef EINVAL
+    case EINVAL:
+        error = QSerialPort::UnsupportedOperationError;
+        break;
+#endif
+#ifdef ENOIOCTLCMD
+    case ENOIOCTLCMD:
+        error = QSerialPort::UnsupportedOperationError;
+        break;
+#endif
+#ifdef ENOTTY
+    case ENOTTY:
+        error = QSerialPort::UnsupportedOperationError;
+        break;
+#endif
+#ifdef EPERM
+    case EPERM:
+        error = QSerialPort::PermissionError;
+        break;
+#endif
     default:
         error = QSerialPort::UnknownError;
         break;
@@ -959,13 +949,12 @@ void QSerialPortPrivate::setWriteNotificationEnabled(bool enable)
 
 bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                                            bool checkRead, bool checkWrite,
-                                           int msecs, bool *timedOut)
+                                           int msecs)
 {
     Q_Q(QSerialPort);
 
     Q_ASSERT(selectForRead);
     Q_ASSERT(selectForWrite);
-    Q_ASSERT(timedOut);
 
     fd_set fdread;
     FD_ZERO(&fdread);
@@ -981,19 +970,19 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     tv.tv_sec = msecs / 1000;
     tv.tv_usec = (msecs % 1000) * 1000;
 
-    int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
-    if (ret < 0)
+    const int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
+    if (ret < 0) {
+        q->setError(decodeSystemError());
         return false;
+    }
     if (ret == 0) {
-        *timedOut = true;
         q->setError(QSerialPort::TimeoutError);
         return false;
     }
 
     *selectForRead = FD_ISSET(descriptor, &fdread);
     *selectForWrite = FD_ISSET(descriptor, &fdwrite);
-
-    return ret;
+    return true;
 }
 
 qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)

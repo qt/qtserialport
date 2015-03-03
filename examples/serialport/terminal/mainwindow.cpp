@@ -109,7 +109,8 @@ void MainWindow::openSerialPort()
 //! [5]
 void MainWindow::closeSerialPort()
 {
-    serial->close();
+    if (serial->isOpen())
+        serial->close();
     console->setEnabled(false);
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);

@@ -87,6 +87,7 @@ struct serial_struct {
 };
 #    define ASYNC_SPD_CUST  0x0030
 #    define ASYNC_SPD_MASK  0x1030
+#    define PORT_UNKNOWN    0
 #  elif defined (Q_OS_LINUX)
 #    include <linux/serial.h>
 #  endif
@@ -172,8 +173,6 @@ public:
     QSerialPort::StopBits stopBits;
     QSerialPort::FlowControl flowControl;
     QSerialPort::DataErrorPolicy policy;
-    bool dataTerminalReady;
-    bool requestToSend;
     bool settingsRestoredOnClose;
     bool isBreakEnabled;
 
@@ -185,7 +184,7 @@ public:
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+                            int msecs);
     void processIoErrors(bool error);
 
     bool notifyRead();
@@ -260,7 +259,7 @@ public:
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
-                            int msecs, bool *timedOut);
+                            int msecs);
 
     qint64 readFromPort(char *data, qint64 maxSize);
     qint64 writeToPort(const char *data, qint64 maxSize);
