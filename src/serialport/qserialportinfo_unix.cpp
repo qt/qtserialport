@@ -170,7 +170,7 @@ static QString deviceName(const QDir &targetDir)
 
 static QString deviceDriver(const QDir &targetDir)
 {
-    const QDir deviceDir(targetDir.absolutePath() + "/device");
+    const QDir deviceDir(targetDir.absolutePath() + QStringLiteral("/device"));
     return ueventProperty(deviceDir, "DRIVER=");
 }
 
