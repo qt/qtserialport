@@ -459,6 +459,8 @@ QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions
 {
     struct serial_struct currentSerialInfo;
 
+    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
+
     if ((::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
             && (currentSerialInfo.flags & ASYNC_SPD_CUST)) {
         currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
@@ -488,6 +490,8 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     Q_UNUSED(directions);
 
     struct serial_struct currentSerialInfo;
+
+    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
 
     if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
         return decodeSystemError();
