@@ -65,7 +65,8 @@ class QSerialPortPrivateData
 {
 public:
     enum IoConstants {
-        ReadChunkSize = 512
+        ReadChunkSize = 512,
+        InitialBufferSize = 16384
     };
 
     QSerialPortPrivateData(QSerialPort *q);

@@ -58,18 +58,14 @@
 #error Unsupported OS
 #endif
 
-#ifndef SERIALPORT_BUFFERSIZE
-#  define SERIALPORT_BUFFERSIZE 16384
-#endif
-
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 
 QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     : readBufferMaxSize(0)
-    , readBuffer(SERIALPORT_BUFFERSIZE)
-    , writeBuffer(SERIALPORT_BUFFERSIZE)
+    , readBuffer(InitialBufferSize)
+    , writeBuffer(InitialBufferSize)
     , error(QSerialPort::NoError)
     , inputBaudRate(9600)
     , outputBaudRate(9600)
