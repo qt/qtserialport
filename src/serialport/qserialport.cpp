@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 
 QSerialPortPrivate::QSerialPortPrivate()
     : readBufferMaxSize(0)
-    , writeBuffer(SERIALPORT_BUFFERSIZE)
+    , writeBuffer(InitialBufferSize)
     , error(QSerialPort::NoError)
     , inputBaudRate(9600)
     , outputBaudRate(9600)

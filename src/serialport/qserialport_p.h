@@ -97,10 +97,6 @@ struct serial_struct {
 
 QT_BEGIN_NAMESPACE
 
-#ifndef SERIALPORT_BUFFERSIZE
-#  define SERIALPORT_BUFFERSIZE 16384
-#endif
-
 class QThread;
 class QWinOverlappedIoNotifier;
 class QTimer;
@@ -115,7 +111,8 @@ class QSerialPortPrivate : public QIODevicePrivate
     Q_DECLARE_PUBLIC(QSerialPort)
 public:
     enum IoConstants {
-        ReadChunkSize = 512
+        ReadChunkSize = 512,
+        InitialBufferSize = 16384
     };
 
     QSerialPortPrivate();
