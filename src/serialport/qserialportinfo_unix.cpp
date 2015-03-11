@@ -67,9 +67,9 @@ static QStringList filteredDeviceFilePaths()
     << QStringLiteral("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
     << QStringLiteral("rfcomm*")  // Bluetooth serial device.
     << QStringLiteral("ircomm*"); // IrDA serial device.
-#elif defined (Q_OS_FREEBSD)
+#elif defined(Q_OS_FREEBSD)
     << QStringLiteral("cu*");
-#elif defined (Q_OS_QNX)
+#elif defined(Q_OS_QNX)
     << QStringLiteral("ser*");
 #else
     ;

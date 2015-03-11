@@ -142,7 +142,7 @@ public:
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
 #if QT_DEPRECATED_SINCE(5, 2)
-#if defined _MSC_VER
+#if defined(_MSC_VER)
 #pragma deprecated(UnknownBaud)
 #pragma deprecated(UnknownDataBits)
 #pragma deprecated(UnknownParity)
@@ -279,7 +279,7 @@ private:
 
     Q_DISABLE_COPY(QSerialPort)
 
-#if defined (Q_OS_WIN32)
+#if defined(Q_OS_WIN32)
     Q_PRIVATE_SLOT(d_func(), bool _q_startAsyncWrite())
     Q_PRIVATE_SLOT(d_func(), void _q_notified(quint32, quint32, OVERLAPPED*))
 #endif
