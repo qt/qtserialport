@@ -117,7 +117,7 @@ public:
 
     QSerialPortPrivate();
 
-    int timeoutValue(int msecs, int elapsed);
+    static int timeoutValue(int msecs, int elapsed);
 
     bool open(QIODevice::OpenMode mode);
     void close();
