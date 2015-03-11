@@ -70,7 +70,7 @@ public:
     };
 
     QSerialPortPrivateData(QSerialPort *q);
-    int timeoutValue(int msecs, int elapsed);
+    static int timeoutValue(int msecs, int elapsed);
 
     qint64 readBufferMaxSize;
     QRingBuffer readBuffer;
