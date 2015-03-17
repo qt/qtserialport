@@ -89,11 +89,6 @@ static bool isCompleteInfo(const QSerialPortInfoPrivate &priv)
             && priv.hasVendorIdentifier;
 }
 
-static QString devicePortName(io_registry_entry_t ioRegistryEntry)
-{
-    return searchStringProperty(ioRegistryEntry, QCFString(kIOTTYDeviceKey));
-}
-
 static QString deviceSystemLocation(io_registry_entry_t ioRegistryEntry)
 {
     return searchStringProperty(ioRegistryEntry, QCFString(kIOCalloutDeviceKey));
@@ -163,11 +158,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         QSerialPortInfoPrivate priv;
 
         forever {
-            if (priv.portName.isEmpty())
-                priv.portName = devicePortName(serialPortService);
-
-            if (priv.device.isEmpty())
+            if (priv.device.isEmpty()) {
                 priv.device = deviceSystemLocation(serialPortService);
+                if (!priv.device.isEmpty())
+                    priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(priv.device);
+            }
 
             if (priv.description.isEmpty())
                 priv.description = deviceDescription(serialPortService);

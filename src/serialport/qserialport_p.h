@@ -52,12 +52,12 @@
 #include <private/qringbuffer_p.h>
 #include <private/qiodevice_p.h>
 
-#if defined (Q_OS_WINCE)
+#if defined(Q_OS_WINCE)
 #  include <QtCore/qmutex.h>
 #  include <qt_windows.h>
-#elif defined (Q_OS_WIN32)
+#elif defined(Q_OS_WIN32)
 #  include <qt_windows.h>
-#elif defined (Q_OS_UNIX)
+#elif defined(Q_OS_UNIX)
 #  include <QtCore/qlockfile.h>
 #  include <QtCore/qscopedpointer.h>
 #  include <QtCore/qfileinfo.h>
@@ -88,7 +88,7 @@ struct serial_struct {
 #    define ASYNC_SPD_CUST  0x0030
 #    define ASYNC_SPD_MASK  0x1030
 #    define PORT_UNKNOWN    0
-#  elif defined (Q_OS_LINUX)
+#  elif defined(Q_OS_LINUX)
 #    include <linux/serial.h>
 #  endif
 #else
@@ -97,16 +97,12 @@ struct serial_struct {
 
 QT_BEGIN_NAMESPACE
 
-#ifndef SERIALPORT_BUFFERSIZE
-#  define SERIALPORT_BUFFERSIZE 16384
-#endif
-
 class QThread;
 class QWinOverlappedIoNotifier;
 class QTimer;
 class QSocketNotifier;
 
-#if defined (Q_OS_UNIX)
+#if defined(Q_OS_UNIX)
 QString serialPortLockFilePath(const QString &portName);
 #endif
 
@@ -115,12 +111,13 @@ class QSerialPortPrivate : public QIODevicePrivate
     Q_DECLARE_PUBLIC(QSerialPort)
 public:
     enum IoConstants {
-        ReadChunkSize = 512
+        ReadChunkSize = 512,
+        InitialBufferSize = 16384
     };
 
     QSerialPortPrivate();
 
-    int timeoutValue(int msecs, int elapsed);
+    static int timeoutValue(int msecs, int elapsed);
 
     bool open(QIODevice::OpenMode mode);
     void close();
@@ -176,7 +173,7 @@ public:
     bool settingsRestoredOnClose;
     bool isBreakEnabled;
 
-#if defined (Q_OS_WINCE)
+#if defined(Q_OS_WINCE)
 
     bool initialize(DWORD eventMask);
     bool updateDcb();
@@ -200,7 +197,7 @@ public:
     QThread *eventNotifier;
     QMutex settingsChangeMutex;
 
-#elif defined (Q_OS_WIN32)
+#elif defined(Q_OS_WIN32)
 
     bool initialize();
     bool updateDcb();
@@ -240,7 +237,7 @@ public:
     DWORD triggeredEventMask;
     qint64 actualBytesToWrite;
 
-#elif defined (Q_OS_UNIX)
+#elif defined(Q_OS_UNIX)
 
     bool initialize(QIODevice::OpenMode mode);
     bool updateTermios();

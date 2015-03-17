@@ -43,7 +43,7 @@
 #include <unistd.h>
 
 #ifdef Q_OS_MAC
-#if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+#if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
 #include <IOKit/serial/ioss.h>
 #endif
 #endif
@@ -271,14 +271,14 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 #ifdef TIOCM_CAR
     if (arg & TIOCM_CAR)
         ret |= QSerialPort::DataCarrierDetectSignal;
-#elif defined TIOCM_CD
+#elif defined(TIOCM_CD)
     if (arg & TIOCM_CD)
         ret |= QSerialPort::DataCarrierDetectSignal;
 #endif
 #ifdef TIOCM_RNG
     if (arg & TIOCM_RNG)
         ret |= QSerialPort::RingIndicatorSignal;
-#elif defined TIOCM_RI
+#elif defined(TIOCM_RI)
     if (arg & TIOCM_RI)
         ret |= QSerialPort::RingIndicatorSignal;
 #endif
@@ -439,6 +439,8 @@ QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions
 {
     struct serial_struct currentSerialInfo;
 
+    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
+
     if ((::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
             && (currentSerialInfo.flags & ASYNC_SPD_CUST)) {
         currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
@@ -468,6 +470,8 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     Q_UNUSED(directions);
 
     struct serial_struct currentSerialInfo;
+
+    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
 
     if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
         return decodeSystemError();
@@ -499,7 +503,7 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
 {
     Q_UNUSED(directions);
 
-#if defined (MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
+#if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
     if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1)
         return decodeSystemError();
 
@@ -509,7 +513,7 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     return QSerialPort::UnsupportedOperationError;
 }
 
-#elif defined (Q_OS_QNX)
+#elif defined(Q_OS_QNX)
 
 QSerialPort::SerialPortError
 QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
@@ -988,7 +992,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
 qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
 {
     qint64 bytesRead = 0;
-#if defined (CMSPAR)
+#if defined(CMSPAR)
     if (parity == QSerialPort::NoParity
             || policy != QSerialPort::StopReceivingPolicy) {
 #else
@@ -1006,7 +1010,7 @@ qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
 qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
 {
     qint64 bytesWritten = 0;
-#if defined (CMSPAR)
+#if defined(CMSPAR)
     bytesWritten = qt_safe_write(descriptor, data, maxSize);
 #else
     if (parity != QSerialPort::MarkParity

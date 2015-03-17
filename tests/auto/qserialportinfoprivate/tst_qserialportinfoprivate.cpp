@@ -56,14 +56,14 @@ void tst_QSerialPortInfoPrivate::canonical_data()
     QTest::addColumn<QString>("name");
     QTest::addColumn<QString>("location");
 
-#if defined (Q_OS_WINCE)
+#if defined(Q_OS_WINCE)
     QTest::newRow("Test1") << "COM1" << "COM1" << "COM1:";
     QTest::newRow("Test2") << "COM1:" << "COM1" << "COM1:";
-#elif defined (Q_OS_WIN32)
+#elif defined(Q_OS_WIN32)
     QTest::newRow("Test1") << "COM1" << "COM1" << "\\\\.\\COM1";
     QTest::newRow("Test2") << "\\\\.\\COM1" << "COM1" << "\\\\.\\COM1";
     QTest::newRow("Test3") << "//./COM1" << "COM1" << "//./COM1";
-#elif defined (Q_OS_OSX)
+#elif defined(Q_OS_OSX)
     QTest::newRow("Test1") << "ttyS0" << "ttyS0" << "/dev/ttyS0";
     QTest::newRow("Test2") << "cu.serial1" << "cu.serial1" << "/dev/cu.serial1";
     QTest::newRow("Test3") << "tty.serial1" << "tty.serial1" << "/dev/tty.serial1";
@@ -76,7 +76,7 @@ void tst_QSerialPortInfoPrivate::canonical_data()
     QTest::newRow("Test10") << "serial/ttyS0" << "serial/ttyS0" << "/dev/serial/ttyS0";
     QTest::newRow("Test11") << "./ttyS0" << "./ttyS0" << "./ttyS0";
     QTest::newRow("Test12") << "../ttyS0" << "../ttyS0" << "../ttyS0";
-#elif defined (Q_OS_UNIX)
+#elif defined(Q_OS_UNIX)
     QTest::newRow("Test1") << "ttyS0" << "ttyS0" << "/dev/ttyS0";
     QTest::newRow("Test2") << "/dev/ttyS0" << "ttyS0" << "/dev/ttyS0";
     QTest::newRow("Test3") << "/dev/serial/ttyS0" << "serial/ttyS0" << "/dev/serial/ttyS0";
