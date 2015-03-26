@@ -83,7 +83,7 @@ QString serialPortLockFilePath(const QString &portName)
 
     QString fileName = portName;
     fileName.replace(QLatin1Char('/'), QLatin1Char('_'));
-    fileName.prepend(QStringLiteral("/LCK.."));
+    fileName.prepend(QLatin1String("/LCK.."));
 
     QString lockFilePath;
 

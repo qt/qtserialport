@@ -119,7 +119,7 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok)
 
 static bool isSerial8250Driver(const QString &driverName)
 {
-    return (driverName == QStringLiteral("serial8250"));
+    return (driverName == QLatin1String("serial8250"));
 }
 
 static bool isValidSerial8250(const QString &systemLocation)
@@ -142,7 +142,7 @@ static bool isValidSerial8250(const QString &systemLocation)
 
 static bool isRfcommDevice(const QString &portName)
 {
-    if (!portName.startsWith(QStringLiteral("rfcomm")))
+    if (!portName.startsWith(QLatin1String("rfcomm")))
         return false;
 
     bool ok;
@@ -178,7 +178,7 @@ static QString deviceName(const QDir &targetDir)
 
 static QString deviceDriver(const QDir &targetDir)
 {
-    const QDir deviceDir(targetDir.absolutePath() + QStringLiteral("/device"));
+    const QDir deviceDir(targetDir.absolutePath() + QLatin1String("/device"));
     return ueventProperty(deviceDir, "DRIVER=");
 }
 
@@ -480,14 +480,14 @@ bool QSerialPortInfo::isValid() const
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {
     return (source.startsWith(QLatin1Char('/'))
-            || source.startsWith(QStringLiteral("./"))
-            || source.startsWith(QStringLiteral("../")))
-            ? source : (QStringLiteral("/dev/") + source);
+            || source.startsWith(QLatin1String("./"))
+            || source.startsWith(QLatin1String("../")))
+            ? source : (QLatin1String("/dev/") + source);
 }
 
 QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
 {
-    return source.startsWith(QStringLiteral("/dev/"))
+    return source.startsWith(QLatin1String("/dev/"))
             ? source.mid(5) : source;
 }
 
