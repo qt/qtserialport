@@ -68,6 +68,9 @@ QString serialPortLockFilePath(const QString &portName)
         << QStringLiteral("/var/spool/locks")
         << QStringLiteral("/var/spool/uucp")
         << QStringLiteral("/tmp")
+        << QStringLiteral("/var/tmp")
+        << QStringLiteral("/var/lock/lockdev")
+        << QStringLiteral("/run/lock")
 #ifdef Q_OS_ANDROID
         << QStringLiteral("/data/local/tmp")
 #endif
