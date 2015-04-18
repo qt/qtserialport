@@ -1370,7 +1370,7 @@ void QSerialPort::setError(QSerialPort::SerialPortError serialPortError, const Q
 
     d->error = serialPortError;
 
-    if (errorString.isNull())
+    if (errorString.isNull() && (serialPortError != QSerialPort::NoError))
         setErrorString(qt_error_string(-1));
     else
         setErrorString(errorString);
