@@ -133,7 +133,6 @@ public:
     HANDLE handle;
     bool parityErrorOccurred;
     QByteArray readChunkBuffer;
-    bool readyReadEmitted;
     bool writeStarted;
     bool readStarted;
     QWinEventNotifier *communicationNotifier;

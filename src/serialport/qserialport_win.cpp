@@ -96,7 +96,6 @@ QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     , handle(INVALID_HANDLE_VALUE)
     , parityErrorOccurred(false)
     , readChunkBuffer(ReadChunkSize, 0)
-    , readyReadEmitted(0)
     , writeStarted(false)
     , readStarted(false)
     , communicationNotifier(Q_NULLPTR)
@@ -169,7 +168,6 @@ void QSerialPortPrivate::close()
     writeBuffer.clear();
     actualBytesToWrite = 0;
 
-    readyReadEmitted = false;
     parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
@@ -669,7 +667,6 @@ void QSerialPortPrivate::emitReadyRead()
 {
     Q_Q(QSerialPort);
 
-    readyReadEmitted = true;
     emit q->readyRead();
 }
 
