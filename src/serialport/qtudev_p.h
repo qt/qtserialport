@@ -93,15 +93,9 @@ GENERATE_SYMBOL_VARIABLE(void, udev_device_unref, struct udev_device *)
 GENERATE_SYMBOL_VARIABLE(void, udev_enumerate_unref, struct udev_enumerate *)
 GENERATE_SYMBOL_VARIABLE(void, udev_unref, struct udev *)
 
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 inline QFunctionPointer resolveSymbol(QLibrary *udevLibrary, const char *symbolName)
 {
     QFunctionPointer symbolFunctionPointer = udevLibrary->resolve(symbolName);
-#else
-inline void *resolveSymbol(QLibrary *udevLibrary, const char *symbolName)
-{
-    void *symbolFunctionPointer = udevLibrary->resolve(symbolName);
-#endif
     if (!symbolFunctionPointer)
         qWarning("Failed to resolve the udev symbol: %s", symbolName);
 
