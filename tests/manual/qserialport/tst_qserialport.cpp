@@ -69,11 +69,7 @@ void tst_QSerialPort::initTestCase()
     serialPortInfoList = QSerialPortInfo::availablePorts();
 
     if (serialPortInfoList.isEmpty()) {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-        QSKIP("Test doesn't work because the serial ports are not detected.");
-#else
         QSKIP("Test doesn't work because the serial ports are not detected.", SkipAll);
-#endif
     }
 }
 
