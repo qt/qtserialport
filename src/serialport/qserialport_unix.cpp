@@ -58,6 +58,10 @@
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
 
+#ifdef Q_OS_MAC
+#include <QtCore/qstandardpaths.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 QString serialPortLockFilePath(const QString &portName)
@@ -93,6 +97,13 @@ QString serialPortLockFilePath(const QString &portName)
             }
         }
     }
+
+#ifdef Q_OS_MAC
+    // This is the workaround to specify a temporary directory
+    // on OSX when running the App Sandbox feature.
+    if (lockFilePath.isEmpty())
+        lockFilePath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+#endif
 
     if (lockFilePath.isEmpty()) {
         qWarning("The following directories are not readable or writable for detaling with lock files\n");
