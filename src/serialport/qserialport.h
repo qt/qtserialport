@@ -265,7 +265,9 @@ Q_SIGNALS:
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
-    void settingsRestoredOnCloseChanged(bool restore);
+#if QT_DEPRECATED_SINCE(5, 3)
+    QT_DEPRECATED void settingsRestoredOnCloseChanged(bool restore);
+#endif
     void breakEnabledChanged(bool set);
 
 protected:
