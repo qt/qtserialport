@@ -246,7 +246,7 @@ public:
     bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
 
 #if QT_DEPRECATED_SINCE(5, 5)
-    bool sendBreak(int duration = 0);
+    QT_DEPRECATED bool sendBreak(int duration = 0);
 #endif
     bool setBreakEnabled(bool set = true);
     bool isBreakEnabled() const;
