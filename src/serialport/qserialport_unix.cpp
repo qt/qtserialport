@@ -372,11 +372,6 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
     return true;
 }
 
-qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
-{
-    return buffer.read(data, maxSize);
-}
-
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
 {
     QElapsedTimer stopWatch;

@@ -1341,10 +1341,27 @@ bool QSerialPort::isBreakEnabled() const
 /*!
     \reimp
 */
+// This function does not really read anything, as we use QIODevicePrivate's
+// buffer. The buffer will be read inside of QIODevice before this
+// method will be called.
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->readData(data, maxSize);
+
+    Q_UNUSED(data);
+    Q_UNUSED(maxSize);
+
+#ifdef Q_OS_WIN32
+    // We need try to start async reading to read a remainder from a driver's queue
+    // in case we have a limited read buffer size. Because the read notification can
+    // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
+    // buffer has a remainder of data ready to read until a new data will be received.
+    if (d->readBufferMaxSize || d->flowControl == QSerialPort::HardwareControl)
+        d->startAsyncRead();
+#endif
+
+    // return 0 indicating there may be more data in the future
+    return qint64(0);
 }
 
 /*!
