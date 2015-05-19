@@ -74,7 +74,7 @@ QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     , stopBits(QSerialPort::OneStop)
     , flowControl(QSerialPort::NoFlowControl)
     , policy(QSerialPort::IgnorePolicy)
-#if QT_DEPRECATED_SINCE(5,3)
+#ifdef QT_DEPRECATED
     , settingsRestoredOnClose(true)
 #endif
     , isBreakEnabled(false)
@@ -568,7 +568,7 @@ void QSerialPort::close()
     The default state of the QSerialPort class is to restore the
     settings.
 */
-#if QT_DEPRECATED_SINCE(5,3)
+#ifdef QT_DEPRECATED
 void QSerialPort::setSettingsRestoredOnClose(bool restore)
 {
     Q_D(QSerialPort);
@@ -584,7 +584,7 @@ bool QSerialPort::settingsRestoredOnClose() const
     Q_D(const QSerialPort);
     return d->settingsRestoredOnClose;
 }
-#endif // QT_DEPRECATED_SINCE(5,3)
+#endif // QT_DEPRECATED
 /*!
     \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
     \obsolete
@@ -1065,7 +1065,7 @@ bool QSerialPort::atEnd() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 */
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);
@@ -1090,7 +1090,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     Q_D(const QSerialPort);
     return d->policy;
 }
-#endif // QT_DEPRECATED_SINCE(5, 2)
+#endif // QT_DEPRECATED
 /*!
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
     \obsolete

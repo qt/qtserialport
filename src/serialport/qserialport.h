@@ -62,13 +62,13 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_PROPERTY(Parity parity READ parity WRITE setParity NOTIFY parityChanged)
     Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
     Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
     Q_PROPERTY(DataErrorPolicy dataErrorPolicy READ dataErrorPolicy WRITE setDataErrorPolicy NOTIFY dataErrorPolicyChanged)
 #endif
     Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
     Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
-#if QT_DEPRECATED_SINCE(5, 3)
+#ifdef QT_DEPRECATED
     Q_PROPERTY(bool settingsRestoredOnClose READ settingsRestoredOnClose WRITE setSettingsRestoredOnClose NOTIFY settingsRestoredOnCloseChanged)
 #endif
     Q_PROPERTY(bool breakEnabled READ isBreakEnabled WRITE setBreakEnabled NOTIFY breakEnabledChanged)
@@ -149,7 +149,7 @@ public:
     };
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
 #if defined _MSC_VER
 #pragma deprecated(UnknownBaud)
 #pragma deprecated(UnknownDataBits)
@@ -161,7 +161,7 @@ public:
 #endif
 #endif
 
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
     enum DataErrorPolicy {
         SkipPolicy,
         PassZeroPolicy,
@@ -201,7 +201,7 @@ public:
     bool open(OpenMode mode) Q_DECL_OVERRIDE;
     void close() Q_DECL_OVERRIDE;
 
-#if QT_DEPRECATED_SINCE(5, 3)
+#ifdef QT_DEPRECATED
     QT_DEPRECATED void setSettingsRestoredOnClose(bool restore);
     QT_DEPRECATED bool settingsRestoredOnClose() const;
 #endif
@@ -233,7 +233,7 @@ public:
     bool clear(Directions directions = AllDirections);
     bool atEnd() const Q_DECL_OVERRIDE;
 
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
     QT_DEPRECATED bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
     QT_DEPRECATED DataErrorPolicy dataErrorPolicy() const;
 #endif
@@ -253,7 +253,7 @@ public:
     bool waitForReadyRead(int msecs) Q_DECL_OVERRIDE;
     bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
 
-#if QT_DEPRECATED_SINCE(5, 5)
+#ifdef QT_DEPRECATED
     QT_DEPRECATED bool sendBreak(int duration = 0);
 #endif
     bool setBreakEnabled(bool set = true);
@@ -267,13 +267,13 @@ Q_SIGNALS:
     void parityChanged(QSerialPort::Parity parity);
     void stopBitsChanged(QSerialPort::StopBits stopBits);
     void flowControlChanged(QSerialPort::FlowControl flowControl);
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
     QT_DEPRECATED void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
 #endif
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
-#if QT_DEPRECATED_SINCE(5, 3)
+#ifdef QT_DEPRECATED
     QT_DEPRECATED void settingsRestoredOnCloseChanged(bool restore);
 #endif
     void breakEnabledChanged(bool set);

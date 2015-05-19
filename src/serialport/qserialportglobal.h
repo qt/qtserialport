@@ -58,11 +58,6 @@ QT_BEGIN_NAMESPACE
 #  define Q_SERIALPORT_EXPORT
 #endif
 
-// These macros have been available only since Qt 5.0
-#ifndef QT_DEPRECATED_SINCE
-#define QT_DEPRECATED_SINCE(major, minor) 1
-#endif
-
 #ifndef Q_DECL_OVERRIDE
 #define Q_DECL_OVERRIDE
 #endif

@@ -81,7 +81,7 @@ public:
 
     bool isNull() const;
     bool isBusy() const;
-#if QT_DEPRECATED_SINCE(5, 2)
+#ifdef QT_DEPRECATED
     QT_DEPRECATED bool isValid() const;
 #endif
 
