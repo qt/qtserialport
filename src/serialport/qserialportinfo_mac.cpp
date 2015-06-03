@@ -240,14 +240,14 @@ bool QSerialPortInfo::isValid() const
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {
     return (source.startsWith(QLatin1Char('/'))
-            || source.startsWith(QStringLiteral("./"))
-            || source.startsWith(QStringLiteral("../")))
-            ? source : (QStringLiteral("/dev/") + source);
+            || source.startsWith(QLatin1String("./"))
+            || source.startsWith(QLatin1String("../")))
+            ? source : (QLatin1String("/dev/") + source);
 }
 
 QString QSerialPortInfoPrivate::portNameFromSystemLocation(const QString &source)
 {
-    return source.startsWith(QStringLiteral("/dev/"))
+    return source.startsWith(QLatin1String("/dev/"))
             ? source.mid(5) : source;
 }
 

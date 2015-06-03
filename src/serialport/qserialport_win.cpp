@@ -119,7 +119,6 @@ void QSerialPortPrivate::close()
     writeBuffer.clear();
     actualBytesToWrite = 0;
 
-    readyReadEmitted = false;
     parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
@@ -632,7 +631,6 @@ void QSerialPortPrivate::emitReadyRead()
 {
     Q_Q(QSerialPort);
 
-    readyReadEmitted = true;
     emit q->readyRead();
 }
 

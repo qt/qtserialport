@@ -246,7 +246,7 @@ public:
     bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
 
 #if QT_DEPRECATED_SINCE(5, 5)
-    bool sendBreak(int duration = 0);
+    QT_DEPRECATED bool sendBreak(int duration = 0);
 #endif
     bool setBreakEnabled(bool set = true);
     bool isBreakEnabled() const;
@@ -259,11 +259,15 @@ Q_SIGNALS:
     void parityChanged(QSerialPort::Parity parity);
     void stopBitsChanged(QSerialPort::StopBits stopBits);
     void flowControlChanged(QSerialPort::FlowControl flowControl);
-    void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
+#if QT_DEPRECATED_SINCE(5, 2)
+    QT_DEPRECATED void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
+#endif
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
-    void settingsRestoredOnCloseChanged(bool restore);
+#if QT_DEPRECATED_SINCE(5, 3)
+    QT_DEPRECATED void settingsRestoredOnCloseChanged(bool restore);
+#endif
     void breakEnabledChanged(bool set);
 
 protected:

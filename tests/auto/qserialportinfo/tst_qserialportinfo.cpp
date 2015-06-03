@@ -75,11 +75,7 @@ void tst_QSerialPortInfo::initTestCase()
 #else
               "\n";
 #endif
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
         QSKIP(message);
-#else
-        QSKIP(message, SkipAll);
-#endif
     } else {
         m_availablePortNames << m_senderPortName << m_receiverPortName;
     }
