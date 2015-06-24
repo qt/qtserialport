@@ -553,9 +553,9 @@ void QSerialPort::close()
         return;
     }
 
-    QIODevice::close();
     d->close();
     d->isBreakEnabled = false;
+    QIODevice::close();
 }
 
 /*!
