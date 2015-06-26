@@ -72,7 +72,11 @@ static QCFType<CFTypeRef> searchProperty(io_registry_entry_t ioRegistryEntry,
 static QString searchStringProperty(io_registry_entry_t ioRegistryEntry,
                                     const QCFString &propertyKey)
 {
-    return QCFString::toQString(searchProperty(ioRegistryEntry, propertyKey).as<CFStringRef>());
+    const QCFType<CFTypeRef> result(searchProperty(ioRegistryEntry, propertyKey));
+    const CFStringRef ref = result.as<CFStringRef>();
+    if (ref && (::CFGetTypeID(ref) == ::CFStringGetTypeID()))
+        return QCFString::toQString(ref);
+    return QString();
 }
 
 static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
