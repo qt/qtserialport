@@ -284,8 +284,6 @@ protected:
     qint64 writeData(const char *data, qint64 maxSize) Q_DECL_OVERRIDE;
 
 private:
-    void setError(QSerialPort::SerialPortError error, const QString &errorString = QString());
-
     QSerialPortPrivate * const d_ptr;
 
     Q_DISABLE_COPY(QSerialPort)

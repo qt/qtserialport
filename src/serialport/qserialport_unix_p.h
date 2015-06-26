@@ -133,6 +133,8 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
+    void setError(const QSerialPortErrorInfo &errorInfo);
+
     bool readNotification();
     bool startAsyncWrite();
     bool completeAsyncWrite();
@@ -163,13 +165,13 @@ private:
     bool initialize(QIODevice::OpenMode mode);
     bool updateTermios();
 
-    QSerialPort::SerialPortError setBaudRate_helper(qint32 baudRate,
+    QSerialPortErrorInfo setBaudRate_helper(qint32 baudRate,
             QSerialPort::Directions directions);
-    QSerialPort::SerialPortError setCustomBaudRate(qint32 baudRate,
+    QSerialPortErrorInfo setCustomBaudRate(qint32 baudRate,
             QSerialPort::Directions directions);
-    QSerialPort::SerialPortError setStandardBaudRate(qint32 baudRate,
+    QSerialPortErrorInfo setStandardBaudRate(qint32 baudRate,
             QSerialPort::Directions directions);
-    QSerialPort::SerialPortError decodeSystemError() const;
+    QSerialPortErrorInfo getSystemError(int systemErrorCode = -1) const;
 
     bool isReadNotificationEnabled() const;
     void setReadNotificationEnabled(bool enable);

@@ -98,8 +98,10 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
+    void setError(const QSerialPortErrorInfo &errorInfo);
+
     void processIoErrors(bool error);
-    QSerialPort::SerialPortError decodeSystemError() const;
+    QSerialPortErrorInfo getSystemError(int systemErrorCode = -1) const;
 
     bool notifyRead();
     bool notifyWrite();

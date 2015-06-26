@@ -61,6 +61,19 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSerialPortErrorInfo
+{
+public:
+    explicit QSerialPortErrorInfo(QSerialPort::SerialPortError errorCode = QSerialPort::UnknownError,
+                                  const QString &errorString = QString())
+        : errorCode(errorCode)
+        , errorString(errorString)
+    {
+    }
+    QSerialPort::SerialPortError errorCode;
+    QString errorString;
+};
+
 class QSerialPortPrivateData
 {
 public:
