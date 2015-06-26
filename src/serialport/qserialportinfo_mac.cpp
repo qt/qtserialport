@@ -72,9 +72,10 @@ static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
                                       bool &ok)
 {
     const QCFType<CFTypeRef> result(searchProperty(ioRegistryEntry, propertyKey));
+    const CFNumberRef ref = result.as<CFNumberRef>();
     quint16 value = 0;
-    ok = result.as<CFNumberRef>()
-            && (::CFNumberGetValue(result.as<CFNumberRef>(), kCFNumberShortType, &value) > 0);
+    ok = ref && (::CFGetTypeID(ref) == ::CFNumberGetTypeID())
+            && (::CFNumberGetValue(ref, kCFNumberShortType, &value) > 0);
     return value;
 }
 
