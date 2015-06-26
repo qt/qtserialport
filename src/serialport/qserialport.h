@@ -259,13 +259,13 @@ Q_SIGNALS:
     void parityChanged(QSerialPort::Parity parity);
     void stopBitsChanged(QSerialPort::StopBits stopBits);
     void flowControlChanged(QSerialPort::FlowControl flowControl);
-#if QT_DEPRECATED_SINCE(5, 2)
+#if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED void dataErrorPolicyChanged(QSerialPort::DataErrorPolicy policy);
 #endif
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
     void error(QSerialPort::SerialPortError serialPortError);
-#if QT_DEPRECATED_SINCE(5, 3)
+#if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED void settingsRestoredOnCloseChanged(bool restore);
 #endif
     void breakEnabledChanged(bool set);
