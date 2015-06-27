@@ -508,20 +508,21 @@ bool QSerialPortPrivate::_q_completeAsyncRead()
         readStarted = false;
         return false;
     }
-    if (bytesTransferred > 0) {
+    if (bytesTransferred > 0)
         readBuffer.append(readChunkBuffer.left(bytesTransferred));
-        if (!emulateErrorPolicy())
-            emitReadyRead();
-    }
 
     readStarted = false;
 
+    bool result = true;
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
-        return startAsyncRead();
+        result = startAsyncRead();
     else if (readBufferMaxSize == 0 || readBufferMaxSize > readBuffer.size())
-        return startAsyncCommunication();
-    else
-        return true;
+        result = startAsyncCommunication();
+
+    if ((bytesTransferred > 0) && !emulateErrorPolicy())
+        emitReadyRead();
+
+    return result;
 }
 
 bool QSerialPortPrivate::_q_completeAsyncWrite()
