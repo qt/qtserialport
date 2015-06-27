@@ -426,18 +426,20 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
     if (bytesTransferred > 0) {
         char *ptr = buffer.reserve(bytesTransferred);
         ::memcpy(ptr, readChunkBuffer.constData(), bytesTransferred);
-        if (!emulateErrorPolicy())
-            emitReadyRead();
     }
 
     readStarted = false;
 
+    bool result = true;
     if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
-        return startAsyncRead();
+        result = startAsyncRead();
     else if (readBufferMaxSize == 0 || readBufferMaxSize > buffer.size())
-        return startAsyncCommunication();
-    else
-        return true;
+        result = startAsyncCommunication();
+
+    if ((bytesTransferred > 0) && !emulateErrorPolicy())
+        emitReadyRead();
+
+    return result;
 }
 
 bool QSerialPortPrivate::completeAsyncWrite(qint64 bytesTransferred)
