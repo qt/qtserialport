@@ -202,7 +202,6 @@ public:
     bool initialize();
     bool updateDcb();
     bool updateCommTimeouts();
-    qint64 overlappedResult(OVERLAPPED *overlapped);
     void handleLineStatusErrors();
     OVERLAPPED *waitForNotified(int msecs);
 
