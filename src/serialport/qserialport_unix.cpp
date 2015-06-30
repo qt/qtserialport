@@ -841,11 +841,6 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
     return true;
 }
 
-qint64 QSerialPortPrivate::bytesToWrite() const
-{
-    return writeBuffer.size();
-}
-
 qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
     ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);

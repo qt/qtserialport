@@ -146,7 +146,6 @@ public:
 
     QSerialPort::SerialPortError decodeSystemError(int systemErrorCode = -1) const;
 
-    qint64 bytesToWrite() const;
     qint64 writeData(const char *data, qint64 maxSize);
 
     static QString portNameToSystemLocation(const QString &port);
