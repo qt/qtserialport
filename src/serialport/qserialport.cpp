@@ -1210,7 +1210,13 @@ qint64 QSerialPort::bytesAvailable() const
 qint64 QSerialPort::bytesToWrite() const
 {
     Q_D(const QSerialPort);
-    return d->bytesToWrite() + QIODevice::bytesToWrite();
+    qint64 bytes = QIODevice::bytesToWrite();
+#ifdef Q_OS_WIN32
+    bytes += d->actualBytesToWrite;
+#else
+    bytes += d->writeBuffer.size();
+#endif
+    return bytes;
 }
 
 /*!

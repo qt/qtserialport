@@ -118,7 +118,6 @@ public:
     bool setReadNotificationEnabled(bool enable);
     bool setWriteNotificationEnabled(bool enable);
 
-    qint64 bytesToWrite() const;
     qint64 writeData(const char *data, qint64 maxSize);
 
     static qint32 baudRateFromSetting(qint32 setting);
