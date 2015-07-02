@@ -77,6 +77,10 @@ QString serialPortLockFilePath(const QString &portName)
         << QStringLiteral("/run/lock")
 #ifdef Q_OS_ANDROID
         << QStringLiteral("/data/local/tmp")
+#elif defined(Q_OS_OSX)
+           // This is the workaround to specify a temporary directory
+           // on OSX when running the App Sandbox feature.
+        << QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 #endif
     ;
 
@@ -97,13 +101,6 @@ QString serialPortLockFilePath(const QString &portName)
             }
         }
     }
-
-#ifdef Q_OS_MAC
-    // This is the workaround to specify a temporary directory
-    // on OSX when running the App Sandbox feature.
-    if (lockFilePath.isEmpty())
-        lockFilePath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-#endif
 
     if (lockFilePath.isEmpty()) {
         qWarning("The following directories are not readable or writable for detaling with lock files\n");
