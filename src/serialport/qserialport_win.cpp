@@ -671,6 +671,8 @@ inline bool QSerialPortPrivate::initialize()
     if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
         currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
 
+    currentDcb.BaudRate = inputBaudRate;
+
     if (!updateDcb())
         return false;
 
