@@ -507,7 +507,7 @@ bool QSerialPortPrivate::notifyRead()
         return false;
     }
 
-    buffer.chop(readBytes);
+    buffer.chop(bytesToRead - qMax(readBytes, DWORD(0)));
 
     // Process emulate policy.
     if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
