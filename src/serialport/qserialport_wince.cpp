@@ -83,21 +83,19 @@ signals:
 
 public:
     CommEventNotifier(DWORD mask, QSerialPortPrivate *d, QObject *parent)
-        : QThread(parent), dptr(d), running(true) {
+        : QThread(parent), dptr(d) {
         connect(this, SIGNAL(eventMask(quint32)), this, SLOT(processNotification(quint32)));
         ::SetCommMask(dptr->handle, mask);
     }
 
     virtual ~CommEventNotifier() {
-        running = false;
         ::SetCommMask(dptr->handle, 0);
-        wait();
     }
 
 protected:
     void run() Q_DECL_OVERRIDE {
         DWORD mask = 0;
-        while (running) {
+        while (true) {
             if (::WaitCommEvent(dptr->handle, &mask, FALSE)) {
                 // Wait until complete the operation changes the port settings,
                 // see updateDcb().
@@ -131,7 +129,6 @@ private slots:
 
 private:
     QSerialPortPrivate *dptr;
-    mutable bool running;
 };
 
 class WaitCommEventBreaker : public QThread
@@ -213,7 +210,9 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 void QSerialPortPrivate::close()
 {
     if (eventNotifier) {
-        eventNotifier->deleteLater();
+        eventNotifier->terminate();
+        eventNotifier->wait();
+        delete eventNotifier;
         eventNotifier = Q_NULLPTR;
     }
 
