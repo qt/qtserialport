@@ -78,14 +78,10 @@ Dialog::Dialog(QWidget *parent)
     setWindowTitle(tr("Blocking Master"));
     serialPortComboBox->setFocus();
 
-    connect(runButton, SIGNAL(clicked()),
-            this, SLOT(transaction()));
-    connect(&thread, SIGNAL(response(QString)),
-            this, SLOT(showResponse(QString)));
-    connect(&thread, SIGNAL(error(QString)),
-            this, SLOT(processError(QString)));
-    connect(&thread, SIGNAL(timeout(QString)),
-            this, SLOT(processTimeout(QString)));
+    connect(runButton, &QPushButton::clicked, this, &Dialog::transaction);
+    connect(&thread, &MasterThread::response, this, &Dialog::showResponse);
+    connect(&thread, &MasterThread::error, this, &Dialog::processError);
+    connect(&thread, &MasterThread::timeout, this, &Dialog::processTimeout);
 }
 
 void Dialog::transaction()

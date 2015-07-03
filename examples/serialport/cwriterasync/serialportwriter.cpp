@@ -44,9 +44,10 @@ SerialPortWriter::SerialPortWriter(QSerialPort *serialPort, QObject *parent)
     , m_bytesWritten(0)
 {
     m_timer.setSingleShot(true);
-    connect(m_serialPort, SIGNAL(bytesWritten(qint64)), SLOT(handleBytesWritten(qint64)));
-    connect(m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), SLOT(handleError(QSerialPort::SerialPortError)));
-    connect(&m_timer, SIGNAL(timeout()), SLOT(handleTimeout()));
+    connect(m_serialPort, &QSerialPort::bytesWritten, this, &SerialPortWriter::handleBytesWritten);
+    connect(m_serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error),
+            this, &SerialPortWriter::handleError);
+    connect(&m_timer, &QTimer::timeout, this, &SerialPortWriter::handleTimeout);
 }
 
 SerialPortWriter::~SerialPortWriter()

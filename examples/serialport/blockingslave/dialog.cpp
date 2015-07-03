@@ -78,21 +78,16 @@ Dialog::Dialog(QWidget *parent)
     setWindowTitle(tr("Blocking Slave"));
     serialPortComboBox->setFocus();
 
-    connect(runButton, SIGNAL(clicked()),
-            this, SLOT(startSlave()));
-    connect(&thread, SIGNAL(request(QString)),
-            this, SLOT(showRequest(QString)));
-    connect(&thread, SIGNAL(error(QString)),
-            this, SLOT(processError(QString)));
-    connect(&thread, SIGNAL(timeout(QString)),
-            this, SLOT(processTimeout(QString)));
+    connect(runButton, &QPushButton::clicked, this, &Dialog::startSlave);
+    connect(&thread, &SlaveThread::request, this,&Dialog::showRequest);
+    connect(&thread, &SlaveThread::error, this, &Dialog::processError);
+    connect(&thread, &SlaveThread::timeout, this, &Dialog::processTimeout);
 
-    connect(serialPortComboBox, SIGNAL(currentIndexChanged(QString)),
-            this, SLOT(activateRunButton()));
-    connect(waitRequestSpinBox, SIGNAL(valueChanged(int)),
-            this, SLOT(activateRunButton()));
-    connect(responseLineEdit, SIGNAL(textChanged(QString)),
-            this, SLOT(activateRunButton()));
+    connect(serialPortComboBox, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::currentIndexChanged),
+            this, &Dialog::activateRunButton);
+    connect(waitRequestSpinBox, static_cast<void (QSpinBox::*)(const QString &)>(&QSpinBox::valueChanged),
+            this, &Dialog::activateRunButton);
+    connect(responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
 }
 
 void Dialog::startSlave()

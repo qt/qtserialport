@@ -595,7 +595,7 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     if (!writeBuffer.isEmpty() && !writeStarted) {
         if (!startAsyncWriteTimer) {
             startAsyncWriteTimer = new QTimer(q);
-            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_startAsyncWrite()));
+            QObjectPrivate::connect(startAsyncWriteTimer, &QTimer::timeout, this, &QSerialPortPrivate::_q_startAsyncWrite);
             startAsyncWriteTimer->setSingleShot(true);
         }
         startAsyncWriteTimer->start(0);
@@ -678,8 +678,8 @@ inline bool QSerialPortPrivate::initialize()
     }
 
     notifier = new QWinOverlappedIoNotifier(q);
-    q->connect(notifier, SIGNAL(notified(quint32, quint32, OVERLAPPED*)),
-               q, SLOT(_q_notified(quint32, quint32, OVERLAPPED*)));
+    QObjectPrivate::connect(notifier, &QWinOverlappedIoNotifier::notified,
+               this, &QSerialPortPrivate::_q_notified);
     notifier->setHandle(handle);
     notifier->setEnabled(true);
 

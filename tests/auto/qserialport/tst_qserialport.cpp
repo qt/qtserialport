@@ -273,7 +273,7 @@ void tst_QSerialPort::openExisting()
 
     foreach (const QString &serialPortName, m_availablePortNames) {
         QSerialPort serialPort(serialPortName);
-        QSignalSpy errorSpy(&serialPort, SIGNAL(error(QSerialPort::SerialPortError)));
+        QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
         QVERIFY(errorSpy.isValid());
 
         QCOMPARE(serialPort.portName(), serialPortName);
@@ -305,7 +305,7 @@ void tst_QSerialPort::openNotExisting()
 
     QSerialPort serialPort(serialPortName);
 
-    QSignalSpy errorSpy(&serialPort, SIGNAL(error(QSerialPort::SerialPortError)));
+    QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
     QVERIFY(errorSpy.isValid());
 
     QCOMPARE(serialPort.portName(), serialPortName);
@@ -334,8 +334,8 @@ void tst_QSerialPort::flush()
     QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
 
     QSerialPort serialPort(m_senderPortName);
-    connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot(qint64)));
-    QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
+    connect(&serialPort, &QSerialPort::bytesWritten, this, &tst_QSerialPort::handleBytesWrittenAndExitLoopSlot);
+    QSignalSpy bytesWrittenSpy(&serialPort, &QSerialPort::bytesWritten);
 
     QVERIFY(serialPort.open(QIODevice::WriteOnly));
     serialPort.write(alphabetArray + newlineArray);
@@ -369,8 +369,8 @@ void tst_QSerialPort::doubleFlush()
     QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
 
     QSerialPort serialPort(m_senderPortName);
-    connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot2(qint64)));
-    QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
+    connect(&serialPort, &QSerialPort::bytesWritten, this, &tst_QSerialPort::handleBytesWrittenAndExitLoopSlot2);
+    QSignalSpy bytesWrittenSpy(&serialPort, &QSerialPort::bytesWritten);
 
     QVERIFY(serialPort.open(QIODevice::WriteOnly));
     serialPort.write(alphabetArray);
@@ -429,7 +429,7 @@ void tst_QSerialPort::waitForReadyReadWithOneByte()
     QSerialPort senderSerialPort(m_senderPortName);
     QVERIFY(senderSerialPort.open(QIODevice::WriteOnly));
     QSerialPort receiverSerialPort(m_receiverPortName);
-    QSignalSpy readyReadSpy(&receiverSerialPort, SIGNAL(readyRead()));
+    QSignalSpy readyReadSpy(&receiverSerialPort, &QSerialPort::readyRead);
     QVERIFY(readyReadSpy.isValid());
     QVERIFY(receiverSerialPort.open(QIODevice::ReadOnly));
     QCOMPARE(senderSerialPort.write(alphabetArray.constData(), oneByte), oneByte);
@@ -451,7 +451,7 @@ void tst_QSerialPort::waitForReadyReadWithAlphabet()
     QSerialPort senderSerialPort(m_senderPortName);
     QVERIFY(senderSerialPort.open(QIODevice::WriteOnly));
     QSerialPort receiverSerialPort(m_receiverPortName);
-    QSignalSpy readyReadSpy(&receiverSerialPort, SIGNAL(readyRead()));
+    QSignalSpy readyReadSpy(&receiverSerialPort, &QSerialPort::readyRead);
     QVERIFY(readyReadSpy.isValid());
     QVERIFY(receiverSerialPort.open(QIODevice::ReadOnly));
     QCOMPARE(senderSerialPort.write(alphabetArray), qint64(alphabetArray.size()));
@@ -541,7 +541,7 @@ public:
     explicit AsyncReader(QSerialPort &port, Qt::ConnectionType connectionType, int expectedBytesCount)
         : serialPort(port), expectedBytesCount(expectedBytesCount)
     {
-        connect(&serialPort, SIGNAL(readyRead()), this, SLOT(receive()), connectionType);
+        connect(&serialPort, &QSerialPort::readyRead, this, &AsyncReader::receive, connectionType);
     }
 
 private slots:
@@ -567,7 +567,7 @@ public:
     {
         writeBuffer.setData(dataToWrite);
         writeBuffer.open(QIODevice::ReadOnly);
-        connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(send()), connectionType);
+        connect(&serialPort, &QSerialPort::bytesWritten, this, &AsyncWriterByBytesWritten::send, connectionType);
         send();
     }
 
@@ -628,7 +628,7 @@ public:
     {
         writeBuffer.setData(dataToWrite);
         writeBuffer.open(QIODevice::ReadOnly);
-        connect(&timer, SIGNAL(timeout()), this, SLOT(send()), connectionType);
+        connect(&timer, &QTimer::timeout, this, &AsyncWriterByTimer::send, connectionType);
         timer.start(0);
     }
 
@@ -862,7 +862,7 @@ public:
     explicit BreakReader(QSerialPort &port)
         : serialPort(port)
     {
-        connect(&serialPort, SIGNAL(readyRead()), this, SLOT(receive()));
+        connect(&serialPort, &QSerialPort::readyRead, this, &BreakReader::receive);
     }
 
 private slots:
@@ -885,7 +885,7 @@ void tst_QSerialPort::controlBreak()
     QVERIFY(senderPort.open(QSerialPort::WriteOnly));
     QCOMPARE(senderPort.isBreakEnabled(), false);
 
-    QSignalSpy breakSpy(&senderPort, SIGNAL(breakEnabledChanged(bool)));
+    QSignalSpy breakSpy(&senderPort, &QSerialPort::breakEnabledChanged);
     QVERIFY(breakSpy.isValid());
 
     QSerialPort receiverPort(m_receiverPortName);

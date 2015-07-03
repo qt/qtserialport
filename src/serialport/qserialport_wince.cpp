@@ -84,7 +84,7 @@ signals:
 public:
     CommEventNotifier(DWORD mask, QSerialPortPrivate *d, QObject *parent)
         : QThread(parent), dptr(d) {
-        connect(this, SIGNAL(eventMask(quint32)), this, SLOT(processNotification(quint32)));
+        connect(this, &CommEventNotifier::eventMask, this, &CommEventNotifier::processNotification);
         ::SetCommMask(dptr->handle, mask);
     }
 
@@ -156,7 +156,7 @@ public:
 protected:
     void run() {
         QTimer timer;
-        QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(processTimeout()), Qt::DirectConnection);
+        QObject::connect(&timer, &QTimer::timeout, this, &WaitCommEventBreaker::processTimeout, Qt::DirectConnection);
         timer.start(timeout);
         exec();
         worked = true;

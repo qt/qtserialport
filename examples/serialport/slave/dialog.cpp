@@ -80,19 +80,15 @@ Dialog::Dialog(QWidget *parent)
 
     timer.setSingleShot(true);
 
-    connect(runButton, SIGNAL(clicked()),
-            this, SLOT(startSlave()));
-    connect(&serial, SIGNAL(readyRead()),
-            this, SLOT(readRequest()));
-    connect(&timer, SIGNAL(timeout()),
-            this, SLOT(processTimeout()));
+    connect(runButton, &QPushButton::clicked, this, &Dialog::startSlave);
+    connect(&serial, &QSerialPort::readyRead, this, &Dialog::readRequest);
+    connect(&timer, &QTimer::timeout, this, &Dialog::processTimeout);
 
-    connect(serialPortComboBox, SIGNAL(currentIndexChanged(QString)),
-            this, SLOT(activateRunButton()));
-    connect(waitRequestSpinBox, SIGNAL(valueChanged(int)),
-            this, SLOT(activateRunButton()));
-    connect(responseLineEdit, SIGNAL(textChanged(QString)),
-            this, SLOT(activateRunButton()));
+    connect(serialPortComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, &Dialog::activateRunButton);
+    connect(waitRequestSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &Dialog::activateRunButton);
+    connect(responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
 }
 
 void Dialog::startSlave()

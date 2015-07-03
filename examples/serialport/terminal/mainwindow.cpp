@@ -66,13 +66,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initActionsConnections();
 
-    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this,
-            SLOT(handleError(QSerialPort::SerialPortError)));
+    connect(serial, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error),
+            this, &MainWindow::handleError);
 
 //! [2]
-    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+    connect(serial, &QSerialPort::readyRead, this, &MainWindow::readData);
 //! [2]
-    connect(console, SIGNAL(getData(QByteArray)), this, SLOT(writeData(QByteArray)));
+    connect(console, &Console::getData, this, &MainWindow::writeData);
 //! [3]
 }
 //! [3]
@@ -158,13 +158,13 @@ void MainWindow::handleError(QSerialPort::SerialPortError error)
 
 void MainWindow::initActionsConnections()
 {
-    connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(openSerialPort()));
-    connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(closeSerialPort()));
-    connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
-    connect(ui->actionConfigure, SIGNAL(triggered()), settings, SLOT(show()));
-    connect(ui->actionClear, SIGNAL(triggered()), console, SLOT(clear()));
-    connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
-    connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::openSerialPort);
+    connect(ui->actionDisconnect, &QAction::triggered, this, &MainWindow::closeSerialPort);
+    connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
+    connect(ui->actionConfigure, &QAction::triggered, settings, &MainWindow::show);
+    connect(ui->actionClear, &QAction::triggered, console, &Console::clear);
+    connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::about);
+    connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);
 }
 
 void MainWindow::showStatusMessage(const QString &message)
