@@ -65,9 +65,6 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
 #endif
     Q_PROPERTY(bool breakEnabled READ isBreakEnabled WRITE setBreakEnabled NOTIFY breakEnabledChanged)
 
-    Q_ENUMS(BaudRate DataBits Parity StopBits FlowControl DataErrorPolicy SerialPortError)
-    Q_FLAGS(Directions PinoutSignals)
-
 #if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
     typedef void* Handle;
 #else
@@ -81,6 +78,7 @@ public:
         Output = 2,
         AllDirections = Input | Output
     };
+    Q_FLAG(Direction)
     Q_DECLARE_FLAGS(Directions, Direction)
 
     enum BaudRate {
@@ -94,6 +92,7 @@ public:
         Baud115200 = 115200,
         UnknownBaud = -1
     };
+    Q_ENUM(BaudRate)
 
     enum DataBits {
         Data5 = 5,
@@ -102,6 +101,7 @@ public:
         Data8 = 8,
         UnknownDataBits = -1
     };
+    Q_ENUM(DataBits)
 
     enum Parity {
         NoParity = 0,
@@ -111,6 +111,7 @@ public:
         MarkParity = 5,
         UnknownParity = -1
     };
+    Q_ENUM(Parity)
 
     enum StopBits {
         OneStop = 1,
@@ -118,6 +119,7 @@ public:
         TwoStop = 2,
         UnknownStopBits = -1
     };
+    Q_ENUM(StopBits)
 
     enum FlowControl {
         NoFlowControl,
@@ -125,6 +127,7 @@ public:
         SoftwareControl,
         UnknownFlowControl = -1
     };
+    Q_ENUM(FlowControl)
 
     enum PinoutSignal {
         NoSignal = 0x00,
@@ -139,6 +142,7 @@ public:
         SecondaryTransmittedDataSignal = 0x100,
         SecondaryReceivedDataSignal = 0x200
     };
+    Q_FLAG(PinoutSignal)
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
 #if QT_DEPRECATED_SINCE(5, 2)
@@ -161,6 +165,7 @@ public:
         StopReceivingPolicy,
         UnknownPolicy = -1
     };
+    Q_ENUM(DataErrorPolicy)
 #endif
 
     enum SerialPortError {
@@ -179,6 +184,7 @@ public:
         TimeoutError,
         NotOpenError
     };
+    Q_ENUM(SerialPortError)
 
     explicit QSerialPort(QObject *parent = Q_NULLPTR);
     explicit QSerialPort(const QString &name, QObject *parent = Q_NULLPTR);
