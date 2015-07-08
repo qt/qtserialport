@@ -302,7 +302,7 @@ bool QSerialPortPrivate::setBaudRate()
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     if (directions != QSerialPort::AllDirections) {
-        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError));
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate direction is unsupported")));
         return false;
     }
     currentDcb.BaudRate = baudRate;
@@ -598,18 +598,16 @@ void QSerialPortPrivate::handleLineStatusErrors()
         return;
     }
 
-    QSerialPortErrorInfo error;
-
     if (errors & CE_FRAME) {
-        error.errorCode = QSerialPort::FramingError;
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
     } else if (errors & CE_RXPARITY) {
-        error.errorCode = QSerialPort::ParityError;
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("ParityError error detected while reading")));
         parityErrorOccurred = true;
     } else if (errors & CE_BREAK) {
-        error.errorCode = QSerialPort::BreakConditionError;
+        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
+    } else {
+        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
     }
-
-    setError(error);
 }
 
 OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)

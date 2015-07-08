@@ -380,7 +380,7 @@ bool QSerialPortPrivate::setBaudRate()
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     if (directions != QSerialPort::AllDirections) {
-        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError));
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate direction is unsupported")));
         return false;
     }
     currentDcb.BaudRate = baudRate;
@@ -491,7 +491,7 @@ bool QSerialPortPrivate::notifyRead()
 
     if (!sucessResult) {
         buffer.chop(bytesToRead);
-        setError(QSerialPortErrorInfo(QSerialPort::ReadError));
+        setError(QSerialPortErrorInfo(QSerialPort::ReadError, QSerialPort::tr("Error reading from device")));
         return false;
     }
 
@@ -534,7 +534,7 @@ bool QSerialPortPrivate::notifyWrite()
 
     DWORD bytesWritten = 0;
     if (!::WriteFile(handle, ptr, nextSize, &bytesWritten, Q_NULLPTR)) {
-        setError(QSerialPortErrorInfo(QSerialPort::WriteError));
+        setError(QSerialPortErrorInfo(QSerialPort::WriteError, QSerialPort::tr("Error writing to device")));
         return false;
     }
 
@@ -557,7 +557,7 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 void QSerialPortPrivate::processIoErrors(bool hasError)
 {
     if (hasError) {
-        setError(QSerialPortErrorInfo(QSerialPort::ResourceError));
+        setError(QSerialPortErrorInfo(QSerialPort::ResourceError, QSerialPort::tr("Device disappeared from the system")));
         return;
     }
 
@@ -567,18 +567,16 @@ void QSerialPortPrivate::processIoErrors(bool hasError)
         return;
     }
 
-    QSerialPortErrorInfo error;
-
     if (errors & CE_FRAME) {
-        error.errorCode = QSerialPort::FramingError;
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
     } else if (errors & CE_RXPARITY) {
-        error.errorCode = QSerialPort::ParityError;
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("ParityError error detected while reading")));
         parityErrorOccurred = true;
     } else if (errors & CE_BREAK) {
-        error.errorCode = QSerialPort::BreakConditionError;
+        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
+    } else {
+        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
     }
-
-    setError(error);
 }
 
 inline bool QSerialPortPrivate::initialize(DWORD eventMask)
@@ -710,7 +708,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     breaker.stop();
 
     if (breaker.isWorked()) {
-        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
     } else {
         if (checkRead) {
             Q_ASSERT(selectForRead);

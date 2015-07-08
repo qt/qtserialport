@@ -162,14 +162,14 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     bool isLockFileEmpty = lockFilePath.isEmpty();
     if (isLockFileEmpty) {
         qWarning("Failed to create a lock file for opening the device");
-        setError(QSerialPortErrorInfo(QSerialPort::PermissionError));
+        setError(QSerialPortErrorInfo(QSerialPort::PermissionError, QSerialPort::tr("Permission error while creating lock file")));
         return false;
     }
 
     QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
 
     if (!newLockFileScopedPointer->tryLock()) {
-        setError(QSerialPortErrorInfo(QSerialPort::PermissionError));
+        setError(QSerialPortErrorInfo(QSerialPort::PermissionError, QSerialPort::tr("Permission error while locking the device")));
         return false;
     }
 
@@ -471,7 +471,7 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
 
     if (currentSerialInfo.custom_divisor == 0)
-        return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError);
+        return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("No suitable custom baud rate divisor"));
 
     if (currentSerialInfo.custom_divisor * baudRate != currentSerialInfo.baud_base) {
         qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
@@ -500,7 +500,7 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     return QSerialPortErrorInfo(QSerialPort::NoError);
 #endif
 
-    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError);
+    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate is not supported"));
 }
 
 #elif defined(Q_OS_QNX)
@@ -531,7 +531,7 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     if (baudRate <= 0) {
-        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError));
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Invalid baud rate value")));
         return false;
     }
 
@@ -958,7 +958,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
         return false;
     }
     if (ret == 0) {
-        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
         return false;
     }
 
@@ -1091,13 +1091,12 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
             case QSerialPort::SkipPolicy:
                 continue;       //ignore received character
             case QSerialPort::StopReceivingPolicy: {
-                QSerialPortErrorInfo error;
                 if (parity != QSerialPort::NoParity)
-                    error.errorCode = QSerialPort::ParityError;
+                    setError(QSerialPortErrorInfo(QSerialPort::ParityError, QSerialPort::tr("Parity error detected while reading")));
+                else if (*data == '\0')
+                    setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
                 else
-                    error.errorCode = *data == '\0' ?
-                                QSerialPort::BreakConditionError : QSerialPort::FramingError;
-                setError(error);
+                    setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
                 return ++ret;   //abort receiving
             }
                 break;
