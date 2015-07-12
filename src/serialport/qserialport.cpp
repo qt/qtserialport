@@ -1283,6 +1283,7 @@ bool QSerialPort::waitForBytesWritten(int msecs)
     return d->waitForBytesWritten(msecs);
 }
 
+#if QT_DEPRECATED_SINCE(5, 5)
 /*!
     Sends a continuous stream of zero bits during a specified period
     of time \a duration in msec if the terminal is using asynchronous
@@ -1311,6 +1312,7 @@ bool QSerialPort::sendBreak(int duration)
 
     return d->sendBreak(duration);
 }
+#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::breakEnabled
