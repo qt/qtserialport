@@ -463,11 +463,13 @@ bool QSerialPortInfo::isBusy() const
     return true;
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();
 }
+#endif // QT_DEPRECATED_SINCE(5, 2)
 
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {

@@ -139,6 +139,7 @@ bool QSerialPortInfo::isBusy() const
     return false;
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
 {
     const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
@@ -152,6 +153,7 @@ bool QSerialPortInfo::isValid() const
     }
     return true;
 }
+#endif // QT_DEPRECATED_SINCE(5, 2)
 
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {
