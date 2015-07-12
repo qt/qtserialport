@@ -597,6 +597,8 @@ bool QSerialPort::settingsRestoredOnClose() const
     return d->settingsRestoredOnClose;
 }
 #endif // QT_DEPRECATED_SINCE(5,3)
+
+#if QT_DEPRECATED_SINCE(5, 5)
 /*!
     \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
     \obsolete
@@ -608,6 +610,7 @@ bool QSerialPort::settingsRestoredOnClose() const
 
     \sa QSerialPort::settingsRestoredOnClose
 */
+#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::baudRate
@@ -1102,6 +1105,8 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     return d->policy;
 }
 #endif // QT_DEPRECATED_SINCE(5, 2)
+
+#if QT_DEPRECATED_SINCE(5, 5)
 /*!
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
     \obsolete
@@ -1113,6 +1118,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
 
     \sa QSerialPort::dataErrorPolicy
 */
+#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::error
