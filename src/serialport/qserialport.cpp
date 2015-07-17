@@ -570,6 +570,7 @@ void QSerialPort::close()
     QIODevice::close();
 }
 
+#if QT_DEPRECATED_SINCE(5, 3)
 /*!
     \property QSerialPort::settingsRestoredOnClose
     \brief the flag which specifies to restore the previous settings when closing
@@ -580,7 +581,6 @@ void QSerialPort::close()
     The default state of the QSerialPort class is to restore the
     settings.
 */
-#if QT_DEPRECATED_SINCE(5,3)
 void QSerialPort::setSettingsRestoredOnClose(bool restore)
 {
     Q_D(QSerialPort);
@@ -1063,6 +1063,7 @@ bool QSerialPort::atEnd() const
     return QIODevice::atEnd() && (!isOpen() || (d->buffer.size() == 0));
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 /*!
     \property QSerialPort::dataErrorPolicy
     \brief the error policy for how the process receives characters in the case where
@@ -1079,7 +1080,6 @@ bool QSerialPort::atEnd() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 */
-#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);

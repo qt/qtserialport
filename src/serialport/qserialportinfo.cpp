@@ -266,6 +266,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     \sa isNull()
 */
 
+#if QT_DEPRECATED_SINCE(5, 2)
 /*!
     \fn bool QSerialPortInfo::isValid() const
     \obsolete
@@ -275,6 +276,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     \sa isNull(), isBusy()
 */
+#endif // QT_DEPRECATED_SINCE(5, 2)
 
 /*!
     \fn QList<qint32> QSerialPortInfo::standardBaudRates()
