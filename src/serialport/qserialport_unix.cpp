@@ -114,7 +114,6 @@ QString serialPortLockFilePath(const QString &portName)
 
 class ReadNotifier : public QSocketNotifier
 {
-    Q_OBJECT
 public:
     ReadNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Read, parent)
@@ -135,7 +134,6 @@ private:
 
 class WriteNotifier : public QSocketNotifier
 {
-    Q_OBJECT
 public:
     WriteNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Write, parent)
@@ -153,8 +151,6 @@ protected:
 private:
     QSerialPortPrivate *dptr;
 };
-
-#include "qserialport_unix.moc"
 
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
