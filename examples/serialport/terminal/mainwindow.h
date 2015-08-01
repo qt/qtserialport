@@ -43,6 +43,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QLabel;
+
 namespace Ui {
 class MainWindow;
 }
@@ -73,7 +75,10 @@ private:
     void initActionsConnections();
 
 private:
+    void showStatusMessage(const QString &message);
+
     Ui::MainWindow *ui;
+    QLabel *status;
     Console *console;
     SettingsDialog *settings;
     QSerialPort *serial;

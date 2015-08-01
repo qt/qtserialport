@@ -38,6 +38,7 @@
 #include "settingsdialog.h"
 
 #include <QMessageBox>
+#include <QLabel>
 #include <QtSerialPort/QSerialPort>
 
 //! [0]
@@ -59,6 +60,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionDisconnect->setEnabled(false);
     ui->actionQuit->setEnabled(true);
     ui->actionConfigure->setEnabled(true);
+
+    status = new QLabel;
+    ui->statusBar->addWidget(status);
 
     initActionsConnections();
 
@@ -90,18 +94,18 @@ void MainWindow::openSerialPort()
     serial->setStopBits(p.stopBits);
     serial->setFlowControl(p.flowControl);
     if (serial->open(QIODevice::ReadWrite)) {
-            console->setEnabled(true);
-            console->setLocalEchoEnabled(p.localEchoEnabled);
-            ui->actionConnect->setEnabled(false);
-            ui->actionDisconnect->setEnabled(true);
-            ui->actionConfigure->setEnabled(false);
-            ui->statusBar->showMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
-                                       .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
-                                       .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
+        console->setEnabled(true);
+        console->setLocalEchoEnabled(p.localEchoEnabled);
+        ui->actionConnect->setEnabled(false);
+        ui->actionDisconnect->setEnabled(true);
+        ui->actionConfigure->setEnabled(false);
+        showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
+                          .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
+                          .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
     } else {
         QMessageBox::critical(this, tr("Error"), serial->errorString());
 
-        ui->statusBar->showMessage(tr("Open error"));
+        showStatusMessage(tr("Open error"));
     }
 }
 //! [4]
@@ -115,7 +119,7 @@ void MainWindow::closeSerialPort()
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     ui->actionConfigure->setEnabled(true);
-    ui->statusBar->showMessage(tr("Disconnected"));
+    showStatusMessage(tr("Disconnected"));
 }
 //! [5]
 
@@ -161,4 +165,9 @@ void MainWindow::initActionsConnections()
     connect(ui->actionClear, SIGNAL(triggered()), console, SLOT(clear()));
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+}
+
+void MainWindow::showStatusMessage(const QString &message)
+{
+    status->setText(message);
 }
