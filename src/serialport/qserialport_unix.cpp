@@ -118,14 +118,17 @@ public:
     ReadNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Read, parent)
         , dptr(d)
-    {}
+    {
+    }
 
 protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE {
-        bool ret = QSocketNotifier::event(e);
-        if (ret)
+    bool event(QEvent *e) Q_DECL_OVERRIDE
+    {
+        if (e->type() == QEvent::SockAct) {
             dptr->readNotification();
-        return ret;
+            return true;
+        }
+        return QSocketNotifier::event(e);
     }
 
 private:
@@ -138,14 +141,17 @@ public:
     WriteNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Write, parent)
         , dptr(d)
-    {}
+    {
+    }
 
 protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE {
-        bool ret = QSocketNotifier::event(e);
-        if (ret)
+    bool event(QEvent *e) Q_DECL_OVERRIDE
+    {
+        if (e->type() == QEvent::SockAct) {
             dptr->completeAsyncWrite();
-        return ret;
+            return true;
+        }
+        return QSocketNotifier::event(e);
     }
 
 private:
