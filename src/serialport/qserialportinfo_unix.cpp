@@ -92,6 +92,15 @@ static QStringList filteredDeviceFilePaths()
         QStringList deviceFilePaths;
         foreach (const QFileInfo &deviceFileInfo, deviceDir.entryInfoList()) {
             const QString deviceAbsoluteFilePath = deviceFileInfo.absoluteFilePath();
+
+#ifdef Q_OS_FREEBSD
+            // it is a quick workaround to skip the non-serial devices
+            if (deviceFilePaths.endsWith(QStringLiteral(".init"))
+                    || deviceFilePaths.endsWith(QStringLiteral(".lock"))) {
+                continue;
+            }
+#endif
+
             if (!deviceFilePaths.contains(deviceAbsoluteFilePath)) {
                 deviceFilePaths.append(deviceAbsoluteFilePath);
                 result.append(deviceAbsoluteFilePath);
