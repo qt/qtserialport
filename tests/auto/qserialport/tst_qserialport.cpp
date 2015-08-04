@@ -327,6 +327,10 @@ void tst_QSerialPort::flush()
     QSKIP("flush() does not work on Windows");
 #endif
 
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_receiverPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
+
     QSerialPort serialPort(m_senderPortName);
     connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot(qint64)));
     QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
@@ -357,6 +361,10 @@ void tst_QSerialPort::doubleFlush()
 #ifdef Q_OS_WIN
     QSKIP("flush() does not work on Windows");
 #endif
+
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_receiverPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
 
     QSerialPort serialPort(m_senderPortName);
     connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot2(qint64)));
