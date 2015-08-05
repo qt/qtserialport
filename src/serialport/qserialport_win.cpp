@@ -153,9 +153,20 @@ void QSerialPortPrivate::close()
     if (!::CancelIo(handle))
         setError(getSystemError());
 
-    setReadNotificationEnabled(false);
-    setWriteNotificationEnabled(false);
-    setCommunicationNotificationEnabled(false);
+    if (communicationNotifier) {
+        delete communicationNotifier;
+        communicationNotifier = Q_NULLPTR;
+    }
+
+    if (readCompletionNotifier) {
+        delete readCompletionNotifier;
+        readCompletionNotifier = Q_NULLPTR;
+    }
+
+    if (writeCompletionNotifier) {
+        delete writeCompletionNotifier;
+        writeCompletionNotifier = Q_NULLPTR;
+    }
 
     readStarted = false;
     readBuffer.clear();
