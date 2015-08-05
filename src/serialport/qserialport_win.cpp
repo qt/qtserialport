@@ -107,8 +107,10 @@ void QSerialPortPrivate::close()
     if (!::CancelIo(handle))
         setError(getSystemError());
 
-    if (notifier)
-        notifier->deleteLater();
+    if (notifier) {
+        delete notifier;
+        notifier = Q_NULLPTR;
+    }
 
     readStarted = false;
     writeStarted = false;

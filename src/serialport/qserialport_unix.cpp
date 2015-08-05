@@ -219,14 +219,12 @@ void QSerialPortPrivate::close()
 #endif
 
     if (readNotifier) {
-        readNotifier->setEnabled(false);
-        readNotifier->deleteLater();
+        delete readNotifier;
         readNotifier = Q_NULLPTR;
     }
 
     if (writeNotifier) {
-        writeNotifier->setEnabled(false);
-        writeNotifier->deleteLater();
+        delete writeNotifier;
         writeNotifier = Q_NULLPTR;
     }
 
