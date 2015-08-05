@@ -87,8 +87,8 @@ static QStringList filteredDeviceFilePaths()
 
 #ifdef Q_OS_FREEBSD
             // it is a quick workaround to skip the non-serial devices
-            if (deviceFilePaths.endsWith(QStringLiteral(".init"))
-                    || deviceFilePaths.endsWith(QStringLiteral(".lock"))) {
+            if (deviceFilePaths.endsWith(QLatin1String(".init"))
+                    || deviceFilePaths.endsWith(QLatin1String(".lock"))) {
                 continue;
             }
 #endif
