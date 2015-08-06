@@ -168,6 +168,11 @@ void QSerialPortPrivate::close()
         writeCompletionNotifier = Q_NULLPTR;
     }
 
+    if (startAsyncWriteTimer) {
+        delete startAsyncWriteTimer;
+        startAsyncWriteTimer = Q_NULLPTR;
+    }
+
     readStarted = false;
     readBuffer.clear();
 
