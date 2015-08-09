@@ -65,11 +65,10 @@ static inline const QList<GuidFlagsPair>& guidFlagsPairs()
 
 static QString toStringAndTrimNullCharacter(const QByteArray &buffer)
 {
-    QString result = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(buffer.constData()),
-                                             buffer.size() / sizeof(wchar_t));
-    while (!result.isEmpty() && (result.at(result.size() - 1).unicode() == 0))
-        result.chop(1);
-    return result;
+    const QString result = QString::fromWCharArray(reinterpret_cast<const wchar_t *>(buffer.constData()),
+                                                   buffer.size() / sizeof(wchar_t));
+    const int index = result.indexOf(QChar(0));
+    return index == -1 ? result : result.mid(0, index);
 }
 
 static QStringList portNamesFromHardwareDeviceMap()
@@ -365,6 +364,7 @@ bool QSerialPortInfo::isBusy() const
     return false;
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
 {
     const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
@@ -378,6 +378,7 @@ bool QSerialPortInfo::isValid() const
     }
     return true;
 }
+#endif // QT_DEPRECATED_SINCE(5, 2)
 
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {

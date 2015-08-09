@@ -106,6 +106,19 @@ class QSocketNotifier;
 QString serialPortLockFilePath(const QString &portName);
 #endif
 
+class QSerialPortErrorInfo
+{
+public:
+    explicit QSerialPortErrorInfo(QSerialPort::SerialPortError errorCode = QSerialPort::UnknownError,
+                                  const QString &errorString = QString())
+        : errorCode(errorCode)
+        , errorString(errorString)
+    {
+    }
+    QSerialPort::SerialPortError errorCode;
+    QString errorString;
+};
+
 class QSerialPortPrivate : public QIODevicePrivate
 {
     Q_DECLARE_PUBLIC(QSerialPort)
@@ -133,8 +146,6 @@ public:
     bool sendBreak(int duration);
     bool setBreakEnabled(bool set);
 
-    qint64 readData(char *data, qint64 maxSize);
-
     bool waitForReadyRead(int msec);
     bool waitForBytesWritten(int msec);
 
@@ -146,9 +157,10 @@ public:
     bool setFlowControl(QSerialPort::FlowControl flowControl);
     bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
-    QSerialPort::SerialPortError decodeSystemError(int systemErrorCode = -1) const;
+    QSerialPortErrorInfo getSystemError(int systemErrorCode = -1) const;
 
-    qint64 bytesToWrite() const;
+    void setError(const QSerialPortErrorInfo &errorInfo);
+
     qint64 writeData(const char *data, qint64 maxSize);
 
     static QString portNameToSystemLocation(const QString &port);
@@ -240,11 +252,11 @@ public:
     bool initialize(QIODevice::OpenMode mode);
     bool updateTermios();
 
-    QSerialPort::SerialPortError setBaudRate_helper(qint32 baudRate,
+    QSerialPortErrorInfo setBaudRate_helper(qint32 baudRate,
             QSerialPort::Directions directions);
-    QSerialPort::SerialPortError setCustomBaudRate(qint32 baudRate,
+    QSerialPortErrorInfo setCustomBaudRate(qint32 baudRate,
             QSerialPort::Directions directions);
-    QSerialPort::SerialPortError setStandardBaudRate(qint32 baudRate,
+    QSerialPortErrorInfo setStandardBaudRate(qint32 baudRate,
             QSerialPort::Directions directions);
 
     bool isReadNotificationEnabled() const;

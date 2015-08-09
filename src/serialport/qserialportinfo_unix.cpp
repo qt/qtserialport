@@ -84,6 +84,15 @@ static QStringList filteredDeviceFilePaths()
         QStringList deviceFilePaths;
         foreach (const QFileInfo &deviceFileInfo, deviceDir.entryInfoList()) {
             const QString deviceAbsoluteFilePath = deviceFileInfo.absoluteFilePath();
+
+#ifdef Q_OS_FREEBSD
+            // it is a quick workaround to skip the non-serial devices
+            if (deviceFilePaths.endsWith(QLatin1String(".init"))
+                    || deviceFilePaths.endsWith(QLatin1String(".lock"))) {
+                continue;
+            }
+#endif
+
             if (!deviceFilePaths.contains(deviceAbsoluteFilePath)) {
                 deviceFilePaths.append(deviceAbsoluteFilePath);
                 result.append(deviceAbsoluteFilePath);
@@ -463,11 +472,13 @@ bool QSerialPortInfo::isBusy() const
     return true;
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();
 }
+#endif // QT_DEPRECATED_SINCE(5, 2)
 
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {

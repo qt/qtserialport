@@ -64,7 +64,11 @@ static QCFType<CFTypeRef> searchProperty(io_registry_entry_t ioRegistryEntry,
 static QString searchStringProperty(io_registry_entry_t ioRegistryEntry,
                                     const QCFString &propertyKey)
 {
-    return QCFString::toQString(searchProperty(ioRegistryEntry, propertyKey).as<CFStringRef>());
+    const QCFType<CFTypeRef> result(searchProperty(ioRegistryEntry, propertyKey));
+    const CFStringRef ref = result.as<CFStringRef>();
+    if (ref && (::CFGetTypeID(ref) == ::CFStringGetTypeID()))
+        return QCFString::toQString(ref);
+    return QString();
 }
 
 static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
@@ -72,9 +76,10 @@ static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
                                       bool &ok)
 {
     const QCFType<CFTypeRef> result(searchProperty(ioRegistryEntry, propertyKey));
+    const CFNumberRef ref = result.as<CFNumberRef>();
     quint16 value = 0;
-    ok = result.as<CFNumberRef>()
-            && (::CFNumberGetValue(result.as<CFNumberRef>(), kCFNumberShortType, &value) > 0);
+    ok = ref && (::CFGetTypeID(ref) == ::CFNumberGetTypeID())
+            && (::CFNumberGetValue(ref, kCFNumberShortType, &value) > 0);
     return value;
 }
 
@@ -231,11 +236,13 @@ bool QSerialPortInfo::isBusy() const
     return true;
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
 {
     QFile f(systemLocation());
     return f.exists();
 }
+#endif // QT_DEPRECATED_SINCE(5, 2)
 
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {

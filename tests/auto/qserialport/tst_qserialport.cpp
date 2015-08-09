@@ -35,6 +35,8 @@
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
+#include <QThread>
+
 Q_DECLARE_METATYPE(QSerialPort::SerialPortError);
 Q_DECLARE_METATYPE(QIODevice::OpenMode);
 Q_DECLARE_METATYPE(QIODevice::OpenModeFlag);
@@ -105,6 +107,7 @@ private slots:
 #ifdef Q_OS_WIN
     void readBufferOverflow();
     void readAfterInputClear();
+    void synchronousReadWriteAfterAsynchronousReadWrite();
 #endif
 
     void controlBreak();
@@ -324,6 +327,10 @@ void tst_QSerialPort::flush()
     QSKIP("flush() does not work on Windows");
 #endif
 
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_receiverPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
+
     QSerialPort serialPort(m_senderPortName);
     connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot(qint64)));
     QSignalSpy bytesWrittenSpy(&serialPort, SIGNAL(bytesWritten(qint64)));
@@ -354,6 +361,10 @@ void tst_QSerialPort::doubleFlush()
 #ifdef Q_OS_WIN
     QSKIP("flush() does not work on Windows");
 #endif
+
+    // the dummy device on other side also has to be open
+    QSerialPort dummySerialPort(m_receiverPortName);
+    QVERIFY(dummySerialPort.open(QIODevice::ReadOnly));
 
     QSerialPort serialPort(m_senderPortName);
     connect(&serialPort, SIGNAL(bytesWritten(qint64)), this, SLOT(handleBytesWrittenAndExitLoopSlot2(qint64)));
@@ -739,6 +750,107 @@ void tst_QSerialPort::readAfterInputClear()
     // No more bytes available
     QVERIFY(receiverPort.bytesAvailable() == 0);
 }
+
+class MasterTransactor : public QObject
+{
+    Q_OBJECT
+public:
+    explicit MasterTransactor(const QString &name)
+        : serialPort(name)
+    {
+    }
+
+public slots:
+    void open()
+    {
+        if (serialPort.open(QSerialPort::ReadWrite)) {
+            createAsynchronousConnection();
+            serialPort.write("A", 1);
+        }
+    }
+
+private slots:
+    void synchronousTransaction()
+    {
+        serialPort.write("B", 1);
+        if (serialPort.waitForBytesWritten(100)) {
+            if (serialPort.waitForReadyRead(100))
+                tst_QSerialPort::exitLoop();
+        }
+    }
+
+    void transaction()
+    {
+        deleteAsyncronousConnection();
+        synchronousTransaction();
+    }
+
+private:
+    void createAsynchronousConnection()
+    {
+        connect(&serialPort, &QSerialPort::readyRead, this, &MasterTransactor::transaction);
+    }
+
+    void deleteAsyncronousConnection()
+    {
+        serialPort.disconnect();
+    }
+
+    QSerialPort serialPort;
+};
+
+class SlaveTransactor : public QObject
+{
+    Q_OBJECT
+public:
+    explicit SlaveTransactor(const QString &name)
+        : serialPort(new QSerialPort(name, this))
+    {
+        connect(serialPort, &QSerialPort::readyRead, this, &SlaveTransactor::transaction);
+    }
+
+public slots:
+    void open()
+    {
+        if (serialPort->open(QSerialPort::ReadWrite))
+            emit ready();
+    }
+
+signals:
+    void ready();
+
+private slots:
+    void transaction()
+    {
+        serialPort->write("Z", 1);
+    }
+
+private:
+    QSerialPort *serialPort;
+};
+
+void tst_QSerialPort::synchronousReadWriteAfterAsynchronousReadWrite()
+{
+    MasterTransactor master(m_senderPortName);
+    SlaveTransactor *slave = new SlaveTransactor(m_receiverPortName);
+
+    QThread thread;
+    slave->moveToThread(&thread);
+    thread.start();
+
+    QObject::connect(&thread, &QThread::finished, slave, &SlaveTransactor::deleteLater);
+    QObject::connect(slave, &SlaveTransactor::ready, &master, &MasterTransactor::open);
+
+    QMetaObject::invokeMethod(slave, "open", Qt::QueuedConnection);
+
+    tst_QSerialPort::enterLoopMsecs(500);
+
+    thread.quit();
+    thread.wait();
+
+    QVERIFY2(!timeout(), "Timed out when testing of transactions.");
+}
+
 #endif
 
 class BreakReader : public QObject

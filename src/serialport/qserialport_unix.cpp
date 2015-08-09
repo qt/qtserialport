@@ -77,6 +77,10 @@ QString serialPortLockFilePath(const QString &portName)
         << QStringLiteral("/run/lock")
 #ifdef Q_OS_ANDROID
         << QStringLiteral("/data/local/tmp")
+#elif defined(Q_OS_OSX)
+           // This is the workaround to specify a temporary directory
+           // on OSX when running the App Sandbox feature.
+        << QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 #endif
     ;
 
@@ -98,13 +102,6 @@ QString serialPortLockFilePath(const QString &portName)
         }
     }
 
-#ifdef Q_OS_MAC
-    // This is the workaround to specify a temporary directory
-    // on OSX when running the App Sandbox feature.
-    if (lockFilePath.isEmpty())
-        lockFilePath = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-#endif
-
     if (lockFilePath.isEmpty()) {
         qWarning("The following directories are not readable or writable for detaling with lock files\n");
         foreach (const QString &lockDirectoryPath, lockDirectoryPaths)
@@ -117,19 +114,21 @@ QString serialPortLockFilePath(const QString &portName)
 
 class ReadNotifier : public QSocketNotifier
 {
-    Q_OBJECT
 public:
     ReadNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Read, parent)
         , dptr(d)
-    {}
+    {
+    }
 
 protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE {
-        bool ret = QSocketNotifier::event(e);
-        if (ret)
+    bool event(QEvent *e) Q_DECL_OVERRIDE
+    {
+        if (e->type() == QEvent::SockAct) {
             dptr->readNotification();
-        return ret;
+            return true;
+        }
+        return QSocketNotifier::event(e);
     }
 
 private:
@@ -138,43 +137,41 @@ private:
 
 class WriteNotifier : public QSocketNotifier
 {
-    Q_OBJECT
 public:
     WriteNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Write, parent)
         , dptr(d)
-    {}
+    {
+    }
 
 protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE {
-        bool ret = QSocketNotifier::event(e);
-        if (ret)
+    bool event(QEvent *e) Q_DECL_OVERRIDE
+    {
+        if (e->type() == QEvent::SockAct) {
             dptr->completeAsyncWrite();
-        return ret;
+            return true;
+        }
+        return QSocketNotifier::event(e);
     }
 
 private:
     QSerialPortPrivate *dptr;
 };
 
-#include "qserialport_unix.moc"
-
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
-    Q_Q(QSerialPort);
-
     QString lockFilePath = serialPortLockFilePath(QSerialPortInfoPrivate::portNameFromSystemLocation(systemLocation));
     bool isLockFileEmpty = lockFilePath.isEmpty();
     if (isLockFileEmpty) {
         qWarning("Failed to create a lock file for opening the device");
-        q->setError(QSerialPort::PermissionError);
+        setError(QSerialPortErrorInfo(QSerialPort::PermissionError, QSerialPort::tr("Permission error while creating lock file")));
         return false;
     }
 
     QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
 
     if (!newLockFileScopedPointer->tryLock()) {
-        q->setError(QSerialPort::PermissionError);
+        setError(QSerialPortErrorInfo(QSerialPort::PermissionError, QSerialPort::tr("Permission error while locking the device")));
         return false;
     }
 
@@ -195,7 +192,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
     descriptor = qt_safe_open(systemLocation.toLocal8Bit().constData(), flags);
 
     if (descriptor == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
@@ -211,32 +208,28 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    Q_Q(QSerialPort);
-
     if (settingsRestoredOnClose) {
         if (::tcsetattr(descriptor, TCSANOW, &restoredTermios) == -1)
-            q->setError(decodeSystemError());
+            setError(getSystemError());
     }
 
 #ifdef TIOCNXCL
     if (::ioctl(descriptor, TIOCNXCL) == -1)
-        q->setError(decodeSystemError());
+        setError(getSystemError());
 #endif
 
     if (readNotifier) {
-        readNotifier->setEnabled(false);
-        readNotifier->deleteLater();
+        delete readNotifier;
         readNotifier = Q_NULLPTR;
     }
 
     if (writeNotifier) {
-        writeNotifier->setEnabled(false);
-        writeNotifier->deleteLater();
+        delete writeNotifier;
         writeNotifier = Q_NULLPTR;
     }
 
     if (qt_safe_close(descriptor) == -1)
-        q->setError(decodeSystemError());
+        setError(getSystemError());
 
     lockFileScopedPointer.reset(Q_NULLPTR);
 
@@ -247,12 +240,10 @@ void QSerialPortPrivate::close()
 
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 {
-    Q_Q(QSerialPort);
-
     int arg = 0;
 
     if (::ioctl(descriptor, TIOCMGET, &arg) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return QSerialPort::NoSignal;
     }
 
@@ -306,11 +297,9 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
 
 bool QSerialPortPrivate::setDataTerminalReady(bool set)
 {
-    Q_Q(QSerialPort);
-
     int status = TIOCM_DTR;
     if (::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
@@ -319,11 +308,9 @@ bool QSerialPortPrivate::setDataTerminalReady(bool set)
 
 bool QSerialPortPrivate::setRequestToSend(bool set)
 {
-    Q_Q(QSerialPort);
-
     int status = TIOCM_RTS;
     if (::ioctl(descriptor, set ? TIOCMBIS : TIOCMBIC, &status) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
@@ -337,11 +324,9 @@ bool QSerialPortPrivate::flush()
 
 bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 {
-    Q_Q(QSerialPort);
-
     if (::tcflush(descriptor, (directions == QSerialPort::AllDirections)
                      ? TCIOFLUSH : (directions & QSerialPort::Input) ? TCIFLUSH : TCOFLUSH) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
@@ -350,10 +335,8 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
 
 bool QSerialPortPrivate::sendBreak(int duration)
 {
-    Q_Q(QSerialPort);
-
     if (::tcsendbreak(descriptor, duration) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
@@ -362,19 +345,12 @@ bool QSerialPortPrivate::sendBreak(int duration)
 
 bool QSerialPortPrivate::setBreakEnabled(bool set)
 {
-    Q_Q(QSerialPort);
-
     if (::ioctl(descriptor, set ? TIOCSBRK : TIOCCBRK) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
     return true;
-}
-
-qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
-{
-    return buffer.read(data, maxSize);
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -433,22 +409,22 @@ bool QSerialPortPrivate::setBaudRate()
         && setBaudRate(outputBaudRate, QSerialPort::Output));
 }
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setBaudRate_helper(qint32 baudRate,
         QSerialPort::Directions directions)
 {
     if ((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
-            return decodeSystemError();
+        return getSystemError();
 
     if ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0)
-            return decodeSystemError();
+        return getSystemError();
 
-    return QSerialPort::NoError;
+    return QSerialPortErrorInfo(QSerialPort::NoError);
 }
 
 #if defined(Q_OS_LINUX)
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     struct serial_struct currentSerialInfo;
@@ -460,7 +436,7 @@ QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions
         currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
         currentSerialInfo.custom_divisor = 0;
         if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-            return decodeSystemError();
+            return getSystemError();
     }
 
     return setBaudRate_helper(baudRate, directions);
@@ -468,7 +444,7 @@ QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions
 
 #else
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     return setBaudRate_helper(baudRate, directions);
@@ -478,7 +454,7 @@ QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions
 
 #if defined(Q_OS_LINUX)
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(directions);
@@ -488,14 +464,14 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
 
     if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
-        return decodeSystemError();
+        return getSystemError();
 
     currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
     currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
     currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
 
     if (currentSerialInfo.custom_divisor == 0)
-        return QSerialPort::UnsupportedOperationError;
+        return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("No suitable custom baud rate divisor"));
 
     if (currentSerialInfo.custom_divisor * baudRate != currentSerialInfo.baud_base) {
         qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
@@ -505,31 +481,31 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
     }
 
     if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-        return decodeSystemError();
+        return getSystemError();
 
     return setBaudRate_helper(B38400, directions);
 }
 
 #elif defined(Q_OS_MAC)
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(directions);
 
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
     if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1)
-        return decodeSystemError();
+        return getSystemError();
 
-    return QSerialPort::NoError;
+    return QSerialPortErrorInfo(QSerialPort::NoError);
 #endif
 
-    return QSerialPort::UnsupportedOperationError;
+    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate is not supported"));
 }
 
 #elif defined(Q_OS_QNX)
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     // On QNX, the values of the 'Bxxxx' constants are set to 'xxxx' (i.e.
@@ -541,36 +517,34 @@ QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions d
 
 #else
 
-QSerialPort::SerialPortError
+QSerialPortErrorInfo
 QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(baudRate);
     Q_UNUSED(directions);
 
-    return QSerialPort::UnsupportedOperationError;
+    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError);
 }
 
 #endif
 
 bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
-    Q_Q(QSerialPort);
-
     if (baudRate <= 0) {
-        q->setError(QSerialPort::UnsupportedOperationError);
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Invalid baud rate value")));
         return false;
     }
 
     const qint32 unixBaudRate = QSerialPortPrivate::settingFromBaudRate(baudRate);
 
-    const QSerialPort::SerialPortError error = (unixBaudRate > 0)
+    const QSerialPortErrorInfo error = (unixBaudRate > 0)
         ? setStandardBaudRate(unixBaudRate, directions)
         : setCustomBaudRate(baudRate, directions);
 
-    if (error == QSerialPort::NoError)
+    if (error.errorCode == QSerialPort::NoError)
         return updateTermios();
 
-    q->setError(error);
+    setError(error);
     return false;
 }
 
@@ -727,12 +701,12 @@ bool QSerialPortPrivate::readNotification()
     const qint64 readBytes = readFromPort(ptr, bytesToRead);
 
     if (readBytes <= 0) {
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::ResourceError)
-            error = QSerialPort::ReadError;
+        QSerialPortErrorInfo error = getSystemError();
+        if (error.errorCode != QSerialPort::ResourceError)
+            error.errorCode = QSerialPort::ReadError;
         else
             setReadNotificationEnabled(false);
-        q->setError(error);
+        setError(error);
         buffer.chop(bytesToRead);
         return false;
     }
@@ -759,18 +733,16 @@ bool QSerialPortPrivate::readNotification()
 
 bool QSerialPortPrivate::startAsyncWrite()
 {
-    Q_Q(QSerialPort);
-
     if (writeBuffer.isEmpty() || writeSequenceStarted)
         return true;
 
     // Attempt to write it all in one chunk.
     qint64 written = writeToPort(writeBuffer.readPointer(), writeBuffer.nextDataBlockSize());
     if (written < 0) {
-        QSerialPort::SerialPortError error = decodeSystemError();
-        if (error != QSerialPort::ResourceError)
-            error = QSerialPort::WriteError;
-        q->setError(error);
+        QSerialPortErrorInfo error = getSystemError();
+        if (error.errorCode != QSerialPort::ResourceError)
+            error.errorCode = QSerialPort::WriteError;
+        setError(error);
         return false;
     }
 
@@ -808,15 +780,13 @@ bool QSerialPortPrivate::completeAsyncWrite()
 
 inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 {
-    Q_Q(QSerialPort);
-
 #ifdef TIOCEXCL
     if (::ioctl(descriptor, TIOCEXCL) == -1)
-        q->setError(decodeSystemError());
+        setError(getSystemError());
 #endif
 
     if (::tcgetattr(descriptor, &restoredTermios) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
 
@@ -846,11 +816,6 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
     return true;
 }
 
-qint64 QSerialPortPrivate::bytesToWrite() const
-{
-    return writeBuffer.size();
-}
-
 qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
     ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
@@ -861,71 +826,72 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 
 bool QSerialPortPrivate::updateTermios()
 {
-    Q_Q(QSerialPort);
-
     if (::tcsetattr(descriptor, TCSANOW, &currentTermios) == -1) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
     return true;
 }
 
-QSerialPort::SerialPortError QSerialPortPrivate::decodeSystemError(int systemErrorCode) const
+QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) const
 {
-    Q_UNUSED(systemErrorCode);
+    if (systemErrorCode == -1)
+        systemErrorCode = errno;
 
-    QSerialPort::SerialPortError error;
-    switch (errno) {
+    QSerialPortErrorInfo error;
+    error.errorString = qt_error_string(systemErrorCode);
+
+    switch (systemErrorCode) {
     case ENODEV:
-        error = QSerialPort::DeviceNotFoundError;
+        error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
 #ifdef ENOENT
     case ENOENT:
-        error = QSerialPort::DeviceNotFoundError;
+        error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
 #endif
     case EACCES:
-        error = QSerialPort::PermissionError;
+        error.errorCode = QSerialPort::PermissionError;
         break;
     case EBUSY:
-        error = QSerialPort::PermissionError;
+        error.errorCode = QSerialPort::PermissionError;
         break;
     case EAGAIN:
-        error = QSerialPort::ResourceError;
+        error.errorCode = QSerialPort::ResourceError;
         break;
     case EIO:
-        error = QSerialPort::ResourceError;
+        error.errorCode = QSerialPort::ResourceError;
         break;
     case EBADF:
-        error = QSerialPort::ResourceError;
+        error.errorCode = QSerialPort::ResourceError;
         break;
 #ifdef Q_OS_MAC
     case ENXIO:
-        error = QSerialPort::ResourceError;
+        error.errorCode = QSerialPort::ResourceError;
         break;
 #endif
 #ifdef EINVAL
     case EINVAL:
-        error = QSerialPort::UnsupportedOperationError;
+        error.errorCode = QSerialPort::UnsupportedOperationError;
         break;
 #endif
 #ifdef ENOIOCTLCMD
     case ENOIOCTLCMD:
-        error = QSerialPort::UnsupportedOperationError;
+        error.errorCode = QSerialPort::UnsupportedOperationError;
         break;
 #endif
 #ifdef ENOTTY
     case ENOTTY:
-        error = QSerialPort::UnsupportedOperationError;
+        error.errorCode = QSerialPort::UnsupportedOperationError;
         break;
 #endif
 #ifdef EPERM
     case EPERM:
-        error = QSerialPort::PermissionError;
+        error.errorCode = QSerialPort::PermissionError;
         break;
 #endif
     default:
-        error = QSerialPort::UnknownError;
+        error.errorCode = QSerialPort::UnknownError;
         break;
     }
     return error;
@@ -969,8 +935,6 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
                                            bool checkRead, bool checkWrite,
                                            int msecs)
 {
-    Q_Q(QSerialPort);
-
     Q_ASSERT(selectForRead);
     Q_ASSERT(selectForWrite);
 
@@ -990,11 +954,11 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
 
     const int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
     if (ret < 0) {
-        q->setError(decodeSystemError());
+        setError(getSystemError());
         return false;
     }
     if (ret == 0) {
-        q->setError(QSerialPort::TimeoutError);
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
         return false;
     }
 
@@ -1081,8 +1045,6 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
 
 qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
 {
-    Q_Q(QSerialPort);
-
     qint64 ret = 0;
     quint8 const charMask = (0xFF >> (8 - dataBits));
 
@@ -1128,13 +1090,15 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
             switch (policy) {
             case QSerialPort::SkipPolicy:
                 continue;       //ignore received character
-            case QSerialPort::StopReceivingPolicy:
+            case QSerialPort::StopReceivingPolicy: {
                 if (parity != QSerialPort::NoParity)
-                    q->setError(QSerialPort::ParityError);
+                    setError(QSerialPortErrorInfo(QSerialPort::ParityError, QSerialPort::tr("Parity error detected while reading")));
+                else if (*data == '\0')
+                    setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
                 else
-                    q->setError(*data == '\0' ?
-                                QSerialPort::BreakConditionError : QSerialPort::FramingError);
+                    setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
                 return ++ret;   //abort receiving
+            }
                 break;
             case QSerialPort::UnknownPolicy:
                 // Unknown error policy is used! Falling back to PassZeroPolicy

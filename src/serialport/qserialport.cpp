@@ -97,6 +97,15 @@ int QSerialPortPrivate::timeoutValue(int msecs, int elapsed)
     return qMax(msecs, 0);
 }
 
+void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
+{
+    Q_Q(QSerialPort);
+
+    error = errorInfo.errorCode;
+    q->setErrorString(errorInfo.errorString);
+    emit q->error(error);
+}
+
 /*!
     \class QSerialPort
 
@@ -512,14 +521,14 @@ bool QSerialPort::open(OpenMode mode)
     Q_D(QSerialPort);
 
     if (isOpen()) {
-        setError(QSerialPort::OpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::OpenError, tr("Device is already open")));
         return false;
     }
 
     // Define while not supported modes.
     static const OpenMode unsupportedModes = Append | Truncate | Text | Unbuffered;
     if ((mode & unsupportedModes) || mode == NotOpen) {
-        setError(QSerialPort::UnsupportedOperationError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, tr("Unsupported open mode")));
         return false;
     }
 
@@ -552,7 +561,7 @@ void QSerialPort::close()
 {
     Q_D(QSerialPort);
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         return;
     }
 
@@ -561,6 +570,7 @@ void QSerialPort::close()
     QIODevice::close();
 }
 
+#if QT_DEPRECATED_SINCE(5, 3)
 /*!
     \property QSerialPort::settingsRestoredOnClose
     \brief the flag which specifies to restore the previous settings when closing
@@ -571,7 +581,6 @@ void QSerialPort::close()
     The default state of the QSerialPort class is to restore the
     settings.
 */
-#if QT_DEPRECATED_SINCE(5,3)
 void QSerialPort::setSettingsRestoredOnClose(bool restore)
 {
     Q_D(QSerialPort);
@@ -588,6 +597,8 @@ bool QSerialPort::settingsRestoredOnClose() const
     return d->settingsRestoredOnClose;
 }
 #endif // QT_DEPRECATED_SINCE(5,3)
+
+#if QT_DEPRECATED_SINCE(5, 5)
 /*!
     \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
     \obsolete
@@ -599,6 +610,7 @@ bool QSerialPort::settingsRestoredOnClose() const
 
     \sa QSerialPort::settingsRestoredOnClose
 */
+#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::baudRate
@@ -862,7 +874,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -909,7 +921,7 @@ bool QSerialPort::setRequestToSend(bool set)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -959,7 +971,7 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return QSerialPort::NoSignal;
     }
@@ -989,7 +1001,7 @@ bool QSerialPort::flush()
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1011,7 +1023,7 @@ bool QSerialPort::clear(Directions directions)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1051,6 +1063,7 @@ bool QSerialPort::atEnd() const
     return QIODevice::atEnd() && (!isOpen() || (d->buffer.size() == 0));
 }
 
+#if QT_DEPRECATED_SINCE(5, 2)
 /*!
     \property QSerialPort::dataErrorPolicy
     \brief the error policy for how the process receives characters in the case where
@@ -1067,13 +1080,12 @@ bool QSerialPort::atEnd() const
     with the kernel and hardware. Hence, the two scenarios cannot be completely
     compared to each other.
 */
-#if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 {
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1093,6 +1105,8 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
     return d->policy;
 }
 #endif // QT_DEPRECATED_SINCE(5, 2)
+
+#if QT_DEPRECATED_SINCE(5, 5)
 /*!
     \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
     \obsolete
@@ -1104,6 +1118,7 @@ QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
 
     \sa QSerialPort::dataErrorPolicy
 */
+#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::error
@@ -1124,7 +1139,8 @@ QSerialPort::SerialPortError QSerialPort::error() const
 
 void QSerialPort::clearError()
 {
-    setError(QSerialPort::NoError);
+    Q_D(QSerialPort);
+    d->setError(QSerialPortErrorInfo(QSerialPort::NoError));
 }
 
 /*!
@@ -1211,7 +1227,13 @@ qint64 QSerialPort::bytesAvailable() const
 qint64 QSerialPort::bytesToWrite() const
 {
     Q_D(const QSerialPort);
-    return d->bytesToWrite() + QIODevice::bytesToWrite();
+    qint64 bytes = QIODevice::bytesToWrite();
+#ifdef Q_OS_WIN32
+    bytes += d->actualBytesToWrite;
+#else
+    bytes += d->writeBuffer.size();
+#endif
+    return bytes;
 }
 
 /*!
@@ -1267,6 +1289,7 @@ bool QSerialPort::waitForBytesWritten(int msecs)
     return d->waitForBytesWritten(msecs);
 }
 
+#if QT_DEPRECATED_SINCE(5, 5)
 /*!
     Sends a continuous stream of zero bits during a specified period
     of time \a duration in msec if the terminal is using asynchronous
@@ -1288,13 +1311,14 @@ bool QSerialPort::sendBreak(int duration)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
 
     return d->sendBreak(duration);
 }
+#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::breakEnabled
@@ -1317,7 +1341,7 @@ bool QSerialPort::setBreakEnabled(bool set)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        setError(QSerialPort::NotOpenError);
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1341,10 +1365,27 @@ bool QSerialPort::isBreakEnabled() const
 /*!
     \reimp
 */
+// This function does not really read anything, as we use QIODevicePrivate's
+// buffer. The buffer will be read inside of QIODevice before this
+// method will be called.
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
-    return d->readData(data, maxSize);
+
+    Q_UNUSED(data);
+    Q_UNUSED(maxSize);
+
+#ifdef Q_OS_WIN32
+    // We need try to start async reading to read a remainder from a driver's queue
+    // in case we have a limited read buffer size. Because the read notification can
+    // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
+    // buffer has a remainder of data ready to read until a new data will be received.
+    if (d->readBufferMaxSize || d->flowControl == QSerialPort::HardwareControl)
+        d->startAsyncRead();
+#endif
+
+    // return 0 indicating there may be more data in the future
+    return qint64(0);
 }
 
 /*!
@@ -1362,20 +1403,6 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
 {
     Q_D(QSerialPort);
     return d->writeData(data, maxSize);
-}
-
-void QSerialPort::setError(QSerialPort::SerialPortError serialPortError, const QString &errorString)
-{
-    Q_D(QSerialPort);
-
-    d->error = serialPortError;
-
-    if (errorString.isNull() && (serialPortError != QSerialPort::NoError))
-        setErrorString(qt_error_string(-1));
-    else
-        setErrorString(errorString);
-
-    emit error(serialPortError);
 }
 
 #include "moc_qserialport.cpp"
