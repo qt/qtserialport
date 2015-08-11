@@ -65,6 +65,7 @@
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
+#include <QtCore/qcoreevent.h>
 
 QT_BEGIN_NAMESPACE
 
