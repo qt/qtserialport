@@ -84,6 +84,9 @@ private:
     QSerialPortInfo(const QSerialPortInfoPrivate &dd);
     friend QList<QSerialPortInfo> availablePortsByUdev(bool &ok);
     friend QList<QSerialPortInfo> availablePortsBySysfs(bool &ok);
+#ifdef Q_OS_FREEBSD
+    friend QList<QSerialPortInfo> availablePortsBySysctl(bool &ok);
+#endif
     friend QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok);
     QScopedPointer<QSerialPortInfoPrivate, QSerialPortInfoPrivateDeleter> d_ptr;
 };
