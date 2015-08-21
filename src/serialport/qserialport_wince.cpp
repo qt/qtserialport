@@ -670,6 +670,9 @@ QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) con
     case ERROR_FILE_NOT_FOUND:
         error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
+    case ERROR_PATH_NOT_FOUND:
+        error.errorCode = QSerialPort::DeviceNotFoundError;
+        break;
     case ERROR_INVALID_NAME:
         error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
