@@ -176,7 +176,7 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     used in non-GUI threads, to avoid freezing the user interface.
 
     For more details about these approaches, refer to the
-    \l {Examples}{example} applications.
+    \l {Qt Serial Port Examples}{example} applications.
 
     The QSerialPort class can also be used with QTextStream and QDataStream's
     stream operators (operator<<() and operator>>()). There is one issue to be
