@@ -491,7 +491,7 @@ bool QSerialPortPrivate::notifyRead()
 
     if (!sucessResult) {
         buffer.chop(bytesToRead);
-        setError(QSerialPortErrorInfo(QSerialPort::ReadError, QSerialPort::tr("Error reading from device")));
+        setError(QSerialPortErrorInfo(QSerialPort::ReadError));
         return false;
     }
 
@@ -534,7 +534,7 @@ bool QSerialPortPrivate::notifyWrite()
 
     DWORD bytesWritten = 0;
     if (!::WriteFile(handle, ptr, nextSize, &bytesWritten, Q_NULLPTR)) {
-        setError(QSerialPortErrorInfo(QSerialPort::WriteError, QSerialPort::tr("Error writing to device")));
+        setError(QSerialPortErrorInfo(QSerialPort::WriteError));
         return false;
     }
 
@@ -557,7 +557,7 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 void QSerialPortPrivate::processIoErrors(bool hasError)
 {
     if (hasError) {
-        setError(QSerialPortErrorInfo(QSerialPort::ResourceError, QSerialPort::tr("Device disappeared from the system")));
+        setError(QSerialPortErrorInfo(QSerialPort::ResourceError));
         return;
     }
 
@@ -568,12 +568,12 @@ void QSerialPortPrivate::processIoErrors(bool hasError)
     }
 
     if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
     } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("ParityError error detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
         parityErrorOccurred = true;
     } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
     } else {
         setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
     }
@@ -711,7 +711,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     breaker.stop();
 
     if (breaker.isWorked()) {
-        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
     } else {
         if (checkRead) {
             Q_ASSERT(selectForRead);
