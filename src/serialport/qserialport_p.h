@@ -236,6 +236,7 @@ public:
     HANDLE handle;
     bool parityErrorOccurred;
     QByteArray readChunkBuffer;
+    bool communicationStarted;
     bool writeStarted;
     bool readStarted;
     QWinOverlappedIoNotifier *notifier;

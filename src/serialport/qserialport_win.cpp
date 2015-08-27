@@ -400,6 +400,8 @@ bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
 
 bool QSerialPortPrivate::completeAsyncCommunication(qint64 bytesTransferred)
 {
+    communicationStarted = false;
+
     if (bytesTransferred == qint64(-1))
         return false;
     if (EV_ERR & triggeredEventMask)
@@ -453,6 +455,9 @@ bool QSerialPortPrivate::completeAsyncWrite(qint64 bytesTransferred)
 
 bool QSerialPortPrivate::startAsyncCommunication()
 {
+    if (communicationStarted)
+        return true;
+
     ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
     if (!::WaitCommEvent(handle, &triggeredEventMask, &communicationOverlapped)) {
         QSerialPortErrorInfo error = getSystemError();
@@ -463,6 +468,7 @@ bool QSerialPortPrivate::startAsyncCommunication()
             return false;
         }
     }
+    communicationStarted = true;
     return true;
 }
 

@@ -112,6 +112,8 @@ private slots:
 
     void controlBreak();
 
+    void clearAfterOpen();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -908,6 +910,15 @@ void tst_QSerialPort::controlBreak()
     QCOMPARE(breakSpy.count(), 2);
     QCOMPARE(qvariant_cast<bool>(breakSpy.at(0).at(0)), true);
     QCOMPARE(qvariant_cast<bool>(breakSpy.at(1).at(0)), false);
+}
+
+void tst_QSerialPort::clearAfterOpen()
+{
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::ReadWrite));
+    QCOMPARE(senderPort.error(), QSerialPort::NoError);
+    QVERIFY(senderPort.clear());
+    QCOMPARE(senderPort.error(), QSerialPort::NoError);
 }
 
 QTEST_MAIN(tst_QSerialPort)
