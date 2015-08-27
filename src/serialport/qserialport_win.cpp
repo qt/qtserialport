@@ -692,12 +692,12 @@ void QSerialPortPrivate::handleLineStatusErrors()
     }
 
     if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
     } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::ParityError, QSerialPort::tr("Parity error detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::ParityError));
         parityErrorOccurred = true;
     } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
     } else {
         setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
     }

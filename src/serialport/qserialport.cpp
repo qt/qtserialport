@@ -62,6 +62,51 @@
 
 QT_BEGIN_NAMESPACE
 
+QSerialPortErrorInfo::QSerialPortErrorInfo(QSerialPort::SerialPortError newErrorCode,
+                                           const QString &newErrorString)
+    : errorCode(newErrorCode)
+    , errorString(newErrorString)
+{
+    if (errorString.isNull()) {
+        switch (errorCode) {
+        case QSerialPort::NoError:
+            errorString = QSerialPort::tr("No error");
+            break;
+        case QSerialPort::OpenError:
+            errorString = QSerialPort::tr("Device is already open");
+            break;
+        case QSerialPort::NotOpenError:
+            errorString = QSerialPort::tr("Device is not open");
+            break;
+        case QSerialPort::TimeoutError:
+            errorString = QSerialPort::tr("Operation timed out");
+            break;
+        case QSerialPort::ParityError:
+            errorString = QSerialPort::tr("Parity error detected while reading");
+            break;
+        case QSerialPort::BreakConditionError:
+            errorString = QSerialPort::tr("Break condition detected while reading");
+            break;
+        case QSerialPort::FramingError:
+            errorString = QSerialPort::tr("Framing error detected while reading");
+            break;
+        case QSerialPort::ReadError:
+            errorString = QSerialPort::tr("Error reading from device");
+            break;
+        case QSerialPort::WriteError:
+            errorString = QSerialPort::tr("Error writing to device");
+            break;
+        case QSerialPort::ResourceError:
+            errorString = QSerialPort::tr("Device disappeared from the system");
+            break;
+        default:
+            // an empty string will be interpreted as "Unknown error"
+            // from the QIODevice::errorString()
+            break;
+        }
+    }
+}
+
 QSerialPortPrivateData::QSerialPortPrivateData(QSerialPort *q)
     : readBufferMaxSize(0)
     , readBuffer(InitialBufferSize)
@@ -518,7 +563,7 @@ bool QSerialPort::open(OpenMode mode)
     Q_D(QSerialPort);
 
     if (isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::OpenError, tr("Device is already open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::OpenError));
         return false;
     }
 
@@ -558,7 +603,7 @@ void QSerialPort::close()
 {
     Q_D(QSerialPort);
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         return;
     }
 
@@ -869,7 +914,7 @@ bool QSerialPort::setDataTerminalReady(bool set)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -916,7 +961,7 @@ bool QSerialPort::setRequestToSend(bool set)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -966,7 +1011,7 @@ QSerialPort::PinoutSignals QSerialPort::pinoutSignals()
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return QSerialPort::NoSignal;
     }
@@ -996,7 +1041,7 @@ bool QSerialPort::flush()
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1018,7 +1063,7 @@ bool QSerialPort::clear(Directions directions)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1080,7 +1125,7 @@ bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1305,7 +1350,7 @@ bool QSerialPort::sendBreak(int duration)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }
@@ -1334,7 +1379,7 @@ bool QSerialPort::setBreakEnabled(bool set)
     Q_D(QSerialPort);
 
     if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError, tr("Device is not open")));
+        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
         return false;
     }

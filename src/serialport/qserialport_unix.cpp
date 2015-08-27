@@ -976,7 +976,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
         return false;
     }
     if (ret == 0) {
-        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
         return false;
     }
 
@@ -1110,11 +1110,11 @@ qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
                 continue;       //ignore received character
             case QSerialPort::StopReceivingPolicy: {
                 if (parity != QSerialPort::NoParity)
-                    setError(QSerialPortErrorInfo(QSerialPort::ParityError, QSerialPort::tr("Parity error detected while reading")));
+                    setError(QSerialPortErrorInfo(QSerialPort::ParityError));
                 else if (*data == '\0')
-                    setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
+                    setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
                 else
-                    setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
+                    setError(QSerialPortErrorInfo(QSerialPort::FramingError));
                 return ++ret;   //abort receiving
             }
                 break;
