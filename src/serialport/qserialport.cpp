@@ -1371,8 +1371,6 @@ bool QSerialPort::isBreakEnabled() const
 // method will be called.
 qint64 QSerialPort::readData(char *data, qint64 maxSize)
 {
-    Q_D(QSerialPort);
-
     Q_UNUSED(data);
     Q_UNUSED(maxSize);
 
@@ -1381,6 +1379,7 @@ qint64 QSerialPort::readData(char *data, qint64 maxSize)
     // in case we have a limited read buffer size. Because the read notification can
     // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
     // buffer has a remainder of data ready to read until a new data will be received.
+    Q_D(QSerialPort);
     if (d->readBufferMaxSize || d->flowControl == QSerialPort::HardwareControl)
         d->startAsyncRead();
 #endif
