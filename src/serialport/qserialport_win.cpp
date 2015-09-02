@@ -117,6 +117,7 @@ void QSerialPortPrivate::close()
         startAsyncWriteTimer = Q_NULLPTR;
     }
 
+    communicationStarted = false;
     readStarted = false;
     writeStarted = false;
     writeBuffer.clear();
