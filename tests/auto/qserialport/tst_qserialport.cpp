@@ -843,7 +843,7 @@ void tst_QSerialPort::synchronousReadWriteAfterAsynchronousReadWrite()
 
     QMetaObject::invokeMethod(slave, "open", Qt::QueuedConnection);
 
-    tst_QSerialPort::enterLoopMsecs(500);
+    tst_QSerialPort::enterLoopMsecs(2000);
 
     thread.quit();
     thread.wait();
