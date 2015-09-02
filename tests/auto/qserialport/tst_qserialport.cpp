@@ -113,11 +113,9 @@ private slots:
     void asynchronousWriteByTimer_data();
     void asynchronousWriteByTimer();
 
-#ifdef Q_OS_WIN
     void readBufferOverflow();
     void readAfterInputClear();
     void synchronousReadWriteAfterAsynchronousReadWrite();
-#endif
 
     void controlBreak();
 
@@ -683,7 +681,6 @@ void tst_QSerialPort::asynchronousWriteByTimer()
     QCOMPARE(receiverPort.readAll(), alphabetArray);
 }
 
-#ifdef Q_OS_WIN
 void tst_QSerialPort::readBufferOverflow()
 {
     clearReceiver();
@@ -853,8 +850,6 @@ void tst_QSerialPort::synchronousReadWriteAfterAsynchronousReadWrite()
 
     QVERIFY2(!timeout(), "Timed out when testing of transactions.");
 }
-
-#endif
 
 class BreakReader : public QObject
 {
