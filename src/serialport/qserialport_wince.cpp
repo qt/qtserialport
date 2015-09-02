@@ -591,7 +591,7 @@ void QSerialPortPrivate::processIoErrors(bool hasError)
     if (errors & CE_FRAME) {
         setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
     } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("ParityError error detected while reading")));
+        setError(QSerialPortErrorInfo(QSerialPort::ParityError, QSerialPort::tr("ParityError error detected while reading")));
         parityErrorOccurred = true;
     } else if (errors & CE_BREAK) {
         setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
