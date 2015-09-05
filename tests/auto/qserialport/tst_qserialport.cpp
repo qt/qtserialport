@@ -119,14 +119,17 @@ private slots:
 
     void controlBreak();
 
+    void clearAfterOpen();
+
+    void loopBack_data();
+    void loopBack();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
 
 private:
-#ifdef Q_OS_WIN
     void clearReceiver(const QString &customReceiverName = QString());
-#endif
 
     QString m_senderPortName;
     QString m_receiverPortName;
@@ -146,7 +149,6 @@ tst_QSerialPort::tst_QSerialPort()
 {
 }
 
-#ifdef Q_OS_WIN
 // This method is a workaround for the "com0com" virtual serial port
 // driver, which is installed on CI. The problem is that the close/clear
 // methods have no effect on sender serial port. If any data didn't manage
@@ -164,7 +166,6 @@ void tst_QSerialPort::clearReceiver(const QString &customReceiverName)
     if (receiver.open(QIODevice::ReadOnly))
         enterLoopMsecs(100);
 }
-#endif
 
 void tst_QSerialPort::initTestCase()
 {
@@ -906,6 +907,45 @@ void tst_QSerialPort::controlBreak()
     QCOMPARE(breakSpy.count(), 2);
     QCOMPARE(qvariant_cast<bool>(breakSpy.at(0).at(0)), true);
     QCOMPARE(qvariant_cast<bool>(breakSpy.at(1).at(0)), false);
+}
+
+void tst_QSerialPort::clearAfterOpen()
+{
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::ReadWrite));
+    QCOMPARE(senderPort.error(), QSerialPort::NoError);
+    QVERIFY(senderPort.clear());
+    QCOMPARE(senderPort.error(), QSerialPort::NoError);
+}
+
+void tst_QSerialPort::loopBack_data()
+{
+    QTest::addColumn<int>("baudRate");
+
+    QTest::newRow("9600 N 1 None") << 9600;
+    QTest::newRow("115200 N 1 None") << 115200;
+    QTest::newRow("14400 N 1 None") << 14400;
+}
+
+// This test works with the connected Rx and Tx pins.
+void tst_QSerialPort::loopBack()
+{
+    QFETCH(int, baudRate);
+
+    QSerialPort serialPort(m_senderPortName);
+    QVERIFY(serialPort.open(QSerialPort::ReadWrite));
+
+    QVERIFY(serialPort.setBaudRate(baudRate));
+    QCOMPARE(serialPort.baudRate(), baudRate);
+
+    QCOMPARE(serialPort.write(alphabetArray), qint64(alphabetArray.size()));
+    QVERIFY(serialPort.waitForBytesWritten(500));
+
+    do {
+        QVERIFY(serialPort.waitForReadyRead(500));
+    } while (serialPort.bytesAvailable() < alphabetArray.size());
+
+    QCOMPARE(serialPort.readAll(), alphabetArray);
 }
 
 QTEST_MAIN(tst_QSerialPort)
