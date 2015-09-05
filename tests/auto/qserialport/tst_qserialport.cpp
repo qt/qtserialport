@@ -112,6 +112,9 @@ private slots:
 
     void clearAfterOpen();
 
+    void loopBack_data();
+    void loopBack();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -914,6 +917,36 @@ void tst_QSerialPort::clearAfterOpen()
     QCOMPARE(senderPort.error(), QSerialPort::NoError);
     QVERIFY(senderPort.clear());
     QCOMPARE(senderPort.error(), QSerialPort::NoError);
+}
+
+void tst_QSerialPort::loopBack_data()
+{
+    QTest::addColumn<int>("baudRate");
+
+    QTest::newRow("9600 N 1 None") << 9600;
+    QTest::newRow("115200 N 1 None") << 115200;
+    QTest::newRow("14400 N 1 None") << 14400;
+}
+
+// This test works with the connected Rx and Tx pins.
+void tst_QSerialPort::loopBack()
+{
+    QFETCH(int, baudRate);
+
+    QSerialPort serialPort(m_senderPortName);
+    QVERIFY(serialPort.open(QSerialPort::ReadWrite));
+
+    QVERIFY(serialPort.setBaudRate(baudRate));
+    QCOMPARE(serialPort.baudRate(), baudRate);
+
+    QCOMPARE(serialPort.write(alphabetArray), qint64(alphabetArray.size()));
+    QVERIFY(serialPort.waitForBytesWritten(500));
+
+    do {
+        QVERIFY(serialPort.waitForReadyRead(500));
+    } while (serialPort.bytesAvailable() < alphabetArray.size());
+
+    QCOMPARE(serialPort.readAll(), alphabetArray);
 }
 
 QTEST_MAIN(tst_QSerialPort)

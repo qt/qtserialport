@@ -249,12 +249,8 @@ public:
     bool initialize(QIODevice::OpenMode mode);
     bool updateTermios();
 
-    QSerialPortErrorInfo setBaudRate_helper(qint32 baudRate,
-            QSerialPort::Directions directions);
-    QSerialPortErrorInfo setCustomBaudRate(qint32 baudRate,
-            QSerialPort::Directions directions);
-    QSerialPortErrorInfo setStandardBaudRate(qint32 baudRate,
-            QSerialPort::Directions directions);
+    bool setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions);
+    bool setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions);
 
     bool isReadNotificationEnabled() const;
     void setReadNotificationEnabled(bool enable);

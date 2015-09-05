@@ -409,121 +409,112 @@ bool QSerialPortPrivate::setBaudRate()
         && setBaudRate(outputBaudRate, QSerialPort::Output));
 }
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setBaudRate_helper(qint32 baudRate,
-        QSerialPort::Directions directions)
+bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
-    if ((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
-        return getSystemError();
-
-    if ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0)
-        return getSystemError();
-
-    return QSerialPortErrorInfo(QSerialPort::NoError);
-}
-
-#if defined(Q_OS_LINUX)
-
-QSerialPortErrorInfo
-QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
-{
-    struct serial_struct currentSerialInfo;
-
-    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
-
-    if ((::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
-            && (currentSerialInfo.flags & ASYNC_SPD_CUST)) {
-        currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
-        currentSerialInfo.custom_divisor = 0;
-        if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-            return getSystemError();
+#ifdef Q_OS_LINUX
+    // try to clear custom baud rate
+    struct serial_struct serial;
+    ::memset(&serial, 0, sizeof(serial));
+    if (::ioctl(descriptor, TIOCGSERIAL, &serial) != -1) {
+        if (serial.flags & ASYNC_SPD_CUST) {
+            serial.flags &= ~ASYNC_SPD_CUST;
+            serial.custom_divisor = 0;
+            // we don't check on errors because a driver can has not this feature
+            ::ioctl(descriptor, TIOCSSERIAL, &serial);
+        }
     }
-
-    return setBaudRate_helper(baudRate, directions);
-}
-
-#else
-
-QSerialPortErrorInfo
-QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
-{
-    return setBaudRate_helper(baudRate, directions);
-}
-
 #endif
 
-#if defined(Q_OS_LINUX)
-
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
-{
-    Q_UNUSED(directions);
-
-    struct serial_struct currentSerialInfo;
-
-    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
-
-    if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
-        return getSystemError();
-
-    currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
-    currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-    currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
-
-    if (currentSerialInfo.custom_divisor == 0)
-        return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("No suitable custom baud rate divisor"));
-
-    if (currentSerialInfo.custom_divisor * baudRate != currentSerialInfo.baud_base) {
-        qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
-            qPrintable(systemLocation),
-            currentSerialInfo.baud_base / currentSerialInfo.custom_divisor,
-            baudRate, (float)currentSerialInfo.baud_base / baudRate);
+    if ((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0) {
+        setError(getSystemError());
+        return false;
     }
 
-    if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-        return getSystemError();
+    if ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0) {
+        setError(getSystemError());
+        return false;
+    }
 
-    return setBaudRate_helper(B38400, directions);
+    return updateTermios();
+}
+
+#if defined(Q_OS_LINUX)
+
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    struct serial_struct serial;
+
+    if (::ioctl(descriptor, TIOCGSERIAL, &serial) == -1) {
+        setError(getSystemError());
+        return false;
+    }
+
+    serial.flags &= ~ASYNC_SPD_MASK;
+    serial.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+    serial.custom_divisor = serial.baud_base / baudRate;
+
+    if (serial.custom_divisor == 0) {
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                      QSerialPort::tr("No suitable custom baud rate divisor")));
+        return false;
+    }
+
+    if (serial.custom_divisor * baudRate != serial.baud_base) {
+        qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
+            qPrintable(systemLocation),
+            serial.baud_base / serial.custom_divisor,
+            baudRate, (float)serial.baud_base / baudRate);
+    }
+
+    if (::ioctl(descriptor, TIOCSSERIAL, &serial) == -1) {
+        setError(getSystemError());
+        return false;
+    }
+
+    return setStandardBaudRate(B38400, directions);
 }
 
 #elif defined(Q_OS_MAC)
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(directions);
 
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-    if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1)
-        return getSystemError();
+    if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1) {
+        setError(getSystemError());
+        return false;
+    }
 
-    return QSerialPortErrorInfo(QSerialPort::NoError);
+    return true;
+#else
+    setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                  QSerialPort::tr("Custom baud rate is not supported")));
+    return false;
 #endif
-
-    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate is not supported"));
 }
 
 #elif defined(Q_OS_QNX)
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     // On QNX, the values of the 'Bxxxx' constants are set to 'xxxx' (i.e.
     // B115200 is defined to '115200'), which means that literal values can be
     // passed to cfsetispeed/cfsetospeed, including custom values, provided
     // that the underlying hardware supports them.
-    return setBaudRate_helper(baudRate, directions);
+    return setStandardBaudRate(baudRate, directions);
 }
 
 #else
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(baudRate);
     Q_UNUSED(directions);
 
-    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError);
+    setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                  QSerialPort::tr("Custom baud rate is not supported")));
+    return false;
 }
 
 #endif
@@ -537,15 +528,9 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
 
     const qint32 unixBaudRate = QSerialPortPrivate::settingFromBaudRate(baudRate);
 
-    const QSerialPortErrorInfo error = (unixBaudRate > 0)
-        ? setStandardBaudRate(unixBaudRate, directions)
-        : setCustomBaudRate(baudRate, directions);
-
-    if (error.errorCode == QSerialPort::NoError)
-        return updateTermios();
-
-    setError(error);
-    return false;
+    return (unixBaudRate > 0)
+            ? setStandardBaudRate(unixBaudRate, directions)
+            : setCustomBaudRate(baudRate, directions);
 }
 
 bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
