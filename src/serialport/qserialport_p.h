@@ -208,7 +208,8 @@ public:
 #elif defined(Q_OS_WIN32)
 
     bool initialize();
-    bool updateDcb();
+    bool setDcb(DCB *dcb);
+    bool getDcb(DCB *dcb);
     bool updateCommTimeouts();
     void handleLineStatusErrors();
     OVERLAPPED *waitForNotified(int msecs);
@@ -225,7 +226,6 @@ public:
     bool emulateErrorPolicy();
     void emitReadyRead();
 
-    DCB currentDcb;
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
