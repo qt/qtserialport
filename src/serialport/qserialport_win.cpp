@@ -238,8 +238,12 @@ bool QSerialPortPrivate::setDataTerminalReady(bool set)
         return false;
     }
 
-    currentDcb.fDtrControl = set ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
-    return true;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fDtrControl = set ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setRequestToSend(bool set)
@@ -405,84 +409,105 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
         setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate direction is unsupported")));
         return false;
     }
-    currentDcb.BaudRate = baudRate;
-    return updateDcb();
+
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.BaudRate = baudRate;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
 {
-    currentDcb.ByteSize = dataBits;
-    return updateDcb();
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.ByteSize = dataBits;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setParity(QSerialPort::Parity parity)
 {
-    currentDcb.fParity = TRUE;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fParity = TRUE;
     switch (parity) {
     case QSerialPort::NoParity:
-        currentDcb.Parity = NOPARITY;
-        currentDcb.fParity = FALSE;
+        dcb.Parity = NOPARITY;
+        dcb.fParity = FALSE;
         break;
     case QSerialPort::OddParity:
-        currentDcb.Parity = ODDPARITY;
+        dcb.Parity = ODDPARITY;
         break;
     case QSerialPort::EvenParity:
-        currentDcb.Parity = EVENPARITY;
+        dcb.Parity = EVENPARITY;
         break;
     case QSerialPort::MarkParity:
-        currentDcb.Parity = MARKPARITY;
+        dcb.Parity = MARKPARITY;
         break;
     case QSerialPort::SpaceParity:
-        currentDcb.Parity = SPACEPARITY;
+        dcb.Parity = SPACEPARITY;
         break;
     default:
-        currentDcb.Parity = NOPARITY;
-        currentDcb.fParity = FALSE;
+        dcb.Parity = NOPARITY;
+        dcb.fParity = FALSE;
         break;
     }
-    return updateDcb();
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
 {
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
     switch (stopBits) {
     case QSerialPort::OneStop:
-        currentDcb.StopBits = ONESTOPBIT;
+        dcb.StopBits = ONESTOPBIT;
         break;
     case QSerialPort::OneAndHalfStop:
-        currentDcb.StopBits = ONE5STOPBITS;
+        dcb.StopBits = ONE5STOPBITS;
         break;
     case QSerialPort::TwoStop:
-        currentDcb.StopBits = TWOSTOPBITS;
+        dcb.StopBits = TWOSTOPBITS;
         break;
     default:
-        currentDcb.StopBits = ONESTOPBIT;
+        dcb.StopBits = ONESTOPBIT;
         break;
     }
-    return updateDcb();
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
-    currentDcb.fInX = FALSE;
-    currentDcb.fOutX = FALSE;
-    currentDcb.fOutxCtsFlow = FALSE;
-    currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fInX = FALSE;
+    dcb.fOutX = FALSE;
+    dcb.fOutxCtsFlow = FALSE;
+    dcb.fRtsControl = RTS_CONTROL_DISABLE;
     switch (flowControl) {
     case QSerialPort::NoFlowControl:
         break;
     case QSerialPort::SoftwareControl:
-        currentDcb.fInX = TRUE;
-        currentDcb.fOutX = TRUE;
+        dcb.fInX = TRUE;
+        dcb.fOutX = TRUE;
         break;
     case QSerialPort::HardwareControl:
-        currentDcb.fOutxCtsFlow = TRUE;
-        currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
+        dcb.fOutxCtsFlow = TRUE;
+        dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
         break;
     default:
         break;
     }
-    return updateDcb();
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
@@ -705,28 +730,25 @@ void QSerialPortPrivate::handleLineStatusErrors()
 
 inline bool QSerialPortPrivate::initialize()
 {
-    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
-    restoredDcb.DCBlength = sizeof(restoredDcb);
-
-    if (!::GetCommState(handle, &restoredDcb)) {
-        setError(getSystemError());
+    DCB dcb;
+    if (!getDcb(&dcb))
         return false;
-    }
 
-    currentDcb = restoredDcb;
-    currentDcb.fBinary = TRUE;
-    currentDcb.fInX = FALSE;
-    currentDcb.fOutX = FALSE;
-    currentDcb.fAbortOnError = FALSE;
-    currentDcb.fNull = FALSE;
-    currentDcb.fErrorChar = FALSE;
+    restoredDcb = dcb;
 
-    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
-        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
+    dcb.fBinary = TRUE;
+    dcb.fInX = FALSE;
+    dcb.fOutX = FALSE;
+    dcb.fAbortOnError = FALSE;
+    dcb.fNull = FALSE;
+    dcb.fErrorChar = FALSE;
 
-    currentDcb.BaudRate = inputBaudRate;
+    if (dcb.fDtrControl == DTR_CONTROL_HANDSHAKE)
+        dcb.fDtrControl = DTR_CONTROL_DISABLE;
 
-    if (!updateDcb())
+    dcb.BaudRate = inputBaudRate;
+
+    if (!setDcb(&dcb))
         return false;
 
     if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
@@ -751,9 +773,21 @@ inline bool QSerialPortPrivate::initialize()
     return true;
 }
 
-bool QSerialPortPrivate::updateDcb()
+bool QSerialPortPrivate::setDcb(DCB *dcb)
 {
-    if (!::SetCommState(handle, &currentDcb)) {
+    if (!::SetCommState(handle, dcb)) {
+        setError(getSystemError());
+        return false;
+    }
+    return true;
+}
+
+bool QSerialPortPrivate::getDcb(DCB *dcb)
+{
+    ::ZeroMemory(dcb, sizeof(DCB));
+    dcb->DCBlength = sizeof(DCB);
+
+    if (!::GetCommState(handle, dcb)) {
         setError(getSystemError());
         return false;
     }

@@ -127,7 +127,6 @@ public:
 
     static QList<qint32> standardBaudRates();
 
-    DCB currentDcb;
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
@@ -149,7 +148,8 @@ public:
 
 private:
     bool initialize();
-    bool updateDcb();
+    bool setDcb(DCB *dcb);
+    bool getDcb(DCB *dcb);
     bool updateCommTimeouts();
     qint64 overlappedResult(OVERLAPPED &overlapped);
 
