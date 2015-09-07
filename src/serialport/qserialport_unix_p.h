@@ -146,7 +146,6 @@ public:
 
     static QList<qint32> standardBaudRates();
 
-    struct termios currentTermios;
     struct termios restoredTermios;
     int descriptor;
 
@@ -163,7 +162,8 @@ public:
 
 private:
     bool initialize(QIODevice::OpenMode mode);
-    bool updateTermios();
+    bool setTermios(const termios *tio);
+    bool getTermios(termios *tio);
 
     bool setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions);
     bool setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions);
