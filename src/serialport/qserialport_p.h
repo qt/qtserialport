@@ -247,7 +247,8 @@ public:
 #elif defined(Q_OS_UNIX)
 
     bool initialize(QIODevice::OpenMode mode);
-    bool updateTermios();
+    bool setTermios(const termios *tio);
+    bool getTermios(termios *tio);
 
     bool setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions);
     bool setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions);
@@ -273,7 +274,6 @@ public:
     bool startAsyncWrite();
     bool completeAsyncWrite();
 
-    struct termios currentTermios;
     struct termios restoredTermios;
     int descriptor;
 
