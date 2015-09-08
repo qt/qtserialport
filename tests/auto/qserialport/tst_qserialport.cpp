@@ -46,6 +46,11 @@
 #include <QThread>
 
 Q_DECLARE_METATYPE(QSerialPort::SerialPortError);
+Q_DECLARE_METATYPE(QSerialPort::BaudRate);
+Q_DECLARE_METATYPE(QSerialPort::DataBits);
+Q_DECLARE_METATYPE(QSerialPort::Parity);
+Q_DECLARE_METATYPE(QSerialPort::StopBits);
+Q_DECLARE_METATYPE(QSerialPort::FlowControl);
 Q_DECLARE_METATYPE(QIODevice::OpenMode);
 Q_DECLARE_METATYPE(QIODevice::OpenModeFlag);
 Q_DECLARE_METATYPE(Qt::ConnectionType);
@@ -93,6 +98,17 @@ private slots:
     void openExisting();
     void openNotExisting_data();
     void openNotExisting();
+
+    void baudRate_data();
+    void baudRate();
+    void dataBits_data();
+    void dataBits();
+    void parity_data();
+    void parity();
+    void stopBits_data();
+    void stopBits();
+    void flowControl_data();
+    void flowControl();
 
     void flush();
     void doubleFlush();
@@ -315,6 +331,161 @@ void tst_QSerialPort::openNotExisting()
 
     //QCOMPARE(errorSpy.count(), 1);
     //QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(0).at(0)), errorCode);
+}
+
+void tst_QSerialPort::baudRate_data()
+{
+    QTest::addColumn<qint32>("baudrate");
+    QTest::newRow("Baud1200") << static_cast<qint32>(QSerialPort::Baud1200);
+    QTest::newRow("Baud2400") << static_cast<qint32>(QSerialPort::Baud2400);
+    QTest::newRow("Baud4800") << static_cast<qint32>(QSerialPort::Baud4800);
+    QTest::newRow("Baud9600") << static_cast<qint32>(QSerialPort::Baud9600);
+    QTest::newRow("Baud19200") << static_cast<qint32>(QSerialPort::Baud19200);
+    QTest::newRow("Baud38400") << static_cast<qint32>(QSerialPort::Baud38400);
+    QTest::newRow("Baud57600") << static_cast<qint32>(QSerialPort::Baud57600);
+    QTest::newRow("Baud115200") << static_cast<qint32>(QSerialPort::Baud115200);
+}
+
+void tst_QSerialPort::baudRate()
+{
+    QFETCH(qint32, baudrate);
+
+    {
+        // setup before opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.setBaudRate(baudrate));
+        QCOMPARE(serialPort.baudRate(), baudrate);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+    }
+
+    {
+        // setup after opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+        QVERIFY(serialPort.setBaudRate(baudrate));
+        QCOMPARE(serialPort.baudRate(), baudrate);
+    }
+}
+
+void tst_QSerialPort::dataBits_data()
+{
+    QTest::addColumn<QSerialPort::DataBits>("databits");
+    QTest::newRow("Data5") << QSerialPort::Data5;
+    QTest::newRow("Data6") << QSerialPort::Data6;
+    QTest::newRow("Data7") << QSerialPort::Data7;
+    QTest::newRow("Data8") << QSerialPort::Data8;
+}
+
+void tst_QSerialPort::dataBits()
+{
+    QFETCH(QSerialPort::DataBits, databits);
+
+    {
+        // setup before opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.setDataBits(databits));
+        QCOMPARE(serialPort.dataBits(), databits);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+    }
+
+    {
+        // setup after opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+        QVERIFY(serialPort.setDataBits(databits));
+        QCOMPARE(serialPort.dataBits(), databits);
+    }
+}
+
+void tst_QSerialPort::parity_data()
+{
+    QTest::addColumn<QSerialPort::Parity>("parity");
+    QTest::newRow("NoParity") << QSerialPort::NoParity;
+    QTest::newRow("EvenParity") << QSerialPort::EvenParity;
+    QTest::newRow("OddParity") << QSerialPort::OddParity;
+    QTest::newRow("SpaceParity") << QSerialPort::SpaceParity;
+    QTest::newRow("MarkParity") << QSerialPort::MarkParity;
+}
+
+void tst_QSerialPort::parity()
+{
+    QFETCH(QSerialPort::Parity, parity);
+
+    {
+        // setup before opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.setParity(parity));
+        QCOMPARE(serialPort.parity(), parity);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+    }
+
+    {
+        // setup after opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+        QVERIFY(serialPort.setParity(parity));
+        QCOMPARE(serialPort.parity(), parity);
+    }
+}
+
+void tst_QSerialPort::stopBits_data()
+{
+    QTest::addColumn<QSerialPort::StopBits>("stopbits");
+    QTest::newRow("OneStop") << QSerialPort::OneStop;
+#ifdef Q_OS_WIN
+    QTest::newRow("OneAndHalfStop") << QSerialPort::OneAndHalfStop;
+#endif
+    QTest::newRow("TwoStop") << QSerialPort::TwoStop;
+}
+
+void tst_QSerialPort::stopBits()
+{
+    QFETCH(QSerialPort::StopBits, stopbits);
+
+    {
+        // setup before opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.setStopBits(stopbits));
+        QCOMPARE(serialPort.stopBits(), stopbits);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+    }
+
+    {
+        // setup after opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+        QVERIFY(serialPort.setStopBits(stopbits));
+        QCOMPARE(serialPort.stopBits(), stopbits);
+    }
+}
+
+void tst_QSerialPort::flowControl_data()
+{
+    QTest::addColumn<QSerialPort::FlowControl>("flowcontrol");
+    QTest::newRow("NoFlowControl") << QSerialPort::NoFlowControl;
+    QTest::newRow("HardwareControl") << QSerialPort::HardwareControl;
+    QTest::newRow("SoftwareControl") << QSerialPort::SoftwareControl;
+}
+
+void tst_QSerialPort::flowControl()
+{
+    QFETCH(QSerialPort::FlowControl, flowcontrol);
+
+    {
+        // setup before opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.setFlowControl(flowcontrol));
+        QCOMPARE(serialPort.flowControl(), flowcontrol);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+    }
+
+    {
+        // setup after opening
+        QSerialPort serialPort(m_senderPortName);
+        QVERIFY(serialPort.open(QIODevice::ReadWrite));
+        QVERIFY(serialPort.setFlowControl(flowcontrol));
+        QCOMPARE(serialPort.flowControl(), flowcontrol);
+    }
 }
 
 void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten)
