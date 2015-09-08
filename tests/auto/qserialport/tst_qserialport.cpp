@@ -344,6 +344,8 @@ void tst_QSerialPort::baudRate_data()
     QTest::newRow("Baud38400") << static_cast<qint32>(QSerialPort::Baud38400);
     QTest::newRow("Baud57600") << static_cast<qint32>(QSerialPort::Baud57600);
     QTest::newRow("Baud115200") << static_cast<qint32>(QSerialPort::Baud115200);
+
+    QTest::newRow("31250") << 31250; // custom baudrate (MIDI)
 }
 
 void tst_QSerialPort::baudRate()
@@ -1098,6 +1100,14 @@ void tst_QSerialPort::readWriteWithDifferentBaudRate_data()
     QTest::newRow("9600, 9600") << 9600 << 9600 << true;
     QTest::newRow("115200, 115200") << 115200 << 115200 << true;
     QTest::newRow("9600, 115200") << 9600 << 115200 << false;
+
+    QTest::newRow("31250, 31250") << 31250 << 31250 << true; // custom baudrate (MIDI)
+    QTest::newRow("31250, 115200") << 31250 << 115200 << false;
+
+#ifdef Q_OS_LINUX
+    QTest::newRow("14400, 14400") << 14400 << 14400 << true; // custom baudrate for Linux
+    QTest::newRow("14400, 115200") << 14400 << 115200 << false;
+#endif
 }
 
 void tst_QSerialPort::readWriteWithDifferentBaudRate()
