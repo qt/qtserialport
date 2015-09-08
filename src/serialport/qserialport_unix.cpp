@@ -52,6 +52,33 @@
 #define CRTSCTS (IHFLOW | OHFLOW)
 #endif
 
+#ifdef Q_OS_LINUX
+
+struct termios2 {
+    tcflag_t c_iflag;       /* input mode flags */
+    tcflag_t c_oflag;       /* output mode flags */
+    tcflag_t c_cflag;       /* control mode flags */
+    tcflag_t c_lflag;       /* local mode flags */
+    cc_t c_line;            /* line discipline */
+    cc_t c_cc[19];          /* control characters */
+    speed_t c_ispeed;       /* input speed */
+    speed_t c_ospeed;       /* output speed */
+};
+
+#ifndef TCGETS2
+#define TCGETS2     _IOR('T', 0x2A, struct termios2)
+#endif
+
+#ifndef TCSETS2
+#define TCSETS2     _IOW('T', 0x2B, struct termios2)
+#endif
+
+#ifndef BOTHER
+#define BOTHER      0010000
+#endif
+
+#endif
+
 #include <private/qcore_unix_p.h>
 
 #include <QtCore/qelapsedtimer.h>
@@ -412,7 +439,17 @@ bool QSerialPortPrivate::setBaudRate()
 bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
 #ifdef Q_OS_LINUX
-    // try to clear custom baud rate
+    // try to clear custom baud rate, using termios v2
+    struct termios2 tio2;
+    if (::ioctl(descriptor, TCGETS2, &tio2) != -1) {
+        if (tio2.c_cflag & BOTHER) {
+            tio2.c_cflag &= ~BOTHER;
+            tio2.c_cflag |= CBAUD;
+            ::ioctl(descriptor, TCSETS2, &tio2);
+        }
+    }
+
+    // try to clear custom baud rate, using serial_struct (old way)
     struct serial_struct serial;
     ::memset(&serial, 0, sizeof(serial));
     if (::ioctl(descriptor, TIOCGSERIAL, &serial) != -1) {
@@ -446,6 +483,24 @@ bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Direc
 
 bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
+    struct termios2 tio2;
+
+    if (::ioctl(descriptor, TCGETS2, &tio2) != -1) {
+        tio2.c_cflag &= ~CBAUD;
+        tio2.c_cflag |= BOTHER;
+
+        if (directions & QSerialPort::Input)
+            tio2.c_ispeed = baudRate;
+
+        if (directions & QSerialPort::Output)
+            tio2.c_ospeed = baudRate;
+
+        if (::ioctl(descriptor, TCSETS2, &tio2) != -1
+                && ::ioctl(descriptor, TCGETS2, &tio2) != -1) {
+            return true;
+        }
+    }
+
     struct serial_struct serial;
 
     if (::ioctl(descriptor, TIOCGSERIAL, &serial) == -1) {
