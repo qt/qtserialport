@@ -136,8 +136,6 @@ protected slots:
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
 
 private:
-    void clearReceiver(const QString &customReceiverName = QString());
-
     QString m_senderPortName;
     QString m_receiverPortName;
     QStringList m_availablePortNames;
@@ -154,24 +152,6 @@ const QByteArray tst_QSerialPort::newlineArray("\n\r");
 
 tst_QSerialPort::tst_QSerialPort()
 {
-}
-
-// This method is a workaround for the "com0com" virtual serial port
-// driver or for the SOCAT utility. The problem is that the close/clear
-// methods have no effect on sender serial port. If any data didn't manage
-// to be transferred before closing, then this data will continue to be
-// transferred at next opening of sender port.
-// Thus, this behavior influences other tests and leads to the wrong results
-// (e.g. the receiver port on other test can receive some data which are
-// not expected). It is recommended to use this method for cleaning of
-// read FIFO of receiver for those tests in which reception of data is
-// required.
-void tst_QSerialPort::clearReceiver(const QString &customReceiverName)
-{
-    QSerialPort receiver(customReceiverName.isEmpty()
-                         ? m_receiverPortName : customReceiverName);
-    if (receiver.open(QIODevice::ReadOnly))
-        enterLoopMsecs(100);
 }
 
 void tst_QSerialPort::initTestCase()
@@ -577,7 +557,6 @@ void tst_QSerialPort::waitForBytesWritten()
 
 void tst_QSerialPort::waitForReadyReadWithTimeout()
 {
-    clearReceiver();
 #ifdef Q_OS_WIN
     // the dummy device on other side also has to be open
     QSerialPort dummySerialPort(m_senderPortName);
@@ -593,10 +572,6 @@ void tst_QSerialPort::waitForReadyReadWithTimeout()
 
 void tst_QSerialPort::waitForReadyReadWithOneByte()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-#endif
-
     const qint64 oneByte = 1;
     const int waitMsecs = 50;
 
@@ -616,10 +591,6 @@ void tst_QSerialPort::waitForReadyReadWithOneByte()
 
 void tst_QSerialPort::waitForReadyReadWithAlphabet()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-#endif
-
     const int waitMsecs = 50;
 
     QSerialPort senderSerialPort(m_senderPortName);
@@ -641,11 +612,6 @@ void tst_QSerialPort::waitForReadyReadWithAlphabet()
 
 void tst_QSerialPort::twoStageSynchronousLoopback()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-    clearReceiver(m_senderPortName);
-#endif
-
     QSerialPort senderPort(m_senderPortName);
     QVERIFY(senderPort.open(QSerialPort::ReadWrite));
 
@@ -684,10 +650,6 @@ void tst_QSerialPort::twoStageSynchronousLoopback()
 
 void tst_QSerialPort::synchronousReadWrite()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-#endif
-
     QSerialPort senderPort(m_senderPortName);
     QVERIFY(senderPort.open(QSerialPort::WriteOnly));
 
@@ -771,10 +733,6 @@ void tst_QSerialPort::asynchronousWriteByBytesWritten_data()
 
 void tst_QSerialPort::asynchronousWriteByBytesWritten()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-#endif
-
     QFETCH(Qt::ConnectionType, readConnectionType);
     QFETCH(Qt::ConnectionType, writeConnectionType);
 
@@ -835,10 +793,6 @@ void tst_QSerialPort::asynchronousWriteByTimer_data()
 
 void tst_QSerialPort::asynchronousWriteByTimer()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-#endif
-
     QFETCH(Qt::ConnectionType, readConnectionType);
     QFETCH(Qt::ConnectionType, writeConnectionType);
 
@@ -858,8 +812,6 @@ void tst_QSerialPort::asynchronousWriteByTimer()
 
 void tst_QSerialPort::readBufferOverflow()
 {
-    clearReceiver();
-
     QSerialPort senderPort(m_senderPortName);
     QVERIFY(senderPort.open(QSerialPort::WriteOnly));
 
@@ -887,8 +839,6 @@ void tst_QSerialPort::readBufferOverflow()
 
 void tst_QSerialPort::readAfterInputClear()
 {
-    clearReceiver();
-
     QSerialPort senderPort(m_senderPortName);
     QVERIFY(senderPort.open(QSerialPort::WriteOnly));
 
@@ -1048,10 +998,6 @@ private:
 
 void tst_QSerialPort::controlBreak()
 {
-#ifdef Q_OS_WIN
-    clearReceiver();
-#endif
-
     QSerialPort senderPort(m_senderPortName);
     QVERIFY(senderPort.open(QSerialPort::WriteOnly));
     QCOMPARE(senderPort.isBreakEnabled(), false);
