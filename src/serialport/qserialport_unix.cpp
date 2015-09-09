@@ -501,17 +501,20 @@ bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Direc
 
 bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
+    if (directions != QSerialPort::AllDirections) {
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                      QSerialPort::tr("Cannot set custom speed for one direction")));
+        return false;
+    }
+
     struct termios2 tio2;
 
     if (::ioctl(descriptor, TCGETS2, &tio2) != -1) {
         tio2.c_cflag &= ~CBAUD;
         tio2.c_cflag |= BOTHER;
 
-        if (directions & QSerialPort::Input)
-            tio2.c_ispeed = baudRate;
-
-        if (directions & QSerialPort::Output)
-            tio2.c_ospeed = baudRate;
+        tio2.c_ispeed = baudRate;
+        tio2.c_ospeed = baudRate;
 
         if (::ioctl(descriptor, TCSETS2, &tio2) != -1
                 && ::ioctl(descriptor, TCGETS2, &tio2) != -1) {
@@ -555,7 +558,11 @@ bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directi
 
 bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
-    Q_UNUSED(directions);
+    if (directions != QSerialPort::AllDirections) {
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                      QSerialPort::tr("Cannot set custom speed for one direction")));
+        return false;
+    }
 
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
     if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1) {
