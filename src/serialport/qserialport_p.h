@@ -151,7 +151,6 @@ public:
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);
     bool setFlowControl(QSerialPort::FlowControl flowControl);
-    bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     QSerialPortErrorInfo getSystemError(int systemErrorCode = -1) const;
 
@@ -177,7 +176,6 @@ public:
     QSerialPort::Parity parity;
     QSerialPort::StopBits stopBits;
     QSerialPort::FlowControl flowControl;
-    QSerialPort::DataErrorPolicy policy;
     bool settingsRestoredOnClose;
     bool isBreakEnabled;
 
@@ -190,7 +188,6 @@ public:
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
                             int msecs);
-    void processIoErrors(bool error);
 
     bool notifyRead();
     bool notifyWrite();
@@ -200,7 +197,6 @@ public:
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE handle;
-    bool parityErrorOccurred;
 
     QThread *eventNotifier;
     QMutex settingsChangeMutex;
@@ -211,7 +207,6 @@ public:
     bool setDcb(DCB *dcb);
     bool getDcb(DCB *dcb);
     bool updateCommTimeouts();
-    void handleLineStatusErrors();
     OVERLAPPED *waitForNotified(int msecs);
 
     bool completeAsyncCommunication(qint64 bytesTransferred);
@@ -223,14 +218,12 @@ public:
     bool _q_startAsyncWrite();
     void _q_notified(DWORD numberOfBytes, DWORD errorCode, OVERLAPPED *overlapped);
 
-    bool emulateErrorPolicy();
     void emitReadyRead();
 
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE handle;
-    bool parityErrorOccurred;
     QByteArray readChunkBuffer;
     bool communicationStarted;
     bool writeStarted;
@@ -268,7 +261,6 @@ public:
 #ifndef CMSPAR
     qint64 writePerChar(const char *data, qint64 maxSize);
 #endif
-    qint64 readPerChar(char *data, qint64 maxSize);
 
     bool readNotification();
     bool startAsyncWrite();

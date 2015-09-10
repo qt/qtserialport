@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    originalEventMask = EV_ERR;
+    originalEventMask = 0;
 
     if (mode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
@@ -122,8 +122,6 @@ void QSerialPortPrivate::close()
     writeStarted = false;
     writeBuffer.clear();
     actualBytesToWrite = 0;
-
-    parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
         if (!::SetCommState(handle, &restoredDcb))
@@ -418,20 +416,12 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     return setDcb(&dcb);
 }
 
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    policy = policy;
-    return true;
-}
-
 bool QSerialPortPrivate::completeAsyncCommunication(qint64 bytesTransferred)
 {
     communicationStarted = false;
 
     if (bytesTransferred == qint64(-1))
         return false;
-    if (EV_ERR & triggeredEventMask)
-        handleLineStatusErrors();
 
     return startAsyncRead();
 }
@@ -450,12 +440,12 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
     readStarted = false;
 
     bool result = true;
-    if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
+    if (bytesTransferred == ReadChunkSize)
         result = startAsyncRead();
     else if (readBufferMaxSize == 0 || readBufferMaxSize > buffer.size())
         result = startAsyncCommunication();
 
-    if ((bytesTransferred > 0) && !emulateErrorPolicy())
+    if (bytesTransferred > 0)
         emitReadyRead();
 
     return result;
@@ -503,7 +493,7 @@ bool QSerialPortPrivate::startAsyncRead()
     if (readStarted)
         return true;
 
-    DWORD bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
+    DWORD bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -576,34 +566,6 @@ void QSerialPortPrivate::_q_notified(DWORD numberOfBytes, DWORD errorCode, OVERL
         Q_ASSERT(!"Unknown OVERLAPPED activated");
 }
 
-bool QSerialPortPrivate::emulateErrorPolicy()
-{
-    if (!parityErrorOccurred)
-        return false;
-
-    parityErrorOccurred = false;
-
-    switch (policy) {
-    case QSerialPort::SkipPolicy:
-        buffer.getChar();
-        break;
-    case QSerialPort::PassZeroPolicy:
-        buffer.getChar();
-        buffer.ungetChar('\0');
-        emitReadyRead();
-        break;
-    case QSerialPort::IgnorePolicy:
-        return false;
-    case QSerialPort::StopReceivingPolicy:
-        emitReadyRead();
-        break;
-    default:
-        return false;
-    }
-
-    return true;
-}
-
 void QSerialPortPrivate::emitReadyRead()
 {
     Q_Q(QSerialPort);
@@ -627,26 +589,6 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
         startAsyncWriteTimer->start(0);
     }
     return maxSize;
-}
-
-void QSerialPortPrivate::handleLineStatusErrors()
-{
-    DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
-        setError(getSystemError());
-        return;
-    }
-
-    if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
-    } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
-        parityErrorOccurred = true;
-    } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
-    } else {
-        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
-    }
 }
 
 OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)
@@ -706,7 +648,7 @@ inline bool QSerialPortPrivate::initialize()
     notifier->setHandle(handle);
     notifier->setEnabled(true);
 
-    if (!startAsyncCommunication())
+    if ((originalEventMask & EV_RXCHAR) && !startAsyncCommunication())
         return false;
 
     return true;

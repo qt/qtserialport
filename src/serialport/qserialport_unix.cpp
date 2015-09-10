@@ -714,50 +714,13 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     return setTermios(&tio);
 }
 
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    termios tio;
-    if (!getTermios(&tio))
-        return false;
-
-    tcflag_t parmrkMask = PARMRK;
-#ifndef CMSPAR
-    // in space/mark parity emulation also used PARMRK flag
-    if (parity == QSerialPort::SpaceParity
-            || parity == QSerialPort::MarkParity) {
-        parmrkMask = 0;
-    }
-#endif //CMSPAR
-    switch (policy) {
-    case QSerialPort::SkipPolicy:
-        tio.c_iflag &= ~parmrkMask;
-        tio.c_iflag |= IGNPAR | INPCK;
-        break;
-    case QSerialPort::PassZeroPolicy:
-        tio.c_iflag &= ~(IGNPAR | parmrkMask);
-        tio.c_iflag |= INPCK;
-        break;
-    case QSerialPort::IgnorePolicy:
-        tio.c_iflag &= ~INPCK;
-        break;
-    case QSerialPort::StopReceivingPolicy:
-        tio.c_iflag &= ~IGNPAR;
-        tio.c_iflag |= parmrkMask | INPCK;
-        break;
-    default:
-        tio.c_iflag &= ~INPCK;
-        break;
-    }
-    return setTermios(&tio);
-}
-
 bool QSerialPortPrivate::readNotification()
 {
     Q_Q(QSerialPort);
 
     // Always buffered, read data from the port into the read buffer
     qint64 newBytes = buffer.size();
-    qint64 bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
+    qint64 bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -1049,20 +1012,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
 
 qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
 {
-    qint64 bytesRead = 0;
-#if defined(CMSPAR)
-    if (parity == QSerialPort::NoParity
-            || policy != QSerialPort::StopReceivingPolicy) {
-#else
-    if (parity != QSerialPort::MarkParity
-            && parity != QSerialPort::SpaceParity) {
-#endif
-        bytesRead = qt_safe_read(descriptor, data, maxSize);
-    } else {// Perform parity emulation.
-        bytesRead = readPerChar(data, maxSize);
-    }
-
-    return bytesRead;
+    return qt_safe_read(descriptor, data, maxSize);
 }
 
 qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
@@ -1082,6 +1032,8 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
     return bytesWritten;
 }
 
+#ifndef CMSPAR
+
 static inline bool evenParity(quint8 c)
 {
     c ^= c >> 4;        //(c7 ^ c3)(c6 ^ c2)(c5 ^ c1)(c4 ^ c0)
@@ -1089,8 +1041,6 @@ static inline bool evenParity(quint8 c)
     c ^= c >> 1;
     return c & 1;       //(c7 ^ c3)(c5 ^ c1)(c6 ^ c2)(c4 ^ c0)
 }
-
-#ifndef CMSPAR
 
 qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
 {
@@ -1126,82 +1076,6 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
 }
 
 #endif //CMSPAR
-
-qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
-{
-    termios tio;
-    if (!getTermios(&tio))
-        return -1;
-
-    qint64 ret = 0;
-    quint8 const charMask = (0xFF >> (8 - dataBits));
-
-    // 0 - prefix not started,
-    // 1 - received 0xFF,
-    // 2 - received 0xFF and 0x00
-    int prefix = 0;
-    while (ret < maxSize) {
-
-        qint64 r = qt_safe_read(descriptor, data, 1);
-        if (r < 0) {
-            if (errno == EAGAIN) // It is ok for nonblocking mode.
-                break;
-            return -1;
-        }
-        if (r == 0)
-            break;
-
-        bool par = true;
-        switch (prefix) {
-        case 2: // Previously received both 0377 and 0.
-            par = false;
-            prefix = 0;
-            break;
-        case 1: // Previously received 0377.
-            if (*data == '\0') {
-                ++prefix;
-                continue;
-            }
-            prefix = 0;
-            break;
-        default:
-            if (*data == '\377') {
-                prefix = 1;
-                continue;
-            }
-            break;
-        }
-        // Now: par contains parity ok or error, *data contains received character
-        par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
-        par ^= (tio.c_cflag & PARODD); //par contains parity bit value for current mode
-        if (par ^ (parity == QSerialPort::SpaceParity)) { //if parity error
-            switch (policy) {
-            case QSerialPort::SkipPolicy:
-                continue;       //ignore received character
-            case QSerialPort::StopReceivingPolicy: {
-                if (parity != QSerialPort::NoParity)
-                    setError(QSerialPortErrorInfo(QSerialPort::ParityError));
-                else if (*data == '\0')
-                    setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
-                else
-                    setError(QSerialPortErrorInfo(QSerialPort::FramingError));
-                return ++ret;   //abort receiving
-            }
-                break;
-            case QSerialPort::UnknownPolicy:
-                // Unknown error policy is used! Falling back to PassZeroPolicy
-            case QSerialPort::PassZeroPolicy:
-                *data = '\0';   //replace received character by zero
-                break;
-            case QSerialPort::IgnorePolicy:
-                break;          //ignore error and pass received character
-            }
-        }
-        ++data;
-        ++ret;
-    }
-    return ret;
-}
 
 typedef QMap<qint32, qint32> BaudRateMap;
 

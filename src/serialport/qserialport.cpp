@@ -63,15 +63,6 @@ QSerialPortErrorInfo::QSerialPortErrorInfo(QSerialPort::SerialPortError newError
         case QSerialPort::TimeoutError:
             errorString = QSerialPort::tr("Operation timed out");
             break;
-        case QSerialPort::ParityError:
-            errorString = QSerialPort::tr("Parity error detected while reading");
-            break;
-        case QSerialPort::BreakConditionError:
-            errorString = QSerialPort::tr("Break condition detected while reading");
-            break;
-        case QSerialPort::FramingError:
-            errorString = QSerialPort::tr("Framing error detected while reading");
-            break;
         case QSerialPort::ReadError:
             errorString = QSerialPort::tr("Error reading from device");
             break;
@@ -99,18 +90,15 @@ QSerialPortPrivate::QSerialPortPrivate()
     , parity(QSerialPort::NoParity)
     , stopBits(QSerialPort::OneStop)
     , flowControl(QSerialPort::NoFlowControl)
-    , policy(QSerialPort::IgnorePolicy)
 #if QT_DEPRECATED_SINCE(5,3)
     , settingsRestoredOnClose(true)
 #endif
     , isBreakEnabled(false)
 #if defined(Q_OS_WINCE)
     , handle(INVALID_HANDLE_VALUE)
-    , parityErrorOccurred(false)
     , eventNotifier(0)
 #elif defined(Q_OS_WIN32)
     , handle(INVALID_HANDLE_VALUE)
-    , parityErrorOccurred(false)
     , readChunkBuffer(ReadChunkSize, 0)
     , communicationStarted(false)
     , writeStarted(false)
@@ -417,13 +405,16 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
                                 QtSerialPort 5.2.
 
     \value ParityError          Parity error detected by the hardware while
-                                reading data.
+                                reading data. This value is obsolete. We strongly
+                                advise against using it in new code.
 
     \value FramingError         Framing error detected by the hardware while
-                                reading data.
+                                reading data. This value is obsolete. We strongly
+                                advise against using it in new code.
 
     \value BreakConditionError  Break condition detected by the hardware on
-                                the input line.
+                                the input line. This value is obsolete. We strongly
+                                advise against using it in new code.
 
     \value WriteError           An I/O error occurred while writing the data.
 
@@ -1147,8 +1138,7 @@ bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
 
 QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
 {
-    Q_D(const QSerialPort);
-    return d->policy;
+    return QSerialPort::IgnorePolicy;
 }
 #endif // QT_DEPRECATED_SINCE(5, 2)
 

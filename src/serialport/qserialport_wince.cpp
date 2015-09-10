@@ -119,8 +119,6 @@ private slots:
             error = true;
         }
 
-        if (error || (EV_ERR & eventMask))
-            dptr->processIoErrors(error);
         if (EV_RXCHAR & eventMask)
             dptr->notifyRead();
         if (EV_TXEMPTY & eventMask)
@@ -179,7 +177,7 @@ private:
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    DWORD eventMask = EV_ERR;
+    DWORD eventMask = 0;
 
     if (mode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
@@ -463,17 +461,11 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     return updateDcb();
 }
 
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    policy = policy;
-    return true;
-}
-
 bool QSerialPortPrivate::notifyRead()
 {
     Q_Q(QSerialPort);
 
-    DWORD bytesToRead = (policy == QSerialPort::IgnorePolicy) ? ReadChunkSize : 1;
+    DWORD bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -496,27 +488,6 @@ bool QSerialPortPrivate::notifyRead()
     }
 
     buffer.chop(bytesToRead - qMax(readBytes, DWORD(0)));
-
-    // Process emulate policy.
-    if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
-
-        parityErrorOccurred = false;
-
-        switch (policy) {
-        case QSerialPort::SkipPolicy:
-            buffer.getChar();
-            return true;
-        case QSerialPort::PassZeroPolicy:
-            buffer.getChar();
-            buffer.ungetChar('\0');
-            break;
-        case QSerialPort::StopReceivingPolicy:
-            // FIXME: Maybe need disable read notifier?
-            break;
-        default:
-            break;
-        }
-    }
 
     if (readBytes > 0)
         emit q->readyRead();
@@ -552,31 +523,6 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     if (!writeBuffer.isEmpty())
         notifyWrite();
     return maxSize;
-}
-
-void QSerialPortPrivate::processIoErrors(bool hasError)
-{
-    if (hasError) {
-        setError(QSerialPortErrorInfo(QSerialPort::ResourceError));
-        return;
-    }
-
-    DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
-        setError(getSystemError());
-        return;
-    }
-
-    if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
-    } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
-        parityErrorOccurred = true;
-    } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
-    } else {
-        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
-    }
 }
 
 inline bool QSerialPortPrivate::initialize(DWORD eventMask)
