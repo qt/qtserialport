@@ -131,7 +131,6 @@ public:
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);
     bool setFlowControl(QSerialPort::FlowControl flowControl);
-    bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     void setError(const QSerialPortErrorInfo &errorInfo);
 
@@ -184,7 +183,6 @@ private:
 #ifndef CMSPAR
     qint64 writePerChar(const char *data, qint64 maxSize);
 #endif
-    qint64 readPerChar(char *data, qint64 maxSize);
 
 };
 

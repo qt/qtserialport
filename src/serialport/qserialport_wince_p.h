@@ -96,11 +96,9 @@ public:
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);
     bool setFlowControl(QSerialPort::FlowControl flowControl);
-    bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     void setError(const QSerialPortErrorInfo &errorInfo);
 
-    void processIoErrors(bool error);
     QSerialPortErrorInfo getSystemError(int systemErrorCode = -1) const;
 
     bool notifyRead();
@@ -118,7 +116,6 @@ public:
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE handle;
-    bool parityErrorOccurred;
 
     QThread *eventNotifier;
     QMutex settingsChangeMutex;

@@ -94,7 +94,6 @@ static void initializeOverlappedStructure(OVERLAPPED &overlapped)
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , handle(INVALID_HANDLE_VALUE)
-    , parityErrorOccurred(false)
     , readChunkBuffer(ReadChunkSize, 0)
     , writeStarted(false)
     , readStarted(false)
@@ -124,7 +123,7 @@ QSerialPortPrivate::~QSerialPortPrivate()
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    originalEventMask = EV_ERR;
+    originalEventMask = 0;
 
     if (mode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
@@ -179,8 +178,6 @@ void QSerialPortPrivate::close()
     writeStarted = false;
     writeBuffer.clear();
     actualBytesToWrite = 0;
-
-    parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
         if (!::SetCommState(handle, &restoredDcb))
@@ -510,18 +507,10 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     return setDcb(&dcb);
 }
 
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    policy = policy;
-    return true;
-}
-
 bool QSerialPortPrivate::_q_completeAsyncCommunication()
 {
     if (overlappedResult(communicationOverlapped) == qint64(-1))
         return false;
-    if (EV_ERR & triggeredEventMask)
-        handleLineStatusErrors();
 
     return startAsyncRead();
 }
@@ -539,12 +528,12 @@ bool QSerialPortPrivate::_q_completeAsyncRead()
     readStarted = false;
 
     bool result = true;
-    if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
+    if (bytesTransferred == ReadChunkSize)
         result = startAsyncRead();
     else if (readBufferMaxSize == 0 || readBufferMaxSize > readBuffer.size())
         result = startAsyncCommunication();
 
-    if ((bytesTransferred > 0) && !emulateErrorPolicy())
+    if (bytesTransferred > 0)
         emitReadyRead();
 
     return result;
@@ -592,7 +581,7 @@ bool QSerialPortPrivate::startAsyncRead()
     if (readStarted)
         return true;
 
-    DWORD bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
+    DWORD bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - readBuffer.size())) {
         bytesToRead = readBufferMaxSize - readBuffer.size();
@@ -655,34 +644,6 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
     return true;
 }
 
-bool QSerialPortPrivate::emulateErrorPolicy()
-{
-    if (!parityErrorOccurred)
-        return false;
-
-    parityErrorOccurred = false;
-
-    switch (policy) {
-    case QSerialPort::SkipPolicy:
-        readBuffer.getChar();
-        break;
-    case QSerialPort::PassZeroPolicy:
-        readBuffer.getChar();
-        readBuffer.putChar('\0');
-        emitReadyRead();
-        break;
-    case QSerialPort::IgnorePolicy:
-        return false;
-    case QSerialPort::StopReceivingPolicy:
-        emitReadyRead();
-        break;
-    default:
-        return false;
-    }
-
-    return true;
-}
-
 void QSerialPortPrivate::emitReadyRead()
 {
     Q_Q(QSerialPort);
@@ -706,26 +667,6 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
         startAsyncWriteTimer->start(0);
     }
     return maxSize;
-}
-
-void QSerialPortPrivate::handleLineStatusErrors()
-{
-    DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
-        setError(getSystemError());
-        return;
-    }
-
-    if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError));
-    } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::ParityError));
-        parityErrorOccurred = true;
-    } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError));
-    } else {
-        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
-    }
 }
 
 inline bool QSerialPortPrivate::initialize()
@@ -767,7 +708,7 @@ inline bool QSerialPortPrivate::initialize()
         return false;
     }
 
-    if (!startAsyncCommunication())
+    if ((originalEventMask & EV_RXCHAR) && !startAsyncCommunication())
         return false;
 
     return true;

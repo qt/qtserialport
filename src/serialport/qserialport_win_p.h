@@ -98,11 +98,9 @@ public:
     bool setParity(QSerialPort::Parity parity);
     bool setStopBits(QSerialPort::StopBits stopBits);
     bool setFlowControl(QSerialPort::FlowControl flowControl);
-    bool setDataErrorPolicy(QSerialPort::DataErrorPolicy policy);
 
     void setError(const QSerialPortErrorInfo &errorInfo);
 
-    void handleLineStatusErrors();
     QSerialPortErrorInfo getSystemError(int systemErrorCode = -1) const;
 
     bool _q_completeAsyncCommunication();
@@ -113,7 +111,6 @@ public:
     bool startAsyncRead();
     bool _q_startAsyncWrite();
 
-    bool emulateErrorPolicy();
     void emitReadyRead();
 
     bool setCommunicationNotificationEnabled(bool enable);
@@ -131,7 +128,6 @@ public:
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE handle;
-    bool parityErrorOccurred;
     QByteArray readChunkBuffer;
     bool writeStarted;
     bool readStarted;

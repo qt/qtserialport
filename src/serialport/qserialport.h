@@ -188,6 +188,14 @@ public:
         NotOpenError
     };
 
+#ifdef QT_DEPRECATED
+#if defined(_MSC_VER)
+#pragma deprecated(ParityError)
+#pragma deprecated(FramingError)
+#pragma deprecated(BreakConditionError)
+#endif
+#endif
+
     explicit QSerialPort(QObject *parent = Q_NULLPTR);
     explicit QSerialPort(const QString &name, QObject *parent = Q_NULLPTR);
     explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = Q_NULLPTR);
