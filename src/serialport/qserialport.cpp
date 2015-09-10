@@ -1130,13 +1130,13 @@ bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
         return false;
     }
 
-    const bool ret = d->policy == policy || d->setDataErrorPolicy(policy);
-    if (ret && (d->policy != policy)) {
-        d->policy = policy;
-        emit dataErrorPolicyChanged(d->policy);
+    if (policy != QSerialPort::IgnorePolicy) {
+        d->setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                    tr("The device supports only the ignoring policy")));
+        return false;
     }
 
-    return ret;
+    return true;
 }
 
 QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
