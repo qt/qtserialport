@@ -556,11 +556,9 @@ void tst_QSerialPort::waitForBytesWritten()
 
 void tst_QSerialPort::waitForReadyReadWithTimeout()
 {
-#ifdef Q_OS_WIN
     // the dummy device on other side also has to be open
     QSerialPort dummySerialPort(m_senderPortName);
     QVERIFY(dummySerialPort.open(QIODevice::WriteOnly));
-#endif
 
     QSerialPort receiverSerialPort(m_receiverPortName);
     QVERIFY(receiverSerialPort.open(QIODevice::ReadOnly));
