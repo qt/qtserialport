@@ -83,8 +83,9 @@ static QStringList filteredDeviceFilePaths()
     << QStringLiteral("ttymxc*")  // Motorola IMX serial ports (i.e. Freescale i.MX).
     << QStringLiteral("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
     << QStringLiteral("rfcomm*")  // Bluetooth serial device.
-    << QStringLiteral("ircomm*"); // IrDA serial device.
-#elif defined (Q_OS_FREEBSD)
+    << QStringLiteral("ircomm*")  // IrDA serial device.
+    << QStringLiteral("tnt*");    // Virtual tty0tty serial device.
+#elif defined(Q_OS_FREEBSD)
     << QStringLiteral("cu*");
 #elif defined (Q_OS_QNX)
     << QStringLiteral("ser*");
@@ -444,6 +445,15 @@ static bool isRfcommDevice(const QString &portName)
     return true;
 }
 
+// provided by the tty0tty driver
+static bool isVirtualNullModemDevice(const QString &portName)
+{
+    if (!portName.startsWith(QLatin1String("tnt")))
+        return false;
+
+    return true;
+}
+
 static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
 {
     QFile f(QFileInfo(targetDir, QStringLiteral("uevent")).absoluteFilePath());
@@ -538,8 +548,10 @@ QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
 
         const QString driverName = deviceDriver(targetDir);
         if (driverName.isEmpty()) {
-            if (!isRfcommDevice(priv.portName))
+            if (!isRfcommDevice(priv.portName)
+                    && !isVirtualNullModemDevice(priv.portName)) {
                 continue;
+            }
         }
 
         priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(priv.portName);
@@ -708,8 +720,10 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
             priv.vendorIdentifier = deviceVendorIdentifier(dev.data(), priv.hasVendorIdentifier);
             priv.productIdentifier = deviceProductIdentifier(dev.data(), priv.hasProductIdentifier);
         } else {
-            if (!isRfcommDevice(priv.portName))
+            if (!isRfcommDevice(priv.portName)
+                    && !isVirtualNullModemDevice(priv.portName)) {
                 continue;
+            }
         }
 
         serialPortInfoList.append(priv);
