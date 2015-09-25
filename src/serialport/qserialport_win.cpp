@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    originalEventMask = EV_ERR;
+    originalEventMask = 0;
 
     if (mode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
@@ -117,12 +117,11 @@ void QSerialPortPrivate::close()
         startAsyncWriteTimer = Q_NULLPTR;
     }
 
+    communicationStarted = false;
     readStarted = false;
     writeStarted = false;
     writeBuffer.clear();
     actualBytesToWrite = 0;
-
-    parityErrorOccurred = false;
 
     if (settingsRestoredOnClose) {
         if (!::SetCommState(handle, &restoredDcb))
@@ -180,8 +179,12 @@ bool QSerialPortPrivate::setDataTerminalReady(bool set)
         return false;
     }
 
-    currentDcb.fDtrControl = set ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
-    return true;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fDtrControl = set ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setRequestToSend(bool set)
@@ -312,98 +315,113 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
         setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate direction is unsupported")));
         return false;
     }
-    currentDcb.BaudRate = baudRate;
-    return updateDcb();
+
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.BaudRate = baudRate;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
 {
-    currentDcb.ByteSize = dataBits;
-    return updateDcb();
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.ByteSize = dataBits;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setParity(QSerialPort::Parity parity)
 {
-    currentDcb.fParity = TRUE;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fParity = TRUE;
     switch (parity) {
     case QSerialPort::NoParity:
-        currentDcb.Parity = NOPARITY;
-        currentDcb.fParity = FALSE;
+        dcb.Parity = NOPARITY;
+        dcb.fParity = FALSE;
         break;
     case QSerialPort::OddParity:
-        currentDcb.Parity = ODDPARITY;
+        dcb.Parity = ODDPARITY;
         break;
     case QSerialPort::EvenParity:
-        currentDcb.Parity = EVENPARITY;
+        dcb.Parity = EVENPARITY;
         break;
     case QSerialPort::MarkParity:
-        currentDcb.Parity = MARKPARITY;
+        dcb.Parity = MARKPARITY;
         break;
     case QSerialPort::SpaceParity:
-        currentDcb.Parity = SPACEPARITY;
+        dcb.Parity = SPACEPARITY;
         break;
     default:
-        currentDcb.Parity = NOPARITY;
-        currentDcb.fParity = FALSE;
+        dcb.Parity = NOPARITY;
+        dcb.fParity = FALSE;
         break;
     }
-    return updateDcb();
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
 {
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
     switch (stopBits) {
     case QSerialPort::OneStop:
-        currentDcb.StopBits = ONESTOPBIT;
+        dcb.StopBits = ONESTOPBIT;
         break;
     case QSerialPort::OneAndHalfStop:
-        currentDcb.StopBits = ONE5STOPBITS;
+        dcb.StopBits = ONE5STOPBITS;
         break;
     case QSerialPort::TwoStop:
-        currentDcb.StopBits = TWOSTOPBITS;
+        dcb.StopBits = TWOSTOPBITS;
         break;
     default:
-        currentDcb.StopBits = ONESTOPBIT;
+        dcb.StopBits = ONESTOPBIT;
         break;
     }
-    return updateDcb();
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
-    currentDcb.fInX = FALSE;
-    currentDcb.fOutX = FALSE;
-    currentDcb.fOutxCtsFlow = FALSE;
-    currentDcb.fRtsControl = RTS_CONTROL_DISABLE;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fInX = FALSE;
+    dcb.fOutX = FALSE;
+    dcb.fOutxCtsFlow = FALSE;
+    dcb.fRtsControl = RTS_CONTROL_DISABLE;
     switch (flowControl) {
     case QSerialPort::NoFlowControl:
         break;
     case QSerialPort::SoftwareControl:
-        currentDcb.fInX = TRUE;
-        currentDcb.fOutX = TRUE;
+        dcb.fInX = TRUE;
+        dcb.fOutX = TRUE;
         break;
     case QSerialPort::HardwareControl:
-        currentDcb.fOutxCtsFlow = TRUE;
-        currentDcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
+        dcb.fOutxCtsFlow = TRUE;
+        dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
         break;
     default:
         break;
     }
-    return updateDcb();
-}
-
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    policy = policy;
-    return true;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::completeAsyncCommunication(qint64 bytesTransferred)
 {
+    communicationStarted = false;
+
     if (bytesTransferred == qint64(-1))
         return false;
-    if (EV_ERR & triggeredEventMask)
-        handleLineStatusErrors();
 
     return startAsyncRead();
 }
@@ -422,12 +440,12 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
     readStarted = false;
 
     bool result = true;
-    if ((bytesTransferred == ReadChunkSize) && (policy == QSerialPort::IgnorePolicy))
+    if (bytesTransferred == ReadChunkSize)
         result = startAsyncRead();
     else if (readBufferMaxSize == 0 || readBufferMaxSize > buffer.size())
         result = startAsyncCommunication();
 
-    if ((bytesTransferred > 0) && !emulateErrorPolicy())
+    if (bytesTransferred > 0)
         emitReadyRead();
 
     return result;
@@ -453,6 +471,9 @@ bool QSerialPortPrivate::completeAsyncWrite(qint64 bytesTransferred)
 
 bool QSerialPortPrivate::startAsyncCommunication()
 {
+    if (communicationStarted)
+        return true;
+
     ::ZeroMemory(&communicationOverlapped, sizeof(communicationOverlapped));
     if (!::WaitCommEvent(handle, &triggeredEventMask, &communicationOverlapped)) {
         QSerialPortErrorInfo error = getSystemError();
@@ -463,6 +484,7 @@ bool QSerialPortPrivate::startAsyncCommunication()
             return false;
         }
     }
+    communicationStarted = true;
     return true;
 }
 
@@ -471,7 +493,7 @@ bool QSerialPortPrivate::startAsyncRead()
     if (readStarted)
         return true;
 
-    DWORD bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
+    DWORD bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -544,34 +566,6 @@ void QSerialPortPrivate::_q_notified(DWORD numberOfBytes, DWORD errorCode, OVERL
         Q_ASSERT(!"Unknown OVERLAPPED activated");
 }
 
-bool QSerialPortPrivate::emulateErrorPolicy()
-{
-    if (!parityErrorOccurred)
-        return false;
-
-    parityErrorOccurred = false;
-
-    switch (policy) {
-    case QSerialPort::SkipPolicy:
-        buffer.getChar();
-        break;
-    case QSerialPort::PassZeroPolicy:
-        buffer.getChar();
-        buffer.ungetChar('\0');
-        emitReadyRead();
-        break;
-    case QSerialPort::IgnorePolicy:
-        return false;
-    case QSerialPort::StopReceivingPolicy:
-        emitReadyRead();
-        break;
-    default:
-        return false;
-    }
-
-    return true;
-}
-
 void QSerialPortPrivate::emitReadyRead()
 {
     Q_Q(QSerialPort);
@@ -589,32 +583,12 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     if (!writeBuffer.isEmpty() && !writeStarted) {
         if (!startAsyncWriteTimer) {
             startAsyncWriteTimer = new QTimer(q);
-            q->connect(startAsyncWriteTimer, SIGNAL(timeout()), q, SLOT(_q_startAsyncWrite()));
+            QObjectPrivate::connect(startAsyncWriteTimer, &QTimer::timeout, this, &QSerialPortPrivate::_q_startAsyncWrite);
             startAsyncWriteTimer->setSingleShot(true);
         }
         startAsyncWriteTimer->start(0);
     }
     return maxSize;
-}
-
-void QSerialPortPrivate::handleLineStatusErrors()
-{
-    DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
-        setError(getSystemError());
-        return;
-    }
-
-    if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
-    } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("ParityError error detected while reading")));
-        parityErrorOccurred = true;
-    } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
-    } else {
-        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
-    }
 }
 
 OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)
@@ -631,28 +605,25 @@ inline bool QSerialPortPrivate::initialize()
 {
     Q_Q(QSerialPort);
 
-    ::ZeroMemory(&restoredDcb, sizeof(restoredDcb));
-    restoredDcb.DCBlength = sizeof(restoredDcb);
-
-    if (!::GetCommState(handle, &restoredDcb)) {
-        setError(getSystemError());
+    DCB dcb;
+    if (!getDcb(&dcb))
         return false;
-    }
 
-    currentDcb = restoredDcb;
-    currentDcb.fBinary = TRUE;
-    currentDcb.fInX = FALSE;
-    currentDcb.fOutX = FALSE;
-    currentDcb.fAbortOnError = FALSE;
-    currentDcb.fNull = FALSE;
-    currentDcb.fErrorChar = FALSE;
+    restoredDcb = dcb;
 
-    if (currentDcb.fDtrControl ==  DTR_CONTROL_HANDSHAKE)
-        currentDcb.fDtrControl = DTR_CONTROL_DISABLE;
+    dcb.fBinary = TRUE;
+    dcb.fInX = FALSE;
+    dcb.fOutX = FALSE;
+    dcb.fAbortOnError = FALSE;
+    dcb.fNull = FALSE;
+    dcb.fErrorChar = FALSE;
 
-    currentDcb.BaudRate = inputBaudRate;
+    if (dcb.fDtrControl == DTR_CONTROL_HANDSHAKE)
+        dcb.fDtrControl = DTR_CONTROL_DISABLE;
 
-    if (!updateDcb())
+    dcb.BaudRate = inputBaudRate;
+
+    if (!setDcb(&dcb))
         return false;
 
     if (!::GetCommTimeouts(handle, &restoredCommTimeouts)) {
@@ -672,20 +643,32 @@ inline bool QSerialPortPrivate::initialize()
     }
 
     notifier = new QWinOverlappedIoNotifier(q);
-    q->connect(notifier, SIGNAL(notified(quint32, quint32, OVERLAPPED*)),
-               q, SLOT(_q_notified(quint32, quint32, OVERLAPPED*)));
+    QObjectPrivate::connect(notifier, &QWinOverlappedIoNotifier::notified,
+               this, &QSerialPortPrivate::_q_notified);
     notifier->setHandle(handle);
     notifier->setEnabled(true);
 
-    if (!startAsyncCommunication())
+    if ((originalEventMask & EV_RXCHAR) && !startAsyncCommunication())
         return false;
 
     return true;
 }
 
-bool QSerialPortPrivate::updateDcb()
+bool QSerialPortPrivate::setDcb(DCB *dcb)
 {
-    if (!::SetCommState(handle, &currentDcb)) {
+    if (!::SetCommState(handle, dcb)) {
+        setError(getSystemError());
+        return false;
+    }
+    return true;
+}
+
+bool QSerialPortPrivate::getDcb(DCB *dcb)
+{
+    ::ZeroMemory(dcb, sizeof(DCB));
+    dcb->DCBlength = sizeof(DCB);
+
+    if (!::GetCommState(handle, dcb)) {
         setError(getSystemError());
         return false;
     }
@@ -720,6 +703,9 @@ QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) con
         error.errorCode = QSerialPort::NoError;
         break;
     case ERROR_FILE_NOT_FOUND:
+        error.errorCode = QSerialPort::DeviceNotFoundError;
+        break;
+    case ERROR_PATH_NOT_FOUND:
         error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
     case ERROR_INVALID_NAME:

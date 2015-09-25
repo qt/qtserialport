@@ -84,7 +84,7 @@ signals:
 public:
     CommEventNotifier(DWORD mask, QSerialPortPrivate *d, QObject *parent)
         : QThread(parent), dptr(d) {
-        connect(this, SIGNAL(eventMask(quint32)), this, SLOT(processNotification(quint32)));
+        connect(this, &CommEventNotifier::eventMask, this, &CommEventNotifier::processNotification);
         ::SetCommMask(dptr->handle, mask);
     }
 
@@ -119,8 +119,6 @@ private slots:
             error = true;
         }
 
-        if (error || (EV_ERR & eventMask))
-            dptr->processIoErrors(error);
         if (EV_RXCHAR & eventMask)
             dptr->notifyRead();
         if (EV_TXEMPTY & eventMask)
@@ -156,7 +154,7 @@ public:
 protected:
     void run() {
         QTimer timer;
-        QObject::connect(&timer, SIGNAL(timeout()), this, SLOT(processTimeout()), Qt::DirectConnection);
+        QObject::connect(&timer, &QTimer::timeout, this, &WaitCommEventBreaker::processTimeout, Qt::DirectConnection);
         timer.start(timeout);
         exec();
         worked = true;
@@ -179,7 +177,7 @@ private:
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    DWORD eventMask = EV_ERR;
+    DWORD eventMask = 0;
 
     if (mode & QIODevice::ReadOnly) {
         desiredAccess |= GENERIC_READ;
@@ -463,17 +461,11 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     return updateDcb();
 }
 
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    policy = policy;
-    return true;
-}
-
 bool QSerialPortPrivate::notifyRead()
 {
     Q_Q(QSerialPort);
 
-    DWORD bytesToRead = (policy == QSerialPort::IgnorePolicy) ? ReadChunkSize : 1;
+    DWORD bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -491,32 +483,11 @@ bool QSerialPortPrivate::notifyRead()
 
     if (!sucessResult) {
         buffer.chop(bytesToRead);
-        setError(QSerialPortErrorInfo(QSerialPort::ReadError, QSerialPort::tr("Error reading from device")));
+        setError(QSerialPortErrorInfo(QSerialPort::ReadError));
         return false;
     }
 
     buffer.chop(bytesToRead - qMax(readBytes, DWORD(0)));
-
-    // Process emulate policy.
-    if ((policy != QSerialPort::IgnorePolicy) && parityErrorOccurred) {
-
-        parityErrorOccurred = false;
-
-        switch (policy) {
-        case QSerialPort::SkipPolicy:
-            buffer.getChar();
-            return true;
-        case QSerialPort::PassZeroPolicy:
-            buffer.getChar();
-            buffer.ungetChar('\0');
-            break;
-        case QSerialPort::StopReceivingPolicy:
-            // FIXME: Maybe need disable read notifier?
-            break;
-        default:
-            break;
-        }
-    }
 
     if (readBytes > 0)
         emit q->readyRead();
@@ -534,7 +505,7 @@ bool QSerialPortPrivate::notifyWrite()
 
     DWORD bytesWritten = 0;
     if (!::WriteFile(handle, ptr, nextSize, &bytesWritten, Q_NULLPTR)) {
-        setError(QSerialPortErrorInfo(QSerialPort::WriteError, QSerialPort::tr("Error writing to device")));
+        setError(QSerialPortErrorInfo(QSerialPort::WriteError));
         return false;
     }
 
@@ -552,31 +523,6 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     if (!writeBuffer.isEmpty())
         notifyWrite();
     return maxSize;
-}
-
-void QSerialPortPrivate::processIoErrors(bool hasError)
-{
-    if (hasError) {
-        setError(QSerialPortErrorInfo(QSerialPort::ResourceError, QSerialPort::tr("Device disappeared from the system")));
-        return;
-    }
-
-    DWORD errors = 0;
-    if (!::ClearCommError(handle, &errors, Q_NULLPTR)) {
-        setError(getSystemError());
-        return;
-    }
-
-    if (errors & CE_FRAME) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
-    } else if (errors & CE_RXPARITY) {
-        setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("ParityError error detected while reading")));
-        parityErrorOccurred = true;
-    } else if (errors & CE_BREAK) {
-        setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
-    } else {
-        setError(QSerialPortErrorInfo(QSerialPort::UnknownError, QSerialPort::tr("Unknown streaming error")));
-    }
 }
 
 inline bool QSerialPortPrivate::initialize(DWORD eventMask)
@@ -670,6 +616,9 @@ QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) con
     case ERROR_FILE_NOT_FOUND:
         error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
+    case ERROR_PATH_NOT_FOUND:
+        error.errorCode = QSerialPort::DeviceNotFoundError;
+        break;
     case ERROR_INVALID_NAME:
         error.errorCode = QSerialPort::DeviceNotFoundError;
         break;
@@ -708,7 +657,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     breaker.stop();
 
     if (breaker.isWorked()) {
-        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
     } else {
         if (checkRead) {
             Q_ASSERT(selectForRead);

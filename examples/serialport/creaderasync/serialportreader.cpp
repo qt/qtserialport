@@ -42,9 +42,10 @@ SerialPortReader::SerialPortReader(QSerialPort *serialPort, QObject *parent)
     , m_serialPort(serialPort)
     , m_standardOutput(stdout)
 {
-    connect(m_serialPort, SIGNAL(readyRead()), SLOT(handleReadyRead()));
-    connect(m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), SLOT(handleError(QSerialPort::SerialPortError)));
-    connect(&m_timer, SIGNAL(timeout()), SLOT(handleTimeout()));
+    connect(m_serialPort, &QSerialPort::readyRead, this, &SerialPortReader::handleReadyRead);
+    connect(m_serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error),
+            this, &SerialPortReader::handleError);
+    connect(&m_timer, &QTimer::timeout, this, &SerialPortReader::handleTimeout);
 
     m_timer.start(5000);
 }

@@ -52,6 +52,33 @@
 #define CRTSCTS (IHFLOW | OHFLOW)
 #endif
 
+#ifdef Q_OS_LINUX
+
+struct termios2 {
+    tcflag_t c_iflag;       /* input mode flags */
+    tcflag_t c_oflag;       /* output mode flags */
+    tcflag_t c_cflag;       /* control mode flags */
+    tcflag_t c_lflag;       /* local mode flags */
+    cc_t c_line;            /* line discipline */
+    cc_t c_cc[19];          /* control characters */
+    speed_t c_ispeed;       /* input speed */
+    speed_t c_ospeed;       /* output speed */
+};
+
+#ifndef TCGETS2
+#define TCGETS2     _IOR('T', 0x2A, struct termios2)
+#endif
+
+#ifndef TCSETS2
+#define TCSETS2     _IOW('T', 0x2B, struct termios2)
+#endif
+
+#ifndef BOTHER
+#define BOTHER      0010000
+#endif
+
+#endif
+
 #include <private/qcore_unix_p.h>
 
 #include <QtCore/qelapsedtimer.h>
@@ -409,121 +436,151 @@ bool QSerialPortPrivate::setBaudRate()
         && setBaudRate(outputBaudRate, QSerialPort::Output));
 }
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setBaudRate_helper(qint32 baudRate,
-        QSerialPort::Directions directions)
+bool QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
-    if ((directions & QSerialPort::Input) && ::cfsetispeed(&currentTermios, baudRate) < 0)
-        return getSystemError();
-
-    if ((directions & QSerialPort::Output) && ::cfsetospeed(&currentTermios, baudRate) < 0)
-        return getSystemError();
-
-    return QSerialPortErrorInfo(QSerialPort::NoError);
-}
-
-#if defined(Q_OS_LINUX)
-
-QSerialPortErrorInfo
-QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
-{
-    struct serial_struct currentSerialInfo;
-
-    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
-
-    if ((::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) != -1)
-            && (currentSerialInfo.flags & ASYNC_SPD_CUST)) {
-        currentSerialInfo.flags &= ~ASYNC_SPD_CUST;
-        currentSerialInfo.custom_divisor = 0;
-        if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-            return getSystemError();
+#ifdef Q_OS_LINUX
+    // try to clear custom baud rate, using termios v2
+    struct termios2 tio2;
+    if (::ioctl(descriptor, TCGETS2, &tio2) != -1) {
+        if (tio2.c_cflag & BOTHER) {
+            tio2.c_cflag &= ~BOTHER;
+            tio2.c_cflag |= CBAUD;
+            ::ioctl(descriptor, TCSETS2, &tio2);
+        }
     }
 
-    return setBaudRate_helper(baudRate, directions);
-}
-
-#else
-
-QSerialPortErrorInfo
-QSerialPortPrivate::setStandardBaudRate(qint32 baudRate, QSerialPort::Directions directions)
-{
-    return setBaudRate_helper(baudRate, directions);
-}
-
+    // try to clear custom baud rate, using serial_struct (old way)
+    struct serial_struct serial;
+    ::memset(&serial, 0, sizeof(serial));
+    if (::ioctl(descriptor, TIOCGSERIAL, &serial) != -1) {
+        if (serial.flags & ASYNC_SPD_CUST) {
+            serial.flags &= ~ASYNC_SPD_CUST;
+            serial.custom_divisor = 0;
+            // we don't check on errors because a driver can has not this feature
+            ::ioctl(descriptor, TIOCSSERIAL, &serial);
+        }
+    }
 #endif
 
-#if defined(Q_OS_LINUX)
+    termios tio;
+    if (!getTermios(&tio))
+        return false;
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
-{
-    Q_UNUSED(directions);
-
-    struct serial_struct currentSerialInfo;
-
-    ::memset(&currentSerialInfo, 0, sizeof(currentSerialInfo));
-
-    if (::ioctl(descriptor, TIOCGSERIAL, &currentSerialInfo) == -1)
-        return getSystemError();
-
-    currentSerialInfo.flags &= ~ASYNC_SPD_MASK;
-    currentSerialInfo.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
-    currentSerialInfo.custom_divisor = currentSerialInfo.baud_base / baudRate;
-
-    if (currentSerialInfo.custom_divisor == 0)
-        return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("No suitable custom baud rate divisor"));
-
-    if (currentSerialInfo.custom_divisor * baudRate != currentSerialInfo.baud_base) {
-        qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
-            qPrintable(systemLocation),
-            currentSerialInfo.baud_base / currentSerialInfo.custom_divisor,
-            baudRate, (float)currentSerialInfo.baud_base / baudRate);
+    if ((directions & QSerialPort::Input) && ::cfsetispeed(&tio, baudRate) < 0) {
+        setError(getSystemError());
+        return false;
     }
 
-    if (::ioctl(descriptor, TIOCSSERIAL, &currentSerialInfo) == -1)
-        return getSystemError();
+    if ((directions & QSerialPort::Output) && ::cfsetospeed(&tio, baudRate) < 0) {
+        setError(getSystemError());
+        return false;
+    }
 
-    return setBaudRate_helper(B38400, directions);
+    return setTermios(&tio);
+}
+
+#if defined(Q_OS_LINUX)
+
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+{
+    if (directions != QSerialPort::AllDirections) {
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                      QSerialPort::tr("Cannot set custom speed for one direction")));
+        return false;
+    }
+
+    struct termios2 tio2;
+
+    if (::ioctl(descriptor, TCGETS2, &tio2) != -1) {
+        tio2.c_cflag &= ~CBAUD;
+        tio2.c_cflag |= BOTHER;
+
+        tio2.c_ispeed = baudRate;
+        tio2.c_ospeed = baudRate;
+
+        if (::ioctl(descriptor, TCSETS2, &tio2) != -1
+                && ::ioctl(descriptor, TCGETS2, &tio2) != -1) {
+            return true;
+        }
+    }
+
+    struct serial_struct serial;
+
+    if (::ioctl(descriptor, TIOCGSERIAL, &serial) == -1) {
+        setError(getSystemError());
+        return false;
+    }
+
+    serial.flags &= ~ASYNC_SPD_MASK;
+    serial.flags |= (ASYNC_SPD_CUST /* | ASYNC_LOW_LATENCY*/);
+    serial.custom_divisor = serial.baud_base / baudRate;
+
+    if (serial.custom_divisor == 0) {
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                      QSerialPort::tr("No suitable custom baud rate divisor")));
+        return false;
+    }
+
+    if (serial.custom_divisor * baudRate != serial.baud_base) {
+        qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
+            qPrintable(systemLocation),
+            serial.baud_base / serial.custom_divisor,
+            baudRate, (float)serial.baud_base / baudRate);
+    }
+
+    if (::ioctl(descriptor, TIOCSSERIAL, &serial) == -1) {
+        setError(getSystemError());
+        return false;
+    }
+
+    return setStandardBaudRate(B38400, directions);
 }
 
 #elif defined(Q_OS_MAC)
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
-    Q_UNUSED(directions);
+    if (directions != QSerialPort::AllDirections) {
+        setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                      QSerialPort::tr("Cannot set custom speed for one direction")));
+        return false;
+    }
 
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
-    if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1)
-        return getSystemError();
+    if (::ioctl(descriptor, IOSSIOSPEED, &baudRate) == -1) {
+        setError(getSystemError());
+        return false;
+    }
 
-    return QSerialPortErrorInfo(QSerialPort::NoError);
+    return true;
+#else
+    setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                  QSerialPort::tr("Custom baud rate is not supported")));
+    return false;
 #endif
-
-    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError, QSerialPort::tr("Custom baud rate is not supported"));
 }
 
 #elif defined(Q_OS_QNX)
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     // On QNX, the values of the 'Bxxxx' constants are set to 'xxxx' (i.e.
     // B115200 is defined to '115200'), which means that literal values can be
     // passed to cfsetispeed/cfsetospeed, including custom values, provided
     // that the underlying hardware supports them.
-    return setBaudRate_helper(baudRate, directions);
+    return setStandardBaudRate(baudRate, directions);
 }
 
 #else
 
-QSerialPortErrorInfo
-QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
+bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
     Q_UNUSED(baudRate);
     Q_UNUSED(directions);
 
-    return QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError);
+    setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
+                                  QSerialPort::tr("Custom baud rate is not supported")));
+    return false;
 }
 
 #endif
@@ -537,147 +594,124 @@ bool QSerialPortPrivate::setBaudRate(qint32 baudRate, QSerialPort::Directions di
 
     const qint32 unixBaudRate = QSerialPortPrivate::settingFromBaudRate(baudRate);
 
-    const QSerialPortErrorInfo error = (unixBaudRate > 0)
-        ? setStandardBaudRate(unixBaudRate, directions)
-        : setCustomBaudRate(baudRate, directions);
-
-    if (error.errorCode == QSerialPort::NoError)
-        return updateTermios();
-
-    setError(error);
-    return false;
+    return (unixBaudRate > 0)
+            ? setStandardBaudRate(unixBaudRate, directions)
+            : setCustomBaudRate(baudRate, directions);
 }
 
 bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
 {
-    currentTermios.c_cflag &= ~CSIZE;
+    termios tio;
+    if (!getTermios(&tio))
+        return false;
+
+    tio.c_cflag &= ~CSIZE;
     switch (dataBits) {
     case QSerialPort::Data5:
-        currentTermios.c_cflag |= CS5;
+        tio.c_cflag |= CS5;
         break;
     case QSerialPort::Data6:
-        currentTermios.c_cflag |= CS6;
+        tio.c_cflag |= CS6;
         break;
     case QSerialPort::Data7:
-        currentTermios.c_cflag |= CS7;
+        tio.c_cflag |= CS7;
         break;
     case QSerialPort::Data8:
-        currentTermios.c_cflag |= CS8;
+        tio.c_cflag |= CS8;
         break;
     default:
-        currentTermios.c_cflag |= CS8;
+        tio.c_cflag |= CS8;
         break;
     }
-    return updateTermios();
+    return setTermios(&tio);
 }
 
 bool QSerialPortPrivate::setParity(QSerialPort::Parity parity)
 {
-    currentTermios.c_iflag &= ~(PARMRK | INPCK);
-    currentTermios.c_iflag |= IGNPAR;
+    termios tio;
+    if (!getTermios(&tio))
+        return false;
+
+    tio.c_iflag &= ~(PARMRK | INPCK);
+    tio.c_iflag |= IGNPAR;
 
     switch (parity) {
 
 #ifdef CMSPAR
     // Here Installation parity only for GNU/Linux where the macro CMSPAR.
     case QSerialPort::SpaceParity:
-        currentTermios.c_cflag &= ~PARODD;
-        currentTermios.c_cflag |= PARENB | CMSPAR;
+        tio.c_cflag &= ~PARODD;
+        tio.c_cflag |= PARENB | CMSPAR;
         break;
     case QSerialPort::MarkParity:
-        currentTermios.c_cflag |= PARENB | CMSPAR | PARODD;
+        tio.c_cflag |= PARENB | CMSPAR | PARODD;
         break;
 #endif
     case QSerialPort::NoParity:
-        currentTermios.c_cflag &= ~PARENB;
+        tio.c_cflag &= ~PARENB;
         break;
     case QSerialPort::EvenParity:
-        currentTermios.c_cflag &= ~PARODD;
-        currentTermios.c_cflag |= PARENB;
+        tio.c_cflag &= ~PARODD;
+        tio.c_cflag |= PARENB;
         break;
     case QSerialPort::OddParity:
-        currentTermios.c_cflag |= PARENB | PARODD;
+        tio.c_cflag |= PARENB | PARODD;
         break;
     default:
-        currentTermios.c_cflag |= PARENB;
-        currentTermios.c_iflag |= PARMRK | INPCK;
-        currentTermios.c_iflag &= ~IGNPAR;
+        tio.c_cflag |= PARENB;
+        tio.c_iflag |= PARMRK | INPCK;
+        tio.c_iflag &= ~IGNPAR;
         break;
     }
 
-    return updateTermios();
+    return setTermios(&tio);
 }
 
 bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
 {
+    termios tio;
+    if (!getTermios(&tio))
+        return false;
+
     switch (stopBits) {
     case QSerialPort::OneStop:
-        currentTermios.c_cflag &= ~CSTOPB;
+        tio.c_cflag &= ~CSTOPB;
         break;
     case QSerialPort::TwoStop:
-        currentTermios.c_cflag |= CSTOPB;
+        tio.c_cflag |= CSTOPB;
         break;
     default:
-        currentTermios.c_cflag &= ~CSTOPB;
+        tio.c_cflag &= ~CSTOPB;
         break;
     }
-    return updateTermios();
+    return setTermios(&tio);
 }
 
 bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
 {
+    termios tio;
+    if (!getTermios(&tio))
+        return false;
+
     switch (flowControl) {
     case QSerialPort::NoFlowControl:
-        currentTermios.c_cflag &= ~CRTSCTS;
-        currentTermios.c_iflag &= ~(IXON | IXOFF | IXANY);
+        tio.c_cflag &= ~CRTSCTS;
+        tio.c_iflag &= ~(IXON | IXOFF | IXANY);
         break;
     case QSerialPort::HardwareControl:
-        currentTermios.c_cflag |= CRTSCTS;
-        currentTermios.c_iflag &= ~(IXON | IXOFF | IXANY);
+        tio.c_cflag |= CRTSCTS;
+        tio.c_iflag &= ~(IXON | IXOFF | IXANY);
         break;
     case QSerialPort::SoftwareControl:
-        currentTermios.c_cflag &= ~CRTSCTS;
-        currentTermios.c_iflag |= IXON | IXOFF | IXANY;
+        tio.c_cflag &= ~CRTSCTS;
+        tio.c_iflag |= IXON | IXOFF | IXANY;
         break;
     default:
-        currentTermios.c_cflag &= ~CRTSCTS;
-        currentTermios.c_iflag &= ~(IXON | IXOFF | IXANY);
+        tio.c_cflag &= ~CRTSCTS;
+        tio.c_iflag &= ~(IXON | IXOFF | IXANY);
         break;
     }
-    return updateTermios();
-}
-
-bool QSerialPortPrivate::setDataErrorPolicy(QSerialPort::DataErrorPolicy policy)
-{
-    tcflag_t parmrkMask = PARMRK;
-#ifndef CMSPAR
-    // in space/mark parity emulation also used PARMRK flag
-    if (parity == QSerialPort::SpaceParity
-            || parity == QSerialPort::MarkParity) {
-        parmrkMask = 0;
-    }
-#endif //CMSPAR
-    switch (policy) {
-    case QSerialPort::SkipPolicy:
-        currentTermios.c_iflag &= ~parmrkMask;
-        currentTermios.c_iflag |= IGNPAR | INPCK;
-        break;
-    case QSerialPort::PassZeroPolicy:
-        currentTermios.c_iflag &= ~(IGNPAR | parmrkMask);
-        currentTermios.c_iflag |= INPCK;
-        break;
-    case QSerialPort::IgnorePolicy:
-        currentTermios.c_iflag &= ~INPCK;
-        break;
-    case QSerialPort::StopReceivingPolicy:
-        currentTermios.c_iflag &= ~IGNPAR;
-        currentTermios.c_iflag |= parmrkMask | INPCK;
-        break;
-    default:
-        currentTermios.c_iflag &= ~INPCK;
-        break;
-    }
-    return updateTermios();
+    return setTermios(&tio);
 }
 
 bool QSerialPortPrivate::readNotification()
@@ -686,7 +720,7 @@ bool QSerialPortPrivate::readNotification()
 
     // Always buffered, read data from the port into the read buffer
     qint64 newBytes = buffer.size();
-    qint64 bytesToRead = policy == QSerialPort::IgnorePolicy ? ReadChunkSize : 1;
+    qint64 bytesToRead = ReadChunkSize;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -785,29 +819,28 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
         setError(getSystemError());
 #endif
 
-    if (::tcgetattr(descriptor, &restoredTermios) == -1) {
-        setError(getSystemError());
+    termios tio;
+    if (!getTermios(&tio))
         return false;
-    }
 
-    currentTermios = restoredTermios;
+    restoredTermios = tio;
 #ifdef Q_OS_SOLARIS
-    currentTermios.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-    currentTermios.c_oflag &= ~OPOST;
-    currentTermios.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-    currentTermios.c_cflag &= ~(CSIZE|PARENB);
-    currentTermios.c_cflag |= CS8;
+    tio.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    tio.c_oflag &= ~OPOST;
+    tio.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    tio.c_cflag &= ~(CSIZE|PARENB);
+    tio.c_cflag |= CS8;
 #else
-    ::cfmakeraw(&currentTermios);
+    ::cfmakeraw(&tio);
 #endif
-    currentTermios.c_cflag |= CLOCAL;
-    currentTermios.c_cc[VTIME] = 0;
-    currentTermios.c_cc[VMIN] = 0;
+    tio.c_cflag |= CLOCAL;
+    tio.c_cc[VTIME] = 0;
+    tio.c_cc[VMIN] = 0;
 
     if (mode & QIODevice::ReadOnly)
-        currentTermios.c_cflag |= CREAD;
+        tio.c_cflag |= CREAD;
 
-    if (!updateTermios())
+    if (!setTermios(&tio))
         return false;
 
     if (mode & QIODevice::ReadOnly)
@@ -824,9 +857,19 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     return maxSize;
 }
 
-bool QSerialPortPrivate::updateTermios()
+bool QSerialPortPrivate::setTermios(const termios *tio)
 {
-    if (::tcsetattr(descriptor, TCSANOW, &currentTermios) == -1) {
+    if (::tcsetattr(descriptor, TCSANOW, tio) == -1) {
+        setError(getSystemError());
+        return false;
+    }
+    return true;
+}
+
+bool QSerialPortPrivate::getTermios(termios *tio)
+{
+    ::memset(tio, 0, sizeof(termios));
+    if (::tcgetattr(descriptor, tio) == -1) {
         setError(getSystemError());
         return false;
     }
@@ -958,7 +1001,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
         return false;
     }
     if (ret == 0) {
-        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError, QSerialPort::tr("Operation timed out")));
+        setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
         return false;
     }
 
@@ -969,20 +1012,7 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
 
 qint64 QSerialPortPrivate::readFromPort(char *data, qint64 maxSize)
 {
-    qint64 bytesRead = 0;
-#if defined(CMSPAR)
-    if (parity == QSerialPort::NoParity
-            || policy != QSerialPort::StopReceivingPolicy) {
-#else
-    if (parity != QSerialPort::MarkParity
-            && parity != QSerialPort::SpaceParity) {
-#endif
-        bytesRead = qt_safe_read(descriptor, data, maxSize);
-    } else {// Perform parity emulation.
-        bytesRead = readPerChar(data, maxSize);
-    }
-
-    return bytesRead;
+    return qt_safe_read(descriptor, data, maxSize);
 }
 
 qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
@@ -1002,6 +1032,8 @@ qint64 QSerialPortPrivate::writeToPort(const char *data, qint64 maxSize)
     return bytesWritten;
 }
 
+#ifndef CMSPAR
+
 static inline bool evenParity(quint8 c)
 {
     c ^= c >> 4;        //(c7 ^ c3)(c6 ^ c2)(c5 ^ c1)(c4 ^ c0)
@@ -1010,10 +1042,12 @@ static inline bool evenParity(quint8 c)
     return c & 1;       //(c7 ^ c3)(c5 ^ c1)(c6 ^ c2)(c4 ^ c0)
 }
 
-#ifndef CMSPAR
-
 qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
 {
+    termios tio;
+    if (!getTermios(&tio))
+        return -1;
+
     qint64 ret = 0;
     quint8 const charMask = (0xFF >> (8 - dataBits));
 
@@ -1022,11 +1056,11 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
         bool par = evenParity(*data & charMask);
         // False if need EVEN, true if need ODD.
         par ^= parity == QSerialPort::MarkParity;
-        if (par ^ (currentTermios.c_cflag & PARODD)) { // Need switch parity mode?
-            currentTermios.c_cflag ^= PARODD;
-            flush(); //force sending already buffered data, because updateTermios() cleares buffers
+        if (par ^ (tio.c_cflag & PARODD)) { // Need switch parity mode?
+            tio.c_cflag ^= PARODD;
+            flush(); //force sending already buffered data, because setTermios(&tio); cleares buffers
             //todo: add receiving buffered data!!!
-            if (!updateTermios())
+            if (!setTermios(&tio))
                 break;
         }
 
@@ -1042,78 +1076,6 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
 }
 
 #endif //CMSPAR
-
-qint64 QSerialPortPrivate::readPerChar(char *data, qint64 maxSize)
-{
-    qint64 ret = 0;
-    quint8 const charMask = (0xFF >> (8 - dataBits));
-
-    // 0 - prefix not started,
-    // 1 - received 0xFF,
-    // 2 - received 0xFF and 0x00
-    int prefix = 0;
-    while (ret < maxSize) {
-
-        qint64 r = qt_safe_read(descriptor, data, 1);
-        if (r < 0) {
-            if (errno == EAGAIN) // It is ok for nonblocking mode.
-                break;
-            return -1;
-        }
-        if (r == 0)
-            break;
-
-        bool par = true;
-        switch (prefix) {
-        case 2: // Previously received both 0377 and 0.
-            par = false;
-            prefix = 0;
-            break;
-        case 1: // Previously received 0377.
-            if (*data == '\0') {
-                ++prefix;
-                continue;
-            }
-            prefix = 0;
-            break;
-        default:
-            if (*data == '\377') {
-                prefix = 1;
-                continue;
-            }
-            break;
-        }
-        // Now: par contains parity ok or error, *data contains received character
-        par ^= evenParity(*data & charMask); //par contains parity bit value for EVEN mode
-        par ^= (currentTermios.c_cflag & PARODD); //par contains parity bit value for current mode
-        if (par ^ (parity == QSerialPort::SpaceParity)) { //if parity error
-            switch (policy) {
-            case QSerialPort::SkipPolicy:
-                continue;       //ignore received character
-            case QSerialPort::StopReceivingPolicy: {
-                if (parity != QSerialPort::NoParity)
-                    setError(QSerialPortErrorInfo(QSerialPort::ParityError, QSerialPort::tr("Parity error detected while reading")));
-                else if (*data == '\0')
-                    setError(QSerialPortErrorInfo(QSerialPort::BreakConditionError, QSerialPort::tr("Break condition detected while reading")));
-                else
-                    setError(QSerialPortErrorInfo(QSerialPort::FramingError, QSerialPort::tr("Framing error detected while reading")));
-                return ++ret;   //abort receiving
-            }
-                break;
-            case QSerialPort::UnknownPolicy:
-                // Unknown error policy is used! Falling back to PassZeroPolicy
-            case QSerialPort::PassZeroPolicy:
-                *data = '\0';   //replace received character by zero
-                break;
-            case QSerialPort::IgnorePolicy:
-                break;          //ignore error and pass received character
-            }
-        }
-        ++data;
-        ++ret;
-    }
-    return ret;
-}
 
 typedef QMap<qint32, qint32> BaudRateMap;
 

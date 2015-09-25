@@ -80,12 +80,9 @@ Dialog::Dialog(QWidget *parent)
 
     timer.setSingleShot(true);
 
-    connect(runButton, SIGNAL(clicked()),
-            this, SLOT(sendRequest()));
-    connect(&serial, SIGNAL(readyRead()),
-            this, SLOT(readResponse()));
-    connect(&timer, SIGNAL(timeout()),
-            this, SLOT(processTimeout()));
+    connect(runButton, &QPushButton::clicked, this, &Dialog::sendRequest);
+    connect(&serial, &QSerialPort::readyRead, this, &Dialog::readResponse);
+    connect(&timer, &QTimer::timeout, this, &Dialog::processTimeout);
 }
 
 void Dialog::sendRequest()
