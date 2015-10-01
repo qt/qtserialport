@@ -129,6 +129,8 @@ private slots:
     void asynchronousWriteByTimer_data();
     void asynchronousWriteByTimer();
 
+    void asyncReadWithLimitedReadBufferSize();
+
     void readBufferOverflow();
     void readAfterInputClear();
     void synchronousReadWriteAfterAsynchronousReadWrite();
@@ -805,6 +807,49 @@ void tst_QSerialPort::asynchronousWriteByTimer()
     QVERIFY2(!timeout(), "Timed out when waiting for the read or write.");
     QCOMPARE(receiverPort.bytesAvailable(), qint64(alphabetArray.size()));
     QCOMPARE(receiverPort.readAll(), alphabetArray);
+}
+
+class AsyncReader2 : public QObject
+{
+    Q_OBJECT
+public:
+    explicit AsyncReader2(QSerialPort &port, const QByteArray &expectedData)
+        : serialPort(port), expectedData(expectedData)
+    {
+        connect(&serialPort, SIGNAL(readyRead()), this, SLOT(receive()));
+    }
+
+private slots:
+    void receive()
+    {
+        receivedData.append(serialPort.readAll());
+        if (receivedData == expectedData)
+            tst_QSerialPort::exitLoop();
+    }
+
+private:
+    QSerialPort &serialPort;
+    const QByteArray expectedData;
+    QByteArray receivedData;
+};
+
+void tst_QSerialPort::asyncReadWithLimitedReadBufferSize()
+{
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+
+    QSerialPort receiverPort(m_receiverPortName);
+    QVERIFY(receiverPort.open(QSerialPort::ReadOnly));
+
+    receiverPort.setReadBufferSize(1);
+    QCOMPARE(receiverPort.readBufferSize(), qint64(1));
+
+    AsyncReader2 reader(receiverPort, alphabetArray);
+
+    QCOMPARE(senderPort.write(alphabetArray), qint64(alphabetArray.size()));
+
+    enterLoop(1);
+    QVERIFY2(!timeout(), "Timed out when waiting for the read or write.");
 }
 
 void tst_QSerialPort::readBufferOverflow()

@@ -395,7 +395,12 @@ bool QSerialPortPrivate::setBreakEnabled(bool set)
 
 qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
 {
-    return readBuffer.read(data, maxSize);
+    const qint64 result = readBuffer.read(data, maxSize);
+    // We need try to re-trigger the read notification to read a remainder from a
+    // driver's queue in case we have a limited read buffer size.
+    if (d->readBufferMaxSize && result > 0 && !d->isReadNotificationEnabled())
+        d->setReadNotificationEnabled(true);
+    return result;
 }
 
 bool QSerialPortPrivate::waitForReadyRead(int msecs)
@@ -744,6 +749,7 @@ bool QSerialPortPrivate::readNotification()
         if (bytesToRead == 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
+            setReadNotificationEnabled(false);
             return false;
         }
     }
