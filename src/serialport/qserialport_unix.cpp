@@ -727,6 +727,7 @@ bool QSerialPortPrivate::readNotification()
         if (bytesToRead == 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
+            setReadNotificationEnabled(false);
             return false;
         }
     }

@@ -1409,7 +1409,7 @@ qint64 QSerialPort::readData(char *data, qint64 maxSize)
     Q_UNUSED(data);
     Q_UNUSED(maxSize);
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32)
     // We need try to start async reading to read a remainder from a driver's queue
     // in case we have a limited read buffer size. Because the read notification can
     // be stalled since Windows do not re-triggered an EV_RXCHAR event if a driver's
@@ -1417,6 +1417,12 @@ qint64 QSerialPort::readData(char *data, qint64 maxSize)
     Q_D(QSerialPort);
     if (d->readBufferMaxSize || d->flowControl == QSerialPort::HardwareControl)
         d->startAsyncRead();
+#elif defined(Q_OS_UNIX)
+    // We need try to re-trigger the read notification to read a remainder from a
+    // driver's queue in case we have a limited read buffer size.
+    Q_D(QSerialPort);
+    if (d->readBufferMaxSize && !d->isReadNotificationEnabled())
+        d->setReadNotificationEnabled(true);
 #endif
 
     // return 0 indicating there may be more data in the future
