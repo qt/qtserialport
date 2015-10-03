@@ -992,11 +992,11 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     if (checkWrite)
         FD_SET(descriptor, &fdwrite);
 
-    struct timeval tv;
+    struct timespec tv;
     tv.tv_sec = msecs / 1000;
-    tv.tv_usec = (msecs % 1000) * 1000;
+    tv.tv_nsec = (msecs % 1000) * 1000 * 1000;
 
-    const int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
+    const int ret = qt_safe_select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
     if (ret < 0) {
         setError(getSystemError());
         return false;
