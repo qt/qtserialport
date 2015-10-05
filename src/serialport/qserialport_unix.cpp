@@ -398,8 +398,8 @@ qint64 QSerialPortPrivate::readData(char *data, qint64 maxSize)
     const qint64 result = readBuffer.read(data, maxSize);
     // We need try to re-trigger the read notification to read a remainder from a
     // driver's queue in case we have a limited read buffer size.
-    if (d->readBufferMaxSize && result > 0 && !d->isReadNotificationEnabled())
-        d->setReadNotificationEnabled(true);
+    if (readBufferMaxSize && result > 0 && !isReadNotificationEnabled())
+        setReadNotificationEnabled(true);
     return result;
 }
 
