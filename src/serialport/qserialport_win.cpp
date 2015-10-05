@@ -984,15 +984,6 @@ static const QList<qint32> standardBaudRatePairList()
     return standardBaudRatesTable;
 };
 
-qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
-{
-    const QList<qint32> baudRatePairs = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator
-            = std::find(baudRatePairs.constBegin(), baudRatePairs.constEnd(), setting);
-
-    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
-}
-
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
     const QList<qint32> baudRatePairList = standardBaudRatePairList();

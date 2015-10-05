@@ -106,7 +106,6 @@ public:
 
     qint64 writeData(const char *data, qint64 maxSize);
 
-    static qint32 baudRateFromSetting(qint32 setting);
     static qint32 settingFromBaudRate(qint32 baudRate);
 
     static QList<qint32> standardBaudRates();
