@@ -1231,11 +1231,6 @@ static const BaudRateMap& standardBaudRateMap()
     return baudRateMap;
 }
 
-qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
-{
-    return standardBaudRateMap().key(setting);
-}
-
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
     return standardBaudRateMap().value(baudRate);
