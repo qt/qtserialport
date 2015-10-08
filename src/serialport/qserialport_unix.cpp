@@ -389,7 +389,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         bool readyToRead = false;
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()))) {
+                                qt_subtract_from_timeout(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -398,7 +398,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
         if (readyToWrite && !completeAsyncWrite())
             return false;
-    } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
+    } while (msecs == -1 || qt_subtract_from_timeout(msecs, stopWatch.elapsed()) > 0);
     return false;
 }
 
@@ -414,7 +414,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         bool readyToRead = false;
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()))) {
+                                qt_subtract_from_timeout(msecs, stopWatch.elapsed()))) {
             return false;
         }
 

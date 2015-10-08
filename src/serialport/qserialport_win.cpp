@@ -260,7 +260,8 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     stopWatch.start();
 
     do {
-        OVERLAPPED *overlapped = waitForNotified(timeoutValue(msecs, stopWatch.elapsed()));
+        OVERLAPPED *overlapped = waitForNotified(
+                    qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)
             return false;
 
@@ -276,7 +277,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
             }
         }
 
-    } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
+    } while (msecs == -1 || qt_subtract_from_timeout(msecs, stopWatch.elapsed()) > 0);
 
     return false;
 }
@@ -293,7 +294,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     stopWatch.start();
 
     forever {
-        OVERLAPPED *overlapped = waitForNotified(timeoutValue(msecs, stopWatch.elapsed()));
+        OVERLAPPED *overlapped = waitForNotified(
+                    qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)
             return false;
 

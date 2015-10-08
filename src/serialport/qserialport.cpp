@@ -123,14 +123,6 @@ QSerialPortPrivate::QSerialPortPrivate()
 {
 }
 
-int QSerialPortPrivate::timeoutValue(int msecs, int elapsed)
-{
-    if (msecs == -1)
-        return msecs;
-    msecs -= elapsed;
-    return qMax(msecs, 0);
-}
-
 void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
 {
     Q_Q(QSerialPort);
