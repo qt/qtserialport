@@ -329,7 +329,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msec)
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite,
                                 true, !writeBuffer.isEmpty(),
-                                timeoutValue(msec, stopWatch.elapsed()))) {
+                                qt_subtract_from_timeout(msec, stopWatch.elapsed()))) {
             return false;
         }
         if (readyToRead) {
@@ -355,7 +355,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msec)
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite,
                                 true, !writeBuffer.isEmpty(),
-                                timeoutValue(msec, stopWatch.elapsed()))) {
+                                qt_subtract_from_timeout(msec, stopWatch.elapsed()))) {
             return false;
         }
         if (readyToRead) {
@@ -742,15 +742,6 @@ static const QList<qint32> standardBaudRatePairList()
 
     return standardBaudRatesTable;
 };
-
-qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
-{
-    const QList<qint32> baudRatePairs = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator
-            = std::find(baudRatePairs.constBegin(), baudRatePairs.constEnd(), setting);
-
-    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
-}
 
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {

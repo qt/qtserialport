@@ -389,7 +389,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
         bool readyToRead = false;
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()))) {
+                                qt_subtract_from_timeout(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -398,7 +398,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
         if (readyToWrite && !completeAsyncWrite())
             return false;
-    } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
+    } while (msecs == -1 || qt_subtract_from_timeout(msecs, stopWatch.elapsed()) > 0);
     return false;
 }
 
@@ -414,7 +414,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
         bool readyToRead = false;
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
-                                timeoutValue(msecs, stopWatch.elapsed()))) {
+                                qt_subtract_from_timeout(msecs, stopWatch.elapsed()))) {
             return false;
         }
 
@@ -727,6 +727,7 @@ bool QSerialPortPrivate::readNotification()
         if (bytesToRead == 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
+            setReadNotificationEnabled(false);
             return false;
         }
     }
@@ -991,11 +992,11 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     if (checkWrite)
         FD_SET(descriptor, &fdwrite);
 
-    struct timeval tv;
+    struct timespec tv;
     tv.tv_sec = msecs / 1000;
-    tv.tv_usec = (msecs % 1000) * 1000;
+    tv.tv_nsec = (msecs % 1000) * 1000 * 1000;
 
-    const int ret = ::select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
+    const int ret = qt_safe_select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
     if (ret < 0) {
         setError(getSystemError());
         return false;
@@ -1228,11 +1229,6 @@ static const BaudRateMap& standardBaudRateMap()
 {
     static const BaudRateMap baudRateMap = createStandardBaudRateMap();
     return baudRateMap;
-}
-
-qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
-{
-    return standardBaudRateMap().key(setting);
 }
 
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)

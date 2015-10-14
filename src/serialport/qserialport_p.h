@@ -126,8 +126,6 @@ public:
 
     QSerialPortPrivate();
 
-    static int timeoutValue(int msecs, int elapsed);
-
     bool open(QIODevice::OpenMode mode);
     void close();
 
@@ -161,7 +159,6 @@ public:
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
 
-    static qint32 baudRateFromSetting(qint32 setting);
     static qint32 settingFromBaudRate(qint32 baudRate);
 
     static QList<qint32> standardBaudRates();

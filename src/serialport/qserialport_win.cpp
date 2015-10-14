@@ -260,7 +260,8 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     stopWatch.start();
 
     do {
-        OVERLAPPED *overlapped = waitForNotified(timeoutValue(msecs, stopWatch.elapsed()));
+        OVERLAPPED *overlapped = waitForNotified(
+                    qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)
             return false;
 
@@ -276,7 +277,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
             }
         }
 
-    } while (msecs == -1 || timeoutValue(msecs, stopWatch.elapsed()) > 0);
+    } while (msecs == -1 || qt_subtract_from_timeout(msecs, stopWatch.elapsed()) > 0);
 
     return false;
 }
@@ -293,7 +294,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     stopWatch.start();
 
     forever {
-        OVERLAPPED *overlapped = waitForNotified(timeoutValue(msecs, stopWatch.elapsed()));
+        OVERLAPPED *overlapped = waitForNotified(
+                    qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)
             return false;
 
@@ -810,15 +812,6 @@ static const QList<qint32> standardBaudRatePairList()
 
     return standardBaudRatesTable;
 };
-
-qint32 QSerialPortPrivate::baudRateFromSetting(qint32 setting)
-{
-    const QList<qint32> baudRatePairs = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator
-            = std::find(baudRatePairs.constBegin(), baudRatePairs.constEnd(), setting);
-
-    return (baudRatePairListConstIterator != baudRatePairs.constEnd()) ? *baudRatePairListConstIterator : 0;
-}
 
 qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
 {
