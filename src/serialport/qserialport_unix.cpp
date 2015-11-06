@@ -54,6 +54,7 @@
 
 #ifdef Q_OS_LINUX
 
+# if !defined(Q_OS_ANDROID) || !defined(Q_PROCESSOR_X86)
 struct termios2 {
     tcflag_t c_iflag;       /* input mode flags */
     tcflag_t c_oflag;       /* output mode flags */
@@ -64,6 +65,7 @@ struct termios2 {
     speed_t c_ispeed;       /* input speed */
     speed_t c_ospeed;       /* output speed */
 };
+# endif
 
 #ifndef TCGETS2
 #define TCGETS2     _IOR('T', 0x2A, struct termios2)
