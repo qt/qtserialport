@@ -42,7 +42,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_OSX
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
 #include <IOKit/serial/ioss.h>
 #endif
@@ -54,6 +54,7 @@
 
 #ifdef Q_OS_LINUX
 
+# if !defined(Q_OS_ANDROID) || !defined(Q_PROCESSOR_X86)
 struct termios2 {
     tcflag_t c_iflag;       /* input mode flags */
     tcflag_t c_oflag;       /* output mode flags */
@@ -64,6 +65,7 @@ struct termios2 {
     speed_t c_ispeed;       /* input speed */
     speed_t c_ospeed;       /* output speed */
 };
+# endif
 
 #ifndef TCGETS2
 #define TCGETS2     _IOR('T', 0x2A, struct termios2)
@@ -85,7 +87,7 @@ struct termios2 {
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_OSX
 #include <QtCore/qstandardpaths.h>
 #endif
 
@@ -536,7 +538,7 @@ bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directi
     return setStandardBaudRate(B38400, directions);
 }
 
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_OSX)
 
 bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
@@ -909,7 +911,7 @@ QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) con
     case EBADF:
         error.errorCode = QSerialPort::ResourceError;
         break;
-#ifdef Q_OS_MAC
+#ifdef Q_OS_OSX
     case ENXIO:
         error.errorCode = QSerialPort::ResourceError;
         break;

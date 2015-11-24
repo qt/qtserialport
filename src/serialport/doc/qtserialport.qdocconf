@@ -34,7 +34,7 @@ exampledirs += ../../../examples/serialport
 imagedirs   += images
 excludedirs += ../qt4support
 
-examplesinstallpath = serialport
+examplesinstallpath = qtserialport/serialport
 
 depends += qtcore qtdoc qtnetwork qmake
 
