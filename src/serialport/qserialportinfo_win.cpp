@@ -57,18 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-typedef QPair<QUuid, DWORD> GuidFlagsPair;
-
-static inline const QList<GuidFlagsPair>& guidFlagsPairs()
-{
-    static const QList<GuidFlagsPair> guidFlagsPairList = QList<GuidFlagsPair>()
-            << qMakePair(QUuid(GUID_DEVCLASS_PORTS), DWORD(DIGCF_PRESENT))
-            << qMakePair(QUuid(GUID_DEVCLASS_MODEM), DWORD(DIGCF_PRESENT))
-            << qMakePair(QUuid(GUID_DEVINTERFACE_COMPORT), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE))
-            << qMakePair(QUuid(GUID_DEVINTERFACE_MODEM), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
-    return guidFlagsPairList;
-}
-
 static QStringList portNamesFromHardwareDeviceMap()
 {
     HKEY hKey = Q_NULLPTR;
@@ -287,10 +275,21 @@ static QString deviceSerialNumber(const QString &instanceIdentifier,
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
+    static const struct {
+        GUID guid; DWORD flags;
+    } setupTokens[] =  {
+        { GUID_DEVCLASS_PORTS, DIGCF_PRESENT },
+        { GUID_DEVCLASS_MODEM, DIGCF_PRESENT },
+        { GUID_DEVINTERFACE_COMPORT, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE },
+        { GUID_DEVINTERFACE_MODEM, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE }
+    };
+
+    static const int setupTokensCount = sizeof(setupTokens) / sizeof(setupTokens[0]);
+
     QList<QSerialPortInfo> serialPortInfoList;
 
-    foreach (const GuidFlagsPair &uniquePair, guidFlagsPairs()) {
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(reinterpret_cast<const GUID *>(&uniquePair.first), Q_NULLPTR, Q_NULLPTR, uniquePair.second);
+    for (int i = 0; i < setupTokensCount; ++i) {
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&setupTokens[i].guid, Q_NULLPTR, Q_NULLPTR, setupTokens[i].flags);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return serialPortInfoList;
 
