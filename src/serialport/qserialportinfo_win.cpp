@@ -147,17 +147,20 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
     if (key == INVALID_HANDLE_VALUE)
         return QString();
 
-    static const QStringList portNameRegistryKeyList = QStringList()
-            << QStringLiteral("PortName")
-            << QStringLiteral("PortNumber");
+    static const wchar_t * const keyTokens[] = {
+            L"PortName\0",
+            L"PortNumber\0"
+    };
+
+    static const int keyTokensCount = sizeof(keyTokens) / sizeof(keyTokens[0]);
 
     QString portName;
-    foreach (const QString &portNameKey, portNameRegistryKeyList) {
+    for (int i = 0; i < keyTokensCount; ++i) {
         DWORD dataType = 0;
         std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
         DWORD bytesRequired = MAX_PATH;
         forever {
-            const LONG ret = ::RegQueryValueEx(key, reinterpret_cast<const wchar_t *>(portNameKey.utf16()), Q_NULLPTR, &dataType,
+            const LONG ret = ::RegQueryValueEx(key, keyTokens[i], Q_NULLPTR, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
             if (ret == ERROR_MORE_DATA) {
                 outputBuffer.resize(bytesRequired / sizeof(wchar_t) + 2, 0);
