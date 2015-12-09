@@ -44,8 +44,16 @@
 #include <vector>
 
 #include <initguid.h>
+#include <devguid.h> // for GUID_DEVCLASS_PORTS and GUID_DEVCLASS_MODEM
+#include <winioctl.h> // for GUID_DEVINTERFACE_COMPORT
 #include <setupapi.h>
 #include <cfgmgr32.h>
+
+#ifdef QT_NO_REDEFINE_GUID_DEVINTERFACE_MODEM
+#  include <ntddmodm.h> // for GUID_DEVINTERFACE_MODEM
+#else
+  DEFINE_GUID(GUID_DEVINTERFACE_MODEM, 0x2c7089aa, 0x2e0e, 0x11d1, 0xb1, 0x14, 0x00, 0xc0, 0x4f, 0xc2, 0xaa, 0xe4);
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -54,14 +62,10 @@ typedef QPair<QUuid, DWORD> GuidFlagsPair;
 static inline const QList<GuidFlagsPair>& guidFlagsPairs()
 {
     static const QList<GuidFlagsPair> guidFlagsPairList = QList<GuidFlagsPair>()
-               // Standard Setup Ports Class GUID
-            << qMakePair(QUuid(0x4D36E978, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18), DWORD(DIGCF_PRESENT))
-               // Standard Setup Modems Class GUID
-            << qMakePair(QUuid(0x4D36E96D, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18), DWORD(DIGCF_PRESENT))
-               // Standard Serial Port Device Interface Class GUID
-            << qMakePair(QUuid(0x86E0D1E0, 0x8089, 0x11D0, 0x9C, 0xE4, 0x08, 0x00, 0x3E, 0x30, 0x1F, 0x73), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE))
-               // Standard Modem Device Interface Class GUID
-            << qMakePair(QUuid(0x2C7089AA, 0x2E0E, 0x11D1, 0xB1, 0x14, 0x00, 0xC0, 0x4F, 0xC2, 0xAA, 0xE4), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
+            << qMakePair(QUuid(GUID_DEVCLASS_PORTS), DWORD(DIGCF_PRESENT))
+            << qMakePair(QUuid(GUID_DEVCLASS_MODEM), DWORD(DIGCF_PRESENT))
+            << qMakePair(QUuid(GUID_DEVINTERFACE_COMPORT), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE))
+            << qMakePair(QUuid(GUID_DEVINTERFACE_MODEM), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
     return guidFlagsPairList;
 }
 
