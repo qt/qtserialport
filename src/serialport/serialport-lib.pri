@@ -33,7 +33,7 @@ wince* {
         $$PWD/qserialportinfo_wince.cpp
 }
 
-unix:!symbian {
+unix {
     SOURCES += \
         $$PWD/qserialport_unix.cpp
 
