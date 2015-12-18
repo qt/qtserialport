@@ -237,14 +237,11 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    if (settingsRestoredOnClose) {
-        if (::tcsetattr(descriptor, TCSANOW, &restoredTermios) == -1)
-            setError(getSystemError());
-    }
+    if (settingsRestoredOnClose)
+        ::tcsetattr(descriptor, TCSANOW, &restoredTermios);
 
 #ifdef TIOCNXCL
-    if (::ioctl(descriptor, TIOCNXCL) == -1)
-        setError(getSystemError());
+    ::ioctl(descriptor, TIOCNXCL);
 #endif
 
     if (readNotifier) {
@@ -257,8 +254,7 @@ void QSerialPortPrivate::close()
         writeNotifier = Q_NULLPTR;
     }
 
-    if (qt_safe_close(descriptor) == -1)
-        setError(getSystemError());
+    qt_safe_close(descriptor);
 
     lockFileScopedPointer.reset(Q_NULLPTR);
 

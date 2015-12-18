@@ -104,8 +104,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    if (!::CancelIo(handle))
-        setError(getSystemError());
+    ::CancelIo(handle);
 
     if (notifier) {
         delete notifier;
@@ -124,15 +123,11 @@ void QSerialPortPrivate::close()
     actualBytesToWrite = 0;
 
     if (settingsRestoredOnClose) {
-        if (!::SetCommState(handle, &restoredDcb))
-            setError(getSystemError());
-        else if (!::SetCommTimeouts(handle, &restoredCommTimeouts))
-            setError(getSystemError());
+        ::SetCommState(handle, &restoredDcb);
+        ::SetCommTimeouts(handle, &restoredCommTimeouts);
     }
 
-    if (!::CloseHandle(handle))
-        setError(getSystemError());
-
+    ::CloseHandle(handle);
     handle = INVALID_HANDLE_VALUE;
 }
 
