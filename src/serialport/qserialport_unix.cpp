@@ -524,10 +524,10 @@ bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directi
     }
 
     if (serial.custom_divisor * baudRate != serial.baud_base) {
-        qWarning("Baud rate of serial port %s is set to %d instead of %d: divisor %f unsupported",
+        qWarning("Baud rate of serial port %s is set to %f instead of %d: divisor %f unsupported",
             qPrintable(systemLocation),
-            serial.baud_base / serial.custom_divisor,
-            baudRate, (float)serial.baud_base / baudRate);
+            float(serial.baud_base) / serial.custom_divisor,
+            baudRate, float(serial.baud_base) / baudRate);
     }
 
     if (::ioctl(descriptor, TIOCSSERIAL, &serial) == -1) {
