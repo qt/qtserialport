@@ -704,7 +704,7 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
 
         if (parentdev) {
             const QString driverName = deviceDriver(parentdev);
-            if (isSerial8250Driver(driverName) && !isValidSerial8250(priv.portName))
+            if (isSerial8250Driver(driverName) && !isValidSerial8250(priv.device))
                 continue;
             priv.description = deviceDescription(dev.data());
             priv.manufacturer = deviceManufacturer(dev.data());
