@@ -74,6 +74,7 @@ static QStringList filteredDeviceFilePaths()
     << QStringLiteral("ttyMI*")   // MOXA pci/serial converters.
     << QStringLiteral("ttymxc*")  // Motorola IMX serial ports (i.e. Freescale i.MX).
     << QStringLiteral("ttyAMA*")  // AMBA serial device for embedded platform on ARM (i.e. Raspberry Pi).
+    << QStringLiteral("ttyTHS*")  // Serial device for embedded platform on ARM (i.e. Tegra Jetson TK1).
     << QStringLiteral("rfcomm*")  // Bluetooth serial device.
     << QStringLiteral("ircomm*")  // IrDA serial device.
     << QStringLiteral("tnt*");    // Virtual tty0tty serial device.
