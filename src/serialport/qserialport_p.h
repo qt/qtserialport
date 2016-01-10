@@ -182,7 +182,6 @@ public:
 
     bool initialize(DWORD eventMask);
     bool updateDcb();
-    bool updateCommTimeouts();
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
@@ -205,7 +204,6 @@ public:
     bool initialize();
     bool setDcb(DCB *dcb);
     bool getDcb(DCB *dcb);
-    bool updateCommTimeouts();
     OVERLAPPED *waitForNotified(int msecs);
 
     bool completeAsyncCommunication(qint64 bytesTransferred);

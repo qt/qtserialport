@@ -559,8 +559,10 @@ inline bool QSerialPortPrivate::initialize(DWORD eventMask)
     ::memset(&currentCommTimeouts, 0, sizeof(currentCommTimeouts));
     currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
-    if (!updateCommTimeouts())
+    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
+        setError(getSystemError());
         return false;
+    }
 
     eventNotifier = new CommEventNotifier(eventMask, this, q);
     eventNotifier->start();
@@ -587,15 +589,6 @@ bool QSerialPortPrivate::updateDcb()
     ::SetCommMask(handle, eventMask);
 
     return ret;
-}
-
-bool QSerialPortPrivate::updateCommTimeouts()
-{
-    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
-        setError(getSystemError());
-        return false;
-    }
-    return true;
 }
 
 QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) const

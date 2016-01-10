@@ -631,8 +631,10 @@ inline bool QSerialPortPrivate::initialize()
     ::ZeroMemory(&currentCommTimeouts, sizeof(currentCommTimeouts));
     currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
-    if (!updateCommTimeouts())
+    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
+        setError(getSystemError());
         return false;
+    }
 
     if (!::SetCommMask(handle, originalEventMask)) {
         setError(getSystemError());
@@ -666,15 +668,6 @@ bool QSerialPortPrivate::getDcb(DCB *dcb)
     dcb->DCBlength = sizeof(DCB);
 
     if (!::GetCommState(handle, dcb)) {
-        setError(getSystemError());
-        return false;
-    }
-    return true;
-}
-
-bool QSerialPortPrivate::updateCommTimeouts()
-{
-    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
         setError(getSystemError());
         return false;
     }
