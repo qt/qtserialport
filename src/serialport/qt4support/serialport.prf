@@ -25,3 +25,5 @@ mac {
        LIBS += -lQtSerialPort$${QT_LIBINFIX}
    }
 }
+
+static:DEFINES += QT_STATIC
