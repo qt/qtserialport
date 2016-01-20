@@ -237,7 +237,7 @@ public:
 
     bool flush();
     bool clear(Directions directions = AllDirections);
-    bool atEnd() const Q_DECL_OVERRIDE;
+    bool atEnd() const Q_DECL_OVERRIDE; // ### Qt6: remove me
 
 #if QT_DEPRECATED_SINCE(5, 2)
     QT_DEPRECATED bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);

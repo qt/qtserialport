@@ -1088,8 +1088,7 @@ bool QSerialPort::clear(Directions directions)
  */
 bool QSerialPort::atEnd() const
 {
-    Q_D(const QSerialPort);
-    return QIODevice::atEnd() && (!isOpen() || (d->buffer.size() == 0));
+    return QIODevice::atEnd();
 }
 
 #if QT_DEPRECATED_SINCE(5, 2)
