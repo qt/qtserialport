@@ -655,8 +655,8 @@ bool QSerialPort::settingsRestoredOnClose() const
     setting is done automatically in the \l{QSerialPort::open()} method right
     after that the opening of the port succeeds.
 
-    \warning Setting the AllDirections flag is only supported on
-    the Windows, Windows CE platforms.
+    \warning Setting the AllDirections flag is supported on all platforms.
+    Windows and Windows CE support only this mode.
 
     \warning Returns equal baud rate in any direction on Windows, Windows CE.
 

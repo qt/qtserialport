@@ -159,7 +159,9 @@ public:
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
 
+#if defined(Q_OS_UNIX)
     static qint32 settingFromBaudRate(qint32 baudRate);
+#endif
 
     static QList<qint32> standardBaudRates();
 
@@ -180,7 +182,6 @@ public:
 
     bool initialize(DWORD eventMask);
     bool updateDcb();
-    bool updateCommTimeouts();
 
     bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
                             bool checkRead, bool checkWrite,
@@ -203,7 +204,6 @@ public:
     bool initialize();
     bool setDcb(DCB *dcb);
     bool getDcb(DCB *dcb);
-    bool updateCommTimeouts();
     OVERLAPPED *waitForNotified(int msecs);
 
     bool completeAsyncCommunication(qint64 bytesTransferred);

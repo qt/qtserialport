@@ -104,8 +104,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 
 void QSerialPortPrivate::close()
 {
-    if (!::CancelIo(handle))
-        setError(getSystemError());
+    ::CancelIo(handle);
 
     if (notifier) {
         delete notifier;
@@ -124,15 +123,11 @@ void QSerialPortPrivate::close()
     actualBytesToWrite = 0;
 
     if (settingsRestoredOnClose) {
-        if (!::SetCommState(handle, &restoredDcb))
-            setError(getSystemError());
-        else if (!::SetCommTimeouts(handle, &restoredCommTimeouts))
-            setError(getSystemError());
+        ::SetCommState(handle, &restoredDcb);
+        ::SetCommTimeouts(handle, &restoredCommTimeouts);
     }
 
-    if (!::CloseHandle(handle))
-        setError(getSystemError());
-
+    ::CloseHandle(handle);
     handle = INVALID_HANDLE_VALUE;
 }
 
@@ -636,8 +631,10 @@ inline bool QSerialPortPrivate::initialize()
     ::ZeroMemory(&currentCommTimeouts, sizeof(currentCommTimeouts));
     currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
-    if (!updateCommTimeouts())
+    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
+        setError(getSystemError());
         return false;
+    }
 
     if (!::SetCommMask(handle, originalEventMask)) {
         setError(getSystemError());
@@ -671,15 +668,6 @@ bool QSerialPortPrivate::getDcb(DCB *dcb)
     dcb->DCBlength = sizeof(DCB);
 
     if (!::GetCommState(handle, dcb)) {
-        setError(getSystemError());
-        return false;
-    }
-    return true;
-}
-
-bool QSerialPortPrivate::updateCommTimeouts()
-{
-    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
         setError(getSystemError());
         return false;
     }
@@ -812,15 +800,6 @@ static const QList<qint32> standardBaudRatePairList()
 
     return standardBaudRatesTable;
 };
-
-qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
-{
-    const QList<qint32> baudRatePairList = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator
-            = std::find(baudRatePairList.constBegin(), baudRatePairList.constEnd(), baudRate);
-
-    return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
-}
 
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {

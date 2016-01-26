@@ -44,26 +44,18 @@
 #include <vector>
 
 #include <initguid.h>
+#include <devguid.h> // for GUID_DEVCLASS_PORTS and GUID_DEVCLASS_MODEM
+#include <winioctl.h> // for GUID_DEVINTERFACE_COMPORT
 #include <setupapi.h>
 #include <cfgmgr32.h>
 
+#ifdef QT_NO_REDEFINE_GUID_DEVINTERFACE_MODEM
+#  include <ntddmodm.h> // for GUID_DEVINTERFACE_MODEM
+#else
+  DEFINE_GUID(GUID_DEVINTERFACE_MODEM, 0x2c7089aa, 0x2e0e, 0x11d1, 0xb1, 0x14, 0x00, 0xc0, 0x4f, 0xc2, 0xaa, 0xe4);
+#endif
+
 QT_BEGIN_NAMESPACE
-
-typedef QPair<QUuid, DWORD> GuidFlagsPair;
-
-static inline const QList<GuidFlagsPair>& guidFlagsPairs()
-{
-    static const QList<GuidFlagsPair> guidFlagsPairList = QList<GuidFlagsPair>()
-               // Standard Setup Ports Class GUID
-            << qMakePair(QUuid(0x4D36E978, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18), DWORD(DIGCF_PRESENT))
-               // Standard Setup Modems Class GUID
-            << qMakePair(QUuid(0x4D36E96D, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18), DWORD(DIGCF_PRESENT))
-               // Standard Serial Port Device Interface Class GUID
-            << qMakePair(QUuid(0x86E0D1E0, 0x8089, 0x11D0, 0x9C, 0xE4, 0x08, 0x00, 0x3E, 0x30, 0x1F, 0x73), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE))
-               // Standard Modem Device Interface Class GUID
-            << qMakePair(QUuid(0x2C7089AA, 0x2E0E, 0x11D1, 0xB1, 0x14, 0x00, 0xC0, 0x4F, 0xC2, 0xAA, 0xE4), DWORD(DIGCF_PRESENT | DIGCF_DEVICEINTERFACE));
-    return guidFlagsPairList;
-}
 
 static QStringList portNamesFromHardwareDeviceMap()
 {
@@ -155,17 +147,20 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
     if (key == INVALID_HANDLE_VALUE)
         return QString();
 
-    static const QStringList portNameRegistryKeyList = QStringList()
-            << QStringLiteral("PortName")
-            << QStringLiteral("PortNumber");
+    static const wchar_t * const keyTokens[] = {
+            L"PortName\0",
+            L"PortNumber\0"
+    };
+
+    static const int keyTokensCount = sizeof(keyTokens) / sizeof(keyTokens[0]);
 
     QString portName;
-    foreach (const QString &portNameKey, portNameRegistryKeyList) {
+    for (int i = 0; i < keyTokensCount; ++i) {
         DWORD dataType = 0;
         std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
         DWORD bytesRequired = MAX_PATH;
         forever {
-            const LONG ret = ::RegQueryValueEx(key, reinterpret_cast<const wchar_t *>(portNameKey.utf16()), Q_NULLPTR, &dataType,
+            const LONG ret = ::RegQueryValueEx(key, keyTokens[i], Q_NULLPTR, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
             if (ret == ERROR_MORE_DATA) {
                 outputBuffer.resize(bytesRequired / sizeof(wchar_t) + 2, 0);
@@ -283,10 +278,21 @@ static QString deviceSerialNumber(const QString &instanceIdentifier,
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
+    static const struct {
+        GUID guid; DWORD flags;
+    } setupTokens[] =  {
+        { GUID_DEVCLASS_PORTS, DIGCF_PRESENT },
+        { GUID_DEVCLASS_MODEM, DIGCF_PRESENT },
+        { GUID_DEVINTERFACE_COMPORT, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE },
+        { GUID_DEVINTERFACE_MODEM, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE }
+    };
+
+    static const int setupTokensCount = sizeof(setupTokens) / sizeof(setupTokens[0]);
+
     QList<QSerialPortInfo> serialPortInfoList;
 
-    foreach (const GuidFlagsPair &uniquePair, guidFlagsPairs()) {
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(reinterpret_cast<const GUID *>(&uniquePair.first), Q_NULLPTR, Q_NULLPTR, uniquePair.second);
+    for (int i = 0; i < setupTokensCount; ++i) {
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&setupTokens[i].guid, Q_NULLPTR, Q_NULLPTR, setupTokens[i].flags);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return serialPortInfoList;
 

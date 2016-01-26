@@ -559,8 +559,10 @@ inline bool QSerialPortPrivate::initialize(DWORD eventMask)
     ::memset(&currentCommTimeouts, 0, sizeof(currentCommTimeouts));
     currentCommTimeouts.ReadIntervalTimeout = MAXDWORD;
 
-    if (!updateCommTimeouts())
+    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
+        setError(getSystemError());
         return false;
+    }
 
     eventNotifier = new CommEventNotifier(eventMask, this, q);
     eventNotifier->start();
@@ -587,15 +589,6 @@ bool QSerialPortPrivate::updateDcb()
     ::SetCommMask(handle, eventMask);
 
     return ret;
-}
-
-bool QSerialPortPrivate::updateCommTimeouts()
-{
-    if (!::SetCommTimeouts(handle, &currentCommTimeouts)) {
-        setError(getSystemError());
-        return false;
-    }
-    return true;
 }
 
 QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) const
@@ -742,15 +735,6 @@ static const QList<qint32> standardBaudRatePairList()
 
     return standardBaudRatesTable;
 };
-
-qint32 QSerialPortPrivate::settingFromBaudRate(qint32 baudRate)
-{
-    const QList<qint32> baudRatePairList = standardBaudRatePairList();
-    const QList<qint32>::const_iterator baudRatePairListConstIterator
-            = std::find(baudRatePairList.constBegin(), baudRatePairList.constEnd(), baudRate);
-
-    return (baudRatePairListConstIterator != baudRatePairList.constEnd()) ? *baudRatePairListConstIterator : 0;
-}
 
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
