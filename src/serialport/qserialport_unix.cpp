@@ -986,21 +986,15 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
     Q_ASSERT(selectForRead);
     Q_ASSERT(selectForWrite);
 
-    fd_set fdread;
-    FD_ZERO(&fdread);
+    pollfd pfd = qt_make_pollfd(descriptor, 0);
+
     if (checkRead)
-        FD_SET(descriptor, &fdread);
+        pfd.events |= POLLIN;
 
-    fd_set fdwrite;
-    FD_ZERO(&fdwrite);
     if (checkWrite)
-        FD_SET(descriptor, &fdwrite);
+        pfd.events |= POLLOUT;
 
-    struct timespec tv;
-    tv.tv_sec = msecs / 1000;
-    tv.tv_nsec = (msecs % 1000) * 1000 * 1000;
-
-    const int ret = qt_safe_select(descriptor + 1, &fdread, &fdwrite, 0, msecs < 0 ? 0 : &tv);
+    const int ret = qt_poll_msecs(&pfd, 1, msecs);
     if (ret < 0) {
         setError(getSystemError());
         return false;
@@ -1009,9 +1003,13 @@ bool QSerialPortPrivate::waitForReadOrWrite(bool *selectForRead, bool *selectFor
         setError(QSerialPortErrorInfo(QSerialPort::TimeoutError));
         return false;
     }
+    if (pfd.revents & POLLNVAL) {
+        setError(getSystemError(EBADF));
+        return false;
+    }
 
-    *selectForRead = FD_ISSET(descriptor, &fdread);
-    *selectForWrite = FD_ISSET(descriptor, &fdwrite);
+    *selectForWrite = ((pfd.revents & POLLOUT) != 0);
+    *selectForRead = ((pfd.revents & POLLIN) != 0);
     return true;
 }
 
