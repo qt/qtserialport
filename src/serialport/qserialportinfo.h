@@ -72,7 +72,9 @@ public:
     bool hasProductIdentifier() const;
 
     bool isNull() const;
+#if QT_DEPRECATED_SINCE(5, 6)
     bool isBusy() const;
+#endif
 #if QT_DEPRECATED_SINCE(5, 2)
     QT_DEPRECATED bool isValid() const;
 #endif

@@ -125,6 +125,7 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
     return QSerialPortPrivate::standardBaudRates();
 }
 
+#if QT_DEPRECATED_SINCE(5, 6)
 bool QSerialPortInfo::isBusy() const
 {
     const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
@@ -138,6 +139,7 @@ bool QSerialPortInfo::isBusy() const
     }
     return false;
 }
+#endif // QT_DEPRECATED_SINCE(5, 6)
 
 #if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
