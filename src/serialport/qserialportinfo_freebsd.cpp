@@ -47,13 +47,13 @@
 
 QT_BEGIN_NAMESPACE
 
-static QString deviceProperty(const QString &pnpinfo, const QByteArray &pattern)
+static QString deviceProperty(const QString &source, const QByteArray &pattern)
 {
-    const int firstbound = pnpinfo.indexOf(QLatin1String(pattern));
+    const int firstbound = source.indexOf(QLatin1String(pattern));
     if (firstbound == -1)
         return QString();
-    const int lastbound = pnpinfo.indexOf(QLatin1Char(' '), firstbound);
-    return pnpinfo.mid(firstbound + pattern.size(), lastbound - firstbound - pattern.size());
+    const int lastbound = source.indexOf(QLatin1Char(' '), firstbound);
+    return source.mid(firstbound + pattern.size(), lastbound - firstbound - pattern.size());
 }
 
 static QString deviceName(const QString &pnpinfo)
@@ -202,8 +202,8 @@ static QList<NodeInfo> enumerateDesiredNodes(const QVector<int> &mib)
 
         const NodeInfo node = nodeForOid(nextoid);
         if (!node.name.isEmpty()) {
-            if (node.name.endsWith("\%desc")
-                    || node.name.endsWith("\%pnpinfo")) {
+            if (node.name.endsWith(QLatin1String("\%desc"))
+                    || node.name.endsWith(QLatin1String("\%pnpinfo"))) {
                 nodes.append(node);
             }
         }
@@ -228,10 +228,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     if (!(deviceDir.exists() && deviceDir.isReadable()))
         return QList<QSerialPortInfo>();
 
-    deviceDir.setNameFilters(QStringList() << QLatin1String("cua*"));
+    deviceDir.setNameFilters(QStringList() << QLatin1String("cua*") << QLatin1String("tty*"));
     deviceDir.setFilter(QDir::Files | QDir::System | QDir::NoSymLinks);
 
-    QList<QSerialPortInfo> serialPortInfoList;
+    QList<QSerialPortInfo> cuaCandidates;
+    QList<QSerialPortInfo> ttyCandidates;
 
     foreach (const QString &portName, deviceDir.entryList()) {
         if (portName.endsWith(QLatin1String(".init"))
@@ -304,7 +305,26 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             break;
         }
 
-        serialPortInfoList.append(priv);
+        if (portName.startsWith(QLatin1String("cua")))
+            cuaCandidates.append(priv);
+        else if (portName.startsWith(QLatin1String("tty")))
+            ttyCandidates.append(priv);
+    }
+
+    QList<QSerialPortInfo> serialPortInfoList;
+
+    foreach (const QSerialPortInfo &cuaCandidate, cuaCandidates) {
+        const QString cuaPortName = cuaCandidate.portName();
+        const QString cuaToken = deviceProperty(cuaPortName, "cua");
+        foreach (const QSerialPortInfo &ttyCandidate, ttyCandidates) {
+            const QString ttyPortName = ttyCandidate.portName();
+            const QString ttyToken = deviceProperty(ttyPortName, "tty");
+            if (cuaToken != ttyToken)
+                continue;
+
+            serialPortInfoList.append(cuaCandidate);
+            serialPortInfoList.append(ttyCandidate);
+        }
     }
 
     return serialPortInfoList;
