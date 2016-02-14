@@ -83,10 +83,10 @@ static quint16 searchShortIntProperty(io_registry_entry_t ioRegistryEntry,
     return value;
 }
 
-static bool isCompleteInfo(const QSerialPortInfoPrivate &priv)
+static bool isCompleteInfo(const QSerialPortInfoPrivate &priv, const QString &calloutDevice, const QString &dialinDevice)
 {
-    return !priv.portName.isEmpty()
-            && !priv.device.isEmpty()
+    return !calloutDevice.isEmpty()
+            && !dialinDevice.isEmpty()
             && !priv.manufacturer.isEmpty()
             && !priv.description.isEmpty()
             && !priv.serialNumber.isEmpty()
@@ -94,9 +94,14 @@ static bool isCompleteInfo(const QSerialPortInfoPrivate &priv)
             && priv.hasVendorIdentifier;
 }
 
-static QString deviceSystemLocation(io_registry_entry_t ioRegistryEntry)
+static QString calloutDeviceSystemLocation(io_registry_entry_t ioRegistryEntry)
 {
     return searchStringProperty(ioRegistryEntry, QCFString(kIOCalloutDeviceKey));
+}
+
+static QString dialinDeviceSystemLocation(io_registry_entry_t ioRegistryEntry)
+{
+    return searchStringProperty(ioRegistryEntry, QCFString(kIODialinDeviceKey));
 }
 
 static QString deviceDescription(io_registry_entry_t ioRegistryEntry)
@@ -162,12 +167,15 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
         QSerialPortInfoPrivate priv;
 
+        QString calloutDevice;
+        QString dialinDevice;
+
         forever {
-            if (priv.device.isEmpty()) {
-                priv.device = deviceSystemLocation(serialPortService);
-                if (!priv.device.isEmpty())
-                    priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(priv.device);
-            }
+            if (calloutDevice.isEmpty())
+                calloutDevice = calloutDeviceSystemLocation(serialPortService);
+
+            if (dialinDevice.isEmpty())
+                dialinDevice = dialinDeviceSystemLocation(serialPortService);
 
             if (priv.description.isEmpty())
                 priv.description = deviceDescription(serialPortService);
@@ -190,7 +198,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                                                 priv.hasProductIdentifier);
             }
 
-            if (isCompleteInfo(priv)) {
+            if (isCompleteInfo(priv, calloutDevice, dialinDevice)) {
                 ::IOObjectRelease(serialPortService);
                 break;
             }
@@ -200,7 +208,15 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                 break;
         }
 
-        serialPortInfoList.append(priv);
+        QSerialPortInfoPrivate calloutCandidate = priv;
+        calloutCandidate.device = calloutDevice;
+        calloutCandidate.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(calloutDevice);
+        serialPortInfoList.append(calloutCandidate);
+
+        QSerialPortInfoPrivate dialinCandidate = priv;
+        dialinCandidate.device = dialinDevice;
+        dialinCandidate.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(dialinDevice);
+        serialPortInfoList.append(dialinCandidate);
     }
 
     ::IOObjectRelease(serialPortIterator);
