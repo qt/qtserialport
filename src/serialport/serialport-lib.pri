@@ -37,14 +37,17 @@ unix {
     SOURCES += \
         $$PWD/qserialport_unix.cpp
 
-    !osx {
-        SOURCES += \
-            $$PWD/qserialportinfo_unix.cpp
-    } else {
+    osx {
         SOURCES += \
             $$PWD/qserialportinfo_osx.cpp
 
         LIBS_PRIVATE += -framework IOKit -framework CoreFoundation
+    } else:freebsd {
+        SOURCES += \
+            $$PWD/qserialportinfo_freebsd.cpp
+    } else {
+        SOURCES += \
+            $$PWD/qserialportinfo_unix.cpp
     }
 }
 
