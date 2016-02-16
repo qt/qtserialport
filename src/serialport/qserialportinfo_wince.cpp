@@ -120,11 +120,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
-QList<qint32> QSerialPortInfo::standardBaudRates()
-{
-    return QSerialPortPrivate::standardBaudRates();
-}
-
 bool QSerialPortInfo::isBusy() const
 {
     const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),

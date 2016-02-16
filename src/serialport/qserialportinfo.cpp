@@ -36,6 +36,7 @@
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
 #include "qserialport.h"
+#include "qserialport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -284,6 +285,10 @@ bool QSerialPortInfo::hasProductIdentifier() const
     Returns a list of available standard baud rates supported by
     the current serial port.
 */
+QList<qint32> QSerialPortInfo::standardBaudRates()
+{
+    return QSerialPortPrivate::standardBaudRates();
+}
 
 /*!
     \fn QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
