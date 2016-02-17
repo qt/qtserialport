@@ -185,7 +185,6 @@ private:
 QSerialPortPrivate::QSerialPortPrivate(QSerialPort *q)
     : QSerialPortPrivateData(q)
     , handle(INVALID_HANDLE_VALUE)
-    , parityErrorOccurred(false)
     , eventNotifier(Q_NULLPTR)
 {
 }
