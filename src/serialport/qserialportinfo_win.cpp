@@ -264,16 +264,22 @@ static QString parseDeviceSerialNumber(const QString &instanceIdentifier)
     return instanceIdentifier.mid(firstbound + 1, lastbound - firstbound - 1);
 }
 
-static QString deviceSerialNumber(const QString &instanceIdentifier,
+static QString deviceSerialNumber(QString instanceIdentifier,
                                   DEVINST deviceInstanceNumber)
 {
-    QString result = parseDeviceSerialNumber(instanceIdentifier);
-    if (result.isEmpty()) {
-        const DEVINST parentNumber = parentDeviceInstanceNumber(deviceInstanceNumber);
-        const QString parentInstanceIdentifier = deviceInstanceIdentifier(parentNumber);
-        result = parseDeviceSerialNumber(parentInstanceIdentifier);
+    forever {
+        const QString result = parseDeviceSerialNumber(instanceIdentifier);
+        if (!result.isEmpty())
+            return result;
+        deviceInstanceNumber = parentDeviceInstanceNumber(deviceInstanceNumber);
+        if (deviceInstanceNumber == 0)
+            break;
+        instanceIdentifier = deviceInstanceIdentifier(deviceInstanceNumber);
+        if (instanceIdentifier.isEmpty())
+            break;
     }
-    return result;
+
+    return QString();
 }
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
