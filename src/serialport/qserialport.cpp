@@ -955,6 +955,11 @@ bool QSerialPort::setRequestToSend(bool set)
         return false;
     }
 
+    if (d->flowControl == QSerialPort::HardwareControl) {
+        d->setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError));
+        return false;
+    }
+
     const bool requestToSend = isRequestToSend();
     const bool retval = d->setRequestToSend(set);
     if (retval && (requestToSend != set))
