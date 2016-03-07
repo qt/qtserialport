@@ -230,11 +230,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
-QList<qint32> QSerialPortInfo::standardBaudRates()
-{
-    return QSerialPortPrivate::standardBaudRates();
-}
-
 bool QSerialPortInfo::isBusy() const
 {
     QString lockFilePath = serialPortLockFilePath(portName());
