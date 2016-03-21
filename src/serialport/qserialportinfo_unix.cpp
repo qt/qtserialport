@@ -459,6 +459,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
+#if QT_DEPRECATED_SINCE(5, 6)
 bool QSerialPortInfo::isBusy() const
 {
     QString lockFilePath = serialPortLockFilePath(portName());
@@ -481,6 +482,7 @@ bool QSerialPortInfo::isBusy() const
 
     return true;
 }
+#endif // QT_DEPRECATED_SINCE(5, 6)
 
 #if QT_DEPRECATED_SINCE(5, 2)
 bool QSerialPortInfo::isValid() const
