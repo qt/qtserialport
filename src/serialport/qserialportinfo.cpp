@@ -264,6 +264,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     \sa isBusy()
 */
 
+#if QT_DEPRECATED_SINCE(5, 6)
 /*!
     \fn bool QSerialPortInfo::isBusy() const
 
@@ -272,6 +273,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     \sa isNull()
 */
+#endif // QT_DEPRECATED_SINCE(5, 6)
 
 #if QT_DEPRECATED_SINCE(5, 2)
 /*!
