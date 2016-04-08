@@ -42,6 +42,7 @@
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
 #include "qserialport.h"
+#include "qserialport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -263,6 +264,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
     \sa isBusy()
 */
 
+#if QT_DEPRECATED_SINCE(5, 6)
 /*!
     \fn bool QSerialPortInfo::isBusy() const
 
@@ -271,6 +273,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     \sa isNull()
 */
+#endif // QT_DEPRECATED_SINCE(5, 6)
 
 #if QT_DEPRECATED_SINCE(5, 2)
 /*!
@@ -287,9 +290,13 @@ bool QSerialPortInfo::hasProductIdentifier() const
 /*!
     \fn QList<qint32> QSerialPortInfo::standardBaudRates()
 
-    Returns a list of available standard baud rates supported by
-    the current serial port.
+    Returns a list of available standard baud rates supported
+    by the target platform.
 */
+QList<qint32> QSerialPortInfo::standardBaudRates()
+{
+    return QSerialPortPrivate::standardBaudRates();
+}
 
 /*!
     \fn QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
