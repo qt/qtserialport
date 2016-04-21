@@ -9,3 +9,6 @@ TEMPLATE = app
 
 SOURCES += \
     main.cpp
+
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/cenumerator
+INSTALLS += target
