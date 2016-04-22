@@ -206,6 +206,8 @@ public:
     bool getDcb(DCB *dcb);
     OVERLAPPED *waitForNotified(int msecs);
 
+    qint64 queuedBytesCount(QSerialPort::Direction direction) const;
+
     bool completeAsyncCommunication(qint64 bytesTransferred);
     bool completeAsyncRead(qint64 bytesTransferred);
     bool completeAsyncWrite(qint64 bytesTransferred);
