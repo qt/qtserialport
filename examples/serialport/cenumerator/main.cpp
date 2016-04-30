@@ -58,16 +58,16 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     QTextStream out(stdout);
-    QList<QSerialPortInfo> serialPortInfoList = QSerialPortInfo::availablePorts();
+    const auto serialPortInfos = QSerialPortInfo::availablePorts();
 
-    out << QObject::tr("Total number of ports available: ") << serialPortInfoList.count() << endl;
+    out << QObject::tr("Total number of ports available: ") << serialPortInfos.count() << endl;
 
     const QString blankString = QObject::tr("N/A");
     QString description;
     QString manufacturer;
     QString serialNumber;
 
-    foreach (const QSerialPortInfo &serialPortInfo, serialPortInfoList) {
+    for (const QSerialPortInfo &serialPortInfo : serialPortInfos) {
         description = serialPortInfo.description();
         manufacturer = serialPortInfo.manufacturer();
         serialNumber = serialPortInfo.serialNumber();

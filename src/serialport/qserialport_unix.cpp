@@ -125,7 +125,7 @@ QString serialPortLockFilePath(const QString &portName)
 
     QString lockFilePath;
 
-    foreach (const QString &lockDirectoryPath, lockDirectoryPaths) {
+    for (const QString &lockDirectoryPath : lockDirectoryPaths) {
         const QString filePath = lockDirectoryPath + fileName;
 
         QFileInfo lockDirectoryInfo(lockDirectoryPath);
@@ -139,7 +139,7 @@ QString serialPortLockFilePath(const QString &portName)
 
     if (lockFilePath.isEmpty()) {
         qWarning("The following directories are not readable or writable for detaling with lock files\n");
-        foreach (const QString &lockDirectoryPath, lockDirectoryPaths)
+        for (const QString &lockDirectoryPath : lockDirectoryPaths)
             qWarning("\t%s\n", qPrintable(lockDirectoryPath));
         return QString();
     }

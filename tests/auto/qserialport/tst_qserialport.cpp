@@ -265,7 +265,7 @@ void tst_QSerialPort::openExisting()
     QFETCH(bool, openResult);
     QFETCH(QSerialPort::SerialPortError, errorCode);
 
-    foreach (const QString &serialPortName, m_availablePortNames) {
+    for (const QString &serialPortName : qAsConst(m_availablePortNames)) {
         QSerialPort serialPort(serialPortName);
         QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
         QVERIFY(errorSpy.isValid());
@@ -1055,9 +1055,9 @@ void tst_QSerialPort::controlBreak()
     QVERIFY2(!timeout(), "Timed out when waiting for the read of break state.");
     QVERIFY(receiverPort.bytesAvailable() > 0);
 
-    foreach (const char c, receiverPort.readAll()) {
-        QCOMPARE(c, char(0));
-    }
+    const QByteArray actual = receiverPort.readAll();
+    const QByteArray expected(actual.size(), '\0');
+    QCOMPARE(actual, expected);
 
     QVERIFY(senderPort.setBreakEnabled(false));
     QCOMPARE(senderPort.isBreakEnabled(), false);
