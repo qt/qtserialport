@@ -27,12 +27,6 @@ win32:!wince* {
     LIBS_PRIVATE += -lsetupapi -ladvapi32
 }
 
-wince* {
-    SOURCES += \
-        $$PWD/qserialport_wince.cpp \
-        $$PWD/qserialportinfo_wince.cpp
-}
-
 unix {
     SOURCES += \
         $$PWD/qserialport_unix.cpp

@@ -71,7 +71,7 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
 #endif
     Q_PROPERTY(bool breakEnabled READ isBreakEnabled WRITE setBreakEnabled NOTIFY breakEnabledChanged)
 
-#if defined(Q_OS_WIN32) || defined(Q_OS_WINCE)
+#if defined(Q_OS_WIN32)
     typedef void* Handle;
 #else
     typedef int Handle;

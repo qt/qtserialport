@@ -58,10 +58,7 @@
 #include <private/qringbuffer_p.h>
 #include <private/qiodevice_p.h>
 
-#if defined(Q_OS_WINCE)
-#  include <QtCore/qmutex.h>
-#  include <qt_windows.h>
-#elif defined(Q_OS_WIN32)
+#if defined(Q_OS_WIN32)
 #  include <qt_windows.h>
 #elif defined(Q_OS_UNIX)
 #  include <QtCore/qlockfile.h>
@@ -184,28 +181,7 @@ public:
     bool settingsRestoredOnClose;
     bool isBreakEnabled;
 
-#if defined(Q_OS_WINCE)
-
-    bool initialize(DWORD eventMask);
-    bool updateDcb();
-
-    bool waitForReadOrWrite(bool *selectForRead, bool *selectForWrite,
-                            bool checkRead, bool checkWrite,
-                            int msecs);
-
-    bool notifyRead();
-    bool notifyWrite();
-
-    DCB currentDcb;
-    DCB restoredDcb;
-    COMMTIMEOUTS currentCommTimeouts;
-    COMMTIMEOUTS restoredCommTimeouts;
-    HANDLE handle;
-
-    QThread *eventNotifier;
-    QMutex settingsChangeMutex;
-
-#elif defined(Q_OS_WIN32)
+#if defined(Q_OS_WIN32)
 
     bool initialize();
     bool setDcb(DCB *dcb);
