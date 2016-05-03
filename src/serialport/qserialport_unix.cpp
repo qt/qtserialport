@@ -244,15 +244,11 @@ void QSerialPortPrivate::close()
     ::ioctl(descriptor, TIOCNXCL);
 #endif
 
-    if (readNotifier) {
-        delete readNotifier;
-        readNotifier = Q_NULLPTR;
-    }
+    delete readNotifier;
+    readNotifier = Q_NULLPTR;
 
-    if (writeNotifier) {
-        delete writeNotifier;
-        writeNotifier = Q_NULLPTR;
-    }
+    delete writeNotifier;
+    writeNotifier = Q_NULLPTR;
 
     qt_safe_close(descriptor);
 

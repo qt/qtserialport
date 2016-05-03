@@ -106,15 +106,11 @@ void QSerialPortPrivate::close()
 {
     ::CancelIo(handle);
 
-    if (notifier) {
-        delete notifier;
-        notifier = Q_NULLPTR;
-    }
+    delete notifier;
+    notifier = Q_NULLPTR;
 
-    if (startAsyncWriteTimer) {
-        delete startAsyncWriteTimer;
-        startAsyncWriteTimer = Q_NULLPTR;
-    }
+    delete startAsyncWriteTimer;
+    startAsyncWriteTimer = Q_NULLPTR;
 
     communicationStarted = false;
     readStarted = false;
