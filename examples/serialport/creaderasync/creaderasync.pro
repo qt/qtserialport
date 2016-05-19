@@ -13,3 +13,6 @@ HEADERS += \
 SOURCES += \
     main.cpp \
     serialportreader.cpp
+
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/creaderasync
+INSTALLS += target

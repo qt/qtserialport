@@ -157,7 +157,7 @@ static bool isRfcommDevice(const QString &portName)
         return false;
 
     bool ok;
-    const int portNumber = portName.mid(6).toInt(&ok);
+    const int portNumber = portName.midRef(6).toInt(&ok);
     if (!ok || (portNumber < 0) || (portNumber > 255))
         return false;
     return true;
