@@ -414,7 +414,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    forever {
+    for (;;) {
         bool readyToRead = false;
         bool readyToWrite = false;
         if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),

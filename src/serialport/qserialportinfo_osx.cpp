@@ -166,7 +166,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     QList<QSerialPortInfo> serialPortInfoList;
 
-    forever {
+    for (;;) {
         io_registry_entry_t serialPortService = ::IOIteratorNext(serialPortIterator);
         if (!serialPortService)
             break;
@@ -176,7 +176,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         QString calloutDevice;
         QString dialinDevice;
 
-        forever {
+        for (;;) {
             if (calloutDevice.isEmpty())
                 calloutDevice = calloutDeviceSystemLocation(serialPortService);
 

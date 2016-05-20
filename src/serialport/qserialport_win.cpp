@@ -294,7 +294,7 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    forever {
+    for (;;) {
         OVERLAPPED *overlapped = waitForNotified(
                     qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)

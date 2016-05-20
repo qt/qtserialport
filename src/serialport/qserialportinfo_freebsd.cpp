@@ -195,7 +195,7 @@ static QList<NodeInfo> enumerateDesiredNodes(const QVector<int> &mib)
 
     QVector<int> oid = mib;
 
-    forever {
+    for (;;) {
         const QVector<int> nextoid = nextOid(oid);
         if (nextoid.isEmpty())
             break;

@@ -79,7 +79,7 @@ static QStringList portNamesFromHardwareDeviceMap()
     std::vector<wchar_t> outputValueName(MaximumValueNameInChars, 0);
     std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
     DWORD bytesRequired = MAX_PATH;
-    forever {
+    for (;;) {
         DWORD requiredValueNameChars = MaximumValueNameInChars;
         const LONG ret = ::RegEnumValue(hKey, index, &outputValueName[0], &requiredValueNameChars,
                                         Q_NULLPTR, Q_NULLPTR, reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
@@ -103,7 +103,7 @@ static QString deviceRegistryProperty(HDEVINFO deviceInfoSet,
     DWORD dataType = 0;
     std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
     DWORD bytesRequired = MAX_PATH;
-    forever {
+    for (;;) {
         if (::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]),
                                                bytesRequired, &bytesRequired)) {
@@ -165,7 +165,7 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
         DWORD dataType = 0;
         std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
         DWORD bytesRequired = MAX_PATH;
-        forever {
+        for (;;) {
             const LONG ret = ::RegQueryValueEx(key, keyTokens[i], Q_NULLPTR, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
             if (ret == ERROR_MORE_DATA) {
@@ -273,7 +273,7 @@ static QString parseDeviceSerialNumber(const QString &instanceIdentifier)
 static QString deviceSerialNumber(QString instanceIdentifier,
                                   DEVINST deviceInstanceNumber)
 {
-    forever {
+    for (;;) {
         const QString result = parseDeviceSerialNumber(instanceIdentifier);
         if (!result.isEmpty())
             return result;
