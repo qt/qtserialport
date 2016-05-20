@@ -13,3 +13,6 @@ HEADERS += \
 SOURCES += \
     main.cpp \
     serialportwriter.cpp
+
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/cwriterasync
+INSTALLS += target

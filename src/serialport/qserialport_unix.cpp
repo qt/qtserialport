@@ -125,7 +125,7 @@ QString serialPortLockFilePath(const QString &portName)
 
     QString lockFilePath;
 
-    foreach (const QString &lockDirectoryPath, lockDirectoryPaths) {
+    for (const QString &lockDirectoryPath : lockDirectoryPaths) {
         const QString filePath = lockDirectoryPath + fileName;
 
         QFileInfo lockDirectoryInfo(lockDirectoryPath);
@@ -139,7 +139,7 @@ QString serialPortLockFilePath(const QString &portName)
 
     if (lockFilePath.isEmpty()) {
         qWarning("The following directories are not readable or writable for detaling with lock files\n");
-        foreach (const QString &lockDirectoryPath, lockDirectoryPaths)
+        for (const QString &lockDirectoryPath : lockDirectoryPaths)
             qWarning("\t%s\n", qPrintable(lockDirectoryPath));
         return QString();
     }
@@ -250,15 +250,11 @@ void QSerialPortPrivate::close()
     ::ioctl(descriptor, TIOCNXCL);
 #endif
 
-    if (readNotifier) {
-        delete readNotifier;
-        readNotifier = Q_NULLPTR;
-    }
+    delete readNotifier;
+    readNotifier = Q_NULLPTR;
 
-    if (writeNotifier) {
-        delete writeNotifier;
-        writeNotifier = Q_NULLPTR;
-    }
+    delete writeNotifier;
+    writeNotifier = Q_NULLPTR;
 
     qt_safe_close(descriptor);
 

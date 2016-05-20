@@ -171,7 +171,8 @@ void SettingsDialog::fillPortsInfo()
     QString description;
     QString manufacturer;
     QString serialNumber;
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+    const auto infos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : infos) {
         QStringList list;
         description = info.description();
         manufacturer = info.manufacturer();
