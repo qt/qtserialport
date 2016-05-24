@@ -122,7 +122,7 @@ static QVector<int> nextOid(const QVector<int> &previousOid)
     QVector<int> mib;
     mib.append(0); // Magic undocumented code (CTL_UNSPEC ?)
     mib.append(2); // Magic undocumented code
-    foreach (int code, previousOid)
+    for (int code : previousOid)
         mib.append(code);
 
     size_t requiredLength = 0;
@@ -144,7 +144,7 @@ static NodeInfo nodeForOid(const QVector<int> &oid)
     QVector<int> mib;
     mib.append(0); // Magic undocumented code (CTL_UNSPEC ?)
     mib.append(1); // Magic undocumented code
-    foreach (int code, oid)
+    for (int code : oid)
         mib.append(code);
 
     // query node name
@@ -234,7 +234,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     QList<QSerialPortInfo> cuaCandidates;
     QList<QSerialPortInfo> ttyCandidates;
 
-    foreach (const QString &portName, deviceDir.entryList()) {
+    const auto portNames = deviceDir.entryList();
+    for (const QString &portName : portNames) {
         if (portName.endsWith(QLatin1String(".init"))
                 || portName.endsWith(QLatin1String(".lock"))) {
             continue;
@@ -244,7 +245,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         priv.portName = portName;
         priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(portName);
 
-        foreach (const NodeInfo &node, nodes) {
+        for (const NodeInfo &node : nodes) {
             const int pnpinfoindex = node.name.indexOf(QLatin1String("\%pnpinfo"));
             if (pnpinfoindex == -1)
                 continue;
@@ -288,7 +289,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             const QString descnode = QString(QLatin1String("%1\%desc")).arg(nodebase);
 
             // search for description and manufacturer properties
-            foreach (const NodeInfo &node, nodes) {
+            for (const NodeInfo &node : nodes) {
                 if (node.name != descnode)
                     continue;
 
@@ -313,10 +314,10 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     QList<QSerialPortInfo> serialPortInfoList;
 
-    foreach (const QSerialPortInfo &cuaCandidate, cuaCandidates) {
+    for (const QSerialPortInfo &cuaCandidate : qAsConst(cuaCandidates)) {
         const QString cuaPortName = cuaCandidate.portName();
         const QString cuaToken = deviceProperty(cuaPortName, "cua");
-        foreach (const QSerialPortInfo &ttyCandidate, ttyCandidates) {
+        for (const QSerialPortInfo &ttyCandidate : qAsConst(ttyCandidates)) {
             const QString ttyPortName = ttyCandidate.portName();
             const QString ttyToken = deviceProperty(ttyPortName, "tty");
             if (cuaToken != ttyToken)

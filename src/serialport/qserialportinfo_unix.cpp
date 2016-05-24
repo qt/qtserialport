@@ -90,7 +90,8 @@ static QStringList filteredDeviceFilePaths()
         deviceDir.setNameFilters(deviceFileNameFilterList);
         deviceDir.setFilter(QDir::Files | QDir::System | QDir::NoSymLinks);
         QStringList deviceFilePaths;
-        foreach (const QFileInfo &deviceFileInfo, deviceDir.entryInfoList()) {
+        const auto deviceFileInfos = deviceDir.entryInfoList();
+        for (const QFileInfo &deviceFileInfo : deviceFileInfos) {
             const QString deviceAbsoluteFilePath = deviceFileInfo.absoluteFilePath();
 
 #ifdef Q_OS_FREEBSD
@@ -115,7 +116,8 @@ QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok)
 {
     QList<QSerialPortInfo> serialPortInfoList;
 
-    foreach (const QString &deviceFilePath, filteredDeviceFilePaths()) {
+    const auto deviceFilePaths = filteredDeviceFilePaths();
+    for (const QString &deviceFilePath : deviceFilePaths) {
         QSerialPortInfoPrivate priv;
         priv.device = deviceFilePath;
         priv.portName = QSerialPortInfoPrivate::portNameFromSystemLocation(deviceFilePath);
@@ -155,7 +157,7 @@ static bool isRfcommDevice(const QString &portName)
         return false;
 
     bool ok;
-    const int portNumber = portName.mid(6).toInt(&ok);
+    const int portNumber = portName.midRef(6).toInt(&ok);
     if (!ok || (portNumber < 0) || (portNumber > 255))
         return false;
     return true;
@@ -250,7 +252,8 @@ QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
 
     QList<QSerialPortInfo> serialPortInfoList;
     ttySysClassDir.setFilter(QDir::Dirs | QDir::NoDotAndDotDot);
-    foreach (const QFileInfo &fileInfo, ttySysClassDir.entryInfoList()) {
+    const auto fileInfos = ttySysClassDir.entryInfoList();
+    for (const QFileInfo &fileInfo : fileInfos) {
         if (!fileInfo.isSymLink())
             continue;
 

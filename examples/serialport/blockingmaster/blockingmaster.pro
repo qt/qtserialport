@@ -11,3 +11,6 @@ SOURCES += \
     main.cpp \
     dialog.cpp \
     masterthread.cpp
+
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/blockingmaster
+INSTALLS += target

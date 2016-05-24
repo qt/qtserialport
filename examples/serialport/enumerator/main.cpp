@@ -64,7 +64,8 @@ int main(int argc, char *argv[])
 
     QVBoxLayout *layout = new QVBoxLayout;
 
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+    const auto infos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : infos) {
         QString s = QObject::tr("Port: ") + info.portName() + "\n"
                     + QObject::tr("Location: ") + info.systemLocation() + "\n"
                     + QObject::tr("Description: ") + info.description() + "\n"

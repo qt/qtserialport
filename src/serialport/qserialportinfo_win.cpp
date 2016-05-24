@@ -344,9 +344,10 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
 
-    foreach (const QString &portName, portNamesFromHardwareDeviceMap()) {
-        if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
-                         SerialPortNameEqualFunctor(portName)) == serialPortInfoList.end()) {
+    const auto portNames = portNamesFromHardwareDeviceMap();
+    for (const QString &portName : portNames) {
+        if (std::find_if(serialPortInfoList.cbegin(), serialPortInfoList.cend(),
+                         SerialPortNameEqualFunctor(portName)) == serialPortInfoList.cend()) {
             QSerialPortInfoPrivate priv;
             priv.portName = portName;
             priv.device =  QSerialPortInfoPrivate::portNameToSystemLocation(portName);
