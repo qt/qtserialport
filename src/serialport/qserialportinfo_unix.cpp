@@ -391,7 +391,6 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
 #endif
-    static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
     QScopedPointer<struct ::udev, ScopedPointerUdevDeleter> udev(::udev_new());
 
