@@ -94,7 +94,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         desiredAccess |= GENERIC_WRITE;
 
     handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation.utf16()),
-                              desiredAccess, 0, Q_NULLPTR, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, Q_NULLPTR);
+                              desiredAccess, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
 
     if (handle == INVALID_HANDLE_VALUE) {
         setError(getSystemError());
@@ -113,10 +113,10 @@ void QSerialPortPrivate::close()
     ::CancelIo(handle);
 
     delete notifier;
-    notifier = Q_NULLPTR;
+    notifier = nullptr;
 
     delete startAsyncWriteTimer;
-    startAsyncWriteTimer = Q_NULLPTR;
+    startAsyncWriteTimer = nullptr;
 
     communicationStarted = false;
     readStarted = false;
@@ -154,9 +154,9 @@ QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
         ret |= QSerialPort::DataCarrierDetectSignal;
 
     DWORD bytesReturned = 0;
-    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, Q_NULLPTR, 0,
+    if (!::DeviceIoControl(handle, IOCTL_SERIAL_GET_DTRRTS, nullptr, 0,
                           &modemStat, sizeof(modemStat),
-                          &bytesReturned, Q_NULLPTR)) {
+                          &bytesReturned, nullptr)) {
         setError(getSystemError());
         return ret;
     }
@@ -507,7 +507,7 @@ bool QSerialPortPrivate::startAsyncRead()
     }
 
     ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
-    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, Q_NULLPTR, &readCompletionOverlapped)) {
+    if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, nullptr, &readCompletionOverlapped)) {
         readStarted = true;
         return true;
     }
@@ -534,7 +534,7 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
     const int writeBytes = writeBuffer.nextDataBlockSize();
     ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
     if (!::WriteFile(handle, writeBuffer.readPointer(),
-                     writeBytes, Q_NULLPTR, &writeCompletionOverlapped)) {
+                     writeBytes, nullptr, &writeCompletionOverlapped)) {
 
         QSerialPortErrorInfo error = getSystemError();
         if (error.errorCode != QSerialPort::NoError) {
@@ -598,7 +598,7 @@ OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)
     OVERLAPPED *overlapped = notifier->waitForAnyNotified(msecs);
     if (!overlapped) {
         setError(getSystemError(WAIT_TIMEOUT));
-        return Q_NULLPTR;
+        return nullptr;
     }
     return overlapped;
 }
@@ -606,7 +606,7 @@ OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)
 qint64 QSerialPortPrivate::queuedBytesCount(QSerialPort::Direction direction) const
 {
     COMSTAT comstat;
-    if (::ClearCommError(handle, Q_NULLPTR, &comstat) == 0)
+    if (::ClearCommError(handle, nullptr, &comstat) == 0)
         return -1;
     return (direction == QSerialPort::Input)
             ? comstat.cbInQue

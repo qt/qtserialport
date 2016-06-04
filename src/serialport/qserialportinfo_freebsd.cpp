@@ -106,7 +106,7 @@ struct NodeInfo
 static QVector<int> mibFromName(const QString &name)
 {
     size_t mibsize = 0;
-    if (::sysctlnametomib(name.toLocal8Bit().constData(), Q_NULLPTR, &mibsize) < 0
+    if (::sysctlnametomib(name.toLocal8Bit().constData(), nullptr, &mibsize) < 0
             || mibsize == 0) {
         return QVector<int>();
     }
@@ -126,11 +126,11 @@ static QVector<int> nextOid(const QVector<int> &previousOid)
         mib.append(code);
 
     size_t requiredLength = 0;
-    if (::sysctl(&mib[0], mib.count(), Q_NULLPTR, &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&mib[0], mib.count(), nullptr, &requiredLength, nullptr, 0) < 0)
         return QVector<int>();
     const size_t oidLength = requiredLength / sizeof(int);
     QVector<int> oid(oidLength, 0);
-    if (::sysctl(&mib[0], mib.count(), &oid[0], &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&mib[0], mib.count(), &oid[0], &requiredLength, nullptr, 0) < 0)
         return QVector<int>();
 
     if (previousOid.first() != oid.first())
@@ -149,27 +149,27 @@ static NodeInfo nodeForOid(const QVector<int> &oid)
 
     // query node name
     size_t requiredLength = 0;
-    if (::sysctl(&mib[0], mib.count(), Q_NULLPTR, &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&mib[0], mib.count(), nullptr, &requiredLength, nullptr, 0) < 0)
         return NodeInfo();
     QByteArray name(requiredLength, 0);
-    if (::sysctl(&mib[0], mib.count(), name.data(), &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&mib[0], mib.count(), name.data(), &requiredLength, nullptr, 0) < 0)
         return NodeInfo();
 
     // query node value
     requiredLength = 0;
-    if (::sysctl(&oid[0], oid.count(), Q_NULLPTR, &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&oid[0], oid.count(), nullptr, &requiredLength, nullptr, 0) < 0)
         return NodeInfo();
     QByteArray value(requiredLength, 0);
-    if (::sysctl(&oid[0], oid.count(), value.data(), &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&oid[0], oid.count(), value.data(), &requiredLength, nullptr, 0) < 0)
         return NodeInfo();
 
     // query value format
     mib[1] = 4; // Magic undocumented code
     requiredLength = 0;
-    if (::sysctl(&mib[0], mib.count(), Q_NULLPTR, &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&mib[0], mib.count(), nullptr, &requiredLength, nullptr, 0) < 0)
         return NodeInfo();
     QByteArray buf(requiredLength, 0);
-    if (::sysctl(&mib[0], mib.count(), buf.data(), &requiredLength, Q_NULLPTR, 0) < 0)
+    if (::sysctl(&mib[0], mib.count(), buf.data(), &requiredLength, nullptr, 0) < 0)
         return NodeInfo();
 
     QDataStream in(buf);

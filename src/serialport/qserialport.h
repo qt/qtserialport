@@ -200,9 +200,9 @@ public:
 #endif
 #endif
 
-    explicit QSerialPort(QObject *parent = Q_NULLPTR);
-    explicit QSerialPort(const QString &name, QObject *parent = Q_NULLPTR);
-    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = Q_NULLPTR);
+    explicit QSerialPort(QObject *parent = nullptr);
+    explicit QSerialPort(const QString &name, QObject *parent = nullptr);
+    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = nullptr);
     virtual ~QSerialPort();
 
     void setPortName(const QString &name);

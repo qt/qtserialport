@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 static QStringList portNamesFromHardwareDeviceMap()
 {
-    HKEY hKey = Q_NULLPTR;
+    HKEY hKey = nullptr;
     if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
         return QStringList();
 
@@ -82,7 +82,7 @@ static QStringList portNamesFromHardwareDeviceMap()
     for (;;) {
         DWORD requiredValueNameChars = MaximumValueNameInChars;
         const LONG ret = ::RegEnumValue(hKey, index, &outputValueName[0], &requiredValueNameChars,
-                                        Q_NULLPTR, Q_NULLPTR, reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
+                                        nullptr, nullptr, reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
         if (ret == ERROR_MORE_DATA) {
             outputBuffer.resize(bytesRequired / sizeof(wchar_t) + 2, 0);
         } else if (ret == ERROR_SUCCESS) {
@@ -166,7 +166,7 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
         std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
         DWORD bytesRequired = MAX_PATH;
         for (;;) {
-            const LONG ret = ::RegQueryValueEx(key, keyTokens[i], Q_NULLPTR, &dataType,
+            const LONG ret = ::RegQueryValueEx(key, keyTokens[i], nullptr, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
             if (ret == ERROR_MORE_DATA) {
                 outputBuffer.resize(bytesRequired / sizeof(wchar_t) + 2, 0);
@@ -304,7 +304,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     QList<QSerialPortInfo> serialPortInfoList;
 
     for (int i = 0; i < SetupTokensCount; ++i) {
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&setupTokens[i].guid, Q_NULLPTR, Q_NULLPTR, setupTokens[i].flags);
+        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&setupTokens[i].guid, nullptr, nullptr, setupTokens[i].flags);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return serialPortInfoList;
 
@@ -362,7 +362,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 bool QSerialPortInfo::isBusy() const
 {
     const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, Q_NULLPTR);
+                                           GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
 
     if (handle == INVALID_HANDLE_VALUE) {
         if (::GetLastError() == ERROR_ACCESS_DENIED)
@@ -378,7 +378,7 @@ bool QSerialPortInfo::isBusy() const
 bool QSerialPortInfo::isValid() const
 {
     const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, Q_NULLPTR);
+                                           GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
 
     if (handle == INVALID_HANDLE_VALUE) {
         if (::GetLastError() != ERROR_ACCESS_DENIED)
