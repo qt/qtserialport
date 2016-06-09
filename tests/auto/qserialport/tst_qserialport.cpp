@@ -995,7 +995,7 @@ private:
 void tst_QSerialPort::synchronousReadWriteAfterAsynchronousReadWrite()
 {
     MasterTransactor master(m_senderPortName);
-    SlaveTransactor *slave = new SlaveTransactor(m_receiverPortName);
+    auto slave = new SlaveTransactor(m_receiverPortName);
 
     QThread thread;
     slave->moveToThread(&thread);

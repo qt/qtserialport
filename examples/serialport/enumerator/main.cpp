@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QVBoxLayout *layout = new QVBoxLayout;
+    auto layout = new QVBoxLayout;
 
     const auto infos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &info : infos) {
@@ -75,11 +75,11 @@ int main(int argc, char *argv[])
                     + QObject::tr("Product Identifier: ") + (info.hasProductIdentifier() ? QString::number(info.productIdentifier(), 16) : QString()) + "\n"
                     + QObject::tr("Busy: ") + (info.isBusy() ? QObject::tr("Yes") : QObject::tr("No")) + "\n";
 
-        QLabel *label = new QLabel(s);
+        auto label = new QLabel(s);
         layout->addWidget(label);
     }
 
-    QWidget *workPage = new QWidget;
+    auto workPage = new QWidget;
     workPage->setLayout(layout);
 
     QScrollArea area;
