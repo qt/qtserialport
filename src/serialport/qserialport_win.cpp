@@ -257,7 +257,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     stopWatch.start();
 
     do {
-        OVERLAPPED *overlapped = waitForNotified(
+        const OVERLAPPED *overlapped = waitForNotified(
                     qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)
             return false;
@@ -290,8 +290,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     QElapsedTimer stopWatch;
     stopWatch.start();
 
-    forever {
-        OVERLAPPED *overlapped = waitForNotified(
+    for (;;) {
+        const OVERLAPPED *overlapped = waitForNotified(
                     qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
         if (!overlapped)
             return false;
@@ -598,7 +598,7 @@ OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)
     OVERLAPPED *overlapped = notifier->waitForAnyNotified(msecs);
     if (!overlapped) {
         setError(getSystemError(WAIT_TIMEOUT));
-        return 0;
+        return Q_NULLPTR;
     }
     return overlapped;
 }

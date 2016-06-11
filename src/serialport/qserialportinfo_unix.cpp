@@ -166,10 +166,7 @@ static bool isRfcommDevice(const QString &portName)
 // provided by the tty0tty driver
 static bool isVirtualNullModemDevice(const QString &portName)
 {
-    if (!portName.startsWith(QLatin1String("tnt")))
-        return false;
-
-    return true;
+    return portName.startsWith(QLatin1String("tnt"));
 }
 
 static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
@@ -391,7 +388,6 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
     if (!symbolsResolved)
         return QList<QSerialPortInfo>();
 #endif
-    static const QString rfcommDeviceName(QStringLiteral("rfcomm"));
 
     QScopedPointer<struct ::udev, ScopedPointerUdevDeleter> udev(::udev_new());
 

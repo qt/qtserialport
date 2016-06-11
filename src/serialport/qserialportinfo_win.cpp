@@ -79,7 +79,7 @@ static QStringList portNamesFromHardwareDeviceMap()
     std::vector<wchar_t> outputValueName(MaximumValueNameInChars, 0);
     std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
     DWORD bytesRequired = MAX_PATH;
-    forever {
+    for (;;) {
         DWORD requiredValueNameChars = MaximumValueNameInChars;
         const LONG ret = ::RegEnumValue(hKey, index, &outputValueName[0], &requiredValueNameChars,
                                         Q_NULLPTR, Q_NULLPTR, reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
@@ -103,7 +103,7 @@ static QString deviceRegistryProperty(HDEVINFO deviceInfoSet,
     DWORD dataType = 0;
     std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
     DWORD bytesRequired = MAX_PATH;
-    forever {
+    for (;;) {
         if (::SetupDiGetDeviceRegistryProperty(deviceInfoSet, deviceInfoData, property, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]),
                                                bytesRequired, &bytesRequired)) {
@@ -158,14 +158,14 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
             L"PortNumber\0"
     };
 
-    static const int keyTokensCount = sizeof(keyTokens) / sizeof(keyTokens[0]);
+    enum { KeyTokensCount = sizeof(keyTokens) / sizeof(keyTokens[0]) };
 
     QString portName;
-    for (int i = 0; i < keyTokensCount; ++i) {
+    for (int i = 0; i < KeyTokensCount; ++i) {
         DWORD dataType = 0;
         std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
         DWORD bytesRequired = MAX_PATH;
-        forever {
+        for (;;) {
             const LONG ret = ::RegQueryValueEx(key, keyTokens[i], Q_NULLPTR, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
             if (ret == ERROR_MORE_DATA) {
@@ -273,7 +273,7 @@ static QString parseDeviceSerialNumber(const QString &instanceIdentifier)
 static QString deviceSerialNumber(QString instanceIdentifier,
                                   DEVINST deviceInstanceNumber)
 {
-    forever {
+    for (;;) {
         const QString result = parseDeviceSerialNumber(instanceIdentifier);
         if (!result.isEmpty())
             return result;
@@ -299,11 +299,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         { GUID_DEVINTERFACE_MODEM, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE }
     };
 
-    static const int setupTokensCount = sizeof(setupTokens) / sizeof(setupTokens[0]);
+    enum { SetupTokensCount = sizeof(setupTokens) / sizeof(setupTokens[0]) };
 
     QList<QSerialPortInfo> serialPortInfoList;
 
-    for (int i = 0; i < setupTokensCount; ++i) {
+    for (int i = 0; i < SetupTokensCount; ++i) {
         const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&setupTokens[i].guid, Q_NULLPTR, Q_NULLPTR, setupTokens[i].flags);
         if (deviceInfoSet == INVALID_HANDLE_VALUE)
             return serialPortInfoList;

@@ -184,7 +184,7 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
      int numRead = 0, numReadTotal = 0;
      char buffer[50];
 
-     forever {
+     for (;;) {
          numRead  = serial.read(buffer, 50);
 
          // Do whatever with the array
