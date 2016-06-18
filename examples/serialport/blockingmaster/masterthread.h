@@ -61,7 +61,7 @@ class MasterThread : public QThread
     Q_OBJECT
 
 public:
-    MasterThread(QObject *parent = 0);
+    explicit MasterThread(QObject *parent = 0);
     ~MasterThread();
 
     void transaction(const QString &portName, int waitTimeout, const QString &request);
