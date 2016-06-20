@@ -65,7 +65,7 @@ public:
     ~SlaveThread();
 
     void startSlave(const QString &portName, int waitTimeout, const QString &response);
-    void run();
+    void run() Q_DECL_OVERRIDE;
 
 signals:
     void request(const QString &s);
