@@ -53,6 +53,7 @@
 
 #include <QtCore/private/qglobal_p.h>
 #include <qobject.h>
+#include <qdeadlinetimer.h>
 
 typedef struct _OVERLAPPED OVERLAPPED;
 
@@ -75,8 +76,8 @@ public:
     Qt::HANDLE handle() const;
 
     void setEnabled(bool enabled);
-    OVERLAPPED *waitForAnyNotified(int msecs);
-    bool waitForNotified(int msecs, OVERLAPPED *overlapped);
+    OVERLAPPED *waitForAnyNotified(QDeadlineTimer deadline);
+    bool waitForNotified(QDeadlineTimer deadline, OVERLAPPED *overlapped);
 
 Q_SIGNALS:
     void notified(quint32 numberOfBytes, quint32 errorCode, OVERLAPPED *overlapped);

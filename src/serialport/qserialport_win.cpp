@@ -344,12 +344,10 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
     const qint64 initialReadBufferSize = buffer.size();
     qint64 currentReadBufferSize = initialReadBufferSize;
 
-    QElapsedTimer stopWatch;
-    stopWatch.start();
+    QDeadlineTimer deadline(msecs);
 
     do {
-        const OVERLAPPED *overlapped = waitForNotified(
-                    qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
+        const OVERLAPPED *overlapped = waitForNotified(deadline);
         if (!overlapped)
             return false;
 
@@ -365,7 +363,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
             }
         }
 
-    } while (msecs == -1 || qt_subtract_from_timeout(msecs, stopWatch.elapsed()) > 0);
+    } while (!deadline.hasExpired());
 
     return false;
 }
@@ -378,12 +376,10 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     if (!writeStarted && !_q_startAsyncWrite())
         return false;
 
-    QElapsedTimer stopWatch;
-    stopWatch.start();
+    QDeadlineTimer deadline(msecs);
 
     for (;;) {
-        const OVERLAPPED *overlapped = waitForNotified(
-                    qt_subtract_from_timeout(msecs, stopWatch.elapsed()));
+        const OVERLAPPED *overlapped = waitForNotified(deadline);
         if (!overlapped)
             return false;
 
@@ -636,9 +632,9 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     return maxSize;
 }
 
-OVERLAPPED *QSerialPortPrivate::waitForNotified(int msecs)
+OVERLAPPED *QSerialPortPrivate::waitForNotified(QDeadlineTimer deadline)
 {
-    OVERLAPPED *overlapped = notifier->waitForAnyNotified(msecs);
+    OVERLAPPED *overlapped = notifier->waitForAnyNotified(deadline);
     if (!overlapped) {
         setError(getSystemError(WAIT_TIMEOUT));
         return nullptr;

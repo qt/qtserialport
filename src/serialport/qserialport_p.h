@@ -56,6 +56,7 @@
 #include "qserialport.h"
 
 #include <private/qiodevice_p.h>
+#include <qdeadlinetimer.h>
 
 #if defined(Q_OS_WIN32)
 #  include <qt_windows.h>
@@ -181,7 +182,7 @@ public:
 
     bool setDcb(DCB *dcb);
     bool getDcb(DCB *dcb);
-    OVERLAPPED *waitForNotified(int msecs);
+    OVERLAPPED *waitForNotified(QDeadlineTimer deadline);
 
     qint64 queuedBytesCount(QSerialPort::Direction direction) const;
 

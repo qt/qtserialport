@@ -122,7 +122,7 @@ public:
     {
     }
 
-    OVERLAPPED *waitForAnyNotified(int msecs);
+    OVERLAPPED *waitForAnyNotified(QDeadlineTimer deadline);
     void notify(DWORD numberOfBytes, DWORD errorCode, OVERLAPPED *overlapped);
     void _q_notified();
     OVERLAPPED *dispatchNextIoResult();
@@ -312,17 +312,20 @@ void QWinOverlappedIoNotifier::setEnabled(bool enabled)
         d->iocp->unregisterNotifier(d);
 }
 
-OVERLAPPED *QWinOverlappedIoNotifierPrivate::waitForAnyNotified(int msecs)
+OVERLAPPED *QWinOverlappedIoNotifierPrivate::waitForAnyNotified(QDeadlineTimer deadline)
 {
     if (!iocp->isRunning()) {
         qWarning("Called QWinOverlappedIoNotifier::waitForAnyNotified on inactive notifier.");
         return 0;
     }
 
+    DWORD msecs = deadline.remainingTime();
     if (msecs == 0)
         iocp->drainQueue();
+    if (msecs == -1)
+        msecs = INFINITE;
 
-    const DWORD wfso = WaitForSingleObject(hSemaphore, msecs == -1 ? INFINITE : DWORD(msecs));
+    const DWORD wfso = WaitForSingleObject(hSemaphore, msecs);
     switch (wfso) {
     case WAIT_OBJECT_0:
         return dispatchNextIoResult();
@@ -359,11 +362,11 @@ private:
  * operation. In case no I/O operation was completed during the \a msec timeout, this function
  * returns a null pointer.
  */
-OVERLAPPED *QWinOverlappedIoNotifier::waitForAnyNotified(int msecs)
+OVERLAPPED *QWinOverlappedIoNotifier::waitForAnyNotified(QDeadlineTimer deadline)
 {
     Q_D(QWinOverlappedIoNotifier);
     QScopedAtomicIntIncrementor saii(d->waiting);
-    OVERLAPPED *result = d->waitForAnyNotified(msecs);
+    OVERLAPPED *result = d->waitForAnyNotified(deadline);
     return result;
 }
 
@@ -373,23 +376,18 @@ OVERLAPPED *QWinOverlappedIoNotifier::waitForAnyNotified(int msecs)
  * The function returns true if the notified signal was emitted for
  * the I/O operation that corresponds to the OVERLAPPED object.
  */
-bool QWinOverlappedIoNotifier::waitForNotified(int msecs, OVERLAPPED *overlapped)
+bool QWinOverlappedIoNotifier::waitForNotified(QDeadlineTimer deadline, OVERLAPPED *overlapped)
 {
     Q_D(QWinOverlappedIoNotifier);
     QScopedAtomicIntIncrementor saii(d->waiting);
-    int t = msecs;
-    QElapsedTimer stopWatch;
-    stopWatch.start();
-    forever {
-        OVERLAPPED *triggeredOverlapped = waitForAnyNotified(t);
+    while (!deadline.hasExpired()) {
+        OVERLAPPED *triggeredOverlapped = waitForAnyNotified(deadline);
         if (!triggeredOverlapped)
             return false;
         if (triggeredOverlapped == overlapped)
             return true;
-        t = qt_subtract_from_timeout(msecs, stopWatch.elapsed());
-        if (t == 0)
-            return false;
     }
+    return false;
 }
 
 /*!
