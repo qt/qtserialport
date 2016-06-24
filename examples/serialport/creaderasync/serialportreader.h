@@ -69,7 +69,7 @@ class SerialPortReader : public QObject
     Q_OBJECT
 
 public:
-    explicit SerialPortReader(QSerialPort *serialPort, QObject *parent = 0);
+    explicit SerialPortReader(QSerialPort *serialPort, QObject *parent = nullptr);
     ~SerialPortReader();
 
 private slots:

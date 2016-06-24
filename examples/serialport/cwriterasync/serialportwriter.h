@@ -69,7 +69,7 @@ class SerialPortWriter : public QObject
     Q_OBJECT
 
 public:
-    explicit SerialPortWriter(QSerialPort *serialPort, QObject *parent = 0);
+    explicit SerialPortWriter(QSerialPort *serialPort, QObject *parent = nullptr);
     ~SerialPortWriter();
 
     void write(const QByteArray &writeData);

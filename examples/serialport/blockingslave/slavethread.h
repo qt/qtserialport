@@ -61,7 +61,7 @@ class SlaveThread : public QThread
     Q_OBJECT
 
 public:
-    explicit SlaveThread(QObject *parent = 0);
+    explicit SlaveThread(QObject *parent = nullptr);
     ~SlaveThread();
 
     void startSlave(const QString &portName, int waitTimeout, const QString &response);

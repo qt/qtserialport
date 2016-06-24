@@ -62,7 +62,7 @@ signals:
     void getData(const QByteArray &data);
 
 public:
-    explicit Console(QWidget *parent = 0);
+    explicit Console(QWidget *parent = nullptr);
 
     void putData(const QByteArray &data);
 
