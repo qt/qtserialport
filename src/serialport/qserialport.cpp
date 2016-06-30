@@ -568,15 +568,6 @@ bool QSerialPort::open(OpenMode mode)
     if (!d->open(mode))
         return false;
 
-    if (!d->setBaudRate()
-        || !d->setDataBits(d->dataBits)
-        || !d->setParity(d->parity)
-        || !d->setStopBits(d->stopBits)
-        || !d->setFlowControl(d->flowControl)) {
-        d->close();
-        return false;
-    }
-
     QIODevice::open(mode);
     return true;
 }
