@@ -74,7 +74,7 @@ struct udev;
 
 #define udev_list_entry_foreach(list_entry, first_entry) \
         for (list_entry = first_entry; \
-             list_entry != NULL; \
+             list_entry != nullptr; \
              list_entry = udev_list_entry_get_next(list_entry))
 
 struct udev_device;

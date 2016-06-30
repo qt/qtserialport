@@ -77,10 +77,11 @@ Dialog::Dialog(QWidget *parent)
     waitRequestSpinBox->setRange(0, 10000);
     waitRequestSpinBox->setValue(20);
 
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
+    const auto infos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : infos)
         serialPortComboBox->addItem(info.portName());
 
-    QGridLayout *mainLayout = new QGridLayout;
+    auto mainLayout = new QGridLayout;
     mainLayout->addWidget(serialPortLabel, 0, 0);
     mainLayout->addWidget(serialPortComboBox, 0, 1);
     mainLayout->addWidget(waitRequestLabel, 1, 0);

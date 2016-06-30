@@ -62,17 +62,17 @@ signals:
     void getData(const QByteArray &data);
 
 public:
-    explicit Console(QWidget *parent = 0);
+    explicit Console(QWidget *parent = nullptr);
 
     void putData(const QByteArray &data);
 
     void setLocalEchoEnabled(bool set);
 
 protected:
-    virtual void keyPressEvent(QKeyEvent *e);
-    virtual void mousePressEvent(QMouseEvent *e);
-    virtual void mouseDoubleClickEvent(QMouseEvent *e);
-    virtual void contextMenuEvent(QContextMenuEvent *e);
+    void keyPressEvent(QKeyEvent *e) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
+    void mouseDoubleClickEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
+    void contextMenuEvent(QContextMenuEvent *e) Q_DECL_OVERRIDE;
 
 private:
     bool localEchoEnabled;

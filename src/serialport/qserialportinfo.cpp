@@ -79,7 +79,7 @@ QSerialPortInfo::QSerialPortInfo()
     Constructs a copy of \a other.
 */
 QSerialPortInfo::QSerialPortInfo(const QSerialPortInfo &other)
-    : d_ptr(other.d_ptr ? new QSerialPortInfoPrivate(*other.d_ptr) : Q_NULLPTR)
+    : d_ptr(other.d_ptr ? new QSerialPortInfoPrivate(*other.d_ptr) : nullptr)
 {
 }
 

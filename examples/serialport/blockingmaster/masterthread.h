@@ -61,11 +61,11 @@ class MasterThread : public QThread
     Q_OBJECT
 
 public:
-    MasterThread(QObject *parent = 0);
+    explicit MasterThread(QObject *parent = nullptr);
     ~MasterThread();
 
     void transaction(const QString &portName, int waitTimeout, const QString &request);
-    void run();
+    void run() Q_DECL_OVERRIDE;
 
 signals:
     void response(const QString &s);

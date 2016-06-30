@@ -81,7 +81,7 @@ Dialog::Dialog(QWidget *parent)
     waitResponseSpinBox->setRange(0, 10000);
     waitResponseSpinBox->setValue(1000);
 
-    QGridLayout *mainLayout = new QGridLayout;
+    auto mainLayout = new QGridLayout;
     mainLayout->addWidget(serialPortLabel, 0, 0);
     mainLayout->addWidget(serialPortComboBox, 0, 1);
     mainLayout->addWidget(waitResponseLabel, 1, 0);

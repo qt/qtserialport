@@ -61,11 +61,11 @@ class SlaveThread : public QThread
     Q_OBJECT
 
 public:
-    SlaveThread(QObject *parent = 0);
+    explicit SlaveThread(QObject *parent = nullptr);
     ~SlaveThread();
 
     void startSlave(const QString &portName, int waitTimeout, const QString &response);
-    void run();
+    void run() Q_DECL_OVERRIDE;
 
 signals:
     void request(const QString &s);

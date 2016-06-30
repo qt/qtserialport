@@ -74,13 +74,14 @@ Dialog::Dialog(QWidget *parent)
     , statusLabel(new QLabel(tr("Status: Not running.")))
     , runButton(new QPushButton(tr("Start")))
 {
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
+    const auto infos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &info : infos)
         serialPortComboBox->addItem(info.portName());
 
     waitResponseSpinBox->setRange(0, 10000);
     waitResponseSpinBox->setValue(100);
 
-    QGridLayout *mainLayout = new QGridLayout;
+    auto mainLayout = new QGridLayout;
     mainLayout->addWidget(serialPortLabel, 0, 0);
     mainLayout->addWidget(serialPortComboBox, 0, 1);
     mainLayout->addWidget(waitResponseLabel, 1, 0);

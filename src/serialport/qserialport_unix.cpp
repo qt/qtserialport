@@ -251,14 +251,14 @@ void QSerialPortPrivate::close()
 #endif
 
     delete readNotifier;
-    readNotifier = Q_NULLPTR;
+    readNotifier = nullptr;
 
     delete writeNotifier;
-    writeNotifier = Q_NULLPTR;
+    writeNotifier = nullptr;
 
     qt_safe_close(descriptor);
 
-    lockFileScopedPointer.reset(Q_NULLPTR);
+    lockFileScopedPointer.reset(nullptr);
 
     descriptor = -1;
     pendingBytesWritten = 0;
