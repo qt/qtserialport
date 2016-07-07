@@ -627,7 +627,8 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
             QObjectPrivate::connect(startAsyncWriteTimer, &QTimer::timeout, this, &QSerialPortPrivate::_q_startAsyncWrite);
             startAsyncWriteTimer->setSingleShot(true);
         }
-        startAsyncWriteTimer->start(0);
+        if (!startAsyncWriteTimer->isActive())
+            startAsyncWriteTimer->start();
     }
     return maxSize;
 }
