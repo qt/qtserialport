@@ -472,10 +472,8 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
         readStarted = false;
         return false;
     }
-    if (bytesTransferred > 0) {
-        char *ptr = buffer.reserve(bytesTransferred);
-        ::memcpy(ptr, readChunkBuffer.constData(), bytesTransferred);
-    }
+    if (bytesTransferred > 0)
+        buffer.append(readChunkBuffer.constData(), bytesTransferred);
 
     readStarted = false;
 
@@ -620,7 +618,7 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
     Q_Q(QSerialPort);
 
-    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    writeBuffer.append(data, maxSize);
     actualBytesToWrite += maxSize;
 
     if (!writeBuffer.isEmpty() && !writeStarted) {

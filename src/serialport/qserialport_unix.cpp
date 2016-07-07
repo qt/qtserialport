@@ -889,7 +889,7 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 
 qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
-    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    writeBuffer.append(data, maxSize);
     if (!writeBuffer.isEmpty() && !isWriteNotificationEnabled())
         setWriteNotificationEnabled(true);
     return maxSize;
