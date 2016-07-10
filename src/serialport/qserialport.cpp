@@ -515,10 +515,6 @@ void QSerialPort::setPort(const QSerialPortInfo &serialPortInfo)
         \li Removes the prefix "\\\\.\\" or "//./" from the system location
            and returns the remainder of the string.
     \row
-        \li Windows CE
-        \li Removes the suffix ":" from the system location
-           and returns the remainder of the string.
-    \row
         \li Unix, BSD
         \li Removes the prefix "/dev/" from the system location
            and returns the remainder of the string.
@@ -650,9 +646,9 @@ bool QSerialPort::settingsRestoredOnClose() const
     after that the opening of the port succeeds.
 
     \warning Setting the AllDirections flag is supported on all platforms.
-    Windows and Windows CE support only this mode.
+    Windows supports only this mode.
 
-    \warning Returns equal baud rate in any direction on Windows, Windows CE.
+    \warning Returns equal baud rate in any direction on Windows.
 
     The default value is Baud9600, i.e. 9600 bits per second.
 */
