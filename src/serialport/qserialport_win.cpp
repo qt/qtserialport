@@ -116,7 +116,6 @@ void QSerialPortPrivate::close()
     readStarted = false;
     writeStarted = false;
     writeBuffer.clear();
-    actualBytesToWrite = 0;
 
     if (settingsRestoredOnClose) {
         ::SetCommState(handle, &restoredDcb);
@@ -198,10 +197,8 @@ bool QSerialPortPrivate::clear(QSerialPort::Directions directions)
     DWORD flags = 0;
     if (directions & QSerialPort::Input)
         flags |= PURGE_RXABORT | PURGE_RXCLEAR;
-    if (directions & QSerialPort::Output) {
+    if (directions & QSerialPort::Output)
         flags |= PURGE_TXABORT | PURGE_TXCLEAR;
-        actualBytesToWrite = 0;
-    }
     if (!::PurgeComm(handle, flags)) {
         setError(getSystemError());
         return false;
@@ -275,7 +272,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
 bool QSerialPortPrivate::waitForBytesWritten(int msecs)
 {
-    if (writeBuffer.isEmpty())
+    if (writeBuffer.isEmpty() && writeChunkBuffer.isEmpty())
         return false;
 
     if (!writeStarted && !_q_startAsyncWrite())
@@ -453,12 +450,13 @@ bool QSerialPortPrivate::completeAsyncWrite(qint64 bytesTransferred)
 
     if (writeStarted) {
         if (bytesTransferred == qint64(-1)) {
+            writeChunkBuffer.clear();
             writeStarted = false;
             return false;
-        } else if (bytesTransferred > 0) {
-            writeBuffer.free(bytesTransferred);
-            emit q->bytesWritten(bytesTransferred);
         }
+        Q_ASSERT(bytesTransferred == writeChunkBuffer.size());
+        writeChunkBuffer.clear();
+        emit q->bytesWritten(bytesTransferred);
         writeStarted = false;
     }
 
@@ -525,10 +523,10 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
     if (writeBuffer.isEmpty() || writeStarted)
         return true;
 
-    const int writeBytes = writeBuffer.nextDataBlockSize();
+    writeChunkBuffer = writeBuffer.read();
     ::ZeroMemory(&writeCompletionOverlapped, sizeof(writeCompletionOverlapped));
-    if (!::WriteFile(handle, writeBuffer.readPointer(),
-                     writeBytes, Q_NULLPTR, &writeCompletionOverlapped)) {
+    if (!::WriteFile(handle, writeChunkBuffer.constData(),
+                     writeChunkBuffer.size(), Q_NULLPTR, &writeCompletionOverlapped)) {
 
         QSerialPortErrorInfo error = getSystemError();
         if (error.errorCode != QSerialPort::NoError) {
@@ -539,7 +537,6 @@ bool QSerialPortPrivate::_q_startAsyncWrite()
         }
     }
 
-    actualBytesToWrite -= writeBytes;
     writeStarted = true;
     return true;
 }
@@ -574,7 +571,6 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
     Q_Q(QSerialPort);
 
     ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
-    actualBytesToWrite += maxSize;
 
     if (!writeBuffer.isEmpty() && !writeStarted) {
         if (!startAsyncWriteTimer) {
