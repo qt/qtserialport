@@ -55,7 +55,6 @@
 
 #include "qserialport.h"
 
-#include <private/qringbuffer_p.h>
 #include <private/qiodevice_p.h>
 
 #if defined(Q_OS_WIN32)
@@ -169,7 +168,6 @@ public:
     static QList<qint32> standardBaudRates();
 
     qint64 readBufferMaxSize;
-    QRingBuffer writeBuffer;
     QSerialPort::SerialPortError error;
     QString systemLocation;
     qint32 inputBaudRate;

@@ -88,7 +88,6 @@ QSerialPortErrorInfo::QSerialPortErrorInfo(QSerialPort::SerialPortError newError
 
 QSerialPortPrivate::QSerialPortPrivate()
     : readBufferMaxSize(0)
-    , writeBuffer(InitialBufferSize)
     , error(QSerialPort::NoError)
     , inputBaudRate(9600)
     , outputBaudRate(9600)
@@ -124,6 +123,7 @@ QSerialPortPrivate::QSerialPortPrivate()
     , writeSequenceStarted(false)
 #endif
 {
+    writeBufferChunkSize = InitialBufferSize;
 }
 
 void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
@@ -1261,12 +1261,9 @@ qint64 QSerialPort::bytesAvailable() const
 */
 qint64 QSerialPort::bytesToWrite() const
 {
-    Q_D(const QSerialPort);
     qint64 bytes = QIODevice::bytesToWrite();
 #ifdef Q_OS_WIN32
-    bytes += d->actualBytesToWrite;
-#else
-    bytes += d->writeBuffer.size();
+    bytes += d_func()->actualBytesToWrite;
 #endif
     return bytes;
 }
