@@ -262,8 +262,8 @@ public:
     qint64 bytesToWrite() const Q_DECL_OVERRIDE;
     bool canReadLine() const Q_DECL_OVERRIDE;
 
-    bool waitForReadyRead(int msecs) Q_DECL_OVERRIDE;
-    bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
+    bool waitForReadyRead(int msecs = 30000) Q_DECL_OVERRIDE;
+    bool waitForBytesWritten(int msecs = 30000) Q_DECL_OVERRIDE;
 
 #if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED bool sendBreak(int duration = 0);
