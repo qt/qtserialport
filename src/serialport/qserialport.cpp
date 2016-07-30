@@ -131,6 +131,7 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
 
     error = errorInfo.errorCode;
     q->setErrorString(errorInfo.errorString);
+    emit q->errorOccurred(error);
     emit q->error(error);
 }
 
@@ -196,6 +197,10 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
 
     If \l{QIODevice::}{waitForReadyRead()} returns false, the
     connection has been closed or an error has occurred.
+
+    If an error occurs at any point in time, QSerialPort will emit the
+    errorOccurred() signal. You can also call error() to find the type of
+    error that occurred last.
 
     Programming with a blocking serial port is radically different from
     programming with a non-blocking serial port. A blocking serial port
@@ -1166,9 +1171,17 @@ void QSerialPort::clearError()
 
 /*!
     \fn void QSerialPort::error(SerialPortError error)
+    \obsolete
 
-    This signal is emitted after the error has been changed. The new error
-    is passed as \a error.
+    Use errorOccurred() instead.
+*/
+
+/*!
+    \fn void QSerialPort::errorOccurred(SerialPortError error)
+    \since 5.8
+
+    This signal is emitted when an error occurs in the serial port.
+    The specified \a error describes the type of error that occurred.
 
     \sa QSerialPort::error
 */

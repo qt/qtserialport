@@ -284,7 +284,10 @@ Q_SIGNALS:
 #endif
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
+#if QT_DEPRECATED_SINCE(5, 8)
     void error(QSerialPort::SerialPortError serialPortError);
+#endif
+    void errorOccurred(QSerialPort::SerialPortError error);
 #if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED void settingsRestoredOnCloseChanged(bool restore);
 #endif
