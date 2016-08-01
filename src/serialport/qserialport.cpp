@@ -110,7 +110,6 @@ QSerialPortPrivate::QSerialPortPrivate()
     , startAsyncWriteTimer(0)
     , originalEventMask(0)
     , triggeredEventMask(0)
-    , actualBytesToWrite(0)
 #elif defined(Q_OS_UNIX)
     , descriptor(-1)
     , readNotifier(0)
@@ -1249,13 +1248,7 @@ qint64 QSerialPort::bytesAvailable() const
 qint64 QSerialPort::bytesToWrite() const
 {
     Q_D(const QSerialPort);
-    qint64 bytes = QIODevice::bytesToWrite();
-#ifdef Q_OS_WIN32
-    bytes += d->actualBytesToWrite;
-#else
-    bytes += d->writeBuffer.size();
-#endif
-    return bytes;
+    return QIODevice::bytesToWrite() + d->writeBuffer.size();
 }
 
 /*!
