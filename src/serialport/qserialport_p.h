@@ -204,6 +204,7 @@ public:
     COMMTIMEOUTS restoredCommTimeouts;
     HANDLE handle;
     QByteArray readChunkBuffer;
+    QByteArray writeChunkBuffer;
     bool communicationStarted;
     bool writeStarted;
     bool readStarted;
@@ -214,7 +215,6 @@ public:
     OVERLAPPED writeCompletionOverlapped;
     DWORD originalEventMask;
     DWORD triggeredEventMask;
-    qint64 actualBytesToWrite;
 
 #elif defined(Q_OS_UNIX)
 

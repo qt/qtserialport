@@ -87,14 +87,8 @@ QSerialPortInfo::QSerialPortInfo(const QSerialPortInfo &other)
     Constructs a QSerialPortInfo object from serial \a port.
 */
 QSerialPortInfo::QSerialPortInfo(const QSerialPort &port)
+    : QSerialPortInfo(port.portName())
 {
-    const auto infos = QSerialPortInfo::availablePorts();
-    for (const QSerialPortInfo &info : infos) {
-        if (port.portName() == info.portName()) {
-            *this = info;
-            break;
-        }
-    }
 }
 
 /*!

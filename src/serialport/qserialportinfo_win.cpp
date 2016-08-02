@@ -187,23 +187,6 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
     return portName;
 }
 
-class SerialPortNameEqualFunctor
-{
-public:
-    explicit SerialPortNameEqualFunctor(const QString &serialPortName)
-        : m_serialPortName(serialPortName)
-    {
-    }
-
-    bool operator() (const QSerialPortInfo &serialPortInfo) const
-    {
-        return serialPortInfo.portName() == m_serialPortName;
-    }
-
-private:
-    const QString &m_serialPortName;
-};
-
 static QString deviceDescription(HDEVINFO deviceInfoSet,
                                  PSP_DEVINFO_DATA deviceInfoData)
 {
@@ -288,6 +271,15 @@ static QString deviceSerialNumber(QString instanceIdentifier,
     return QString();
 }
 
+static bool anyOfPorts(const QList<QSerialPortInfo> &ports, const QString &portName)
+{
+    const auto end = ports.end();
+    auto isPortNamesEquals = [&portName](const QSerialPortInfo &portInfo) {
+        return portInfo.portName() == portName;
+    };
+    return std::find_if(ports.begin(), end, isPortNamesEquals) != end;
+}
+
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
     static const struct {
@@ -318,10 +310,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             if (portName.isEmpty() || portName.contains(QLatin1String("LPT")))
                 continue;
 
-            if (std::find_if(serialPortInfoList.begin(), serialPortInfoList.end(),
-                             SerialPortNameEqualFunctor(portName)) != serialPortInfoList.end()) {
+            if (anyOfPorts(serialPortInfoList, portName))
                 continue;
-            }
 
             QSerialPortInfoPrivate priv;
 
@@ -346,8 +336,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     const auto portNames = portNamesFromHardwareDeviceMap();
     for (const QString &portName : portNames) {
-        if (std::find_if(serialPortInfoList.cbegin(), serialPortInfoList.cend(),
-                         SerialPortNameEqualFunctor(portName)) == serialPortInfoList.cend()) {
+        if (!anyOfPorts(serialPortInfoList, portName)) {
             QSerialPortInfoPrivate priv;
             priv.portName = portName;
             priv.device =  QSerialPortInfoPrivate::portNameToSystemLocation(portName);

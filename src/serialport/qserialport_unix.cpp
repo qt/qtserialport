@@ -193,6 +193,120 @@ private:
     QSerialPortPrivate *dptr;
 };
 
+static inline void qt_set_common_props(termios *tio, QIODevice::OpenMode m)
+{
+#ifdef Q_OS_SOLARIS
+    tio->c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+    tio->c_oflag &= ~OPOST;
+    tio->c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    tio->c_cflag &= ~(CSIZE|PARENB);
+    tio->c_cflag |= CS8;
+#else
+    ::cfmakeraw(tio);
+#endif
+
+    tio->c_cflag |= CLOCAL;
+    tio->c_cc[VTIME] = 0;
+    tio->c_cc[VMIN] = 0;
+
+    if (m & QIODevice::ReadOnly)
+        tio->c_cflag |= CREAD;
+}
+
+static inline void qt_set_databits(termios *tio, QSerialPort::DataBits databits)
+{
+    tio->c_cflag &= ~CSIZE;
+    switch (databits) {
+    case QSerialPort::Data5:
+        tio->c_cflag |= CS5;
+        break;
+    case QSerialPort::Data6:
+        tio->c_cflag |= CS6;
+        break;
+    case QSerialPort::Data7:
+        tio->c_cflag |= CS7;
+        break;
+    case QSerialPort::Data8:
+        tio->c_cflag |= CS8;
+        break;
+    default:
+        tio->c_cflag |= CS8;
+        break;
+    }
+}
+
+static inline void qt_set_parity(termios *tio, QSerialPort::Parity parity)
+{
+    tio->c_iflag &= ~(PARMRK | INPCK);
+    tio->c_iflag |= IGNPAR;
+
+    switch (parity) {
+
+#ifdef CMSPAR
+    // Here Installation parity only for GNU/Linux where the macro CMSPAR.
+    case QSerialPort::SpaceParity:
+        tio->c_cflag &= ~PARODD;
+        tio->c_cflag |= PARENB | CMSPAR;
+        break;
+    case QSerialPort::MarkParity:
+        tio->c_cflag |= PARENB | CMSPAR | PARODD;
+        break;
+#endif
+    case QSerialPort::NoParity:
+        tio->c_cflag &= ~PARENB;
+        break;
+    case QSerialPort::EvenParity:
+        tio->c_cflag &= ~PARODD;
+        tio->c_cflag |= PARENB;
+        break;
+    case QSerialPort::OddParity:
+        tio->c_cflag |= PARENB | PARODD;
+        break;
+    default:
+        tio->c_cflag |= PARENB;
+        tio->c_iflag |= PARMRK | INPCK;
+        tio->c_iflag &= ~IGNPAR;
+        break;
+    }
+}
+
+static inline void qt_set_stopbits(termios *tio, QSerialPort::StopBits stopbits)
+{
+    switch (stopbits) {
+    case QSerialPort::OneStop:
+        tio->c_cflag &= ~CSTOPB;
+        break;
+    case QSerialPort::TwoStop:
+        tio->c_cflag |= CSTOPB;
+        break;
+    default:
+        tio->c_cflag &= ~CSTOPB;
+        break;
+    }
+}
+
+static inline void qt_set_flowcontrol(termios *tio, QSerialPort::FlowControl flowcontrol)
+{
+    switch (flowcontrol) {
+    case QSerialPort::NoFlowControl:
+        tio->c_cflag &= ~CRTSCTS;
+        tio->c_iflag &= ~(IXON | IXOFF | IXANY);
+        break;
+    case QSerialPort::HardwareControl:
+        tio->c_cflag |= CRTSCTS;
+        tio->c_iflag &= ~(IXON | IXOFF | IXANY);
+        break;
+    case QSerialPort::SoftwareControl:
+        tio->c_cflag &= ~CRTSCTS;
+        tio->c_iflag |= IXON | IXOFF | IXANY;
+        break;
+    default:
+        tio->c_cflag &= ~CRTSCTS;
+        tio->c_iflag &= ~(IXON | IXOFF | IXANY);
+        break;
+    }
+}
+
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     QString lockFilePath = serialPortLockFilePath(QSerialPortInfoPrivate::portNameFromSystemLocation(systemLocation));
@@ -605,24 +719,8 @@ bool QSerialPortPrivate::setDataBits(QSerialPort::DataBits dataBits)
     if (!getTermios(&tio))
         return false;
 
-    tio.c_cflag &= ~CSIZE;
-    switch (dataBits) {
-    case QSerialPort::Data5:
-        tio.c_cflag |= CS5;
-        break;
-    case QSerialPort::Data6:
-        tio.c_cflag |= CS6;
-        break;
-    case QSerialPort::Data7:
-        tio.c_cflag |= CS7;
-        break;
-    case QSerialPort::Data8:
-        tio.c_cflag |= CS8;
-        break;
-    default:
-        tio.c_cflag |= CS8;
-        break;
-    }
+    qt_set_databits(&tio, dataBits);
+
     return setTermios(&tio);
 }
 
@@ -632,37 +730,7 @@ bool QSerialPortPrivate::setParity(QSerialPort::Parity parity)
     if (!getTermios(&tio))
         return false;
 
-    tio.c_iflag &= ~(PARMRK | INPCK);
-    tio.c_iflag |= IGNPAR;
-
-    switch (parity) {
-
-#ifdef CMSPAR
-    // Here Installation parity only for GNU/Linux where the macro CMSPAR.
-    case QSerialPort::SpaceParity:
-        tio.c_cflag &= ~PARODD;
-        tio.c_cflag |= PARENB | CMSPAR;
-        break;
-    case QSerialPort::MarkParity:
-        tio.c_cflag |= PARENB | CMSPAR | PARODD;
-        break;
-#endif
-    case QSerialPort::NoParity:
-        tio.c_cflag &= ~PARENB;
-        break;
-    case QSerialPort::EvenParity:
-        tio.c_cflag &= ~PARODD;
-        tio.c_cflag |= PARENB;
-        break;
-    case QSerialPort::OddParity:
-        tio.c_cflag |= PARENB | PARODD;
-        break;
-    default:
-        tio.c_cflag |= PARENB;
-        tio.c_iflag |= PARMRK | INPCK;
-        tio.c_iflag &= ~IGNPAR;
-        break;
-    }
+    qt_set_parity(&tio, parity);
 
     return setTermios(&tio);
 }
@@ -673,17 +741,8 @@ bool QSerialPortPrivate::setStopBits(QSerialPort::StopBits stopBits)
     if (!getTermios(&tio))
         return false;
 
-    switch (stopBits) {
-    case QSerialPort::OneStop:
-        tio.c_cflag &= ~CSTOPB;
-        break;
-    case QSerialPort::TwoStop:
-        tio.c_cflag |= CSTOPB;
-        break;
-    default:
-        tio.c_cflag &= ~CSTOPB;
-        break;
-    }
+    qt_set_stopbits(&tio, stopBits);
+
     return setTermios(&tio);
 }
 
@@ -693,24 +752,8 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     if (!getTermios(&tio))
         return false;
 
-    switch (flowControl) {
-    case QSerialPort::NoFlowControl:
-        tio.c_cflag &= ~CRTSCTS;
-        tio.c_iflag &= ~(IXON | IXOFF | IXANY);
-        break;
-    case QSerialPort::HardwareControl:
-        tio.c_cflag |= CRTSCTS;
-        tio.c_iflag &= ~(IXON | IXOFF | IXANY);
-        break;
-    case QSerialPort::SoftwareControl:
-        tio.c_cflag &= ~CRTSCTS;
-        tio.c_iflag |= IXON | IXOFF | IXANY;
-        break;
-    default:
-        tio.c_cflag &= ~CRTSCTS;
-        tio.c_iflag &= ~(IXON | IXOFF | IXANY);
-        break;
-    }
+    qt_set_flowcontrol(&tio, flowControl);
+
     return setTermios(&tio);
 }
 
@@ -825,23 +868,17 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
         return false;
 
     restoredTermios = tio;
-#ifdef Q_OS_SOLARIS
-    tio.c_iflag &= ~(IMAXBEL|IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-    tio.c_oflag &= ~OPOST;
-    tio.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
-    tio.c_cflag &= ~(CSIZE|PARENB);
-    tio.c_cflag |= CS8;
-#else
-    ::cfmakeraw(&tio);
-#endif
-    tio.c_cflag |= CLOCAL;
-    tio.c_cc[VTIME] = 0;
-    tio.c_cc[VMIN] = 0;
 
-    if (mode & QIODevice::ReadOnly)
-        tio.c_cflag |= CREAD;
+    qt_set_common_props(&tio, mode);
+    qt_set_databits(&tio, dataBits);
+    qt_set_parity(&tio, parity);
+    qt_set_stopbits(&tio, stopBits);
+    qt_set_flowcontrol(&tio, flowControl);
 
     if (!setTermios(&tio))
+        return false;
+
+    if (!setBaudRate())
         return false;
 
     if (mode & QIODevice::ReadOnly)
@@ -852,7 +889,7 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 
 qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
-    ::memcpy(writeBuffer.reserve(maxSize), data, maxSize);
+    writeBuffer.append(data, maxSize);
     if (!writeBuffer.isEmpty() && !isWriteNotificationEnabled())
         setWriteNotificationEnabled(true);
     return maxSize;
