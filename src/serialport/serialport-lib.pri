@@ -1,6 +1,6 @@
 INCLUDEPATH += $$PWD
 
-unix:contains(QT_CONFIG, libudev) {
+unix:qtConfig(libudev) {
     DEFINES += LINK_LIBUDEV
     INCLUDEPATH += $$QMAKE_INCDIR_LIBUDEV
     LIBS_PRIVATE += $$QMAKE_LIBS_LIBUDEV
