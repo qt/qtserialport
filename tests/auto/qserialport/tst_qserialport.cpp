@@ -98,6 +98,7 @@ private slots:
 
     void rts();
     void dtr();
+    void independenceRtsAndDtr();
 
     void flush();
     void doubleFlush();
@@ -547,6 +548,58 @@ void tst_QSerialPort::dtr()
     QCOMPARE(qvariant_cast<bool>(dtrSpy.at(0).at(0)), toggle1);
     QCOMPARE(qvariant_cast<bool>(dtrSpy.at(1).at(0)), toggle2);
     QCOMPARE(qvariant_cast<bool>(dtrSpy.at(2).at(0)), toggle3);
+}
+
+void tst_QSerialPort::independenceRtsAndDtr()
+{
+    QSerialPort serialPort(m_senderPortName);
+    QVERIFY(serialPort.open(QIODevice::ReadWrite)); // No flow control by default!
+
+    QVERIFY(serialPort.setDataTerminalReady(true));
+    QVERIFY(serialPort.setRequestToSend(true));
+    QVERIFY(serialPort.isDataTerminalReady());
+    QVERIFY(serialPort.isRequestToSend());
+
+    // check that DTR changing does not change RTS
+    QVERIFY(serialPort.setDataTerminalReady(false));
+    QVERIFY(!serialPort.isDataTerminalReady());
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.setDataTerminalReady(true));
+    QVERIFY(serialPort.isDataTerminalReady());
+    QVERIFY(serialPort.isRequestToSend());
+
+    // check that RTS changing does not change DTR
+    QVERIFY(serialPort.setRequestToSend(false));
+    QVERIFY(!serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
+    QVERIFY(serialPort.setRequestToSend(true));
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
+
+    // check that baud rate changing does not change DTR or RTS
+    QVERIFY(serialPort.setBaudRate(115200));
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
+
+    // check that data bits changing does not change DTR or RTS
+    QVERIFY(serialPort.setDataBits(QSerialPort::Data7));
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
+
+    // check that parity changing does not change DTR or RTS
+    QVERIFY(serialPort.setParity(QSerialPort::EvenParity));
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
+
+    // check that stop bits changing does not change DTR or RTS
+    QVERIFY(serialPort.setStopBits(QSerialPort::TwoStop));
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
+
+    // check that software flow control changing does not change DTR or RTS
+    QVERIFY(serialPort.setFlowControl(QSerialPort::SoftwareControl));
+    QVERIFY(serialPort.isRequestToSend());
+    QVERIFY(serialPort.isDataTerminalReady());
 }
 
 void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten)
