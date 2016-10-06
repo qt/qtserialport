@@ -102,42 +102,42 @@ static bool isCompleteInfo(const QSerialPortInfoPrivate &priv, const QString &ca
 
 static QString calloutDeviceSystemLocation(io_registry_entry_t ioRegistryEntry)
 {
-    return searchStringProperty(ioRegistryEntry, QCFString(kIOCalloutDeviceKey));
+    return searchStringProperty(ioRegistryEntry, QCFString(CFSTR(kIOCalloutDeviceKey)));
 }
 
 static QString dialinDeviceSystemLocation(io_registry_entry_t ioRegistryEntry)
 {
-    return searchStringProperty(ioRegistryEntry, QCFString(kIODialinDeviceKey));
+    return searchStringProperty(ioRegistryEntry, QCFString(CFSTR(kIODialinDeviceKey)));
 }
 
 static QString deviceDescription(io_registry_entry_t ioRegistryEntry)
 {
-    QString result = searchStringProperty(ioRegistryEntry, QCFString(kIOPropertyProductNameKey));
+    QString result = searchStringProperty(ioRegistryEntry, QCFString(CFSTR(kIOPropertyProductNameKey)));
     if (result.isEmpty())
-        result = searchStringProperty(ioRegistryEntry, QCFString(kUSBProductString));
+        result = searchStringProperty(ioRegistryEntry, QCFString(CFSTR(kUSBProductString)));
     if (result.isEmpty())
-        result = searchStringProperty(ioRegistryEntry, QCFString("BTName"));
+        result = searchStringProperty(ioRegistryEntry, QCFString(CFSTR("BTName")));
     return result;
 }
 
 static QString deviceManufacturer(io_registry_entry_t ioRegistryEntry)
 {
-    return searchStringProperty(ioRegistryEntry, QCFString(kUSBVendorString));
+    return searchStringProperty(ioRegistryEntry, QCFString(CFSTR(kUSBVendorString)));
 }
 
 static QString deviceSerialNumber(io_registry_entry_t ioRegistryEntry)
 {
-    return searchStringProperty(ioRegistryEntry, QCFString(kUSBSerialNumberString));
+    return searchStringProperty(ioRegistryEntry, QCFString(CFSTR(kUSBSerialNumberString)));
 }
 
 static quint16 deviceVendorIdentifier(io_registry_entry_t ioRegistryEntry, bool &ok)
 {
-    return searchShortIntProperty(ioRegistryEntry, QCFString(kUSBVendorID), ok);
+    return searchShortIntProperty(ioRegistryEntry, QCFString(CFSTR(kUSBVendorID)), ok);
 }
 
 static quint16 deviceProductIdentifier(io_registry_entry_t ioRegistryEntry, bool &ok)
 {
-    return searchShortIntProperty(ioRegistryEntry, QCFString(kUSBProductID), ok);
+    return searchShortIntProperty(ioRegistryEntry, QCFString(CFSTR(kUSBProductID)), ok);
 }
 
 static io_registry_entry_t parentSerialPortService(io_registry_entry_t currentSerialPortService)
