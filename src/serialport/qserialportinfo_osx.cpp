@@ -73,7 +73,7 @@ static QString searchStringProperty(io_registry_entry_t ioRegistryEntry,
     const QCFType<CFTypeRef> result(searchProperty(ioRegistryEntry, propertyKey));
     const CFStringRef ref = result.as<CFStringRef>();
     if (ref && (::CFGetTypeID(ref) == ::CFStringGetTypeID()))
-        return QCFString::toQString(ref);
+        return QString::fromCFString(ref);
     return QString();
 }
 
