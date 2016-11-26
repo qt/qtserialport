@@ -90,6 +90,9 @@ static inline void qt_set_common_props(DCB *dcb)
 
     if (dcb->fDtrControl == DTR_CONTROL_HANDSHAKE)
         dcb->fDtrControl = DTR_CONTROL_DISABLE;
+
+    if (dcb->fRtsControl != RTS_CONTROL_HANDSHAKE)
+        dcb->fRtsControl = RTS_CONTROL_DISABLE;
 }
 
 static inline void qt_set_baudrate(DCB *dcb, qint32 baudrate)
@@ -152,7 +155,8 @@ static inline void qt_set_flowcontrol(DCB *dcb, QSerialPort::FlowControl flowcon
     dcb->fInX = FALSE;
     dcb->fOutX = FALSE;
     dcb->fOutxCtsFlow = FALSE;
-    dcb->fRtsControl = RTS_CONTROL_DISABLE;
+    if (dcb->fRtsControl == RTS_CONTROL_HANDSHAKE)
+        dcb->fRtsControl = RTS_CONTROL_DISABLE;
     switch (flowcontrol) {
     case QSerialPort::NoFlowControl:
         break;
@@ -278,7 +282,12 @@ bool QSerialPortPrivate::setRequestToSend(bool set)
         return false;
     }
 
-    return true;
+    DCB dcb;
+    if (!getDcb(&dcb))
+        return false;
+
+    dcb.fRtsControl = set ? RTS_CONTROL_ENABLE : RTS_CONTROL_DISABLE;
+    return setDcb(&dcb);
 }
 
 bool QSerialPortPrivate::flush()
