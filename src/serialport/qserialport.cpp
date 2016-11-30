@@ -607,6 +607,9 @@ void QSerialPort::close()
     QIODevice::close();
 }
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
+
 #if QT_DEPRECATED_SINCE(5, 3)
 /*!
     \property QSerialPort::settingsRestoredOnClose
@@ -627,6 +630,8 @@ void QSerialPort::setSettingsRestoredOnClose(bool restore)
         emit settingsRestoredOnCloseChanged(d->settingsRestoredOnClose);
     }
 }
+
+QT_WARNING_POP
 
 bool QSerialPort::settingsRestoredOnClose() const
 {
