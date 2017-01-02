@@ -499,6 +499,9 @@ bool QSerialPortPrivate::notifyWrite()
 {
     Q_Q(QSerialPort);
 
+    if (writeBuffer.isEmpty())
+        return true;
+
     int nextSize = writeBuffer.nextDataBlockSize();
 
     const char *ptr = writeBuffer.readPointer();
