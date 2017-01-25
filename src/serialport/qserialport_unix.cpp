@@ -778,6 +778,8 @@ bool QSerialPortPrivate::readNotification()
     char *ptr = buffer.reserve(bytesToRead);
     const qint64 readBytes = readFromPort(ptr, bytesToRead);
 
+    buffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
+
     if (readBytes <= 0) {
         QSerialPortErrorInfo error = getSystemError();
         if (error.errorCode != QSerialPort::ResourceError)
@@ -785,11 +787,8 @@ bool QSerialPortPrivate::readNotification()
         else
             setReadNotificationEnabled(false);
         setError(error);
-        buffer.chop(bytesToRead);
         return false;
     }
-
-    buffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
 
     newBytes = buffer.size() - newBytes;
 

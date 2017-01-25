@@ -178,7 +178,7 @@ void MainWindow::initActionsConnections()
     connect(ui->actionConnect, &QAction::triggered, this, &MainWindow::openSerialPort);
     connect(ui->actionDisconnect, &QAction::triggered, this, &MainWindow::closeSerialPort);
     connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
-    connect(ui->actionConfigure, &QAction::triggered, settings, &MainWindow::show);
+    connect(ui->actionConfigure, &QAction::triggered, settings, &SettingsDialog::show);
     connect(ui->actionClear, &QAction::triggered, console, &Console::clear);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::about);
     connect(ui->actionAboutQt, &QAction::triggered, qApp, &QApplication::aboutQt);

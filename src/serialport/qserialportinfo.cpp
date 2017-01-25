@@ -228,8 +228,8 @@ quint16 QSerialPortInfo::productIdentifier() const
 }
 
 /*!
-    Returns true if there is a valid 16-bit vendor number present; otherwise
-    returns false.
+    Returns \c true if there is a valid \c 16-bit vendor number present; otherwise
+    returns \c false.
 
     \sa vendorIdentifier(), productIdentifier(), hasProductIdentifier()
 */
@@ -240,8 +240,8 @@ bool QSerialPortInfo::hasVendorIdentifier() const
 }
 
 /*!
-    Returns true if there is a valid 16-bit product number present; otherwise
-    returns false.
+    Returns \c true if there is a valid \c 16-bit product number present; otherwise
+    returns \c false.
 
     \sa productIdentifier(), vendorIdentifier(), hasVendorIdentifier()
 */
@@ -264,8 +264,8 @@ bool QSerialPortInfo::hasProductIdentifier() const
 /*!
     \fn bool QSerialPortInfo::isBusy() const
 
-    Returns true if serial port is busy;
-    otherwise returns false.
+    Returns \c true if serial port is busy;
+    otherwise returns \c false.
 
     \sa isNull()
 */
@@ -276,8 +276,8 @@ bool QSerialPortInfo::hasProductIdentifier() const
     \fn bool QSerialPortInfo::isValid() const
     \obsolete
 
-    Returns true if serial port is present on system;
-    otherwise returns false.
+    Returns \c true if serial port is present on system;
+    otherwise returns \c false.
 
     \sa isNull(), isBusy()
 */
