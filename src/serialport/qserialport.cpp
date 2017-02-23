@@ -956,6 +956,10 @@ bool QSerialPort::isDataTerminalReady()
     property; otherwise \c false is returned and the error code is set to
     NotOpenError.
 
+    \note An attempt to control the RTS signal in the HardwareControl mode
+    will fail with error code set to UnsupportedOperationError, because
+    the signal is automatically controlled by the driver.
+
     \sa pinoutSignals()
 */
 bool QSerialPort::setRequestToSend(bool set)
