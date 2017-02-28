@@ -4,7 +4,7 @@ lessThan(QT_MAJOR_VERSION, 5) {
 }
 
 requires(!winrt)
-requires(!ios)
+requires(!uikit)
 
 load(configure)
 qtCompileTest(ntddmodm)
