@@ -122,8 +122,7 @@ QSerialPortInfo::~QSerialPortInfo()
 {
 }
 
-/*! \fn void QSerialPortInfo::swap(QSerialPortInfo &other)
-
+/*!
     Swaps QSerialPortInfo \a other with this QSerialPortInfo. This operation is
     very fast and never fails.
 */
