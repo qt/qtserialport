@@ -176,12 +176,9 @@ static inline void qt_set_flowcontrol(DCB *dcb, QSerialPort::FlowControl flowcon
 bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     DWORD desiredAccess = 0;
-    originalEventMask = 0;
 
-    if (mode & QIODevice::ReadOnly) {
+    if (mode & QIODevice::ReadOnly)
         desiredAccess |= GENERIC_READ;
-        originalEventMask |= EV_RXCHAR;
-    }
     if (mode & QIODevice::WriteOnly)
         desiredAccess |= GENERIC_WRITE;
 
@@ -193,7 +190,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    if (initialize())
+    if (initialize(mode))
         return true;
 
     ::CloseHandle(handle);
@@ -658,7 +655,7 @@ qint64 QSerialPortPrivate::queuedBytesCount(QSerialPort::Direction direction) co
             : ((direction == QSerialPort::Output) ? comstat.cbOutQue : -1);
 }
 
-inline bool QSerialPortPrivate::initialize()
+inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 {
     Q_Q(QSerialPort);
 
@@ -691,7 +688,8 @@ inline bool QSerialPortPrivate::initialize()
         return false;
     }
 
-    if (!::SetCommMask(handle, originalEventMask)) {
+    const DWORD eventMask = (mode & QIODevice::ReadOnly) ? EV_RXCHAR : 0;
+    if (!::SetCommMask(handle, eventMask)) {
         setError(getSystemError());
         return false;
     }
@@ -702,7 +700,7 @@ inline bool QSerialPortPrivate::initialize()
     notifier->setHandle(handle);
     notifier->setEnabled(true);
 
-    if ((originalEventMask & EV_RXCHAR) && !startAsyncCommunication())
+    if ((eventMask & EV_RXCHAR) && !startAsyncCommunication())
         return false;
 
     return true;

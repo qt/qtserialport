@@ -157,6 +157,8 @@ public:
 
     qint64 writeData(const char *data, qint64 maxSize);
 
+    bool initialize(QIODevice::OpenMode mode);
+
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
 
@@ -176,7 +178,6 @@ public:
 
 #if defined(Q_OS_WIN32)
 
-    bool initialize();
     bool setDcb(DCB *dcb);
     bool getDcb(DCB *dcb);
     OVERLAPPED *waitForNotified(int msecs);
@@ -208,14 +209,12 @@ public:
     OVERLAPPED communicationOverlapped;
     OVERLAPPED readCompletionOverlapped;
     OVERLAPPED writeCompletionOverlapped;
-    DWORD originalEventMask;
     DWORD triggeredEventMask;
 
 #elif defined(Q_OS_UNIX)
 
     static qint32 settingFromBaudRate(qint32 baudRate);
 
-    bool initialize(QIODevice::OpenMode mode);
     bool setTermios(const termios *tio);
     bool getTermios(termios *tio);
 
