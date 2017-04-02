@@ -99,7 +99,6 @@ struct serial_struct {
 
 QT_BEGIN_NAMESPACE
 
-class QThread;
 class QWinOverlappedIoNotifier;
 class QTimer;
 class QSocketNotifier;
