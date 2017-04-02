@@ -160,10 +160,6 @@ public:
     static QString portNameToSystemLocation(const QString &port);
     static QString portNameFromSystemLocation(const QString &location);
 
-#if defined(Q_OS_UNIX)
-    static qint32 settingFromBaudRate(qint32 baudRate);
-#endif
-
     static QList<qint32> standardBaudRates();
 
     qint64 readBufferMaxSize;
@@ -216,6 +212,8 @@ public:
     DWORD triggeredEventMask;
 
 #elif defined(Q_OS_UNIX)
+
+    static qint32 settingFromBaudRate(qint32 baudRate);
 
     bool initialize(QIODevice::OpenMode mode);
     bool setTermios(const termios *tio);
