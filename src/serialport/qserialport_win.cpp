@@ -783,80 +783,16 @@ QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) con
 }
 
 // This table contains standard values of baud rates that
-// are defined in MSDN and/or in Win SDK file winbase.h
-
-static const QList<qint32> standardBaudRatePairList()
-{
-
-    static const QList<qint32> standardBaudRatesTable = QList<qint32>()
-
-        #ifdef CBR_110
-            << CBR_110
-        #endif
-
-        #ifdef CBR_300
-            << CBR_300
-        #endif
-
-        #ifdef CBR_600
-            << CBR_600
-        #endif
-
-        #ifdef CBR_1200
-            << CBR_1200
-        #endif
-
-        #ifdef CBR_2400
-            << CBR_2400
-        #endif
-
-        #ifdef CBR_4800
-            << CBR_4800
-        #endif
-
-        #ifdef CBR_9600
-            << CBR_9600
-        #endif
-
-        #ifdef CBR_14400
-            << CBR_14400
-        #endif
-
-        #ifdef CBR_19200
-            << CBR_19200
-        #endif
-
-        #ifdef CBR_38400
-            << CBR_38400
-        #endif
-
-        #ifdef CBR_56000
-            << CBR_56000
-        #endif
-
-        #ifdef CBR_57600
-            << CBR_57600
-        #endif
-
-        #ifdef CBR_115200
-            << CBR_115200
-        #endif
-
-        #ifdef CBR_128000
-            << CBR_128000
-        #endif
-
-        #ifdef CBR_256000
-            << CBR_256000
-        #endif
-    ;
-
-    return standardBaudRatesTable;
-};
-
+// are defined in file winbase.h
 QList<qint32> QSerialPortPrivate::standardBaudRates()
 {
-    return standardBaudRatePairList();
+    static const QList<qint32> baudRates = {
+        CBR_110,   CBR_300,   CBR_600,    CBR_1200,   CBR_2400,
+        CBR_4800,  CBR_9600,  CBR_14400,  CBR_19200,  CBR_38400,
+        CBR_56000, CBR_57600, CBR_115200, CBR_128000, CBR_256000
+    };
+
+    return baudRates;
 }
 
 QSerialPort::Handle QSerialPort::handle() const
