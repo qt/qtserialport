@@ -97,6 +97,10 @@ struct serial_struct {
 #  error Unsupported OS
 #endif
 
+#ifndef QSERIALPORT_BUFFERSIZE
+#define QSERIALPORT_BUFFERSIZE 32768
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QWinOverlappedIoNotifier;
@@ -120,11 +124,6 @@ class QSerialPortPrivate : public QIODevicePrivate
 {
     Q_DECLARE_PUBLIC(QSerialPort)
 public:
-    enum IoConstants {
-        ReadChunkSize = 512,
-        InitialBufferSize = 16384
-    };
-
     QSerialPortPrivate();
 
     bool open(QIODevice::OpenMode mode);

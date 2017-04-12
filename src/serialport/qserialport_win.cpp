@@ -355,7 +355,7 @@ bool QSerialPortPrivate::waitForReadyRead(int msecs)
 
         if (overlapped == &readCompletionOverlapped) {
             const qint64 readBytesForOneReadOperation = qint64(buffer.size()) - currentReadBufferSize;
-            if (readBytesForOneReadOperation == ReadChunkSize) {
+            if (readBytesForOneReadOperation == QSERIALPORT_BUFFERSIZE) {
                 currentReadBufferSize = buffer.size();
             } else if (readBytesForOneReadOperation == 0) {
                 if (initialReadBufferSize != currentReadBufferSize)
@@ -481,7 +481,7 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
     readStarted = false;
 
     bool result = true;
-    if (bytesTransferred == ReadChunkSize
+    if (bytesTransferred == QSERIALPORT_BUFFERSIZE
             || queuedBytesCount(QSerialPort::Input) > 0) {
         result = startAsyncRead();
     } else if (readBufferMaxSize == 0
@@ -538,7 +538,7 @@ bool QSerialPortPrivate::startAsyncRead()
     if (readStarted)
         return true;
 
-    DWORD bytesToRead = ReadChunkSize;
+    DWORD bytesToRead = QSERIALPORT_BUFFERSIZE;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
@@ -548,6 +548,8 @@ bool QSerialPortPrivate::startAsyncRead()
             return false;
         }
     }
+
+    Q_ASSERT(int(bytesToRead) <= readChunkBuffer.size());
 
     ::ZeroMemory(&readCompletionOverlapped, sizeof(readCompletionOverlapped));
     if (::ReadFile(handle, readChunkBuffer.data(), bytesToRead, nullptr, &readCompletionOverlapped)) {

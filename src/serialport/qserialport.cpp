@@ -101,7 +101,7 @@ QSerialPortPrivate::QSerialPortPrivate()
     , isBreakEnabled(false)
 #if defined(Q_OS_WIN32)
     , handle(INVALID_HANDLE_VALUE)
-    , readChunkBuffer(ReadChunkSize, 0)
+    , readChunkBuffer(QSERIALPORT_BUFFERSIZE, 0)
     , communicationStarted(false)
     , writeStarted(false)
     , readStarted(false)
@@ -121,7 +121,8 @@ QSerialPortPrivate::QSerialPortPrivate()
     , writeSequenceStarted(false)
 #endif
 {
-    writeBufferChunkSize = InitialBufferSize;
+    writeBufferChunkSize = QSERIALPORT_BUFFERSIZE;
+    readBufferChunkSize = QSERIALPORT_BUFFERSIZE;
 }
 
 void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)

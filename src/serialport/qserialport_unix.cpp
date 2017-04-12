@@ -769,7 +769,7 @@ bool QSerialPortPrivate::readNotification()
 
     // Always buffered, read data from the port into the read buffer
     qint64 newBytes = buffer.size();
-    qint64 bytesToRead = ReadChunkSize;
+    qint64 bytesToRead = QSERIALPORT_BUFFERSIZE;
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
