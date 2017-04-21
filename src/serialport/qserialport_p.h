@@ -175,6 +175,8 @@ public:
     bool settingsRestoredOnClose;
     bool isBreakEnabled;
 
+    bool startAsyncRead();
+
 #if defined(Q_OS_WIN32)
 
     bool setDcb(DCB *dcb);
@@ -188,7 +190,6 @@ public:
     bool completeAsyncWrite(qint64 bytesTransferred);
 
     bool startAsyncCommunication();
-    bool startAsyncRead();
     bool _q_startAsyncWrite();
     void _q_notified(DWORD numberOfBytes, DWORD errorCode, OVERLAPPED *overlapped);
 

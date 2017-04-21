@@ -763,6 +763,12 @@ bool QSerialPortPrivate::setFlowControl(QSerialPort::FlowControl flowControl)
     return setTermios(&tio);
 }
 
+bool QSerialPortPrivate::startAsyncRead()
+{
+    setReadNotificationEnabled(true);
+    return true;
+}
+
 bool QSerialPortPrivate::readNotification()
 {
     Q_Q(QSerialPort);
@@ -797,10 +803,6 @@ bool QSerialPortPrivate::readNotification()
     }
 
     newBytes = buffer.size() - newBytes;
-
-    // If read buffer is full, disable the read port notifier.
-    if (readBufferMaxSize && buffer.size() == readBufferMaxSize)
-        setReadNotificationEnabled(false);
 
     // only emit readyRead() when not recursing, and only if there is data available
     const bool hasData = newBytes > 0;

@@ -484,8 +484,7 @@ bool QSerialPortPrivate::completeAsyncRead(qint64 bytesTransferred)
     if (bytesTransferred == QSERIALPORT_BUFFERSIZE
             || queuedBytesCount(QSerialPort::Input) > 0) {
         result = startAsyncRead();
-    } else if (readBufferMaxSize == 0
-               || readBufferMaxSize > buffer.size()) {
+    } else {
         result = startAsyncCommunication();
     }
 
