@@ -1283,8 +1283,11 @@ qint64 QSerialPort::bytesAvailable() const
 */
 qint64 QSerialPort::bytesToWrite() const
 {
-    Q_D(const QSerialPort);
-    return QIODevice::bytesToWrite() + d->writeBuffer.size();
+    qint64 pendingBytes = QIODevice::bytesToWrite();
+#if defined(Q_OS_WIN32)
+    pendingBytes += d_func()->writeChunkBuffer.size();
+#endif
+    return pendingBytes;
 }
 
 /*!
