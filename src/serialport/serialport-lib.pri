@@ -22,7 +22,11 @@ SOURCES += \
 win32:!wince* {
     SOURCES += \
         $$PWD/qserialport_win.cpp \
-        $$PWD/qserialportinfo_win.cpp
+        $$PWD/qserialportinfo_win.cpp \
+        $$PWD/qwinoverlappedionotifier.cpp
+
+    PRIVATE_HEADERS += \
+        $$PWD/qwinoverlappedionotifier_p.h
 
     LIBS_PRIVATE += -lsetupapi -ladvapi32
 }

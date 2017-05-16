@@ -40,12 +40,12 @@
 ****************************************************************************/
 
 #include "qserialport_p.h"
+#include "qwinoverlappedionotifier_p.h"
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qtimer.h>
-#include <private/qwinoverlappedionotifier_p.h>
 #include <algorithm>
 
 #ifndef CTL_CODE
