@@ -779,7 +779,7 @@ bool QSerialPortPrivate::readNotification()
 
     if (readBufferMaxSize && bytesToRead > (readBufferMaxSize - buffer.size())) {
         bytesToRead = readBufferMaxSize - buffer.size();
-        if (bytesToRead == 0) {
+        if (bytesToRead <= 0) {
             // Buffer is full. User must read data from the buffer
             // before we can read more from the port.
             setReadNotificationEnabled(false);
