@@ -56,7 +56,6 @@
 
 #include <QMessageBox>
 #include <QLabel>
-#include <QtSerialPort/QSerialPort>
 
 //! [0]
 MainWindow::MainWindow(QWidget *parent) :

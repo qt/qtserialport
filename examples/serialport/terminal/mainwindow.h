@@ -52,11 +52,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtCore/QtGlobal>
-
 #include <QMainWindow>
-
-#include <QtSerialPort/QSerialPort>
+#include <QSerialPort>
 
 QT_BEGIN_NAMESPACE
 
@@ -94,11 +91,11 @@ private:
 private:
     void showStatusMessage(const QString &message);
 
-    Ui::MainWindow *ui;
-    QLabel *status;
-    Console *console;
-    SettingsDialog *settings;
-    QSerialPort *serial;
+    Ui::MainWindow *ui = nullptr;
+    QLabel *status = nullptr;
+    Console *console = nullptr;
+    SettingsDialog *settings = nullptr;
+    QSerialPort *serial = nullptr;
 };
 
 #endif // MAINWINDOW_H
