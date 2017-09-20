@@ -65,7 +65,7 @@ public:
     ~MasterThread();
 
     void transaction(const QString &portName, int waitTimeout, const QString &request);
-    void run() Q_DECL_OVERRIDE;
+    void run() override;
 
 signals:
     void response(const QString &s);

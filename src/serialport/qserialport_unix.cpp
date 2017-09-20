@@ -163,7 +163,7 @@ public:
     }
 
 protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE
+    bool event(QEvent *e) override
     {
         if (e->type() == QEvent::SockAct) {
             dptr->readNotification();
@@ -186,7 +186,7 @@ public:
     }
 
 protected:
-    bool event(QEvent *e) Q_DECL_OVERRIDE
+    bool event(QEvent *e) override
     {
         if (e->type() == QEvent::SockAct) {
             dptr->completeAsyncWrite();

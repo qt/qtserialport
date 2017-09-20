@@ -210,8 +210,8 @@ public:
 
     void setPort(const QSerialPortInfo &info);
 
-    bool open(OpenMode mode) Q_DECL_OVERRIDE;
-    void close() Q_DECL_OVERRIDE;
+    bool open(OpenMode mode) override;
+    void close() override;
 
 #if QT_DEPRECATED_SINCE(5, 3)
     QT_DEPRECATED void setSettingsRestoredOnClose(bool restore);
@@ -243,7 +243,7 @@ public:
 
     bool flush();
     bool clear(Directions directions = AllDirections);
-    bool atEnd() const Q_DECL_OVERRIDE; // ### Qt6: remove me
+    bool atEnd() const override; // ### Qt6: remove me
 
 #if QT_DEPRECATED_SINCE(5, 2)
     QT_DEPRECATED bool setDataErrorPolicy(DataErrorPolicy policy = IgnorePolicy);
@@ -256,14 +256,14 @@ public:
     qint64 readBufferSize() const;
     void setReadBufferSize(qint64 size);
 
-    bool isSequential() const Q_DECL_OVERRIDE;
+    bool isSequential() const override;
 
-    qint64 bytesAvailable() const Q_DECL_OVERRIDE;
-    qint64 bytesToWrite() const Q_DECL_OVERRIDE;
-    bool canReadLine() const Q_DECL_OVERRIDE;
+    qint64 bytesAvailable() const override;
+    qint64 bytesToWrite() const override;
+    bool canReadLine() const override;
 
-    bool waitForReadyRead(int msecs = 30000) Q_DECL_OVERRIDE;
-    bool waitForBytesWritten(int msecs = 30000) Q_DECL_OVERRIDE;
+    bool waitForReadyRead(int msecs = 30000) override;
+    bool waitForBytesWritten(int msecs = 30000) override;
 
 #if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED bool sendBreak(int duration = 0);
@@ -294,9 +294,9 @@ Q_SIGNALS:
     void breakEnabledChanged(bool set);
 
 protected:
-    qint64 readData(char *data, qint64 maxSize) Q_DECL_OVERRIDE;
-    qint64 readLineData(char *data, qint64 maxSize) Q_DECL_OVERRIDE;
-    qint64 writeData(const char *data, qint64 maxSize) Q_DECL_OVERRIDE;
+    qint64 readData(char *data, qint64 maxSize) override;
+    qint64 readLineData(char *data, qint64 maxSize) override;
+    qint64 writeData(const char *data, qint64 maxSize) override;
 
 private:
     // ### Qt6: remove me.
