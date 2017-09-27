@@ -74,7 +74,7 @@ protected:
     void contextMenuEvent(QContextMenuEvent *e) override;
 
 private:
-    bool localEchoEnabled = false;
+    bool m_localEchoEnabled = false;
 };
 
 #endif // CONSOLE_H

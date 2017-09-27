@@ -53,8 +53,8 @@
 
 #include <QScrollBar>
 
-Console::Console(QWidget *parent)
-    : QPlainTextEdit(parent)
+Console::Console(QWidget *parent) :
+    QPlainTextEdit(parent)
 {
     document()->setMaximumBlockCount(100);
     QPalette p = palette();
@@ -73,7 +73,7 @@ void Console::putData(const QByteArray &data)
 
 void Console::setLocalEchoEnabled(bool set)
 {
-    localEchoEnabled = set;
+    m_localEchoEnabled = set;
 }
 
 void Console::keyPressEvent(QKeyEvent *e)
@@ -86,7 +86,7 @@ void Console::keyPressEvent(QKeyEvent *e)
     case Qt::Key_Down:
         break;
     default:
-        if (localEchoEnabled)
+        if (m_localEchoEnabled)
             QPlainTextEdit::keyPressEvent(e);
         emit getData(e->text().toLocal8Bit());
     }

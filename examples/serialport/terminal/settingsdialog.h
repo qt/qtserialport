@@ -53,9 +53,7 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QtSerialPort/QSerialPort>
-
-QT_USE_NAMESPACE
+#include <QSerialPort>
 
 QT_BEGIN_NAMESPACE
 
@@ -104,9 +102,9 @@ private:
     void updateSettings();
 
 private:
-    Ui::SettingsDialog *ui;
-    Settings currentSettings;
-    QIntValidator *intValidator;
+    Ui::SettingsDialog *m_ui = nullptr;
+    Settings m_currentSettings;
+    QIntValidator *m_intValidator = nullptr;
 };
 
 #endif // SETTINGSDIALOG_H

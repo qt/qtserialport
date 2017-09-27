@@ -91,11 +91,11 @@ private:
 private:
     void showStatusMessage(const QString &message);
 
-    Ui::MainWindow *ui = nullptr;
-    QLabel *status = nullptr;
-    Console *console = nullptr;
-    SettingsDialog *settings = nullptr;
-    QSerialPort *serial = nullptr;
+    Ui::MainWindow *m_ui = nullptr;
+    QLabel *m_status = nullptr;
+    Console *m_console = nullptr;
+    SettingsDialog *m_settings = nullptr;
+    QSerialPort *m_serial = nullptr;
 };
 
 #endif // MAINWINDOW_H
