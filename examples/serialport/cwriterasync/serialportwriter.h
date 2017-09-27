@@ -51,14 +51,11 @@
 #ifndef SERIALPORTWRITER_H
 #define SERIALPORTWRITER_H
 
-#include <QtSerialPort/QSerialPort>
-
-#include <QTextStream>
-#include <QTimer>
 #include <QByteArray>
 #include <QObject>
-
-QT_USE_NAMESPACE
+#include <QSerialPort>
+#include <QTextStream>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 
@@ -70,8 +67,6 @@ class SerialPortWriter : public QObject
 
 public:
     explicit SerialPortWriter(QSerialPort *serialPort, QObject *parent = nullptr);
-    ~SerialPortWriter();
-
     void write(const QByteArray &writeData);
 
 private slots:
@@ -80,11 +75,11 @@ private slots:
     void handleError(QSerialPort::SerialPortError error);
 
 private:
-    QSerialPort     *m_serialPort;
-    QByteArray      m_writeData;
-    QTextStream     m_standardOutput;
-    qint64          m_bytesWritten;
-    QTimer          m_timer;
+    QSerialPort *m_serialPort = nullptr;
+    QByteArray m_writeData;
+    QTextStream m_standardOutput;
+    qint64 m_bytesWritten = 0;
+    QTimer m_timer;
 };
 
-#endif
+#endif // SERIALPORTWRITER_H
