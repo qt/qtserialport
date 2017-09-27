@@ -51,14 +51,10 @@
 #ifndef SERIALPORTREADER_H
 #define SERIALPORTREADER_H
 
-#include <QtSerialPort/QSerialPort>
-
+#include <QByteArray>
+#include <QSerialPort>
 #include <QTextStream>
 #include <QTimer>
-#include <QByteArray>
-#include <QObject>
-
-QT_USE_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 
@@ -70,7 +66,6 @@ class SerialPortReader : public QObject
 
 public:
     explicit SerialPortReader(QSerialPort *serialPort, QObject *parent = nullptr);
-    ~SerialPortReader();
 
 private slots:
     void handleReadyRead();
@@ -78,10 +73,10 @@ private slots:
     void handleError(QSerialPort::SerialPortError error);
 
 private:
-    QSerialPort *m_serialPort;
-    QByteArray  m_readData;
+    QSerialPort *m_serialPort = nullptr;
+    QByteArray m_readData;
     QTextStream m_standardOutput;
-    QTimer      m_timer;
+    QTimer m_timer;
 };
 
-#endif
+#endif // SERIALPORTREADER_H
