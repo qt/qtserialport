@@ -50,109 +50,106 @@
 
 #include "dialog.h"
 
+#include <QComboBox>
+#include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QComboBox>
-#include <QSpinBox>
 #include <QPushButton>
-#include <QGridLayout>
+#include <QSerialPortInfo>
+#include <QSpinBox>
 
-#include <QtSerialPort/QSerialPortInfo>
-
-QT_USE_NAMESPACE
-
-Dialog::Dialog(QWidget *parent)
-    : QDialog(parent)
-    , transactionCount(0)
-    , serialPortLabel(new QLabel(tr("Serial port:")))
-    , serialPortComboBox(new QComboBox())
-    , waitRequestLabel(new QLabel(tr("Wait request, msec:")))
-    , waitRequestSpinBox(new QSpinBox())
-    , responseLabel(new QLabel(tr("Response:")))
-    , responseLineEdit(new QLineEdit(tr("Hello, I'm Slave.")))
-    , trafficLabel(new QLabel(tr("No traffic.")))
-    , statusLabel(new QLabel(tr("Status: Not running.")))
-    , runButton(new QPushButton(tr("Start")))
+Dialog::Dialog(QWidget *parent) :
+    QDialog(parent),
+    m_serialPortLabel(new QLabel(tr("Serial port:"))),
+    m_serialPortComboBox(new QComboBox),
+    m_waitRequestLabel(new QLabel(tr("Wait request, msec:"))),
+    m_waitRequestSpinBox(new QSpinBox),
+    m_responseLabel(new QLabel(tr("Response:"))),
+    m_responseLineEdit(new QLineEdit(tr("Hello, I'm Slave."))),
+    m_trafficLabel(new QLabel(tr("No traffic."))),
+    m_statusLabel(new QLabel(tr("Status: Not running."))),
+    m_runButton(new QPushButton(tr("Start")))
 {
-    waitRequestSpinBox->setRange(0, 10000);
-    waitRequestSpinBox->setValue(20);
+    m_waitRequestSpinBox->setRange(0, 10000);
+    m_waitRequestSpinBox->setValue(20);
 
     const auto infos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &info : infos)
-        serialPortComboBox->addItem(info.portName());
+        m_serialPortComboBox->addItem(info.portName());
 
     auto mainLayout = new QGridLayout;
-    mainLayout->addWidget(serialPortLabel, 0, 0);
-    mainLayout->addWidget(serialPortComboBox, 0, 1);
-    mainLayout->addWidget(waitRequestLabel, 1, 0);
-    mainLayout->addWidget(waitRequestSpinBox, 1, 1);
-    mainLayout->addWidget(runButton, 0, 2, 2, 1);
-    mainLayout->addWidget(responseLabel, 2, 0);
-    mainLayout->addWidget(responseLineEdit, 2, 1, 1, 3);
-    mainLayout->addWidget(trafficLabel, 3, 0, 1, 4);
-    mainLayout->addWidget(statusLabel, 4, 0, 1, 5);
+    mainLayout->addWidget(m_serialPortLabel, 0, 0);
+    mainLayout->addWidget(m_serialPortComboBox, 0, 1);
+    mainLayout->addWidget(m_waitRequestLabel, 1, 0);
+    mainLayout->addWidget(m_waitRequestSpinBox, 1, 1);
+    mainLayout->addWidget(m_runButton, 0, 2, 2, 1);
+    mainLayout->addWidget(m_responseLabel, 2, 0);
+    mainLayout->addWidget(m_responseLineEdit, 2, 1, 1, 3);
+    mainLayout->addWidget(m_trafficLabel, 3, 0, 1, 4);
+    mainLayout->addWidget(m_statusLabel, 4, 0, 1, 5);
     setLayout(mainLayout);
 
     setWindowTitle(tr("Slave"));
-    serialPortComboBox->setFocus();
+    m_serialPortComboBox->setFocus();
 
-    timer.setSingleShot(true);
+    m_timer.setSingleShot(true);
 
-    connect(runButton, &QPushButton::clicked, this, &Dialog::startSlave);
-    connect(&serial, &QSerialPort::readyRead, this, &Dialog::readRequest);
-    connect(&timer, &QTimer::timeout, this, &Dialog::processTimeout);
+    connect(m_runButton, &QPushButton::clicked, this, &Dialog::startSlave);
+    connect(&m_serial, &QSerialPort::readyRead, this, &Dialog::readRequest);
+    connect(&m_timer, &QTimer::timeout, this, &Dialog::processTimeout);
 
-    connect(serialPortComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+    connect(m_serialPortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &Dialog::activateRunButton);
-    connect(waitRequestSpinBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+    connect(m_waitRequestSpinBox, QOverload<int>::of(&QSpinBox::valueChanged),
             this, &Dialog::activateRunButton);
-    connect(responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
+    connect(m_responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
 }
 
 void Dialog::startSlave()
 {
-    if (serial.portName() != serialPortComboBox->currentText()) {
-        serial.close();
-        serial.setPortName(serialPortComboBox->currentText());
+    if (m_serial.portName() != m_serialPortComboBox->currentText()) {
+        m_serial.close();
+        m_serial.setPortName(m_serialPortComboBox->currentText());
 
-        if (!serial.open(QIODevice::ReadWrite)) {
+        if (!m_serial.open(QIODevice::ReadWrite)) {
             processError(tr("Can't open %1, error code %2")
-                         .arg(serial.portName()).arg(serial.error()));
+                         .arg(m_serial.portName()).arg(m_serial.error()));
             return;
         }
     }
 
-    runButton->setEnabled(false);
-    statusLabel->setText(tr("Status: Running, connected to port %1.")
-                         .arg(serialPortComboBox->currentText()));
+    m_runButton->setEnabled(false);
+    m_statusLabel->setText(tr("Status: Running, connected to port %1.")
+                           .arg(m_serialPortComboBox->currentText()));
 }
 
 void Dialog::readRequest()
 {
-    if (!timer.isActive())
-        timer.start(waitRequestSpinBox->value());
-    request.append(serial.readAll());
+    if (!m_timer.isActive())
+        m_timer.start(m_waitRequestSpinBox->value());
+    m_request.append(m_serial.readAll());
 }
 
 void Dialog::processTimeout()
 {
-    serial.write(responseLineEdit->text().toLocal8Bit());
+    m_serial.write(m_responseLineEdit->text().toUtf8());
 
-    trafficLabel->setText(tr("Traffic, transaction #%1:"
-                             "\n\r-request: %2"
-                             "\n\r-response: %3")
-                          .arg(++transactionCount).arg(QString(request)).arg(responseLineEdit->text()));
-    request.clear();
+    m_trafficLabel->setText(tr("Traffic, transaction #%1:"
+                               "\n\r-request: %2"
+                               "\n\r-response: %3")
+                            .arg(++m_transactionCount).arg(QString::fromUtf8(m_request))
+                            .arg(m_responseLineEdit->text()));
+    m_request.clear();
 }
 
 void Dialog::activateRunButton()
 {
-    runButton->setEnabled(true);
+    m_runButton->setEnabled(true);
 }
 
 void Dialog::processError(const QString &s)
 {
     activateRunButton();
-    statusLabel->setText(tr("Status: Not running, %1.").arg(s));
-    trafficLabel->setText(tr("No traffic."));
+    m_statusLabel->setText(tr("Status: Not running, %1.").arg(s));
+    m_trafficLabel->setText(tr("No traffic."));
 }
