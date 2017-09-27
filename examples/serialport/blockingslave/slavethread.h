@@ -51,8 +51,8 @@
 #ifndef SLAVETHREAD_H
 #define SLAVETHREAD_H
 
-#include <QThread>
 #include <QMutex>
+#include <QThread>
 #include <QWaitCondition>
 
 //! [0]
@@ -65,7 +65,6 @@ public:
     ~SlaveThread();
 
     void startSlave(const QString &portName, int waitTimeout, const QString &response);
-    void run() Q_DECL_OVERRIDE;
 
 signals:
     void request(const QString &s);
@@ -73,11 +72,13 @@ signals:
     void timeout(const QString &s);
 
 private:
-    QString portName;
-    QString response;
-    int waitTimeout;
-    QMutex mutex;
-    bool quit;
+    void run() override;
+
+    QString m_portName;
+    QString m_response;
+    int m_waitTimeout = 0;
+    QMutex m_mutex;
+    bool m_quit = false;
 };
 //! [0]
 
