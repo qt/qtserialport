@@ -51,9 +51,9 @@
 #ifndef DIALOG_H
 #define DIALOG_H
 
-#include <QDialog>
-
 #include "masterthread.h"
+
+#include <QDialog>
 
 QT_BEGIN_NAMESPACE
 
@@ -82,18 +82,18 @@ private:
     void setControlsEnabled(bool enable);
 
 private:
-    int transactionCount;
-    QLabel *serialPortLabel;
-    QComboBox *serialPortComboBox;
-    QLabel *waitResponseLabel;
-    QSpinBox *waitResponseSpinBox;
-    QLabel *requestLabel;
-    QLineEdit *requestLineEdit;
-    QLabel *trafficLabel;
-    QLabel *statusLabel;
-    QPushButton *runButton;
+    int m_transactionCount = 0;
+    QLabel *m_serialPortLabel = nullptr;
+    QComboBox *m_serialPortComboBox = nullptr;
+    QLabel *m_waitResponseLabel = nullptr;
+    QSpinBox *m_waitResponseSpinBox = nullptr;
+    QLabel *m_requestLabel = nullptr;
+    QLineEdit *m_requestLineEdit = nullptr;
+    QLabel *m_trafficLabel = nullptr;
+    QLabel *m_statusLabel = nullptr;
+    QPushButton *m_runButton = nullptr;
 
-    MasterThread thread;
+    MasterThread m_thread;
 };
 
 #endif // DIALOG_H

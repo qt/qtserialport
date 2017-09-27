@@ -51,8 +51,8 @@
 #ifndef MASTERTHREAD_H
 #define MASTERTHREAD_H
 
-#include <QThread>
 #include <QMutex>
+#include <QThread>
 #include <QWaitCondition>
 
 //! [0]
@@ -65,7 +65,6 @@ public:
     ~MasterThread();
 
     void transaction(const QString &portName, int waitTimeout, const QString &request);
-    void run() Q_DECL_OVERRIDE;
 
 signals:
     void response(const QString &s);
@@ -73,12 +72,14 @@ signals:
     void timeout(const QString &s);
 
 private:
-    QString portName;
-    QString request;
-    int waitTimeout;
-    QMutex mutex;
-    QWaitCondition cond;
-    bool quit;
+    void run() override;
+
+    QString m_portName;
+    QString m_request;
+    int m_waitTimeout = 0;
+    QMutex m_mutex;
+    QWaitCondition m_cond;
+    bool m_quit = false;
 };
 //! [0]
 
