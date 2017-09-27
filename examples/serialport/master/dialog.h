@@ -52,11 +52,8 @@
 #define DIALOG_H
 
 #include <QDialog>
+#include <QSerialPort>
 #include <QTimer>
-
-#include <QtSerialPort/QSerialPort>
-
-QT_USE_NAMESPACE
 
 QT_BEGIN_NAMESPACE
 
@@ -85,20 +82,20 @@ private:
     void processError(const QString &error);
 
 private:
-    int transactionCount;
-    QLabel *serialPortLabel;
-    QComboBox *serialPortComboBox;
-    QLabel *waitResponseLabel;
-    QSpinBox *waitResponseSpinBox;
-    QLabel *requestLabel;
-    QLineEdit *requestLineEdit;
-    QLabel *trafficLabel;
-    QLabel *statusLabel;
-    QPushButton *runButton;
+    int m_transactionCount = 0;
+    QLabel *m_serialPortLabel = nullptr;
+    QComboBox *m_serialPortComboBox = nullptr;
+    QLabel *m_waitResponseLabel = nullptr;
+    QSpinBox *m_waitResponseSpinBox = nullptr;
+    QLabel *m_requestLabel = nullptr;
+    QLineEdit *m_requestLineEdit = nullptr;
+    QLabel *m_trafficLabel = nullptr;
+    QLabel *m_statusLabel = nullptr;
+    QPushButton *m_runButton = nullptr;
 
-    QSerialPort serial;
-    QByteArray response;
-    QTimer timer;
+    QSerialPort m_serial;
+    QByteArray m_response;
+    QTimer m_timer;
 };
 
 #endif // DIALOG_H
