@@ -1309,7 +1309,7 @@ bool QSerialPort::canReadLine() const
     This function blocks until new data is available for reading and the
     \l{QIODevice::}{readyRead()} signal has been emitted. The function
     will timeout after \a msecs milliseconds; the default timeout is
-    30000 milliseconds.
+    30000 milliseconds. If \a msecs is -1, this function will not time out.
 
     The function returns \c true if the readyRead() signal is emitted and
     there is new data available for reading; otherwise it returns \c false
@@ -1341,7 +1341,7 @@ bool QSerialPort::waitForReadyRead(int msecs)
     This function blocks until at least one byte has been written to the serial
     port and the \l{QIODevice::}{bytesWritten()} signal has been emitted. The
     function will timeout after \a msecs milliseconds; the default timeout is
-    30000 milliseconds.
+    30000 milliseconds. If \a msecs is -1, this function will not time out.
 
     The function returns \c true if the bytesWritten() signal is emitted; otherwise
     it returns \c false (if an error occurred or the operation timed out).
