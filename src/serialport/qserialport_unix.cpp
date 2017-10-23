@@ -173,7 +173,7 @@ protected:
     }
 
 private:
-    QSerialPortPrivate *dptr;
+    QSerialPortPrivate * const dptr;
 };
 
 class WriteNotifier : public QSocketNotifier
@@ -196,7 +196,7 @@ protected:
     }
 
 private:
-    QSerialPortPrivate *dptr;
+    QSerialPortPrivate * const dptr;
 };
 
 static inline void qt_set_common_props(termios *tio, QIODevice::OpenMode m)
