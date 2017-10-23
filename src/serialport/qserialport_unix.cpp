@@ -98,10 +98,7 @@ struct termios2 {
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qmap.h>
-
-#ifdef Q_OS_OSX
 #include <QtCore/qstandardpaths.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -118,12 +115,8 @@ QString serialPortLockFilePath(const QString &portName)
         << QStringLiteral("/run/lock")
 #ifdef Q_OS_ANDROID
         << QStringLiteral("/data/local/tmp")
-#elif defined(Q_OS_OSX)
-           // This is the workaround to specify a temporary directory
-           // on OSX when running the App Sandbox feature.
-        << QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 #endif
-    ;
+        << QStandardPaths::writableLocation(QStandardPaths::TempLocation);
 
     QString fileName = portName;
     fileName.replace(QLatin1Char('/'), QLatin1Char('_'));
