@@ -42,10 +42,17 @@
 #include "qserialport_p.h"
 #include "qserialportinfo_p.h"
 
+#include <QtCore/qelapsedtimer.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qsocketnotifier.h>
+#include <QtCore/qstandardpaths.h>
+
+#include <private/qcore_unix_p.h>
+
 #include <errno.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #ifdef Q_OS_OSX
@@ -92,13 +99,6 @@ struct termios2 {
 #endif
 
 #endif
-
-#include <private/qcore_unix_p.h>
-
-#include <QtCore/qelapsedtimer.h>
-#include <QtCore/qsocketnotifier.h>
-#include <QtCore/qmap.h>
-#include <QtCore/qstandardpaths.h>
 
 QT_BEGIN_NAMESPACE
 
