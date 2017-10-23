@@ -156,7 +156,7 @@ QString serialPortLockFilePath(const QString &portName)
 class ReadNotifier : public QSocketNotifier
 {
 public:
-    ReadNotifier(QSerialPortPrivate *d, QObject *parent)
+    explicit ReadNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Read, parent)
         , dptr(d)
     {
@@ -179,7 +179,7 @@ private:
 class WriteNotifier : public QSocketNotifier
 {
 public:
-    WriteNotifier(QSerialPortPrivate *d, QObject *parent)
+    explicit WriteNotifier(QSerialPortPrivate *d, QObject *parent)
         : QSocketNotifier(d->descriptor, QSocketNotifier::Write, parent)
         , dptr(d)
     {
