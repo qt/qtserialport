@@ -104,6 +104,11 @@ void MasterThread::run()
 //! [5] //! [6]
     QSerialPort serial;
 
+    if (currentPortName.isEmpty()) {
+        emit error(tr("No port name specified"));
+        return;
+    }
+
     while (!m_quit) {
 //![6] //! [7]
         if (currentPortNameChanged) {

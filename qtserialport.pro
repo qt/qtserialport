@@ -4,6 +4,7 @@ lessThan(QT_MAJOR_VERSION, 5) {
 }
 
 requires(!integrity)
+requires(!vxworks)
 requires(!winrt)
 requires(!uikit)
 
