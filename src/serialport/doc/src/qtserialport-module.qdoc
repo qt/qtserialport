@@ -32,11 +32,17 @@
     \qtvariable serialport
     \brief List of C++ classes that enable access to a serial port.
 
-    To use these classes in your application, use the following include
+    To use QSerialPort in your application, add the following include
     statement:
 
     \code
-    #include <QtSerialPort/QtSerialPort>
+    #include <QSerialPort>
+    \endcode
+
+    For QSerialPortInfo, use the following include statement:
+
+    \code
+    #include <QSerialPortInfo>
     \endcode
 
     To link against the module, add this line to your \l qmake \c

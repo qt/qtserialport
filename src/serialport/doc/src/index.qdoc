@@ -43,11 +43,18 @@
     \li Pinout signal change notification.
     \endlist
 
-    To use these classes in your application, use the following include
+    To use the serial port in your application, add the following include
     statement:
 
     \code
-    #include <QtSerialPort/QtSerialPort>
+    #include <QSerialPort>
+    \endcode
+
+    For information about available serial ports, use the following include
+    statement:
+
+    \code
+    #include <QSerialPortInfo>
     \endcode
 
     To link against the module, add this line to your \l qmake \c
