@@ -117,7 +117,7 @@ class QSerialPortErrorInfo
 public:
     explicit QSerialPortErrorInfo(QSerialPort::SerialPortError newErrorCode = QSerialPort::UnknownError,
                                   const QString &newErrorString = QString());
-    QSerialPort::SerialPortError errorCode;
+    QSerialPort::SerialPortError errorCode = QSerialPort::UnknownError;
     QString errorString;
 };
 
@@ -164,17 +164,17 @@ public:
 
     static QList<qint32> standardBaudRates();
 
-    qint64 readBufferMaxSize;
-    QSerialPort::SerialPortError error;
+    qint64 readBufferMaxSize = 0;
+    QSerialPort::SerialPortError error = QSerialPort::NoError;
     QString systemLocation;
-    qint32 inputBaudRate;
-    qint32 outputBaudRate;
-    QSerialPort::DataBits dataBits;
-    QSerialPort::Parity parity;
-    QSerialPort::StopBits stopBits;
-    QSerialPort::FlowControl flowControl;
-    bool settingsRestoredOnClose;
-    bool isBreakEnabled;
+    qint32 inputBaudRate = QSerialPort::Baud9600;
+    qint32 outputBaudRate = QSerialPort::Baud9600;
+    QSerialPort::DataBits dataBits = QSerialPort::Data8;
+    QSerialPort::Parity parity = QSerialPort::NoParity;
+    QSerialPort::StopBits stopBits = QSerialPort::OneStop;
+    QSerialPort::FlowControl flowControl = QSerialPort::NoFlowControl;
+    bool settingsRestoredOnClose = true;
+    bool isBreakEnabled = false;
 
     bool startAsyncRead();
 
@@ -199,18 +199,18 @@ public:
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
     COMMTIMEOUTS restoredCommTimeouts;
-    HANDLE handle;
+    HANDLE handle = INVALID_HANDLE_VALUE;
     QByteArray readChunkBuffer;
     QByteArray writeChunkBuffer;
-    bool communicationStarted;
-    bool writeStarted;
-    bool readStarted;
-    QWinOverlappedIoNotifier *notifier;
-    QTimer *startAsyncWriteTimer;
+    bool communicationStarted = false;
+    bool writeStarted = false;
+    bool readStarted = false;
+    QWinOverlappedIoNotifier *notifier = nullptr;
+    QTimer *startAsyncWriteTimer = nullptr;
     OVERLAPPED communicationOverlapped;
     OVERLAPPED readCompletionOverlapped;
     OVERLAPPED writeCompletionOverlapped;
-    DWORD triggeredEventMask;
+    DWORD triggeredEventMask = 0;
 
 #elif defined(Q_OS_UNIX)
 
@@ -243,20 +243,20 @@ public:
     bool completeAsyncWrite();
 
     struct termios restoredTermios;
-    int descriptor;
+    int descriptor = -1;
 
-    QSocketNotifier *readNotifier;
-    QSocketNotifier *writeNotifier;
+    QSocketNotifier *readNotifier = nullptr;
+    QSocketNotifier *writeNotifier = nullptr;
 
-    bool readPortNotifierCalled;
-    bool readPortNotifierState;
-    bool readPortNotifierStateSet;
+    bool readPortNotifierCalled = false;
+    bool readPortNotifierState = false;
+    bool readPortNotifierStateSet = false;
 
-    bool emittedReadyRead;
-    bool emittedBytesWritten;
+    bool emittedReadyRead = false;
+    bool emittedBytesWritten = false;
 
-    qint64 pendingBytesWritten;
-    bool writeSequenceStarted;
+    qint64 pendingBytesWritten = 0;
+    bool writeSequenceStarted = false;
 
     QScopedPointer<QLockFile> lockFileScopedPointer;
 

@@ -65,7 +65,6 @@ public:
     explicit Console(QWidget *parent = nullptr);
 
     void putData(const QByteArray &data);
-
     void setLocalEchoEnabled(bool set);
 
 protected:
@@ -75,8 +74,7 @@ protected:
     void contextMenuEvent(QContextMenuEvent *e) override;
 
 private:
-    bool localEchoEnabled;
-
+    bool m_localEchoEnabled = false;
 };
 
 #endif // CONSOLE_H

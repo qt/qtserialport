@@ -50,22 +50,20 @@
 
 #include "slavethread.h"
 
-#include <QtSerialPort/QSerialPort>
-
+#include <QSerialPort>
 #include <QTime>
 
-QT_USE_NAMESPACE
-
-SlaveThread::SlaveThread(QObject *parent)
-    : QThread(parent), waitTimeout(0), quit(false)
+SlaveThread::SlaveThread(QObject *parent) :
+    QThread(parent)
 {
 }
+
 //! [0]
 SlaveThread::~SlaveThread()
 {
-    mutex.lock();
-    quit = true;
-    mutex.unlock();
+    m_mutex.lock();
+    m_quit = true;
+    m_mutex.unlock();
     wait();
 }
 //! [0]
@@ -73,12 +71,12 @@ SlaveThread::~SlaveThread()
 //! [1] //! [2]
 void SlaveThread::startSlave(const QString &portName, int waitTimeout, const QString &response)
 {
-//! [1]
-    QMutexLocker locker(&mutex);
-    this->portName = portName;
-    this->waitTimeout = waitTimeout;
-    this->response = response;
-//! [3]
+    //! [1]
+    const QMutexLocker locker(&m_mutex);
+    m_portName = portName;
+    m_waitTimeout = waitTimeout;
+    m_response = response;
+    //! [3]
     if (!isRunning())
         start();
 }
@@ -89,21 +87,21 @@ void SlaveThread::run()
 {
     bool currentPortNameChanged = false;
 
-    mutex.lock();
+    m_mutex.lock();
 //! [4] //! [5]
     QString currentPortName;
-    if (currentPortName != portName) {
-        currentPortName = portName;
+    if (currentPortName != m_portName) {
+        currentPortName = m_portName;
         currentPortNameChanged = true;
     }
 
-    int currentWaitTimeout = waitTimeout;
-    QString currentRespone = response;
-    mutex.unlock();
+    int currentWaitTimeout = m_waitTimeout;
+    QString currentRespone = m_response;
+    m_mutex.unlock();
 //! [5] //! [6]
     QSerialPort serial;
 
-    while (!quit) {
+    while (!m_quit) {
 //![6] //! [7]
         if (currentPortNameChanged) {
             serial.close();
@@ -111,7 +109,7 @@ void SlaveThread::run()
 
             if (!serial.open(QIODevice::ReadWrite)) {
                 emit error(tr("Can't open %1, error code %2")
-                           .arg(portName).arg(serial.error()));
+                           .arg(m_portName).arg(serial.error()));
                 return;
             }
         }
@@ -124,10 +122,10 @@ void SlaveThread::run()
                 requestData += serial.readAll();
 //! [8] //! [10]
             // write response
-            QByteArray responseData = currentRespone.toLocal8Bit();
+            const QByteArray responseData = currentRespone.toUtf8();
             serial.write(responseData);
-            if (serial.waitForBytesWritten(waitTimeout)) {
-                QString request(requestData);
+            if (serial.waitForBytesWritten(m_waitTimeout)) {
+                const QString request = QString::fromUtf8(requestData);
 //! [12]
                 emit this->request(request);
 //! [10] //! [11] //! [12]
@@ -141,16 +139,16 @@ void SlaveThread::run()
                          .arg(QTime::currentTime().toString()));
         }
 //! [9]  //! [13]
-        mutex.lock();
-        if (currentPortName != portName) {
-            currentPortName = portName;
+        m_mutex.lock();
+        if (currentPortName != m_portName) {
+            currentPortName = m_portName;
             currentPortNameChanged = true;
         } else {
             currentPortNameChanged = false;
         }
-        currentWaitTimeout = waitTimeout;
-        currentRespone = response;
-        mutex.unlock();
+        currentWaitTimeout = m_waitTimeout;
+        currentRespone = m_response;
+        m_mutex.unlock();
     }
 //! [13]
 }

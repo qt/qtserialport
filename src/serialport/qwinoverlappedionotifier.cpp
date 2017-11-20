@@ -101,13 +101,13 @@ QT_BEGIN_NAMESPACE
 
 struct IOResult
 {
-    IOResult(DWORD n = 0, DWORD e = 0, OVERLAPPED *p = 0)
+    IOResult(DWORD n = 0, DWORD e = 0, OVERLAPPED *p = nullptr)
         : numberOfBytes(n), errorCode(e), overlapped(p)
     {}
 
-    DWORD numberOfBytes;
-    DWORD errorCode;
-    OVERLAPPED *overlapped;
+    DWORD numberOfBytes = 0;
+    DWORD errorCode = 0;
+    OVERLAPPED *overlapped = nullptr;
 };
 
 
@@ -117,11 +117,6 @@ class QWinOverlappedIoNotifierPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QWinOverlappedIoNotifier)
 public:
-    QWinOverlappedIoNotifierPrivate()
-        : hHandle(INVALID_HANDLE_VALUE)
-    {
-    }
-
     OVERLAPPED *waitForAnyNotified(QDeadlineTimer deadline);
     void notify(DWORD numberOfBytes, DWORD errorCode, OVERLAPPED *overlapped);
     void _q_notified();
@@ -130,9 +125,9 @@ public:
     static QWinIoCompletionPort *iocp;
     static HANDLE iocpInstanceLock;
     static unsigned int iocpInstanceRefCount;
-    HANDLE hHandle;
-    HANDLE hSemaphore;
-    HANDLE hResultsMutex;
+    HANDLE hHandle = INVALID_HANDLE_VALUE;
+    HANDLE hSemaphore = nullptr;
+    HANDLE hResultsMutex = nullptr;
     QAtomicInt waiting;
     QQueue<IOResult> results;
 };
@@ -147,8 +142,7 @@ class QWinIoCompletionPort : protected QThread
 public:
     QWinIoCompletionPort()
         : finishThreadKey(reinterpret_cast<ULONG_PTR>(this)),
-          drainQueueKey(reinterpret_cast<ULONG_PTR>(this + 1)),
-          hPort(INVALID_HANDLE_VALUE)
+          drainQueueKey(reinterpret_cast<ULONG_PTR>(this + 1))
     {
         setObjectName(QLatin1String("I/O completion port thread"));
         HANDLE hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -208,9 +202,9 @@ public:
 protected:
     void run()
     {
-        DWORD dwBytesRead;
-        ULONG_PTR pulCompletionKey;
-        OVERLAPPED *overlapped;
+        DWORD dwBytesRead = 0;
+        ULONG_PTR pulCompletionKey = 0;
+        OVERLAPPED *overlapped = nullptr;
         DWORD msecs = INFINITE;
 
         forever {
@@ -253,11 +247,11 @@ protected:
 private:
     const ULONG_PTR finishThreadKey;
     const ULONG_PTR drainQueueKey;
-    HANDLE hPort;
+    HANDLE hPort = INVALID_HANDLE_VALUE;
     QSet<QWinOverlappedIoNotifierPrivate *> notifiers;
     QMutex mutex;
     QMutex drainQueueMutex;
-    HANDLE hQueueDrainedEvent;
+    HANDLE hQueueDrainedEvent = nullptr;
 };
 
 

@@ -50,13 +50,11 @@
 ****************************************************************************/
 
 #include <QApplication>
-#include <QWidget>
-#include <QVBoxLayout>
 #include <QLabel>
 #include <QScrollArea>
-#include <QtSerialPort/QSerialPortInfo>
-
-QT_USE_NAMESPACE
+#include <QSerialPortInfo>
+#include <QVBoxLayout>
+#include <QWidget>
 
 int main(int argc, char *argv[])
 {

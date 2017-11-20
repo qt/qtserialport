@@ -87,38 +87,8 @@ QSerialPortErrorInfo::QSerialPortErrorInfo(QSerialPort::SerialPortError newError
 }
 
 QSerialPortPrivate::QSerialPortPrivate()
-    : readBufferMaxSize(0)
-    , error(QSerialPort::NoError)
-    , inputBaudRate(9600)
-    , outputBaudRate(9600)
-    , dataBits(QSerialPort::Data8)
-    , parity(QSerialPort::NoParity)
-    , stopBits(QSerialPort::OneStop)
-    , flowControl(QSerialPort::NoFlowControl)
-#if QT_DEPRECATED_SINCE(5,3)
-    , settingsRestoredOnClose(true)
-#endif
-    , isBreakEnabled(false)
 #if defined(Q_OS_WIN32)
-    , handle(INVALID_HANDLE_VALUE)
-    , readChunkBuffer(QSERIALPORT_BUFFERSIZE, 0)
-    , communicationStarted(false)
-    , writeStarted(false)
-    , readStarted(false)
-    , notifier(0)
-    , startAsyncWriteTimer(0)
-    , triggeredEventMask(0)
-#elif defined(Q_OS_UNIX)
-    , descriptor(-1)
-    , readNotifier(0)
-    , writeNotifier(0)
-    , readPortNotifierCalled(false)
-    , readPortNotifierState(false)
-    , readPortNotifierStateSet(false)
-    , emittedReadyRead(false)
-    , emittedBytesWritten(false)
-    , pendingBytesWritten(0)
-    , writeSequenceStarted(false)
+    : readChunkBuffer(QSERIALPORT_BUFFERSIZE, 0)
 #endif
 {
     writeBufferChunkSize = QSERIALPORT_BUFFERSIZE;
@@ -1308,7 +1278,7 @@ bool QSerialPort::canReadLine() const
     This function blocks until new data is available for reading and the
     \l{QIODevice::}{readyRead()} signal has been emitted. The function
     will timeout after \a msecs milliseconds; the default timeout is
-    30000 milliseconds.
+    30000 milliseconds. If \a msecs is -1, this function will not time out.
 
     The function returns \c true if the readyRead() signal is emitted and
     there is new data available for reading; otherwise it returns \c false
@@ -1340,7 +1310,7 @@ bool QSerialPort::waitForReadyRead(int msecs)
     This function blocks until at least one byte has been written to the serial
     port and the \l{QIODevice::}{bytesWritten()} signal has been emitted. The
     function will timeout after \a msecs milliseconds; the default timeout is
-    30000 milliseconds.
+    30000 milliseconds. If \a msecs is -1, this function will not time out.
 
     The function returns \c true if the bytesWritten() signal is emitted; otherwise
     it returns \c false (if an error occurred or the operation timed out).

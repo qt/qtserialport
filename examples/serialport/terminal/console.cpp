@@ -53,23 +53,19 @@
 
 #include <QScrollBar>
 
-#include <QtCore/QDebug>
-
-Console::Console(QWidget *parent)
-    : QPlainTextEdit(parent)
-    , localEchoEnabled(false)
+Console::Console(QWidget *parent) :
+    QPlainTextEdit(parent)
 {
     document()->setMaximumBlockCount(100);
     QPalette p = palette();
     p.setColor(QPalette::Base, Qt::black);
     p.setColor(QPalette::Text, Qt::green);
     setPalette(p);
-
 }
 
 void Console::putData(const QByteArray &data)
 {
-    insertPlainText(QString(data));
+    insertPlainText(data);
 
     QScrollBar *bar = verticalScrollBar();
     bar->setValue(bar->maximum());
@@ -77,7 +73,7 @@ void Console::putData(const QByteArray &data)
 
 void Console::setLocalEchoEnabled(bool set)
 {
-    localEchoEnabled = set;
+    m_localEchoEnabled = set;
 }
 
 void Console::keyPressEvent(QKeyEvent *e)
@@ -90,7 +86,7 @@ void Console::keyPressEvent(QKeyEvent *e)
     case Qt::Key_Down:
         break;
     default:
-        if (localEchoEnabled)
+        if (m_localEchoEnabled)
             QPlainTextEdit::keyPressEvent(e);
         emit getData(e->text().toLocal8Bit());
     }

@@ -51,9 +51,9 @@
 #ifndef DIALOG_H
 #define DIALOG_H
 
-#include <QDialog>
-
 #include "slavethread.h"
+
+#include <QDialog>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,18 +80,18 @@ private slots:
     void activateRunButton();
 
 private:
-    int transactionCount;
-    QLabel *serialPortLabel;
-    QComboBox *serialPortComboBox;
-    QLabel *waitRequestLabel;
-    QSpinBox *waitRequestSpinBox;
-    QLabel *responseLabel;
-    QLineEdit *responseLineEdit;
-    QLabel *trafficLabel;
-    QLabel *statusLabel;
-    QPushButton *runButton;
+    int m_transactionCount = 0;
+    QLabel *m_serialPortLabel = nullptr;
+    QComboBox *m_serialPortComboBox = nullptr;
+    QLabel *m_waitRequestLabel = nullptr;
+    QSpinBox *m_waitRequestSpinBox = nullptr;
+    QLabel *m_responseLabel = nullptr;
+    QLineEdit *m_responseLineEdit = nullptr;
+    QLabel *m_trafficLabel = nullptr;
+    QLabel *m_statusLabel = nullptr;
+    QPushButton *m_runButton = nullptr;
 
-    SlaveThread thread;
+    SlaveThread m_thread;
 };
 
 #endif // DIALOG_H
