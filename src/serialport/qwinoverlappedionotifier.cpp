@@ -384,9 +384,9 @@ bool QWinOverlappedIoNotifier::waitForNotified(QDeadlineTimer deadline, OVERLAPP
     return false;
 }
 
-/*!
-  * Note: This function runs in the I/O completion port thread.
-  */
+/*
+ * Note: This function runs in the I/O completion port thread.
+ */
 void QWinOverlappedIoNotifierPrivate::notify(DWORD numberOfBytes, DWORD errorCode,
         OVERLAPPED *overlapped)
 {
