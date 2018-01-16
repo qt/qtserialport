@@ -1,5 +1,6 @@
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT       += widgets serialport
+    requires(qtConfig(combobox))
 } else {
     include($$QTSERIALPORT_PROJECT_ROOT/src/serialport/qt4support/serialport.prf)
 }

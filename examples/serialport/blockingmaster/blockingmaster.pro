@@ -1,4 +1,5 @@
 QT += widgets serialport
+requires(qtConfig(combobox))
 
 TARGET = blockingmaster
 TEMPLATE = app
