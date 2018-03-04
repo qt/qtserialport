@@ -533,7 +533,8 @@ bool QSerialPortPrivate::waitForBytesWritten(int msecs)
     for (;;) {
         bool readyToRead = false;
         bool readyToWrite = false;
-        if (!waitForReadOrWrite(&readyToRead, &readyToWrite, true, !writeBuffer.isEmpty(),
+        const bool checkRead = q_func()->isReadable();
+        if (!waitForReadOrWrite(&readyToRead, &readyToWrite, checkRead, !writeBuffer.isEmpty(),
                                 qt_subtract_from_timeout(msecs, stopWatch.elapsed()))) {
             return false;
         }
