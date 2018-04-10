@@ -691,14 +691,17 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
         return false;
     }
 
-    if ((eventMask & EV_RXCHAR) && !startAsyncCommunication())
-        return false;
-
     notifier = new QWinOverlappedIoNotifier(q);
     QObjectPrivate::connect(notifier, &QWinOverlappedIoNotifier::notified,
                this, &QSerialPortPrivate::_q_notified);
     notifier->setHandle(handle);
     notifier->setEnabled(true);
+
+    if ((eventMask & EV_RXCHAR) && !startAsyncCommunication()) {
+        delete notifier;
+        notifier = nullptr;
+        return false;
+    }
 
     return true;
 }
