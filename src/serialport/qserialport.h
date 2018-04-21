@@ -152,7 +152,7 @@ public:
     Q_DECLARE_FLAGS(PinoutSignals, PinoutSignal)
 
 #if QT_DEPRECATED_SINCE(5, 2)
-#if defined(_MSC_VER)
+#if defined(Q_CC_MSVC) && !defined(Q_CC_CLANG)
 #pragma deprecated(UnknownBaud)
 #pragma deprecated(UnknownDataBits)
 #pragma deprecated(UnknownParity)
@@ -193,7 +193,7 @@ public:
     Q_ENUM(SerialPortError)
 
 #if QT_DEPRECATED_SINCE(5, 6)
-#if defined(_MSC_VER)
+#if defined(Q_CC_MSVC) && !defined(Q_CC_CLANG)
 #pragma deprecated(ParityError)
 #pragma deprecated(FramingError)
 #pragma deprecated(BreakConditionError)
