@@ -7,6 +7,7 @@ requires(!integrity)
 requires(!vxworks)
 requires(!winrt)
 requires(!uikit)
+requires(!android)
 
 load(configure)
 qtCompileTest(ntddmodm)
