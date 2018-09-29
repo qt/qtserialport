@@ -8,6 +8,7 @@ requires(!vxworks)
 requires(!winrt)
 requires(!uikit)
 requires(!android)
+requires(!emscripten)
 
 load(configure)
 qtCompileTest(ntddmodm)
