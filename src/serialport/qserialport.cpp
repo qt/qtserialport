@@ -1433,6 +1433,6 @@ qint64 QSerialPort::writeData(const char *data, qint64 maxSize)
     return d->writeData(data, maxSize);
 }
 
-#include "moc_qserialport.cpp"
-
 QT_END_NAMESPACE
+
+#include "moc_qserialport.cpp"
