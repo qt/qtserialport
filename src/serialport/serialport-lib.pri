@@ -19,7 +19,7 @@ SOURCES += \
     $$PWD/qserialport.cpp \
     $$PWD/qserialportinfo.cpp
 
-win32:!wince* {
+win32 {
     SOURCES += \
         $$PWD/qserialport_win.cpp \
         $$PWD/qserialportinfo_win.cpp \
