@@ -70,10 +70,10 @@
 # ifdef Q_OS_ANDROID
 #  include <android/api-level.h>
 # else
-#  define __ANDROID_API__ 21
+#  define __ANDROID_API__ 16
 # endif
 
-# if !defined(Q_OS_ANDROID) || (!defined(Q_PROCESSOR_X86) && __ANDROID_API__ < 21)
+# if !defined(Q_OS_ANDROID) || (!defined(Q_PROCESSOR_X86) && __ANDROID_API__ < 16)
 struct termios2 {
     tcflag_t c_iflag;       /* input mode flags */
     tcflag_t c_oflag;       /* output mode flags */
