@@ -306,7 +306,6 @@ private:
 
 #if defined(Q_OS_WIN32)
     Q_PRIVATE_SLOT(d_func(), bool _q_startAsyncWrite())
-    Q_PRIVATE_SLOT(d_func(), void _q_notified(quint32, quint32, OVERLAPPED*))
 #endif
 };
 

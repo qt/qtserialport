@@ -104,7 +104,6 @@ struct serial_struct {
 
 QT_BEGIN_NAMESPACE
 
-class QWinOverlappedIoNotifier;
 class QTimer;
 class QSocketNotifier;
 
@@ -182,7 +181,6 @@ public:
 
     bool setDcb(DCB *dcb);
     bool getDcb(DCB *dcb);
-    OVERLAPPED *waitForNotified(QDeadlineTimer deadline);
 
     qint64 queuedBytesCount(QSerialPort::Direction direction) const;
 
@@ -192,9 +190,14 @@ public:
 
     bool startAsyncCommunication();
     bool _q_startAsyncWrite();
-    void _q_notified(DWORD numberOfBytes, DWORD errorCode, OVERLAPPED *overlapped);
+    void handleNotification(DWORD bytesTransferred, DWORD errorCode,
+                            OVERLAPPED *overlapped);
 
     void emitReadyRead();
+
+    static void CALLBACK ioCompletionRoutine(
+            DWORD errorCode, DWORD bytesTransfered,
+            OVERLAPPED *overlappedBase);
 
     DCB restoredDcb;
     COMMTIMEOUTS currentCommTimeouts;
@@ -205,11 +208,12 @@ public:
     bool communicationStarted = false;
     bool writeStarted = false;
     bool readStarted = false;
-    QWinOverlappedIoNotifier *notifier = nullptr;
+    qint64 writeBytesTransferred = 0;
+    qint64 readBytesTransferred = 0;
     QTimer *startAsyncWriteTimer = nullptr;
-    OVERLAPPED communicationOverlapped;
-    OVERLAPPED readCompletionOverlapped;
-    OVERLAPPED writeCompletionOverlapped;
+    class Overlapped *communicationCompletionOverlapped = nullptr;
+    class Overlapped *readCompletionOverlapped = nullptr;
+    class Overlapped *writeCompletionOverlapped = nullptr;
     DWORD triggeredEventMask = 0;
 
 #elif defined(Q_OS_UNIX)
