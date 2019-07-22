@@ -169,6 +169,12 @@ static bool isVirtualNullModemDevice(const QString &portName)
     return portName.startsWith(QLatin1String("tnt"));
 }
 
+// provided by the g_serial driver
+static bool isGadgetDevice(const QString &portName)
+{
+    return portName.startsWith(QLatin1String("ttyGS"));
+}
+
 static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
 {
     QFile f(QFileInfo(targetDir, QStringLiteral("uevent")).absoluteFilePath());
@@ -265,7 +271,8 @@ QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
         const QString driverName = deviceDriver(targetDir);
         if (driverName.isEmpty()) {
             if (!isRfcommDevice(priv.portName)
-                    && !isVirtualNullModemDevice(priv.portName)) {
+                    && !isVirtualNullModemDevice(priv.portName)
+                    && !isGadgetDevice(priv.portName)) {
                 continue;
             }
         }
@@ -436,7 +443,8 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
             priv.productIdentifier = deviceProductIdentifier(dev.data(), priv.hasProductIdentifier);
         } else {
             if (!isRfcommDevice(priv.portName)
-                    && !isVirtualNullModemDevice(priv.portName)) {
+                    && !isVirtualNullModemDevice(priv.portName)
+                    && !isGadgetDevice(priv.portName)) {
                 continue;
             }
         }
