@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     QTextStream out(stdout);
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
 
-    out << "Total number of ports available: " << serialPortInfos.count() << endl;
+    out << "Total number of ports available: " << serialPortInfos.count() << Qt::endl;
 
     const QString blankString = "N/A";
     QString description;
@@ -69,19 +69,19 @@ int main(int argc, char *argv[])
         description = serialPortInfo.description();
         manufacturer = serialPortInfo.manufacturer();
         serialNumber = serialPortInfo.serialNumber();
-        out << endl
-            << "Port: " << serialPortInfo.portName() << endl
-            << "Location: " << serialPortInfo.systemLocation() << endl
-            << "Description: " << (!description.isEmpty() ? description : blankString) << endl
-            << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl
-            << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl
+        out << Qt::endl
+            << "Port: " << serialPortInfo.portName() << Qt::endl
+            << "Location: " << serialPortInfo.systemLocation() << Qt::endl
+            << "Description: " << (!description.isEmpty() ? description : blankString) << Qt::endl
+            << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << Qt::endl
+            << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << Qt::endl
             << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier()
                                          ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16)
-                                         : blankString) << endl
+                                         : blankString) << Qt::endl
             << "Product Identifier: " << (serialPortInfo.hasProductIdentifier()
                                           ? QByteArray::number(serialPortInfo.productIdentifier(), 16)
-                                          : blankString) << endl
-            << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
+                                          : blankString) << Qt::endl
+            << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << Qt::endl;
     }
 
     return 0;

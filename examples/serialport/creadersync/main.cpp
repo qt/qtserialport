@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     if (argumentCount == 1) {
         standardOutput << QObject::tr("Usage: %1 <serialportname> [baudrate]")
-                          .arg(argumentList.first()) << endl;
+                          .arg(argumentList.first()) << Qt::endl;
         return 1;
     }
 
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 
     if (!serialPort.open(QIODevice::ReadOnly)) {
         standardOutput << QObject::tr("Failed to open port %1, error: %2")
-                          .arg(serialPortName).arg(serialPort.error()) << endl;
+                          .arg(serialPortName).arg(serialPort.error()) << Qt::endl;
         return 1;
     }
 
@@ -87,18 +87,18 @@ int main(int argc, char *argv[])
 
     if (serialPort.error() == QSerialPort::ReadError) {
         standardOutput << QObject::tr("Failed to read from port %1, error: %2")
-                          .arg(serialPortName).arg(serialPort.errorString()) << endl;
+                          .arg(serialPortName).arg(serialPort.errorString()) << Qt::endl;
         return 1;
     } else if (serialPort.error() == QSerialPort::TimeoutError && readData.isEmpty()) {
         standardOutput << QObject::tr("No data was currently available"
                                       " for reading from port %1")
-                          .arg(serialPortName) << endl;
+                          .arg(serialPortName) << Qt::endl;
         return 0;
     }
 
     standardOutput << QObject::tr("Data successfully received from port %1")
-                      .arg(serialPortName) << endl;
-    standardOutput << readData << endl;
+                      .arg(serialPortName) << Qt::endl;
+    standardOutput << readData << Qt::endl;
 
     return 0;
 }
