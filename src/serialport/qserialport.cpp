@@ -102,7 +102,9 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     error = errorInfo.errorCode;
     q->setErrorString(errorInfo.errorString);
     emit q->errorOccurred(error);
+#if QT_DEPRECATED_SINCE(5, 8)
     emit q->error(error);
+#endif
 }
 
 /*!
@@ -347,6 +349,7 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     QSerialPort::requestToSend
 */
 
+#if QT_DEPRECATED_SINCE(5, 2)
 /*!
     \enum QSerialPort::DataErrorPolicy
     \obsolete
@@ -362,6 +365,7 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
 
     \sa QSerialPort::dataErrorPolicy
 */
+#endif
 
 /*!
     \enum QSerialPort::SerialPortError
@@ -1162,12 +1166,14 @@ void QSerialPort::clearError()
     d->setError(QSerialPortErrorInfo(QSerialPort::NoError));
 }
 
+#if QT_DEPRECATED_SINCE(5, 8)
 /*!
     \fn void QSerialPort::error(SerialPortError error)
     \obsolete
 
     Use errorOccurred() instead.
 */
+#endif
 
 /*!
     \fn void QSerialPort::errorOccurred(SerialPortError error)

@@ -272,7 +272,7 @@ void tst_QSerialPort::openExisting()
 
     for (const QString &serialPortName : qAsConst(m_availablePortNames)) {
         QSerialPort serialPort(serialPortName);
-        QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
+        QSignalSpy errorSpy(&serialPort, &QSerialPort::errorOccurred);
         QVERIFY(errorSpy.isValid());
 
         QCOMPARE(serialPort.portName(), serialPortName);
@@ -304,7 +304,7 @@ void tst_QSerialPort::openNotExisting()
 
     QSerialPort serialPort(serialPortName);
 
-    QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
+    QSignalSpy errorSpy(&serialPort, &QSerialPort::errorOccurred);
     QVERIFY(errorSpy.isValid());
 
     QCOMPARE(serialPort.portName(), serialPortName);
@@ -477,7 +477,7 @@ void tst_QSerialPort::rts()
 {
     QSerialPort serialPort(m_senderPortName);
 
-    QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
+    QSignalSpy errorSpy(&serialPort, &QSerialPort::errorOccurred);
     QVERIFY(errorSpy.isValid());
     QSignalSpy rtsSpy(&serialPort, &QSerialPort::requestToSendChanged);
     QVERIFY(rtsSpy.isValid());
@@ -516,7 +516,7 @@ void tst_QSerialPort::dtr()
 {
     QSerialPort serialPort(m_senderPortName);
 
-    QSignalSpy errorSpy(&serialPort, static_cast<void (QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error));
+    QSignalSpy errorSpy(&serialPort, &QSerialPort::errorOccurred);
     QVERIFY(errorSpy.isValid());
     QSignalSpy dtrSpy(&serialPort, &QSerialPort::dataTerminalReadyChanged);
     QVERIFY(dtrSpy.isValid());

@@ -80,8 +80,7 @@ int main(int argc, char *argv[])
                                          : blankString) << endl
             << "Product Identifier: " << (serialPortInfo.hasProductIdentifier()
                                           ? QByteArray::number(serialPortInfo.productIdentifier(), 16)
-                                          : blankString) << endl
-            << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
+                                          : blankString) << endl;
     }
 
     return 0;

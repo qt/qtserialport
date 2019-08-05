@@ -99,8 +99,7 @@ Dialog::Dialog(QWidget *parent) :
 
     connect(m_serialPortComboBox, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
             this, &Dialog::activateRunButton);
-    connect(m_waitRequestSpinBox, QOverload<const QString &>::of(&QSpinBox::valueChanged),
-            this, &Dialog::activateRunButton);
+    connect(m_waitRequestSpinBox, &QSpinBox::textChanged, this, &Dialog::activateRunButton);
     connect(m_responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
 }
 
