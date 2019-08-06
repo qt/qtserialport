@@ -262,6 +262,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
 #if QT_DEPRECATED_SINCE(5, 6)
 /*!
     \fn bool QSerialPortInfo::isBusy() const
+    \obsolete
 
     Returns \c true if serial port is busy;
     otherwise returns \c false.
