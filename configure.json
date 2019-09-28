@@ -1,4 +1,5 @@
 {
-    "module": "serialport",
-    "condition": "!config.integrity && !config.vxworks && !config.winrt && !config.uikit && !config.wasm"
+    "subconfigs": [
+         "src/serialport"
+    ]
 }
