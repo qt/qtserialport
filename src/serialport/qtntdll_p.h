@@ -123,14 +123,14 @@ typedef VOID (WINAPI *PIO_APC_ROUTINE) (
     static fp_##symbolName symbolName;
 
 #define RESOLVE_SYMBOL(symbolName) \
-    symbolName = reinterpret_cast<fp_##symbolName>(resolveSymbol(ntLibrary, #symbolName)); \
+    symbolName = reinterpret_cast<fp_##symbolName>(resolveNtdllSymbol(ntLibrary, #symbolName)); \
     if (!symbolName) \
         return false;
 
 GENERATE_SYMBOL_VARIABLE(ULONG, RtlNtStatusToDosError, NTSTATUS)
 GENERATE_SYMBOL_VARIABLE(NTSTATUS, NtDeviceIoControlFile, HANDLE, HANDLE, PIO_APC_ROUTINE, PVOID, PIO_STATUS_BLOCK, ULONG, PVOID, ULONG, PVOID, ULONG)
 
-inline QFunctionPointer resolveSymbol(QLibrary *ntLibrary, const char *symbolName)
+inline QFunctionPointer resolveNtdllSymbol(QLibrary *ntLibrary, const char *symbolName)
 {
     QFunctionPointer symbolFunctionPointer = ntLibrary->resolve(symbolName);
     if (!symbolFunctionPointer)
@@ -139,7 +139,7 @@ inline QFunctionPointer resolveSymbol(QLibrary *ntLibrary, const char *symbolNam
     return symbolFunctionPointer;
 }
 
-inline bool resolveSymbols(QLibrary *ntLibrary)
+inline bool resolveNtdllSymbols(QLibrary *ntLibrary)
 {
     if (!ntLibrary->isLoaded()) {
         ntLibrary->setFileName(QStringLiteral("ntdll"));
