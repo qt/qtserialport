@@ -246,7 +246,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
 {
     {
         QMutexLocker locker(&helper()->mutex);
-        static bool symbolsResolved = resolveSymbols(&helper()->ntLibrary);
+        static bool symbolsResolved = resolveNtdllSymbols(&helper()->ntLibrary);
         if (!symbolsResolved) {
             setError(QSerialPortErrorInfo(QSerialPort::OpenError,
                                           helper()->ntLibrary.errorString()));
