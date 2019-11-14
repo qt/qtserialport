@@ -4,7 +4,7 @@
 ## tst_qserialport Binary:
 #####################################################################
 
-qt_add_test(tst_qserialport # special case
+qt_add_executable(tst_qserialport
     SOURCES
         tst_qserialport.cpp
     PUBLIC_LIBRARIES

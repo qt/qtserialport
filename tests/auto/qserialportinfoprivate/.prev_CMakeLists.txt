@@ -4,7 +4,7 @@
 ## tst_qserialportinfoprivate Binary:
 #####################################################################
 
-qt_add_test(tst_qserialportinfoprivate # special case
+qt_add_executable(tst_qserialportinfoprivate
     SOURCES
         tst_qserialportinfoprivate.cpp
     LIBRARIES

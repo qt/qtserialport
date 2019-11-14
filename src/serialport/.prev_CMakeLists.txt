@@ -4,8 +4,6 @@
 ## SerialPort Module:
 #####################################################################
 
-qt_find_package(Libudev PROVIDED_TARGETS PkgConfig::Libudev) # special case
-
 qt_add_module(SerialPort
     SOURCES
         qserialport.cpp qserialport.h qserialport_p.h
@@ -22,26 +20,20 @@ qt_add_module(SerialPort
 ## Scopes:
 #####################################################################
 
-# special case begin
-# Temporarily remove until ntddmodm config test is ported
-#qt_extend_target(SerialPort CONDITION QT_FEATURE_ntddmodm
-#    DEFINES
-#        QT_NO_REDEFINE_GUID_DEVINTERFACE_MODEM
-#)
-# special case end
+qt_extend_target(SerialPort CONDITION config_ntddmodm
+    DEFINES
+        QT_NO_REDEFINE_GUID_DEVINTERFACE_MODEM
+)
 
 qt_extend_target(SerialPort CONDITION QT_FEATURE_libudev AND UNIX
     DEFINES
         LINK_LIBUDEV
-    LIBRARIES # special case
-        PkgConfig::Libudev # special case
 )
 
 qt_extend_target(SerialPort CONDITION WIN32
     SOURCES
         qserialport_win.cpp
         qserialportinfo_win.cpp
-        qtntdll_p.h # special case
     LIBRARIES
         advapi32
         setupapi

@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/serialport/master")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -22,6 +22,13 @@ target_link_libraries(master PUBLIC
     Qt::Core
     Qt::Gui
 )
+
+if((QT_MAJOR_VERSION GREATER 4))
+    target_link_libraries(master PUBLIC
+        Qt::SerialPort
+        Qt::Widgets
+    )
+endif()
 
 install(TARGETS master
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

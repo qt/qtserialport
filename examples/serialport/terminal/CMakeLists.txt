@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples")
+set(INSTALL_EXAMPLEDIR "examples/serialport/terminal")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -29,6 +29,7 @@ target_link_libraries(terminal PUBLIC
     Qt::Widgets
 )
 
+
 # Resources:
 set(terminal_resource_files
     "images/application-exit.png"
@@ -38,13 +39,12 @@ set(terminal_resource_files
     "images/settings.png"
 )
 
-QT6_ADD_RESOURCES(terminal "terminal"
+qt6_add_resources(terminal "terminal"
     PREFIX
         "/"
     FILES
         ${terminal_resource_files}
 )
-
 
 install(TARGETS terminal
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
