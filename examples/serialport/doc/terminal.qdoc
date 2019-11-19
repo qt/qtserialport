@@ -122,7 +122,7 @@
     \snippet terminal/mainwindow.cpp 6
 
     This slot sends the characters typed in the given
-    \l{terminal/console.cpp}{Console} widget to the serial port.
+    Console widget to the serial port - see \c terminal/console.cpp.
 
     When the serial port receives new data, the signal
     \l{QIODevice::}{readyRead()} is emitted, and that signal is

@@ -350,6 +350,7 @@ private:
 };
 
 /*!
+ * \internal
  * Wait synchronously for any notified signal.
  *
  * The function returns a pointer to the OVERLAPPED object corresponding to the completed I/O
@@ -365,6 +366,7 @@ OVERLAPPED *QWinOverlappedIoNotifier::waitForAnyNotified(QDeadlineTimer deadline
 }
 
 /*!
+ * \internal
  * Wait synchronously for the notified signal.
  *
  * The function returns true if the notified signal was emitted for
