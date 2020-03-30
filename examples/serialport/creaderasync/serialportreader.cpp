@@ -78,12 +78,12 @@ void SerialPortReader::handleTimeout()
         m_standardOutput << QObject::tr("No data was currently available "
                                         "for reading from port %1")
                             .arg(m_serialPort->portName())
-                         << endl;
+                         << "\n";
     } else {
         m_standardOutput << QObject::tr("Data successfully received from port %1")
                             .arg(m_serialPort->portName())
-                         << endl;
-        m_standardOutput << m_readData << endl;
+                         << "\n";
+        m_standardOutput << m_readData << "\n";
     }
 
     QCoreApplication::quit();
@@ -96,7 +96,7 @@ void SerialPortReader::handleError(QSerialPort::SerialPortError serialPortError)
                                         "the data from port %1, error: %2")
                             .arg(m_serialPort->portName())
                             .arg(m_serialPort->errorString())
-                         << endl;
+                         << "\n";
         QCoreApplication::exit(1);
     }
 }

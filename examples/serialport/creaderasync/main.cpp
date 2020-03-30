@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     if (argumentCount == 1) {
         standardOutput << QObject::tr("Usage: %1 <serialportname> [baudrate]")
                           .arg(argumentList.first())
-                       << endl;
+                       << "\n";
         return 1;
     }
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
         standardOutput << QObject::tr("Failed to open port %1, error: %2")
                           .arg(serialPortName)
                           .arg(serialPort.errorString())
-                       << endl;
+                       << "\n";
         return 1;
     }
 

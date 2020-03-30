@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     QTextStream out(stdout);
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
 
-    out << "Total number of ports available: " << serialPortInfos.count() << endl;
+    out << "Total number of ports available: " << serialPortInfos.count() << "\n";
 
     const QString blankString = "N/A";
     QString description;
@@ -69,18 +69,17 @@ int main(int argc, char *argv[])
         description = serialPortInfo.description();
         manufacturer = serialPortInfo.manufacturer();
         serialNumber = serialPortInfo.serialNumber();
-        out << endl
-            << "Port: " << serialPortInfo.portName() << endl
-            << "Location: " << serialPortInfo.systemLocation() << endl
-            << "Description: " << (!description.isEmpty() ? description : blankString) << endl
-            << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl
-            << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl
-            << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier()
+        out << "\nPort: " << serialPortInfo.portName()
+            << "\nLocation: " << serialPortInfo.systemLocation()
+            << "\nDescription: " << (!description.isEmpty() ? description : blankString)
+            << "\nManufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString)
+            << "\nSerial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString)
+            << "\nVendor Identifier: " << (serialPortInfo.hasVendorIdentifier()
                                          ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16)
-                                         : blankString) << endl
-            << "Product Identifier: " << (serialPortInfo.hasProductIdentifier()
+                                         : blankString)
+            << "\nProduct Identifier: " << (serialPortInfo.hasProductIdentifier()
                                           ? QByteArray::number(serialPortInfo.productIdentifier(), 16)
-                                          : blankString) << endl;
+                                          : blankString) << "\n";
     }
 
     return 0;
