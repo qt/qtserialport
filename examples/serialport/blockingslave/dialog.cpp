@@ -97,8 +97,7 @@ Dialog::Dialog(QWidget *parent) :
     connect(&m_thread, &SlaveThread::error, this, &Dialog::processError);
     connect(&m_thread, &SlaveThread::timeout, this, &Dialog::processTimeout);
 
-    connect(m_serialPortComboBox, QOverload<const QString &>::of(&QComboBox::currentIndexChanged),
-            this, &Dialog::activateRunButton);
+    connect(m_serialPortComboBox, &QComboBox::currentIndexChanged, this, &Dialog::activateRunButton);
     connect(m_waitRequestSpinBox, &QSpinBox::textChanged, this, &Dialog::activateRunButton);
     connect(m_responseLineEdit, &QLineEdit::textChanged, this, &Dialog::activateRunButton);
 }
