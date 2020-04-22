@@ -41,6 +41,8 @@
     \li Text mode.
     \li Configuring timeouts and delays while reading or writing.
     \li Pinout signal change notification.
+    \li Special transceiver conditions, like Framing error, Parity error and
+        Break condition error.
     \endlist
 
     To use the serial port in your application, add the following include
