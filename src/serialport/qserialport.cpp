@@ -188,6 +188,12 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     errorOccurred() signal. You can also call error() to find the type of
     error that occurred last.
 
+    \note Not all error conditions are handled in a platform independent way in
+    QSerialport, as for example the Framing, Parity, and Break condition errors.
+    These kind of errors need to be handled by the application code, probably
+    using OS system specific ioctls on the device descriptor and/or parsing the
+    stream's byte-stuffing.
+
     Programming with a blocking serial port is radically different from
     programming with a non-blocking serial port. A blocking serial port
     does not require an event loop and typically leads to simpler code.
