@@ -151,13 +151,13 @@ static bool isValidSerial8250(const QString &systemLocation)
     return false;
 }
 
-static bool isRfcommDevice(const QString &portName)
+static bool isRfcommDevice(QStringView portName)
 {
     if (!portName.startsWith(QLatin1String("rfcomm")))
         return false;
 
     bool ok;
-    const int portNumber = portName.midRef(6).toInt(&ok);
+    const int portNumber = portName.mid(6).toInt(&ok);
     if (!ok || (portNumber < 0) || (portNumber > 255))
         return false;
     return true;
