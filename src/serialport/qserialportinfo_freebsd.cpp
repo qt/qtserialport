@@ -42,7 +42,7 @@
 #include "qserialport_p.h"
 
 #include <QtCore/qdatastream.h>
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qdir.h>
 
 #include <errno.h>
@@ -109,23 +109,23 @@ struct NodeInfo
     QString value;
 };
 
-static QVector<int> mibFromName(const QString &name)
+static QList<int> mibFromName(const QString &name)
 {
     size_t mibsize = 0;
     if (::sysctlnametomib(name.toLocal8Bit().constData(), nullptr, &mibsize) < 0
             || mibsize == 0) {
-        return QVector<int>();
+        return QList<int>();
     }
-    QVector<int> mib(mibsize);
+    QList<int> mib(mibsize);
     if (::sysctlnametomib(name.toLocal8Bit().constData(), &mib[0], &mibsize) < 0)
-        return QVector<int>();
+        return QList<int>();
 
     return mib;
 }
 
-static QVector<int> nextOid(const QVector<int> &previousOid)
+static QList<int> nextOid(const QList<int> &previousOid)
 {
-    QVector<int> mib;
+    QList<int> mib;
     mib.append(0); // Magic undocumented code (CTL_UNSPEC ?)
     mib.append(2); // Magic undocumented code
     for (int code : previousOid)
@@ -133,21 +133,21 @@ static QVector<int> nextOid(const QVector<int> &previousOid)
 
     size_t requiredLength = 0;
     if (::sysctl(&mib[0], mib.count(), nullptr, &requiredLength, nullptr, 0) < 0)
-        return QVector<int>();
+        return QList<int>();
     const size_t oidLength = requiredLength / sizeof(int);
-    QVector<int> oid(oidLength, 0);
+    QList<int> oid(oidLength, 0);
     if (::sysctl(&mib[0], mib.count(), &oid[0], &requiredLength, nullptr, 0) < 0)
-        return QVector<int>();
+        return QList<int>();
 
     if (previousOid.first() != oid.first())
-        return QVector<int>();
+        return QList<int>();
 
     return oid;
 }
 
-static NodeInfo nodeForOid(const QVector<int> &oid)
+static NodeInfo nodeForOid(const QList<int> &oid)
 {
-    QVector<int> mib;
+    QList<int> mib;
     mib.append(0); // Magic undocumented code (CTL_UNSPEC ?)
     mib.append(1); // Magic undocumented code
     for (int code : oid)
@@ -195,14 +195,14 @@ static NodeInfo nodeForOid(const QVector<int> &oid)
     return result;
 }
 
-static QList<NodeInfo> enumerateDesiredNodes(const QVector<int> &mib)
+static QList<NodeInfo> enumerateDesiredNodes(const QList<int> &mib)
 {
     QList<NodeInfo> nodes;
 
-    QVector<int> oid = mib;
+    QList<int> oid = mib;
 
     for (;;) {
-        const QVector<int> nextoid = nextOid(oid);
+        const QList<int> nextoid = nextOid(oid);
         if (nextoid.isEmpty())
             break;
 
@@ -222,7 +222,7 @@ static QList<NodeInfo> enumerateDesiredNodes(const QVector<int> &mib)
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    const QVector<int> mib = mibFromName(QLatin1String("dev"));
+    const QList<int> mib = mibFromName(QLatin1String("dev"));
     if (mib.isEmpty())
         return QList<QSerialPortInfo>();
 

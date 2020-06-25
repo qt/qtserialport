@@ -44,9 +44,9 @@
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qtimer.h>
-#include <QtCore/qvector.h>
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
