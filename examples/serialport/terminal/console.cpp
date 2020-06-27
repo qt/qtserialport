@@ -94,16 +94,16 @@ void Console::keyPressEvent(QKeyEvent *e)
 
 void Console::mousePressEvent(QMouseEvent *e)
 {
-    Q_UNUSED(e)
+    Q_UNUSED(e);
     setFocus();
 }
 
 void Console::mouseDoubleClickEvent(QMouseEvent *e)
 {
-    Q_UNUSED(e)
+    Q_UNUSED(e);
 }
 
 void Console::contextMenuEvent(QContextMenuEvent *e)
 {
-    Q_UNUSED(e)
+    Q_UNUSED(e);
 }
