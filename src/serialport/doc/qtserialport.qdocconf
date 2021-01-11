@@ -33,7 +33,6 @@ headerdirs  += ..
 sourcedirs  += ..
 exampledirs += ../../../examples/serialport
 imagedirs   += images
-excludedirs += ../qt4support
 
 examplesinstallpath = serialport
 
