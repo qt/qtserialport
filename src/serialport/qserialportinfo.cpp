@@ -255,33 +255,7 @@ bool QSerialPortInfo::hasProductIdentifier() const
 
     Returns whether this QSerialPortInfo object holds a
     serial port definition.
-
-    \sa isBusy()
 */
-
-#if QT_DEPRECATED_SINCE(5, 6)
-/*!
-    \fn bool QSerialPortInfo::isBusy() const
-    \obsolete
-
-    Returns \c true if serial port is busy;
-    otherwise returns \c false.
-
-    \sa isNull()
-*/
-#endif // QT_DEPRECATED_SINCE(5, 6)
-
-#if QT_DEPRECATED_SINCE(5, 2)
-/*!
-    \fn bool QSerialPortInfo::isValid() const
-    \obsolete
-
-    Returns \c true if serial port is present on system;
-    otherwise returns \c false.
-
-    \sa isNull(), isBusy()
-*/
-#endif // QT_DEPRECATED_SINCE(5, 2)
 
 /*!
     \fn QList<qint32> QSerialPortInfo::standardBaudRates()

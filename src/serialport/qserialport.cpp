@@ -102,9 +102,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     error = errorInfo.errorCode;
     q->setErrorString(errorInfo.errorString);
     emit q->errorOccurred(error);
-#if QT_DEPRECATED_SINCE(5, 8)
-    emit q->error(error);
-#endif
 }
 
 /*!
@@ -235,9 +232,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     \value Baud38400    38400 baud.
     \value Baud57600    57600 baud.
     \value Baud115200   115200 baud.
-    \value UnknownBaud  Unknown baud. This value is obsolete. It is provided to
-                        keep old source code working. We strongly advise against
-                        using it in new code.
 
     \sa QSerialPort::baudRate
 */
@@ -259,9 +253,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
                             is used for most kinds of data, as this size matches
                             the size of a byte. It is almost universally used in
                             newer applications.
-    \value UnknownDataBits  Unknown number of bits. This value is obsolete. It
-                            is provided to keep old source code working. We
-                            strongly advise against using it in new code.
 
     \sa QSerialPort::dataBits
 */
@@ -285,9 +276,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     \value MarkParity       Mark parity. The parity bit is always set to the
                             mark signal condition (logical 1). It does not
                             provide error detection information.
-    \value UnknownParity    Unknown parity. This value is obsolete. It is
-                            provided to keep old source code working. We
-                            strongly advise against using it in new code.
 
     \sa QSerialPort::parity
 */
@@ -300,9 +288,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     \value OneStop          1 stop bit.
     \value OneAndHalfStop   1.5 stop bits. This is only for the Windows platform.
     \value TwoStop          2 stop bits.
-    \value UnknownStopBits  Unknown number of stop bits. This value is obsolete.
-                            It is provided to keep old source code working. We
-                            strongly advise against using it in new code.
 
     \sa QSerialPort::stopBits
 */
@@ -315,9 +300,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     \value NoFlowControl        No flow control.
     \value HardwareControl      Hardware flow control (RTS/CTS).
     \value SoftwareControl      Software flow control (XON/XOFF).
-    \value UnknownFlowControl   Unknown flow control. This value is obsolete. It
-                                is provided to keep old source code working. We
-                                strongly advise against using it in new code.
 
     \sa QSerialPort::flowControl
 */
@@ -328,14 +310,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     This enum describes the possible RS-232 pinout signals.
 
     \value NoSignal                       No line active
-    \value TransmittedDataSignal          TxD (Transmitted Data). This value is
-                                          obsolete. It is provided to keep old
-                                          source code working. We strongly
-                                          advise against using it in new code.
-    \value ReceivedDataSignal             RxD (Received Data). This value is
-                                          obsolete. It is provided to keep old
-                                          source code working. We strongly
-                                          advise against using it in new code.
     \value DataTerminalReadySignal        DTR (Data Terminal Ready).
     \value DataCarrierDetectSignal        DCD (Data Carrier Detect).
     \value DataSetReadySignal             DSR (Data Set Ready).
@@ -348,24 +322,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     \sa pinoutSignals(), QSerialPort::dataTerminalReady,
     QSerialPort::requestToSend
 */
-
-#if QT_DEPRECATED_SINCE(5, 2)
-/*!
-    \enum QSerialPort::DataErrorPolicy
-    \obsolete
-
-    This enum describes the policies for the received symbols
-    while parity errors were detected.
-
-    \value SkipPolicy           Skips the bad character.
-    \value PassZeroPolicy       Replaces bad character with zero.
-    \value IgnorePolicy         Ignores the error for a bad character.
-    \value StopReceivingPolicy  Stops data reception on error.
-    \value UnknownPolicy        Unknown policy.
-
-    \sa QSerialPort::dataErrorPolicy
-*/
-#endif
 
 /*!
     \enum QSerialPort::SerialPortError
@@ -390,18 +346,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
                                 that can only be successfully performed if the
                                 device is open. This value was introduced in
                                 QtSerialPort 5.2.
-
-    \value ParityError          Parity error detected by the hardware while
-                                reading data. This value is obsolete. We strongly
-                                advise against using it in new code.
-
-    \value FramingError         Framing error detected by the hardware while
-                                reading data. This value is obsolete. We strongly
-                                advise against using it in new code.
-
-    \value BreakConditionError  Break condition detected by the hardware on
-                                the input line. This value is obsolete. We strongly
-                                advise against using it in new code.
 
     \value WriteError           An I/O error occurred while writing the data.
 
@@ -429,7 +373,6 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
 */
 QSerialPort::QSerialPort(QObject *parent)
     : QIODevice(*new QSerialPortPrivate, parent)
-    , d_dummy(0)
 {
 }
 
@@ -441,7 +384,6 @@ QSerialPort::QSerialPort(QObject *parent)
 */
 QSerialPort::QSerialPort(const QString &name, QObject *parent)
     : QIODevice(*new QSerialPortPrivate, parent)
-    , d_dummy(0)
 {
     setPortName(name);
 }
@@ -453,7 +395,6 @@ QSerialPort::QSerialPort(const QString &name, QObject *parent)
 */
 QSerialPort::QSerialPort(const QSerialPortInfo &serialPortInfo, QObject *parent)
     : QIODevice(*new QSerialPortPrivate, parent)
-    , d_dummy(0)
 {
     setPort(serialPortInfo);
 }
@@ -580,53 +521,6 @@ void QSerialPort::close()
     d->isBreakEnabled = false;
     QIODevice::close();
 }
-
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
-
-#if QT_DEPRECATED_SINCE(5, 3)
-/*!
-    \property QSerialPort::settingsRestoredOnClose
-    \brief the flag which specifies to restore the previous settings when closing
-    the serial port.
-    \obsolete
-
-    If this flag is \c true, the settings will be restored; otherwise not.
-    The default state of the QSerialPort class is to restore the
-    settings.
-*/
-void QSerialPort::setSettingsRestoredOnClose(bool restore)
-{
-    Q_D(QSerialPort);
-
-    if (d->settingsRestoredOnClose != restore) {
-        d->settingsRestoredOnClose = restore;
-        emit settingsRestoredOnCloseChanged(d->settingsRestoredOnClose);
-    }
-}
-
-QT_WARNING_POP
-
-bool QSerialPort::settingsRestoredOnClose() const
-{
-    Q_D(const QSerialPort);
-    return d->settingsRestoredOnClose;
-}
-#endif // QT_DEPRECATED_SINCE(5,3)
-
-#if QT_DEPRECATED_SINCE(5, 5)
-/*!
-    \fn void QSerialPort::settingsRestoredOnCloseChanged(bool restore)
-    \obsolete
-
-    This signal is emitted after the flag which specifies to restore the
-    previous settings while closing the serial port has been changed. The new
-    flag which specifies to restore the previous settings while closing the serial
-    port is passed as \a restore.
-
-    \sa QSerialPort::settingsRestoredOnClose
-*/
-#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::baudRate
@@ -1087,62 +981,6 @@ bool QSerialPort::atEnd() const
     return QIODevice::atEnd();
 }
 
-#if QT_DEPRECATED_SINCE(5, 2)
-/*!
-    \property QSerialPort::dataErrorPolicy
-    \brief the error policy for how the process receives characters in the case where
-    a parity error is detected.
-    \obsolete
-
-    If the setting is successful, returns \c true; otherwise returns \c false. The
-    default policy set is IgnorePolicy.
-
-    \note The serial port has to be open before trying to set this property;
-    otherwise returns \c false and sets the NotOpenError error code. This is a bit
-    unusual as opposed to the regular Qt property settings of a class. However,
-    this is a special use case since the property is set through the interaction
-    with the kernel and hardware. Hence, the two scenarios cannot be completely
-    compared to each other.
-*/
-bool QSerialPort::setDataErrorPolicy(DataErrorPolicy policy)
-{
-    Q_D(QSerialPort);
-
-    if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
-        qWarning("%s: device not open", Q_FUNC_INFO);
-        return false;
-    }
-
-    if (policy != QSerialPort::IgnorePolicy) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::UnsupportedOperationError,
-                    tr("The device supports only the ignoring policy")));
-        return false;
-    }
-
-    return true;
-}
-
-QSerialPort::DataErrorPolicy QSerialPort::dataErrorPolicy() const
-{
-    return QSerialPort::IgnorePolicy;
-}
-#endif // QT_DEPRECATED_SINCE(5, 2)
-
-#if QT_DEPRECATED_SINCE(5, 5)
-/*!
-    \fn void QSerialPort::dataErrorPolicyChanged(DataErrorPolicy policy)
-    \obsolete
-
-    This signal is emitted after the error policy for how the process receives
-    characters in case of parity error detection has been changed. The new error
-    policy for how the process receives the character in case of parity error
-    detection is passed as \a policy.
-
-    \sa QSerialPort::dataErrorPolicy
-*/
-#endif // QT_DEPRECATED_SINCE(5, 5)
-
 /*!
     \property QSerialPort::error
     \brief the error status of the serial port
@@ -1165,15 +1003,6 @@ void QSerialPort::clearError()
     Q_D(QSerialPort);
     d->setError(QSerialPortErrorInfo(QSerialPort::NoError));
 }
-
-#if QT_DEPRECATED_SINCE(5, 8)
-/*!
-    \fn void QSerialPort::error(SerialPortError error)
-    \obsolete
-
-    Use errorOccurred() instead.
-*/
-#endif
 
 /*!
     \fn void QSerialPort::errorOccurred(SerialPortError error)
@@ -1326,37 +1155,6 @@ bool QSerialPort::waitForBytesWritten(int msecs)
     Q_D(QSerialPort);
     return d->waitForBytesWritten(msecs);
 }
-
-#if QT_DEPRECATED_SINCE(5, 5)
-/*!
-    Sends a continuous stream of zero bits during a specified period
-    of time \a duration in msec if the terminal is using asynchronous
-    serial data. If successful, returns \c true; otherwise returns \c false.
-
-    If the duration is zero then zero bits are transmitted by at least
-    \c 0.25 seconds, but no more than \c 0.5 seconds.
-
-    If the duration is non zero then zero bits are transmitted within a certain
-    period of time depending on the implementation.
-
-    \note The serial port has to be open before trying to send a break
-    duration; otherwise returns \c false and sets the NotOpenError error code.
-
-    \sa setBreakEnabled()
-*/
-bool QSerialPort::sendBreak(int duration)
-{
-    Q_D(QSerialPort);
-
-    if (!isOpen()) {
-        d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
-        qWarning("%s: device not open", Q_FUNC_INFO);
-        return false;
-    }
-
-    return d->sendBreak(duration);
-}
-#endif // QT_DEPRECATED_SINCE(5, 5)
 
 /*!
     \property QSerialPort::breakEnabled

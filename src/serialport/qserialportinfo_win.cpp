@@ -347,38 +347,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     return serialPortInfoList;
 }
 
-#if QT_DEPRECATED_SINCE(5, 6)
-bool QSerialPortInfo::isBusy() const
-{
-    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-
-    if (handle == INVALID_HANDLE_VALUE) {
-        if (::GetLastError() == ERROR_ACCESS_DENIED)
-            return true;
-    } else {
-        ::CloseHandle(handle);
-    }
-    return false;
-}
-#endif // QT_DEPRECATED_SINCE(5, 6)
-
-#if QT_DEPRECATED_SINCE(5, 2)
-bool QSerialPortInfo::isValid() const
-{
-    const HANDLE handle = ::CreateFile(reinterpret_cast<const wchar_t*>(systemLocation().utf16()),
-                                           GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-
-    if (handle == INVALID_HANDLE_VALUE) {
-        if (::GetLastError() != ERROR_ACCESS_DENIED)
-            return false;
-    } else {
-        ::CloseHandle(handle);
-    }
-    return true;
-}
-#endif // QT_DEPRECATED_SINCE(5, 2)
-
 QString QSerialPortInfoPrivate::portNameToSystemLocation(const QString &source)
 {
     return source.startsWith(QLatin1String("COM"))
