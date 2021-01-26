@@ -191,7 +191,6 @@ public:
 
     bool flush();
     bool clear(Directions directions = AllDirections);
-    bool atEnd() const override; // ### Qt6: remove me
 
     SerialPortError error() const;
     void clearError();

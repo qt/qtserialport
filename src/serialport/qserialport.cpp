@@ -955,33 +955,6 @@ bool QSerialPort::clear(Directions directions)
 }
 
 /*!
-    \reimp
-
-    Returns \c true if no more data is currently available for reading; otherwise
-    returns \c false.
-
-    This function is most commonly used when reading data from the
-    serial port in a loop. For example:
-
-    \code
-    // This slot is connected to QSerialPort::readyRead()
-    void QSerialPortClass::readyReadSlot()
-    {
-        while (!port.atEnd()) {
-            QByteArray data = port.read(100);
-            ....
-        }
-    }
-    \endcode
-
-     \sa bytesAvailable(), readyRead()
- */
-bool QSerialPort::atEnd() const
-{
-    return QIODevice::atEnd();
-}
-
-/*!
     \property QSerialPort::error
     \brief the error status of the serial port
 
