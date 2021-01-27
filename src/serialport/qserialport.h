@@ -56,14 +56,19 @@ class Q_SERIALPORT_EXPORT QSerialPort : public QIODevice
     Q_DECLARE_PRIVATE(QSerialPort)
 
     Q_PROPERTY(qint32 baudRate READ baudRate WRITE setBaudRate NOTIFY baudRateChanged)
-    Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits NOTIFY dataBitsChanged)
-    Q_PROPERTY(Parity parity READ parity WRITE setParity NOTIFY parityChanged)
-    Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged)
-    Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged)
-    Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady NOTIFY dataTerminalReadyChanged)
+    Q_PROPERTY(DataBits dataBits READ dataBits WRITE setDataBits NOTIFY dataBitsChanged
+                BINDABLE bindableDataBits)
+    Q_PROPERTY(Parity parity READ parity WRITE setParity NOTIFY parityChanged BINDABLE bindableParity)
+    Q_PROPERTY(StopBits stopBits READ stopBits WRITE setStopBits NOTIFY stopBitsChanged
+                BINDABLE bindableStopBits)
+    Q_PROPERTY(FlowControl flowControl READ flowControl WRITE setFlowControl NOTIFY flowControlChanged
+                BINDABLE bindableFlowControl)
+    Q_PROPERTY(bool dataTerminalReady READ isDataTerminalReady WRITE setDataTerminalReady
+                NOTIFY dataTerminalReadyChanged)
     Q_PROPERTY(bool requestToSend READ isRequestToSend WRITE setRequestToSend NOTIFY requestToSendChanged)
-    Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY error)
-    Q_PROPERTY(bool breakEnabled READ isBreakEnabled WRITE setBreakEnabled NOTIFY breakEnabledChanged)
+    Q_PROPERTY(SerialPortError error READ error RESET clearError NOTIFY errorOccurred BINDABLE bindableError)
+    Q_PROPERTY(bool breakEnabled READ isBreakEnabled WRITE setBreakEnabled NOTIFY breakEnabledChanged
+                BINDABLE bindableIsBreakEnabled)
 
 #if defined(Q_OS_WIN32)
     typedef void* Handle;
@@ -171,15 +176,19 @@ public:
 
     bool setDataBits(DataBits dataBits);
     DataBits dataBits() const;
+    QBindable<DataBits> bindableDataBits();
 
     bool setParity(Parity parity);
     Parity parity() const;
+    QBindable<Parity> bindableParity();
 
     bool setStopBits(StopBits stopBits);
     StopBits stopBits() const;
+    QBindable<bool> bindableStopBits();
 
     bool setFlowControl(FlowControl flowControl);
     FlowControl flowControl() const;
+    QBindable<FlowControl> bindableFlowControl();
 
     bool setDataTerminalReady(bool set);
     bool isDataTerminalReady();
@@ -194,6 +203,7 @@ public:
 
     SerialPortError error() const;
     void clearError();
+    QBindable<SerialPortError> bindableError() const;
 
     qint64 readBufferSize() const;
     void setReadBufferSize(qint64 size);
@@ -209,6 +219,7 @@ public:
 
     bool setBreakEnabled(bool set = true);
     bool isBreakEnabled() const;
+    QBindable<bool> bindableIsBreakEnabled();
 
     Handle handle() const;
 

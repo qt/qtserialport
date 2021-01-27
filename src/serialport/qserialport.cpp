@@ -99,8 +99,8 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
 {
     Q_Q(QSerialPort);
 
-    error = errorInfo.errorCode;
     q->setErrorString(errorInfo.errorString);
+    error.setValue(errorInfo.errorCode);
     emit q->errorOccurred(error);
 }
 
@@ -518,7 +518,7 @@ void QSerialPort::close()
     }
 
     d->close();
-    d->isBreakEnabled = false;
+    d->isBreakEnabled.setValue(false);
     QIODevice::close();
 }
 
@@ -607,13 +607,14 @@ bool QSerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(QSerialPort);
 
+    const auto currentDataBits = d->dataBits.value();
     if (!isOpen() || d->setDataBits(dataBits)) {
-        if (d->dataBits != dataBits) {
-            d->dataBits = dataBits;
-            emit dataBitsChanged(d->dataBits);
-        }
+        d->dataBits.setValue(dataBits);
+        if (currentDataBits != dataBits)
+            emit dataBitsChanged(dataBits);
         return true;
     }
+    d->dataBits.setValue(currentDataBits); // removes the binding if necessary, keep
 
     return false;
 }
@@ -622,6 +623,11 @@ QSerialPort::DataBits QSerialPort::dataBits() const
 {
     Q_D(const QSerialPort);
     return d->dataBits;
+}
+
+QBindable<QSerialPort::DataBits> QSerialPort::bindableDataBits()
+{
+    return &d_func()->dataBits;
 }
 
 /*!
@@ -652,13 +658,14 @@ bool QSerialPort::setParity(Parity parity)
 {
     Q_D(QSerialPort);
 
+    const auto currentParity = d->parity.value();
     if (!isOpen() || d->setParity(parity)) {
-        if (d->parity != parity) {
-            d->parity = parity;
-            emit parityChanged(d->parity);
-        }
+        d->parity.setValue(parity);
+        if (currentParity != parity)
+            emit parityChanged(parity);
         return true;
     }
+    d->parity.setValue(currentParity); // removes the binding if necessary, keep
 
     return false;
 }
@@ -667,6 +674,11 @@ QSerialPort::Parity QSerialPort::parity() const
 {
     Q_D(const QSerialPort);
     return d->parity;
+}
+
+QBindable<QSerialPort::Parity> QSerialPort::bindableParity()
+{
+    return &d_func()->parity;
 }
 
 /*!
@@ -696,13 +708,14 @@ bool QSerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(QSerialPort);
 
+    const auto currentStopBits = d->stopBits.value();
     if (!isOpen() || d->setStopBits(stopBits)) {
-        if (d->stopBits != stopBits) {
-            d->stopBits = stopBits;
-            emit stopBitsChanged(d->stopBits);
-        }
+        d->stopBits.setValue(stopBits);
+        if (currentStopBits != stopBits)
+            emit stopBitsChanged(stopBits);
         return true;
     }
+    d->stopBits.setValue(currentStopBits); // removes the binding if necessary, keep
 
     return false;
 }
@@ -711,6 +724,11 @@ QSerialPort::StopBits QSerialPort::stopBits() const
 {
     Q_D(const QSerialPort);
     return d->stopBits;
+}
+
+QBindable<bool> QSerialPort::bindableStopBits()
+{
+    return &d_func()->stopBits;
 }
 
 /*!
@@ -740,13 +758,14 @@ bool QSerialPort::setFlowControl(FlowControl flowControl)
 {
     Q_D(QSerialPort);
 
+    const auto currentFlowControl = d->flowControl.value();
     if (!isOpen() || d->setFlowControl(flowControl)) {
-        if (d->flowControl != flowControl) {
-            d->flowControl = flowControl;
-            emit flowControlChanged(d->flowControl);
-        }
+        d->flowControl.setValue(flowControl);
+        if (currentFlowControl != flowControl)
+            emit flowControlChanged(flowControl);
         return true;
     }
+    d->flowControl.setValue(currentFlowControl); // removes the binding if necessary, keep
 
     return false;
 }
@@ -755,6 +774,11 @@ QSerialPort::FlowControl QSerialPort::flowControl() const
 {
     Q_D(const QSerialPort);
     return d->flowControl;
+}
+
+QBindable<QSerialPort::FlowControl> QSerialPort::bindableFlowControl()
+{
+    return &d_func()->flowControl;
 }
 
 /*!
@@ -977,6 +1001,11 @@ void QSerialPort::clearError()
     d->setError(QSerialPortErrorInfo(QSerialPort::NoError));
 }
 
+QBindable<QSerialPort::SerialPortError> QSerialPort::bindableError() const
+{
+    return &d_func()->error;
+}
+
 /*!
     \fn void QSerialPort::errorOccurred(SerialPortError error)
     \since 5.8
@@ -1149,19 +1178,20 @@ bool QSerialPort::setBreakEnabled(bool set)
 {
     Q_D(QSerialPort);
 
-    if (!isOpen()) {
+    const auto currentSet = d->isBreakEnabled.value();
+    if (isOpen()) {
+        if (d->setBreakEnabled(set)) {
+            d->isBreakEnabled.setValue(set);
+            if (currentSet != set)
+                emit breakEnabledChanged(set);
+            return true;
+        }
+    } else {
         d->setError(QSerialPortErrorInfo(QSerialPort::NotOpenError));
         qWarning("%s: device not open", Q_FUNC_INFO);
-        return false;
     }
+    d->isBreakEnabled.setValue(currentSet); // removes the binding if necessary, keep
 
-    if (d->setBreakEnabled(set)) {
-        if (d->isBreakEnabled != set) {
-            d->isBreakEnabled = set;
-            emit breakEnabledChanged(d->isBreakEnabled);
-        }
-        return true;
-    }
     return false;
 }
 
@@ -1169,6 +1199,11 @@ bool QSerialPort::isBreakEnabled() const
 {
     Q_D(const QSerialPort);
     return d->isBreakEnabled;
+}
+
+QBindable<bool> QSerialPort::bindableIsBreakEnabled()
+{
+    return &d_func()->isBreakEnabled;
 }
 
 /*!

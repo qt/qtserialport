@@ -55,8 +55,10 @@
 
 #include "qserialport.h"
 
-#include <private/qiodevice_p.h>
 #include <qdeadlinetimer.h>
+
+#include <private/qiodevice_p.h>
+#include <private/qproperty_p.h>
 
 #if defined(Q_OS_WIN32)
 #  include <qt_windows.h>
@@ -114,7 +116,7 @@ QString serialPortLockFilePath(const QString &portName);
 class QSerialPortErrorInfo
 {
 public:
-    explicit QSerialPortErrorInfo(QSerialPort::SerialPortError newErrorCode = QSerialPort::UnknownError,
+    QSerialPortErrorInfo(QSerialPort::SerialPortError newErrorCode = QSerialPort::UnknownError,
                                   const QString &newErrorString = QString());
     QSerialPort::SerialPortError errorCode = QSerialPort::UnknownError;
     QString errorString;
@@ -164,16 +166,42 @@ public:
     static QList<qint32> standardBaudRates();
 
     qint64 readBufferMaxSize = 0;
-    QSerialPort::SerialPortError error = QSerialPort::NoError;
+
+    void setBindableError(QSerialPort::SerialPortError error)
+    { setError(error); }
+    Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(QSerialPortPrivate, QSerialPort::SerialPortError, error,
+        &QSerialPortPrivate::setBindableError, QSerialPort::NoError)
+
     QString systemLocation;
     qint32 inputBaudRate = QSerialPort::Baud9600;
     qint32 outputBaudRate = QSerialPort::Baud9600;
-    QSerialPort::DataBits dataBits = QSerialPort::Data8;
-    QSerialPort::Parity parity = QSerialPort::NoParity;
-    QSerialPort::StopBits stopBits = QSerialPort::OneStop;
-    QSerialPort::FlowControl flowControl = QSerialPort::NoFlowControl;
+
+    bool setBindableDataBits(QSerialPort::DataBits dataBits)
+    { return q_func()->setDataBits(dataBits); }
+    Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(QSerialPortPrivate, QSerialPort::DataBits, dataBits,
+        &QSerialPortPrivate::setBindableDataBits, QSerialPort::Data8)
+
+    bool setBindableParity(QSerialPort::Parity parity)
+    { return q_func()->setParity(parity); }
+    Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(QSerialPortPrivate, QSerialPort::Parity, parity,
+        &QSerialPortPrivate::setBindableParity, QSerialPort::NoParity)
+
+    bool setBindableStopBits(QSerialPort::StopBits stopBits)
+    { return q_func()->setStopBits(stopBits); }
+    Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(QSerialPortPrivate, QSerialPort::StopBits, stopBits,
+        &QSerialPortPrivate::setBindableStopBits, QSerialPort::OneStop)
+
+    bool setBindableFlowControl(QSerialPort::FlowControl flowControl)
+    { return q_func()->setFlowControl(flowControl); }
+    Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(QSerialPortPrivate, QSerialPort::FlowControl, flowControl,
+        &QSerialPortPrivate::setBindableFlowControl, QSerialPort::NoFlowControl)
+
     bool settingsRestoredOnClose = true;
-    bool isBreakEnabled = false;
+
+    bool setBindableBreakEnabled(bool isBreakEnabled)
+    { return q_func()->setBreakEnabled(isBreakEnabled); }
+    Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(QSerialPortPrivate, bool, isBreakEnabled,
+        &QSerialPortPrivate::setBindableBreakEnabled, false)
 
     bool startAsyncRead();
 
