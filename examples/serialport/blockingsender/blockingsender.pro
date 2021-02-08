@@ -1,17 +1,17 @@
 QT += widgets serialport
 requires(qtConfig(combobox))
 
-TARGET = blockingmaster
+TARGET = blockingsender
 TEMPLATE = app
 
 HEADERS += \
     dialog.h \
-    masterthread.h
+    senderthread.h
 
 SOURCES += \
     main.cpp \
     dialog.cpp \
-    masterthread.cpp
+    senderthread.cpp
 
-target.path = $$[QT_INSTALL_EXAMPLES]/serialport/blockingmaster
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/blockingsender
 INSTALLS += target

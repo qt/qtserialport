@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(blockingmaster LANGUAGES CXX)
+project(receiver LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -11,30 +11,29 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/serialport/blockingmaster")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/serialport/receiver")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS SerialPort)
 
-qt_add_executable(blockingmaster
+qt_add_executable(receiver
     dialog.cpp dialog.h
     main.cpp
-    masterthread.cpp masterthread.h
 )
-set_target_properties(blockingmaster PROPERTIES
+set_target_properties(receiver PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(blockingmaster PRIVATE
+target_link_libraries(receiver PRIVATE
     Qt::Core
     Qt::Gui
     Qt::SerialPort
     Qt::Widgets
 )
 
-install(TARGETS blockingmaster
+install(TARGETS receiver
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

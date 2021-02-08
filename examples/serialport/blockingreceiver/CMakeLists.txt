@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(blockingslave LANGUAGES CXX)
+project(blockingreceiver LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -11,30 +11,30 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/serialport/blockingslave")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/serialport/blockingreceiver")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS SerialPort)
 
-qt_add_executable(blockingslave
+qt_add_executable(blockingreceiver
     dialog.cpp dialog.h
     main.cpp
-    slavethread.cpp slavethread.h
+    receiverthread.cpp receiverthread.h
 )
-set_target_properties(blockingslave PROPERTIES
+set_target_properties(blockingreceiver PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(blockingslave PRIVATE
+target_link_libraries(blockingreceiver PRIVATE
     Qt::Core
     Qt::Gui
     Qt::SerialPort
     Qt::Widgets
 )
 
-install(TARGETS blockingslave
+install(TARGETS blockingreceiver
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

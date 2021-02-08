@@ -28,15 +28,15 @@
 ****************************************************************************/
 
 /*!
-    \example blockingmaster
-    \title Blocking Master Example
+    \example blockingsender
+    \title Blocking Sender Example
     \ingroup qtserialport-examples
     \brief Shows how to use the synchronous API of QSerialPort in a worker thread.
 
-    \e{Blocking Master} shows how to create an application for a serial
+    \e{Blocking Sender} shows how to create an application for a serial
     interface using the synchronous API of QSerialPort in a worker thread.
 
-    \image blockingmaster-example.png
+    \image blockingsender-example.png
 
     QSerialPort supports two programming alternatives:
 
@@ -65,35 +65,35 @@
     should only be used in non-GUI threads to keep the user interface
     responsive.
 
-    This application is the master which demonstrates the work paired with the slave
-    application \l{blockingslave}{Blocking Slave Example}.
+    This application is the sender which demonstrates the work paired with the receiver
+    application \l{blockingreceiver}{Blocking Receiver Example}.
 
-    The master application initiates the transfer request via the serial port to
-    the slave application and waits for response.
+    The sender application initiates the transfer request via the serial port to
+    the receiver application and waits for response.
 
-    \snippet blockingmaster/masterthread.h 0
+    \snippet blockingsender/senderthread.h 0
 
-    MasterThread is a QThread subclass that provides API for scheduling
-    requests to the slave. This class provides signals for responding and
+    SenderThread is a QThread subclass that provides API for scheduling
+    requests to the receiver. This class provides signals for responding and
     reporting errors. The transaction() method can be called to start up the
-    new master transaction with the desired request.  The result is provided by
+    new sender transaction with the desired request.  The result is provided by
     the response() signal. In case of any issues, the error() or timeout()
     signal is emitted.
 
     Note, the transaction() method is called in the main thread, but the
-    request is provided in the MasterThread thread. The MasterThread
+    request is provided in the SenderThread thread. The SenderThread
     data members are read and written concurrently in different threads, thus
     the QMutex class is used to synchronize the access.
 
-    \snippet blockingmaster/masterthread.cpp 2
+    \snippet blockingsender/senderthread.cpp 2
 
     The transaction() method stores the serial port name, timeout and request
     data. The mutex can be locked with QMutexLocker to protect this data. The
     thread can be started then, unless it is already running.  The
     \l{QWaitCondition::wakeOne()}{wakeOne()} method is discussed later.
 
-    \snippet blockingmaster/masterthread.cpp 4
-    \snippet blockingmaster/masterthread.cpp 5
+    \snippet blockingsender/senderthread.cpp 4
+    \snippet blockingsender/senderthread.cpp 5
 
     In the run() function, the first is to lock the QMutex object, then fetch the
     serial port name, timeout and request data by using the member data. Having
@@ -103,13 +103,13 @@
     simultaneously with a process fetching the data. Note, while the QString
     class is reentrant, it is not thread-safe. Thereby, it is not recommended to
     read the serial port name in a request thread, and timeout or request data
-    in another thread. The MasterThread class can only handle one request at a
+    in another thread. The SenderThread class can only handle one request at a
     time.
 
     The QSerialPort object is constructed on stack in the run() method before
     entering the loop:
 
-    \snippet blockingmaster/masterthread.cpp 6
+    \snippet blockingsender/senderthread.cpp 6
 
     This makes it possible to create an object while running the loop. It also
     means that all the object methods are executed in the scope of the run()
@@ -119,12 +119,12 @@
     current transaction has changed. If this has changed, the serial port is
     reopened and then reconfigured.
 
-    \snippet blockingmaster/masterthread.cpp 7
+    \snippet blockingsender/senderthread.cpp 7
 
     The loop will continue to request data, write to the serial port and wait
     until all data is transferred.
 
-    \snippet blockingmaster/masterthread.cpp 8
+    \snippet blockingsender/senderthread.cpp 8
 
     \warning As for the blocking transfer, the
     \l{QSerialPort::waitForBytesWritten()}{waitForBytesWritten()} method should be
@@ -134,12 +134,12 @@
     The timeout() signal is emitted if a timeout error occurs when transferring
     data.
 
-    \snippet blockingmaster/masterthread.cpp 9
+    \snippet blockingsender/senderthread.cpp 9
 
     There is a waiting period for response after a successful request, and then
     it is read again.
 
-    \snippet blockingmaster/masterthread.cpp 10
+    \snippet blockingsender/senderthread.cpp 10
 
     \warning As for the blocking alternative, the
     \l{QSerialPort::waitForReadyRead()}{waitForReadyRead()} method should be
@@ -148,20 +148,20 @@
 
     The timeout() signal is emitted if a timeout error occurs when receiving data.
 
-    \snippet blockingmaster/masterthread.cpp 11
+    \snippet blockingsender/senderthread.cpp 11
 
     When a transaction has been completed successfully, the response() signal contains
-    the data received from the slave application:
+    the data received from the receiver application:
 
-    \snippet blockingmaster/masterthread.cpp 12
+    \snippet blockingsender/senderthread.cpp 12
 
     Afterwards, the thread goes to sleep until the next transaction appears.
     The thread reads the new data after waking up by using the members and
     runs the loop from the beginning.
 
-    \snippet blockingmaster/masterthread.cpp 13
+    \snippet blockingsender/senderthread.cpp 13
 
-    \sa {Terminal Example}, {Blocking Slave Example}
+    \sa {Terminal Example}, {Blocking Receiver Example}
 
     \include examples-run.qdocinc
 */

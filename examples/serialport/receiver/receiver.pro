@@ -1,7 +1,7 @@
 QT += widgets serialport
 requires(qtConfig(combobox))
 
-TARGET = slave
+TARGET = receiver
 TEMPLATE = app
 
 HEADERS += \
@@ -11,5 +11,5 @@ SOURCES += \
     main.cpp \
     dialog.cpp
 
-target.path = $$[QT_INSTALL_EXAMPLES]/serialport/slave
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/receiver
 INSTALLS += target

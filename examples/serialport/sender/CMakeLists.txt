@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(master LANGUAGES CXX)
+project(sender LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -11,29 +11,29 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/serialport/master")
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/serialport/sender")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS SerialPort)
 
-qt_add_executable(master
+qt_add_executable(sender
     dialog.cpp dialog.h
     main.cpp
 )
-set_target_properties(master PROPERTIES
+set_target_properties(sender PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(master PRIVATE
+target_link_libraries(sender PRIVATE
     Qt::Core
     Qt::Gui
     Qt::SerialPort
     Qt::Widgets
 )
 
-install(TARGETS master
+install(TARGETS sender
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

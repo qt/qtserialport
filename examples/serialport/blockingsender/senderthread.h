@@ -48,54 +48,39 @@
 **
 ****************************************************************************/
 
-#ifndef DIALOG_H
-#define DIALOG_H
+#ifndef SENDERTHREAD_H
+#define SENDERTHREAD_H
 
-#include <QDialog>
-#include <QSerialPort>
-#include <QTimer>
+#include <QMutex>
+#include <QThread>
+#include <QWaitCondition>
 
-QT_BEGIN_NAMESPACE
-
-class QLabel;
-class QLineEdit;
-class QComboBox;
-class QSpinBox;
-class QPushButton;
-
-QT_END_NAMESPACE
-
-class Dialog : public QDialog
+//! [0]
+class SenderThread : public QThread
 {
     Q_OBJECT
 
 public:
-    explicit Dialog(QWidget *parent = nullptr);
+    explicit SenderThread(QObject *parent = nullptr);
+    ~SenderThread();
 
-private slots:
-    void startSlave();
-    void readRequest();
-    void processTimeout();
-    void activateRunButton();
+    void transaction(const QString &portName, int waitTimeout, const QString &request);
+
+signals:
+    void response(const QString &s);
+    void error(const QString &s);
+    void timeout(const QString &s);
 
 private:
-    void processError(const QString &s);
+    void run() override;
 
-private:
-    int m_transactionCount = 0;
-    QLabel *m_serialPortLabel = nullptr;
-    QComboBox *m_serialPortComboBox = nullptr;
-    QLabel *m_waitRequestLabel = nullptr;
-    QSpinBox *m_waitRequestSpinBox = nullptr;
-    QLabel *m_responseLabel = nullptr;
-    QLineEdit *m_responseLineEdit = nullptr;
-    QLabel *m_trafficLabel = nullptr;
-    QLabel *m_statusLabel = nullptr;
-    QPushButton *m_runButton = nullptr;
-
-    QSerialPort m_serial;
-    QByteArray m_request;
-    QTimer m_timer;
+    QString m_portName;
+    QString m_request;
+    int m_waitTimeout = 0;
+    QMutex m_mutex;
+    QWaitCondition m_cond;
+    bool m_quit = false;
 };
+//! [0]
 
-#endif // DIALOG_H
+#endif // SENDERTHREAD_H

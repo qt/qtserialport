@@ -1,17 +1,17 @@
 QT += widgets serialport
 requires(qtConfig(combobox))
 
-TARGET = blockingslave
+TARGET = blockingreceiver
 TEMPLATE = app
 
 HEADERS += \
     dialog.h \
-    slavethread.h
+    receiverthread.h
 
 SOURCES += \
     main.cpp \
     dialog.cpp \
-    slavethread.cpp
+    receiverthread.cpp
 
-target.path = $$[QT_INSTALL_EXAMPLES]/serialport/blockingslave
+target.path = $$[QT_INSTALL_EXAMPLES]/serialport/blockingreceiver
 INSTALLS += target

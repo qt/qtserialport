@@ -60,7 +60,7 @@
     \endlist
 
     In this example, the asynchronous approach is demonstrated. The
-    \l{blockingslave}{Blocking Slave} example illustrates the synchronous
+    \l{blockingreceiver}{Blocking Receiver} example illustrates the synchronous
     approach.
 
     Our example contains some GUI widgets:
@@ -141,7 +141,7 @@
     about the selected port, and set the desired parameters of the given serial
     port.
 
-    \sa {Blocking Slave Example}
+    \sa {Blocking Receiver Example}
 
     \include examples-run.qdocinc
 */

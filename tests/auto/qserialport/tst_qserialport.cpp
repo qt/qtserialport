@@ -1050,11 +1050,11 @@ void tst_QSerialPort::readAfterInputClear()
     QVERIFY(receiverPort.bytesAvailable() == 0);
 }
 
-class MasterTransactor : public QObject
+class SenderTransactor : public QObject
 {
     Q_OBJECT
 public:
-    explicit MasterTransactor(const QString &name)
+    explicit SenderTransactor(const QString &name)
         : serialPort(name)
     {
     }
@@ -1087,7 +1087,7 @@ private slots:
 private:
     void createAsynchronousConnection()
     {
-        connect(&serialPort, &QSerialPort::readyRead, this, &MasterTransactor::transaction);
+        connect(&serialPort, &QSerialPort::readyRead, this, &SenderTransactor::transaction);
     }
 
     void deleteAsyncronousConnection()
@@ -1098,14 +1098,14 @@ private:
     QSerialPort serialPort;
 };
 
-class SlaveTransactor : public QObject
+class ReceiverTransactor : public QObject
 {
     Q_OBJECT
 public:
-    explicit SlaveTransactor(const QString &name)
+    explicit ReceiverTransactor(const QString &name)
         : serialPort(new QSerialPort(name, this))
     {
-        connect(serialPort, &QSerialPort::readyRead, this, &SlaveTransactor::transaction);
+        connect(serialPort, &QSerialPort::readyRead, this, &ReceiverTransactor::transaction);
     }
 
 public slots:
@@ -1130,17 +1130,17 @@ private:
 
 void tst_QSerialPort::synchronousReadWriteAfterAsynchronousReadWrite()
 {
-    MasterTransactor master(m_senderPortName);
-    auto slave = new SlaveTransactor(m_receiverPortName);
+    SenderTransactor sender(m_senderPortName);
+    auto receiver = new ReceiverTransactor(m_receiverPortName);
 
     QThread thread;
-    slave->moveToThread(&thread);
+    receiver->moveToThread(&thread);
     thread.start();
 
-    QObject::connect(&thread, &QThread::finished, slave, &SlaveTransactor::deleteLater);
-    QObject::connect(slave, &SlaveTransactor::ready, &master, &MasterTransactor::open);
+    QObject::connect(&thread, &QThread::finished, receiver, &ReceiverTransactor::deleteLater);
+    QObject::connect(receiver, &ReceiverTransactor::ready, &sender, &SenderTransactor::open);
 
-    QMetaObject::invokeMethod(slave, "open", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(receiver, "open", Qt::QueuedConnection);
 
     tst_QSerialPort::enterLoopMsecs(2000);
 
