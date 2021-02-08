@@ -60,15 +60,13 @@ int main(int argc, char *argv[])
 
     out << "Total number of ports available: " << serialPortInfos.count() << Qt::endl;
 
-    const QString blankString = "N/A";
-    QString description;
-    QString manufacturer;
-    QString serialNumber;
+    const QStringView blankString = u"N/A";
 
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos) {
-        description = serialPortInfo.description();
-        manufacturer = serialPortInfo.manufacturer();
-        serialNumber = serialPortInfo.serialNumber();
+        const QStringView description = serialPortInfo.description();
+        const QStringView manufacturer = serialPortInfo.manufacturer();
+        const QStringView serialNumber = serialPortInfo.serialNumber();
+
         out << Qt::endl
             << "Port: " << serialPortInfo.portName() << Qt::endl
             << "Location: " << serialPortInfo.systemLocation() << Qt::endl
@@ -77,10 +75,10 @@ int main(int argc, char *argv[])
             << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << Qt::endl
             << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier()
                                          ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16)
-                                         : blankString) << Qt::endl
+                                         : blankString.toLatin1()) << Qt::endl
             << "Product Identifier: " << (serialPortInfo.hasProductIdentifier()
                                           ? QByteArray::number(serialPortInfo.productIdentifier(), 16)
-                                          : blankString) << Qt::endl;
+                                          : blankString.toLatin1()) << Qt::endl;
     }
 
     return 0;
