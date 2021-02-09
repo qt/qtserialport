@@ -29,6 +29,7 @@
     \page qtserialport-index.html
     \since 5.1
     \title Qt Serial Port
+    \qtcmakepackage SerialPort
     \brief Provides an API to make serial programming simple and portable.
 
     Qt Serial Port provides the basic functionality, which includes
@@ -57,12 +58,13 @@
     #include <QSerialPortInfo>
     \endcode
 
-    To link against the module, add this line to your \l qmake \c
-    .pro file:
+    To use the module with cmake, use the \c{find_package()} command to locate
+    the needed module components in the \c{Qt6} package:
+    \include qtserialport-module-use.qdocinc cmakebuild
 
-    \code
-    QT += serialport
-    \endcode
+    To use the module for building with qmake, add the module as a value of the
+    \c QT variable in the project's .pro file:
+    \include qtserialport-module-use.qdocinc qmakebuild
 
     \section1 Related Information
     \list

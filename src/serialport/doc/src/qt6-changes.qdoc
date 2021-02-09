@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -24,33 +24,27 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 /*!
-    \module QtSerialPort
-    \title Qt Serial Port C++ Classes
-    \ingroup modules
-    \qtvariable serialport
-    \qtcmakepackage SerialPort
-    \brief List of C++ classes that enable access to a serial port.
+    \page qtserialport-changes-qt6.html
 
-    To use QSerialPort in your application, add the following include
-    statement:
+    \title Changes to Qt SerialPort
+    \ingroup changes-qt-5-to-6
+    \brief Migrate Qt SerialPort to Qt 6.
 
-    \code
-    #include <QSerialPort>
-    \endcode
+    Qt 6 is a result of the conscious effort to make the framework more
+    efficient and easy to use.
+    We try to maintain binary and source compatibility for all the public
+    APIs in each release. But some changes were inevitable in an effort to
+    make Qt a better framework.
+    In this topic we summarize those changes in Qt SerialPort module, and
+    provide guidance to handle them.
 
-    For QSerialPortInfo, use the following include statement:
+    \section1 Changes overview
+    The Qt SerialPort module is generally speaking source compatible with the
+    Qt5 version and users of the library should be able to continue with no or
+    minor changes to their project.
 
-    \code
-    #include <QSerialPortInfo>
-    \endcode
-
-    To use the module with cmake, use the \c{find_package()} command to locate
-    the needed module components in the \c{Qt6} package:
-    \include qtserialport-module-use.qdocinc cmakebuild
-
-    To use the module for building with qmake, add the module as a value of the
-    \c QT variable in the project's .pro file:
-    \include qtserialport-module-use.qdocinc qmakebuild
+    \section1 Build system
+    As with Qt6 in general, the Qt SerialPort module has cmake support in
+    addition to qmake.
 */
