@@ -18,3 +18,7 @@ module-paths/*
 lib/pkgconfig/*
 Makefile.Debug
 Makefile.Release
+.vs
+CMakeSettings.json
+out/*
+CMakeLists.txt.user
