@@ -38,7 +38,8 @@ qt_internal_extend_target(SerialPort CONDITION WIN32
     SOURCES
         qserialport_win.cpp
         qserialportinfo_win.cpp
-        qtntdll_p.h
+        qwinoverlappedionotifier.cpp
+        qwinoverlappedionotifier_p.h
     LIBRARIES
         advapi32
         setupapi
