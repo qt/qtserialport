@@ -472,10 +472,10 @@ QString QSerialPort::portName() const
     not set any of the port settings successfully. In that case, the port is
     closed automatically not to leave the port around with incorrect settings.
 
-    \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
-    or QIODevice::ReadWrite. Other modes are unsupported.
+    \warning The \a mode has to be QIODeviceBase::ReadOnly, QIODeviceBase::WriteOnly,
+    or QIODeviceBase::ReadWrite. Other modes are unsupported.
 
-    \sa QIODevice::OpenMode, setPort()
+    \sa QIODeviceBase::OpenMode, setPort()
 */
 bool QSerialPort::open(OpenMode mode)
 {
