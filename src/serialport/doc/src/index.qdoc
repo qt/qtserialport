@@ -29,7 +29,6 @@
     \page qtserialport-index.html
     \since 5.1
     \title Qt Serial Port
-    \qtcmakepackage SerialPort
     \brief Provides an API to make serial programming simple and portable.
 
     Qt Serial Port provides the basic functionality, which includes
