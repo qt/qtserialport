@@ -13,10 +13,6 @@ qhp.QtSerialPort.virtualFolder       = qtserialport
 qhp.QtSerialPort.indexTitle          = Qt Serial Port
 qhp.QtSerialPort.indexRoot           =
 
-qhp.QtSerialPort.filterAttributes    = qtserialport $QT_VERSION qtrefdoc
-qhp.QtSerialPort.customFilters.Qt.name = QtSerialPort $QT_VERSION
-qhp.QtSerialPort.customFilters.Qt.filterAttributes = qtserialport $QT_VERSION
-
 qhp.QtSerialPort.subprojects         = classes examples
 
 qhp.QtSerialPort.subprojects.classes.title = C++ Classes
