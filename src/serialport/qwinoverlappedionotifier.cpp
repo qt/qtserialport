@@ -313,13 +313,13 @@ OVERLAPPED *QWinOverlappedIoNotifierPrivate::waitForAnyNotified(QDeadlineTimer d
         return 0;
     }
 
-    DWORD msecs = deadline.remainingTime();
+    qint64 msecs = deadline.remainingTime();
     if (msecs == 0)
         iocp->drainQueue();
     if (msecs == -1)
         msecs = INFINITE;
 
-    const DWORD wfso = WaitForSingleObject(hSemaphore, msecs);
+    const DWORD wfso = WaitForSingleObject(hSemaphore, DWORD(msecs));
     switch (wfso) {
     case WAIT_OBJECT_0:
         return dispatchNextIoResult();
