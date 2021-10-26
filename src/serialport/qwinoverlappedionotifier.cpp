@@ -200,7 +200,7 @@ public:
     using QThread::isRunning;
 
 protected:
-    void run()
+    void run() override
     {
         DWORD dwBytesRead = 0;
         ULONG_PTR pulCompletionKey = 0;
