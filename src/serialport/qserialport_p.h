@@ -125,8 +125,9 @@ public:
 
 class QSerialPortPrivate : public QIODevicePrivate
 {
-    Q_DECLARE_PUBLIC(QSerialPort)
 public:
+    Q_DECLARE_PUBLIC(QSerialPort)
+
     QSerialPortPrivate();
 
     bool open(QIODevice::OpenMode mode);
