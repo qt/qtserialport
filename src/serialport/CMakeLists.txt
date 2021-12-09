@@ -22,11 +22,6 @@ qt_internal_add_module(SerialPort
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(SerialPort CONDITION config_ntddmodm
-    DEFINES
-        QT_NO_REDEFINE_GUID_DEVINTERFACE_MODEM
-)
-
 qt_internal_extend_target(SerialPort CONDITION QT_FEATURE_libudev AND UNIX
    DEFINES
        LINK_LIBUDEV
