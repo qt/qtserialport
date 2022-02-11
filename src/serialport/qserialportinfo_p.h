@@ -1,8 +1,8 @@
 /****************************************************************************
 **
 ** Copyright (C) 2011-2012 Denis Shienkov <denis.shienkov@gmail.com>
-** Copyright (C) 2011 Sergey Belyashov <Sergey.Belyashov@gmail.com>
-** Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
+** Copyright (C) 2017 Sergey Belyashov <Sergey.Belyashov@gmail.com>
+** Copyright (C) 2013 Laszlo Papp <lpapp@kde.org>
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtSerialPort module of the Qt Toolkit.
@@ -54,6 +54,7 @@
 //
 
 #include <QtCore/qstring.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

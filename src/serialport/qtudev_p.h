@@ -60,6 +60,7 @@ extern "C"
 #include <QtCore/qlibrary.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/private/qglobal_p.h>
 
 #define GENERATE_SYMBOL_VARIABLE(returnType, symbolName, ...) \
     typedef returnType (*fp_##symbolName)(__VA_ARGS__); \
