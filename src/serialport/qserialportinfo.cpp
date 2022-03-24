@@ -46,6 +46,12 @@
 
 QT_BEGIN_NAMESPACE
 
+// We changed from QScopedPointer to std::unique_ptr, make sure it's
+// binary compatible. The QScopedPointer had a non-default deleter, but
+// the deleter just provides a static function to use for deletion so we don't
+// include it in this template definition (the deleter-class was deleted).
+static_assert(sizeof(std::unique_ptr<QSerialPortInfoPrivate>)
+              == sizeof(QScopedPointer<QSerialPortInfoPrivate>));
 
 /*!
     \class QSerialPortInfo

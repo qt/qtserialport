@@ -50,7 +50,6 @@ QT_BEGIN_NAMESPACE
 
 class QSerialPort;
 class QSerialPortInfoPrivate;
-class QSerialPortInfoPrivateDeleter;
 
 class Q_SERIALPORT_EXPORT QSerialPortInfo
 {
@@ -87,7 +86,7 @@ private:
     friend QList<QSerialPortInfo> availablePortsByUdev(bool &ok);
     friend QList<QSerialPortInfo> availablePortsBySysfs(bool &ok);
     friend QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok);
-    QScopedPointer<QSerialPortInfoPrivate, QSerialPortInfoPrivateDeleter> d_ptr;
+    std::unique_ptr<QSerialPortInfoPrivate> d_ptr;
 };
 
 inline bool QSerialPortInfo::isNull() const
