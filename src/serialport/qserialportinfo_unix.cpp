@@ -46,9 +46,10 @@
 #include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdir.h>
-#include <QtCore/qscopedpointer.h>
 
 #include <private/qcore_unix_p.h>
+
+#include <memory>
 
 #include <errno.h>
 #include <sys/types.h> // kill
@@ -313,29 +314,22 @@ QList<QSerialPortInfo> availablePortsBySysfs(bool &ok)
     return serialPortInfoList;
 }
 
-struct ScopedPointerUdevDeleter
-{
-    static inline void cleanup(struct ::udev *pointer)
+struct udev_deleter {
+    void operator()(struct ::udev *pointer) const
     {
         ::udev_unref(pointer);
     }
-};
-
-struct ScopedPointerUdevEnumeratorDeleter
-{
-    static inline void cleanup(struct ::udev_enumerate *pointer)
+    void operator()(struct ::udev_enumerate *pointer) const
     {
         ::udev_enumerate_unref(pointer);
     }
-};
-
-struct ScopedPointerUdevDeviceDeleter
-{
-    static inline void cleanup(struct ::udev_device *pointer)
+    void operator()(struct ::udev_device *pointer) const
     {
         ::udev_device_unref(pointer);
     }
 };
+template <typename T>
+using udev_ptr = std::unique_ptr<T, udev_deleter>;
 
 #ifndef LINK_LIBUDEV
     Q_GLOBAL_STATIC(QLibrary, udevLibrary)
@@ -396,21 +390,20 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
         return QList<QSerialPortInfo>();
 #endif
 
-    QScopedPointer<struct ::udev, ScopedPointerUdevDeleter> udev(::udev_new());
+    const udev_ptr<struct ::udev> udev(::udev_new());
 
     if (!udev)
         return QList<QSerialPortInfo>();
 
-    QScopedPointer<udev_enumerate, ScopedPointerUdevEnumeratorDeleter>
-            enumerate(::udev_enumerate_new(udev.data()));
+    const udev_ptr<udev_enumerate> enumerate(::udev_enumerate_new(udev.get()));
 
     if (!enumerate)
         return QList<QSerialPortInfo>();
 
-    ::udev_enumerate_add_match_subsystem(enumerate.data(), "tty");
-    ::udev_enumerate_scan_devices(enumerate.data());
+    ::udev_enumerate_add_match_subsystem(enumerate.get(), "tty");
+    ::udev_enumerate_scan_devices(enumerate.get());
 
-    udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate.data());
+    udev_list_entry *devices = ::udev_enumerate_get_list_entry(enumerate.get());
 
     QList<QSerialPortInfo> serialPortInfoList;
     udev_list_entry *dev_list_entry;
@@ -418,29 +411,29 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
 
         ok = true;
 
-        QScopedPointer<udev_device, ScopedPointerUdevDeviceDeleter>
+        const udev_ptr<udev_device>
                 dev(::udev_device_new_from_syspath(
-                        udev.data(), ::udev_list_entry_get_name(dev_list_entry)));
+                        udev.get(), ::udev_list_entry_get_name(dev_list_entry)));
 
         if (!dev)
             return serialPortInfoList;
 
         QSerialPortInfoPrivate priv;
 
-        priv.device = deviceLocation(dev.data());
-        priv.portName = deviceName(dev.data());
+        priv.device = deviceLocation(dev.get());
+        priv.portName = deviceName(dev.get());
 
-        udev_device *parentdev = ::udev_device_get_parent(dev.data());
+        udev_device *parentdev = ::udev_device_get_parent(dev.get());
 
         if (parentdev) {
             const QString driverName = deviceDriver(parentdev);
             if (isSerial8250Driver(driverName) && !isValidSerial8250(priv.device))
                 continue;
-            priv.description = deviceDescription(dev.data());
-            priv.manufacturer = deviceManufacturer(dev.data());
-            priv.serialNumber = deviceSerialNumber(dev.data());
-            priv.vendorIdentifier = deviceVendorIdentifier(dev.data(), priv.hasVendorIdentifier);
-            priv.productIdentifier = deviceProductIdentifier(dev.data(), priv.hasProductIdentifier);
+            priv.description = deviceDescription(dev.get());
+            priv.manufacturer = deviceManufacturer(dev.get());
+            priv.serialNumber = deviceSerialNumber(dev.get());
+            priv.vendorIdentifier = deviceVendorIdentifier(dev.get(), priv.hasVendorIdentifier);
+            priv.productIdentifier = deviceProductIdentifier(dev.get(), priv.hasProductIdentifier);
         } else {
             if (!isRfcommDevice(priv.portName)
                     && !isVirtualNullModemDevice(priv.portName)
