@@ -60,11 +60,12 @@
 #include <private/qiodevice_p.h>
 #include <private/qproperty_p.h>
 
+#include <memory>
+
 #if defined(Q_OS_WIN32)
 #  include <qt_windows.h>
 #elif defined(Q_OS_UNIX)
 #  include <QtCore/qlockfile.h>
-#  include <QtCore/qscopedpointer.h>
 #  include <QtCore/qfileinfo.h>
 #  include <QtCore/qstringlist.h>
 #  include <limits.h>
@@ -287,7 +288,7 @@ public:
     qint64 pendingBytesWritten = 0;
     bool writeSequenceStarted = false;
 
-    QScopedPointer<QLockFile> lockFileScopedPointer;
+    std::unique_ptr<QLockFile> lockFileScopedPointer;
 
 #endif
 };

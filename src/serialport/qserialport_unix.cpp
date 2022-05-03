@@ -316,7 +316,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    QScopedPointer<QLockFile> newLockFileScopedPointer(new QLockFile(lockFilePath));
+    auto newLockFileScopedPointer = std::make_unique<QLockFile>(lockFilePath);
 
     if (!newLockFileScopedPointer->tryLock()) {
         setError(QSerialPortErrorInfo(QSerialPort::PermissionError, QSerialPort::tr("Permission error while locking the device")));
@@ -349,7 +349,7 @@ bool QSerialPortPrivate::open(QIODevice::OpenMode mode)
         return false;
     }
 
-    lockFileScopedPointer.swap(newLockFileScopedPointer);
+    lockFileScopedPointer = std::move(newLockFileScopedPointer);
 
     return true;
 }
