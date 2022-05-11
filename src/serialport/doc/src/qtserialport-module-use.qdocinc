@@ -27,7 +27,7 @@
 
 //! [cmakebuild]
     \code
-    find_package(Qt6 COMPONENTS SerialPort REQUIRED)
+    find_package(Qt6 REQUIRED COMPONENTS SerialPort)
     target_link_libraries(mytarget PRIVATE Qt6::SerialPort)
     \endcode
 //! [cmakebuild]
