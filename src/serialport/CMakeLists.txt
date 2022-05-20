@@ -1,7 +1,7 @@
 #####################################################################
 ## SerialPort Module:
 #####################################################################
-qt_find_package(Libudev)
+qt_find_package(Libudev PROVIDED_TARGETS PkgConfig::Libudev MODULE_NAME global QMAKE_LIB libudev)
 
 qt_internal_add_module(SerialPort
     SOURCES
