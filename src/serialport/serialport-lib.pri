@@ -23,9 +23,10 @@ win32 {
     SOURCES += \
         $$PWD/qserialport_win.cpp \
         $$PWD/qserialportinfo_win.cpp \
+        $$PWD/qwinoverlappedionotifier.cpp
 
     PRIVATE_HEADERS += \
-        $$PWD/qtntdll_p.h
+        $$PWD/qwinoverlappedionotifier_p.h
 
     LIBS_PRIVATE += -lsetupapi -ladvapi32
 }
