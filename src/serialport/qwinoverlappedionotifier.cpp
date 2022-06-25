@@ -382,9 +382,12 @@ void QWinOverlappedIoNotifierPrivate::_q_notified()
         QQueue<IOResult> values;
         results.swap(values);
         ReleaseMutex(hResultsMutex);
-        while (!values.empty()) {
+        // 'q' can go out of scope if the user decides to close the serial port
+        // while processing some answer. So we need to guard against that.
+        QPointer<QWinOverlappedIoNotifier> qptr(q);
+        while (!values.empty() && qptr) {
             IOResult ioresult = values.dequeue();
-            emit q->notified(ioresult.numberOfBytes, ioresult.errorCode, ioresult.overlapped);
+            emit qptr->notified(ioresult.numberOfBytes, ioresult.errorCode, ioresult.overlapped);
         }
     }
 }
