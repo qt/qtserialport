@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qserialportinfo
     SOURCES
         tst_qserialportinfo.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::SerialPort
         Qt::Test
 )
