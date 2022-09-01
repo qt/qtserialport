@@ -1,4 +1,4 @@
 dependencies:
   ../tqtc-qtbase:
-    ref: ddc7a4a2f22c5bcb891814af02d1a7b3d2e5bf63
+    ref: 656cdb66470d839da53a8ddf4288af27a004db80
     required: true
