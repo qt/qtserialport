@@ -50,13 +50,15 @@ void SettingsDialog::showPortInfo(int idx)
     if (idx == -1)
         return;
 
+    const QString blankString = tr(::blankString);
+
     const QStringList list = m_ui->serialPortInfoListBox->itemData(idx).toStringList();
-    m_ui->descriptionLabel->setText(tr("Description: %1").arg(list.count() > 1 ? list.at(1) : tr(blankString)));
-    m_ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.count() > 2 ? list.at(2) : tr(blankString)));
-    m_ui->serialNumberLabel->setText(tr("Serial number: %1").arg(list.count() > 3 ? list.at(3) : tr(blankString)));
-    m_ui->locationLabel->setText(tr("Location: %1").arg(list.count() > 4 ? list.at(4) : tr(blankString)));
-    m_ui->vidLabel->setText(tr("Vendor Identifier: %1").arg(list.count() > 5 ? list.at(5) : tr(blankString)));
-    m_ui->pidLabel->setText(tr("Product Identifier: %1").arg(list.count() > 6 ? list.at(6) : tr(blankString)));
+    m_ui->descriptionLabel->setText(tr("Description: %1").arg(list.value(1, blankString)));
+    m_ui->manufacturerLabel->setText(tr("Manufacturer: %1").arg(list.value(2, blankString)));
+    m_ui->serialNumberLabel->setText(tr("Serial number: %1").arg(list.value(3, blankString)));
+    m_ui->locationLabel->setText(tr("Location: %1").arg(list.value(4, blankString)));
+    m_ui->vidLabel->setText(tr("Vendor Identifier: %1").arg(list.value(5, blankString)));
+    m_ui->pidLabel->setText(tr("Product Identifier: %1").arg(list.value(6, blankString)));
 }
 
 void SettingsDialog::apply()
@@ -118,24 +120,25 @@ void SettingsDialog::fillPortsParameters()
 void SettingsDialog::fillPortsInfo()
 {
     m_ui->serialPortInfoListBox->clear();
-    QString description;
-    QString manufacturer;
-    QString serialNumber;
+    const QString blankString = tr(::blankString);
     const auto infos = QSerialPortInfo::availablePorts();
+
     for (const QSerialPortInfo &info : infos) {
         QStringList list;
-        description = info.description();
-        manufacturer = info.manufacturer();
-        serialNumber = info.serialNumber();
+        const QString description = info.description();
+        const QString manufacturer = info.manufacturer();
+        const QString serialNumber = info.serialNumber();
+        const auto vendorId = info.vendorIdentifier();
+        const auto productId = info.productIdentifier();
         list << info.portName()
              << (!description.isEmpty() ? description : blankString)
              << (!manufacturer.isEmpty() ? manufacturer : blankString)
              << (!serialNumber.isEmpty() ? serialNumber : blankString)
              << info.systemLocation()
-             << (info.vendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : blankString)
-             << (info.productIdentifier() ? QString::number(info.productIdentifier(), 16) : blankString);
+             << (vendorId ? QString::number(vendorId, 16) : blankString)
+             << (productId ? QString::number(productId, 16) : blankString);
 
-        m_ui->serialPortInfoListBox->addItem(list.first(), list);
+        m_ui->serialPortInfoListBox->addItem(list.constFirst(), list);
     }
 
     m_ui->serialPortInfoListBox->addItem(tr("Custom"));
@@ -148,25 +151,25 @@ void SettingsDialog::updateSettings()
     if (m_ui->baudRateBox->currentIndex() == 4) {
         m_currentSettings.baudRate = m_ui->baudRateBox->currentText().toInt();
     } else {
-        m_currentSettings.baudRate = static_cast<QSerialPort::BaudRate>(
-                    m_ui->baudRateBox->itemData(m_ui->baudRateBox->currentIndex()).toInt());
+        const auto baudRateData = m_ui->baudRateBox->currentData();
+        m_currentSettings.baudRate = baudRateData.value<QSerialPort::BaudRate>();
     }
     m_currentSettings.stringBaudRate = QString::number(m_currentSettings.baudRate);
 
-    m_currentSettings.dataBits = static_cast<QSerialPort::DataBits>(
-                m_ui->dataBitsBox->itemData(m_ui->dataBitsBox->currentIndex()).toInt());
+    const auto dataBitsData = m_ui->dataBitsBox->currentData();
+    m_currentSettings.dataBits = dataBitsData.value<QSerialPort::DataBits>();
     m_currentSettings.stringDataBits = m_ui->dataBitsBox->currentText();
 
-    m_currentSettings.parity = static_cast<QSerialPort::Parity>(
-                m_ui->parityBox->itemData(m_ui->parityBox->currentIndex()).toInt());
+    const auto parityData = m_ui->parityBox->currentData();
+    m_currentSettings.parity = parityData.value<QSerialPort::Parity>();
     m_currentSettings.stringParity = m_ui->parityBox->currentText();
 
-    m_currentSettings.stopBits = static_cast<QSerialPort::StopBits>(
-                m_ui->stopBitsBox->itemData(m_ui->stopBitsBox->currentIndex()).toInt());
+    const auto stopBitsData = m_ui->stopBitsBox->currentData();
+    m_currentSettings.stopBits = stopBitsData.value<QSerialPort::StopBits>();
     m_currentSettings.stringStopBits = m_ui->stopBitsBox->currentText();
 
-    m_currentSettings.flowControl = static_cast<QSerialPort::FlowControl>(
-                m_ui->flowControlBox->itemData(m_ui->flowControlBox->currentIndex()).toInt());
+    const auto flowControlData = m_ui->flowControlBox->currentData();
+    m_currentSettings.flowControl = flowControlData.value<QSerialPort::FlowControl>();
     m_currentSettings.stringFlowControl = m_ui->flowControlBox->currentText();
 
     m_currentSettings.localEchoEnabled = m_ui->localEchoCheckBox->isChecked();

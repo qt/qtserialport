@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_ui(new Ui::MainWindow),
     m_status(new QLabel),
     m_console(new Console),
-    m_settings(new SettingsDialog),
+      m_settings(new SettingsDialog(this)),
 //! [1]
     m_serial(new QSerialPort(this))
 //! [1]
@@ -68,8 +68,8 @@ void MainWindow::openSerialPort()
         m_ui->actionDisconnect->setEnabled(true);
         m_ui->actionConfigure->setEnabled(false);
         showStatusMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
-                          .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
-                          .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
+                          .arg(p.name, p.stringBaudRate, p.stringDataBits,
+                               p.stringParity, p.stringStopBits, p.stringFlowControl));
     } else {
         QMessageBox::critical(this, tr("Error"), m_serial->errorString());
 
