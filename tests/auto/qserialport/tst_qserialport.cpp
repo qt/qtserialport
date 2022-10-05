@@ -257,7 +257,7 @@ void tst_QSerialPort::openExisting()
         QCOMPARE(serialPort.isOpen(), openResult);
         QCOMPARE(serialPort.error(), errorCode);
 
-        QCOMPARE(errorSpy.count(), 1);
+        QCOMPARE(errorSpy.size(), 1);
         QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(0).at(0)), errorCode);
     }
 }
@@ -480,11 +480,11 @@ void tst_QSerialPort::rts()
     QCOMPARE(serialPort.isRequestToSend(), !toggle3); // same as before
     QCOMPARE(serialPort.error(), QSerialPort::UnsupportedOperationError);
 
-    QCOMPARE(errorSpy.count(), 2);
+    QCOMPARE(errorSpy.size(), 2);
     QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(0).at(0)), QSerialPort::NoError);
     QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(1).at(0)), QSerialPort::UnsupportedOperationError);
 
-    QCOMPARE(rtsSpy.count(), 2);
+    QCOMPARE(rtsSpy.size(), 2);
     QCOMPARE(qvariant_cast<bool>(rtsSpy.at(0).at(0)), toggle1);
     QCOMPARE(qvariant_cast<bool>(rtsSpy.at(1).at(0)), toggle2);
 }
@@ -518,10 +518,10 @@ void tst_QSerialPort::dtr()
     QVERIFY(serialPort.setDataTerminalReady(toggle3));
     QCOMPARE(serialPort.isDataTerminalReady(), toggle3);
 
-    QCOMPARE(errorSpy.count(), 1);
+    QCOMPARE(errorSpy.size(), 1);
     QCOMPARE(qvariant_cast<QSerialPort::SerialPortError>(errorSpy.at(0).at(0)), QSerialPort::NoError);
 
-    QCOMPARE(dtrSpy.count(), 3);
+    QCOMPARE(dtrSpy.size(), 3);
     QCOMPARE(qvariant_cast<bool>(dtrSpy.at(0).at(0)), toggle1);
     QCOMPARE(qvariant_cast<bool>(dtrSpy.at(1).at(0)), toggle2);
     QCOMPARE(qvariant_cast<bool>(dtrSpy.at(2).at(0)), toggle3);
@@ -606,7 +606,7 @@ void tst_QSerialPort::flush()
     QCOMPARE(serialPort.bytesToWrite(), qint64(0));
     enterLoop(1);
     QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
-    QCOMPARE(bytesWrittenSpy.count(), 1);
+    QCOMPARE(bytesWrittenSpy.size(), 1);
 }
 
 void tst_QSerialPort::handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten)
@@ -646,7 +646,7 @@ void tst_QSerialPort::doubleFlush()
 
     enterLoop(1);
     QVERIFY2(!timeout(), "Timed out when waiting for the bytesWritten(qint64) signal.");
-    QCOMPARE(bytesWrittenSpy.count(), 2);
+    QCOMPARE(bytesWrittenSpy.size(), 2);
 }
 
 void tst_QSerialPort::waitForBytesWritten()
@@ -692,7 +692,7 @@ void tst_QSerialPort::waitForReadyReadWithOneByte()
     QVERIFY(receiverSerialPort.waitForReadyRead(waitMsecs));
     QCOMPARE(receiverSerialPort.bytesAvailable(), oneByte);
     QCOMPARE(receiverSerialPort.error(), QSerialPort::NoError);
-    QCOMPARE(readyReadSpy.count(), 1);
+    QCOMPARE(readyReadSpy.size(), 1);
 }
 
 void tst_QSerialPort::waitForReadyReadWithAlphabet()
@@ -713,7 +713,7 @@ void tst_QSerialPort::waitForReadyReadWithAlphabet()
     } while (receiverSerialPort.bytesAvailable() < qint64(alphabetArray.size()));
 
     QCOMPARE(receiverSerialPort.error(), QSerialPort::NoError);
-    QVERIFY(readyReadSpy.count() > 0);
+    QVERIFY(readyReadSpy.size() > 0);
 }
 
 void tst_QSerialPort::twoStageSynchronousLoopback()
@@ -1173,7 +1173,7 @@ void tst_QSerialPort::controlBreak()
     QVERIFY(senderPort.setBreakEnabled(false));
     QCOMPARE(senderPort.isBreakEnabled(), false);
 
-    QCOMPARE(breakSpy.count(), 2);
+    QCOMPARE(breakSpy.size(), 2);
     QCOMPARE(qvariant_cast<bool>(breakSpy.at(0).at(0)), true);
     QCOMPARE(qvariant_cast<bool>(breakSpy.at(1).at(0)), false);
 }
@@ -1277,7 +1277,7 @@ void tst_QSerialPort::bindingsAndProperties()
 
     dbProp = QSerialPort::DataBits::Data5;
     QCOMPARE(sp.dataBits(), QSerialPort::DataBits::Data5);
-    QCOMPARE(dataBitsChangedSpy.count(), 1);
+    QCOMPARE(dataBitsChangedSpy.size(), 1);
     QCOMPARE(dataBitsChangedSpy.at(0).value(0).toInt(), QSerialPort::DataBits::Data5);
 
     dbProp.setBinding(sp.bindableDataBits().makeBinding());
@@ -1300,7 +1300,7 @@ void tst_QSerialPort::bindingsAndProperties()
 
     parityProp = QSerialPort::Parity::EvenParity;
     QCOMPARE(sp.parity(), QSerialPort::Parity::EvenParity);
-    QCOMPARE(parityChangedSpy.count(), 1);
+    QCOMPARE(parityChangedSpy.size(), 1);
     QCOMPARE(parityChangedSpy.at(0).value(0).toInt(), QSerialPort::Parity::EvenParity);
 
     parityProp.setBinding(sp.bindableParity().makeBinding());
@@ -1323,7 +1323,7 @@ void tst_QSerialPort::bindingsAndProperties()
 
     sbProp = QSerialPort::StopBits::OneStop;
     QCOMPARE(sp.stopBits(), QSerialPort::StopBits::OneStop);
-    QCOMPARE(stopBitsChangedSpy.count(), 1);
+    QCOMPARE(stopBitsChangedSpy.size(), 1);
     QCOMPARE(stopBitsChangedSpy.at(0).value(0).toInt(), QSerialPort::StopBits::OneStop);
 
     sbProp.setBinding(sp.bindableStopBits().makeBinding());
@@ -1346,7 +1346,7 @@ void tst_QSerialPort::bindingsAndProperties()
 
     fcProp = QSerialPort::FlowControl::NoFlowControl;
     QCOMPARE(sp.flowControl(), QSerialPort::FlowControl::NoFlowControl);
-    QCOMPARE(flowControlChangedSpy.count(), 1);
+    QCOMPARE(flowControlChangedSpy.size(), 1);
     QCOMPARE(flowControlChangedSpy.at(0).value(0).toInt(), QSerialPort::FlowControl::NoFlowControl);
 
     fcProp.setBinding(sp.bindableFlowControl().makeBinding());
@@ -1370,12 +1370,12 @@ void tst_QSerialPort::bindingsAndProperties()
     // this shall not change the error, we do not have a public setter
     errorProp = QSerialPort::SerialPortError::DeviceNotFoundError;
     QCOMPARE(sp.error(), QSerialPort::SerialPortError::NoError);
-    QCOMPARE(errorChangedSpy.count(), 0);
+    QCOMPARE(errorChangedSpy.size(), 0);
 
     errorProp.setBinding(sp.bindableError().makeBinding());
     sp.clearError();
     QCOMPARE(errorProp.value(), QSerialPort::SerialPortError::NoError);
-    QCOMPARE(errorChangedSpy.count(), 1);
+    QCOMPARE(errorChangedSpy.size(), 1);
     QCOMPARE(errorChangedSpy.at(0).value(0).toInt(), QSerialPort::SerialPortError::NoError);
 
     sp.setPortName(m_receiverPortName);
@@ -1393,7 +1393,7 @@ void tst_QSerialPort::bindingsAndProperties()
 
     beProp = true;
     QCOMPARE(sp.isBreakEnabled(), true);
-    QCOMPARE(breakEnabledChangedSpy.count(), 1);
+    QCOMPARE(breakEnabledChangedSpy.size(), 1);
     QCOMPARE(breakEnabledChangedSpy.at(0).value(0).toBool(), true);
 
     beProp.setBinding(sp.bindableIsBreakEnabled().makeBinding());
