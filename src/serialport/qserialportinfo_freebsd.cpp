@@ -284,10 +284,10 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     QList<QSerialPortInfo> serialPortInfoList;
 
-    for (const QSerialPortInfo &cuaCandidate : qAsConst(cuaCandidates)) {
+    for (const QSerialPortInfo &cuaCandidate : std::as_const(cuaCandidates)) {
         const QString cuaPortName = cuaCandidate.portName();
         const QString cuaToken = deviceProperty(cuaPortName, "cua");
-        for (const QSerialPortInfo &ttyCandidate : qAsConst(ttyCandidates)) {
+        for (const QSerialPortInfo &ttyCandidate : std::as_const(ttyCandidates)) {
             const QString ttyPortName = ttyCandidate.portName();
             const QString ttyToken = deviceProperty(ttyPortName, "tty");
             if (cuaToken != ttyToken)
