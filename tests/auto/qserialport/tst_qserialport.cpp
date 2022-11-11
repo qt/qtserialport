@@ -247,7 +247,7 @@ void tst_QSerialPort::openExisting()
     QFETCH(bool, openResult);
     QFETCH(QSerialPort::SerialPortError, errorCode);
 
-    for (const QString &serialPortName : qAsConst(m_availablePortNames)) {
+    for (const QString &serialPortName : std::as_const(m_availablePortNames)) {
         QSerialPort serialPort(serialPortName);
         QSignalSpy errorSpy(&serialPort, &QSerialPort::errorOccurred);
         QVERIFY(errorSpy.isValid());
