@@ -360,8 +360,8 @@ void QWinOverlappedIoNotifierPrivate::notify(DWORD numberOfBytes, DWORD errorCod
     Q_Q(QWinOverlappedIoNotifier);
     WaitForSingleObject(hResultsMutex, INFINITE);
     results.enqueue(IOResult(numberOfBytes, errorCode, overlapped));
-    ReleaseMutex(hResultsMutex);
     ReleaseSemaphore(hSemaphore, 1, NULL);
+    ReleaseMutex(hResultsMutex);
     // Do not send a signal if we didn't process the previous one.
     // This is done to prevent soft memory leaks when working in a completely
     // synchronous way.
@@ -381,6 +381,15 @@ void QWinOverlappedIoNotifierPrivate::_q_notified()
         WaitForSingleObject(hResultsMutex, INFINITE);
         QQueue<IOResult> values;
         results.swap(values);
+        // Decreasing the semaphore count to keep it in sync with the number
+        // of messages in queue. As ReleaseSemaphore does not accept negative
+        // values, this is sort of a recommended way to go:
+        // https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesemaphore#remarks
+        int numToDecrease = values.size() - 1;
+        while (numToDecrease > 0) {
+            WaitForSingleObject(hSemaphore, 0);
+            --numToDecrease;
+        }
         ReleaseMutex(hResultsMutex);
         // 'q' can go out of scope if the user decides to close the serial port
         // while processing some answer. So we need to guard against that.
