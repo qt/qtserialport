@@ -1379,30 +1379,38 @@ void tst_QSerialPort::bindingsAndProperties()
     QCOMPARE(errorChangedSpy.at(0).value(0).toInt(), QSerialPort::SerialPortError::NoError);
 
     sp.setPortName(m_receiverPortName);
-    sp.open(QIODevice::ReadOnly);
+    const bool portOpened = sp.open(QIODevice::ReadOnly);
 
     // -- break enabled
 
-    QProperty<bool> beProp(false);
-    QCOMPARE(beProp.value(), false);
+    if (portOpened) {
+        QProperty<bool> beProp(false);
+        QCOMPARE(beProp.value(), false);
 
-    sp.bindableIsBreakEnabled().setBinding(Qt::makePropertyBinding(beProp));
-    QCOMPARE(sp.isBreakEnabled(), false);
+        sp.bindableIsBreakEnabled().setBinding(Qt::makePropertyBinding(beProp));
+        QCOMPARE(sp.isBreakEnabled(), false);
 
-    const QSignalSpy breakEnabledChangedSpy(&sp, &QSerialPort::breakEnabledChanged);
+        const QSignalSpy breakEnabledChangedSpy(&sp, &QSerialPort::breakEnabledChanged);
 
-    beProp = true;
-    QCOMPARE(sp.isBreakEnabled(), true);
-    QCOMPARE(breakEnabledChangedSpy.size(), 1);
-    QCOMPARE(breakEnabledChangedSpy.at(0).value(0).toBool(), true);
+        beProp = true;
+        QCOMPARE(sp.isBreakEnabled(), true);
+        QCOMPARE(breakEnabledChangedSpy.size(), 1);
+        QCOMPARE(breakEnabledChangedSpy.at(0).value(0).toBool(), true);
 
-    beProp.setBinding(sp.bindableIsBreakEnabled().makeBinding());
-    sp.setBreakEnabled(false);
-    QCOMPARE(beProp.value(), false);
+        beProp.setBinding(sp.bindableIsBreakEnabled().makeBinding());
+        sp.setBreakEnabled(false);
+        QCOMPARE(beProp.value(), false);
 
-    beProp.setBinding([&] { return sp.isBreakEnabled(); });
-    sp.setBreakEnabled(true);
-    QCOMPARE(beProp.value(), true);
+        beProp.setBinding([&] { return sp.isBreakEnabled(); });
+        sp.setBreakEnabled(true);
+        QCOMPARE(beProp.value(), true);
+    } else {
+        // setting isBreakEnabled() will return false and raise an error
+        const auto currErrorCount = errorChangedSpy.size();
+        sp.setBreakEnabled(true);
+        QCOMPARE(errorProp.value(), QSerialPort::SerialPortError::NotOpenError);
+        QCOMPARE(errorChangedSpy.size(), currErrorCount + 1);
+    }
 }
 
 QTEST_MAIN(tst_QSerialPort)
