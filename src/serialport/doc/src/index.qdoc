@@ -7,9 +7,9 @@
     \title Qt Serial Port
     \brief Provides an API to make serial programming simple and portable.
 
-    Qt Serial Port provides the basic functionality, which includes
-    configuring, I/O operations, getting and setting the control signals of the
-    RS-232 pinouts.
+    Qt Serial Port provides basic functionality for configuration, I/O
+    operations, and getting and setting the control signals of the RS-232
+    pinouts.
 
     The following items are not supported by this module:
     \list
@@ -19,27 +19,17 @@
     \li Pinout signal change notification.
     \endlist
 
-    To use the serial port in your application, add the following include
-    statement:
+    \section1 Using the Module
 
-    \code
-    #include <QSerialPort>
-    \endcode
+    \include {module-use.qdocinc} {using the c++ api}
 
-    For information about available serial ports, use the following include
-    statement:
+    \section2 Building with Cmake
 
-    \code
-    #include <QSerialPortInfo>
-    \endcode
+    \include {module-use.qdocinc} {building with cmake} {SerialPort}
 
-    To use the module with cmake, use the \c{find_package()} command to locate
-    the needed module components in the \c{Qt6} package:
-    \include qtserialport-module-use.qdocinc cmakebuild
+    \section2 Building with qmake
 
-    To use the module for building with qmake, add the module as a value of the
-    \c QT variable in the project's .pro file:
-    \include qtserialport-module-use.qdocinc qmakebuild
+    \include {module-use.qdocinc} {building_with_qmake} {serialport}
 
     \section1 Module Evolution
     \l{Changes to Qt SerialPort} lists important changes in the module API
