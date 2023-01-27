@@ -27,12 +27,16 @@ qhp.QtSerialPort.subprojects.examples.sortPages = true
 
 headerdirs  += ..
 sourcedirs  += ..
-exampledirs += ../../../examples/serialport
+exampledirs += \
+    ../../../examples/serialport \
+    snippets
+
+excludedirs += snippets
 imagedirs   += images
 
 examplesinstallpath = serialport
 
-depends += qtcore qtdoc qtnetwork qmake
+depends += qtcore qtdoc qtnetwork qmake qtcmake
 
 navigation.landingpage = "Qt Serial Port"
 navigation.cppclassespage = "Qt Serial Port C++ Classes"

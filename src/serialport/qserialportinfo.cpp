@@ -26,12 +26,20 @@ static_assert(sizeof(std::unique_ptr<QSerialPortInfoPrivate>)
     \inmodule QtSerialPort
     \since 5.1
 
-    Use the static functions to generate a list of QSerialPortInfo
-    objects. Each QSerialPortInfo object in the list represents a single
-    serial port and can be queried for the port name, system location,
-    description, and manufacturer. The QSerialPortInfo class can also be
-    used as an input parameter for the setPort() method of the QSerialPort
-    class.
+    Use the static \l availablePorts() function to generate a list of
+    QSerialPortInfo objects. Each QSerialPortInfo object in the list represents
+    a single serial port and can be queried for the \l {portName}{port name},
+    \l {systemLocation}{system location}, \l description, \l manufacturer, and
+    some other hardware parameters. The QSerialPortInfo class can also be
+    used as an input parameter for the \l {QSerialPort::}{setPort()} method of
+    the QSerialPort class.
+
+    \section1 Example Usage
+
+    The example code enumerates all available serial ports and prints their
+    parameters to console:
+
+    \snippet doc_src_serialport.cpp enumerate_ports
 
     \sa QSerialPort
 */
