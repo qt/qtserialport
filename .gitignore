@@ -5,7 +5,7 @@ Makefile
 *.o
 *.a
 moc_*.cpp
-*.pro.user
+*.pro.user*
 *.moc
 lib*.so
 lib*.so.*
@@ -21,4 +21,4 @@ Makefile.Release
 .vs
 CMakeSettings.json
 out/*
-CMakeLists.txt.user
+CMakeLists.txt.user*
