@@ -3,7 +3,7 @@
 
 qt_internal_add_example(creaderasync)
 qt_internal_add_example(cwriterasync)
-if((((NOT QT.widgets.name_ISEMPTY))))
+if(TARGET Qt::Widgets)
     qt_internal_add_example(terminal)
     qt_internal_add_example(blockingsender)
     qt_internal_add_example(blockingreceiver)
