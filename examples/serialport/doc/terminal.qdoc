@@ -1,11 +1,13 @@
 // Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
     \example terminal
-    \title Terminal Example
+    \title Serial Terminal
     \ingroup qtserialport-examples
+    \meta category Connectivity
+
     \brief Shows how to use various features of QSerialPort.
 
     \e Terminal  shows how to create a terminal for a simple serial interface by
@@ -63,12 +65,16 @@
     happens automatically according to the parent and child mechanism in Qt:
 
     \snippet terminal/mainwindow.cpp 0
-    \dots
     \snippet terminal/mainwindow.cpp 1
+    \dots
 
-    The only QSerialPort signal invoked in this example is
-    \l{QIODevice::}{readyRead()}, which shows that new data has been
-    received and hence available:
+    This example demonstrates the following \l QSerialPort signals:
+    \list
+        \li \l {QIODevice::}{readyRead()} - shows that new data has been
+        received and hence available
+        \li \l {QIODevice::}{bytesWritten()} - used to check that all data was
+        written successfully
+    \endlist
 
     \dots
     \snippet terminal/mainwindow.cpp 2
@@ -79,7 +85,8 @@
 
     \snippet terminal/mainwindow.cpp 4
 
-    In this slot, the settings are read from \c{SettingsDialog} and an attempt is made to open and initialize the serial
+    In this slot, the settings are read from \c{SettingsDialog} and an attempt
+    is made to open and initialize the serial
     port accordingly. If successful, the status bar displays a message that the
     opening was successful with the given configuration; otherwise, a messagebox
     is displayed with the appropriate error code and message. If the serial port
@@ -93,12 +100,30 @@
 
     In this case, handled by the closure of the serial port.
 
+    Clicking on the \b{Configure} button invokes the \c{show()} slot which
+    belongs to the \c{SettingsDialog} widget.
+
+    This method (\c{terminal/settingsdialog.cpp}) displays the \c{SettingsDialog},
+    in which the user can choose the desired serial port, see the information
+    about the selected port, and set the desired parameters of the given serial
+    port.
+
+    \section2 Writing Data
+
     Typing characters in the console invokes the \c writeData() slot:
 
     \snippet terminal/mainwindow.cpp 6
 
     This slot sends the characters typed in the given
     Console widget to the serial port - see \c terminal/console.cpp.
+    It also starts a timer to track if the write actually succeeded or not.
+    We use the \l {QIODevice::}{bytesWritten()} signal to make sure that all
+    bytes are actually written. It is connected to the
+    \c {MainWindow::handleBytesWritten()} slot:
+
+    \snippet terminal/mainwindow.cpp 9
+
+    \section2 Reading Data
 
     When the serial port receives new data, the signal
     \l{QIODevice::}{readyRead()} is emitted, and that signal is
@@ -108,14 +133,6 @@
 
     This slot reads the data from the serial port and displays that in the
     Console widget.
-
-    Clicking on the \b{Configure} button invokes the \c{show()} slot which
-    belongs to the \c{SettingsDialog} widget.
-
-    This method (\c{terminal/settingsdialog.cpp}) displays the \c{SettingsDialog},
-    in which the user can choose the desired serial port, see the information
-    about the selected port, and set the desired parameters of the given serial
-    port.
 
     \sa {Blocking Receiver Example}
 

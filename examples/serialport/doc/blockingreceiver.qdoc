@@ -137,7 +137,7 @@
 
     \snippet blockingreceiver/receiverthread.cpp 13
 
-    \sa {Terminal Example}, {Blocking Sender Example}
+    \sa {Serial Terminal}, {Blocking Sender Example}
 
     \include examples-run.qdocinc
 */

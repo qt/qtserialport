@@ -11,6 +11,7 @@
 QT_BEGIN_NAMESPACE
 
 class QLabel;
+class QTimer;
 
 namespace Ui {
 class MainWindow;
@@ -37,17 +38,22 @@ private slots:
     void readData();
 
     void handleError(QSerialPort::SerialPortError error);
+    void handleBytesWritten(qint64 bytes);
+    void handleWriteTimeout();
 
 private:
     void initActionsConnections();
 
 private:
     void showStatusMessage(const QString &message);
+    void showWriteError(const QString &message);
 
     Ui::MainWindow *m_ui = nullptr;
     QLabel *m_status = nullptr;
     Console *m_console = nullptr;
     SettingsDialog *m_settings = nullptr;
+    qint64 m_bytesToWrite = 0;
+    QTimer *m_timer = nullptr;
     QSerialPort *m_serial = nullptr;
 };
 
