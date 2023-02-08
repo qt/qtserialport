@@ -4,8 +4,10 @@
 
 /*!
     \example blockingreceiver
-    \title Blocking Receiver Example
+    \title Blocking Receiver
     \ingroup qtserialport-examples
+    \meta category Connectivity
+
     \brief Shows how to use the synchronous API of QSerialPort in a non-GUI thread.
 
     \e{Blocking Receiver} shows how to create an application for a serial interface
@@ -42,8 +44,8 @@
     But contrary to what many think, using threads with QThread does not
     necessarily add unmanageable complexity to your application.
 
-    This application is a Receiver, that demonstrate the work paired with Sender
-    application \l{Blocking Sender Example}.
+    This application is a Receiver, that demonstrate the work paired with the
+    sender application \l{blockingsender}{Blocking Sender example}.
 
     The Receiver application receives the request via serial port from
     the Sender application and send a response to it.
@@ -137,7 +139,7 @@
 
     \snippet blockingreceiver/receiverthread.cpp 13
 
-    \sa {Serial Terminal}, {Blocking Sender Example}
+    \sa {Serial Terminal}, {Blocking Sender}
 
     \include examples-run.qdocinc
 */

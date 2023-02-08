@@ -1,12 +1,14 @@
 // Copyright (C) 2011 - 2012 Denis Shienkov <denis.shienkov@gmail.com>
 // Copyright (C) 2012 - 2013 Laszlo Papp <lpapp@kde.org>
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
     \example blockingsender
-    \title Blocking Sender Example
+    \title Blocking Sender
     \ingroup qtserialport-examples
+    \meta category Connectivity
+
     \brief Shows how to use the synchronous API of QSerialPort in a worker thread.
 
     \e{Blocking Sender} shows how to create an application for a serial
@@ -41,8 +43,8 @@
     should only be used in non-GUI threads to keep the user interface
     responsive.
 
-    This application is the sender which demonstrates the work paired with the receiver
-    application \l{blockingreceiver}{Blocking Receiver Example}.
+    This application is the sender which demonstrates the work paired with the
+    receiver application \l{blockingreceiver}{Blocking Receiver example}.
 
     The sender application initiates the transfer request via the serial port to
     the receiver application and waits for response.
@@ -137,7 +139,7 @@
 
     \snippet blockingsender/senderthread.cpp 13
 
-    \sa {Serial Terminal}, {Blocking Receiver Example}
+    \sa {Serial Terminal}, {Blocking Receiver}
 
     \include examples-run.qdocinc
 */
