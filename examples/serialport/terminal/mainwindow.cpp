@@ -9,19 +9,25 @@
 
 #include <QLabel>
 #include <QMessageBox>
+#include <QTimer>
+
+#include <chrono>
+
+static constexpr std::chrono::seconds kWriteTimeout = std::chrono::seconds{5};
 
 //! [0]
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     m_ui(new Ui::MainWindow),
+//! [0]
     m_status(new QLabel),
     m_console(new Console),
-      m_settings(new SettingsDialog(this)),
+    m_settings(new SettingsDialog(this)),
+    m_timer(new QTimer(this)),
 //! [1]
     m_serial(new QSerialPort(this))
-//! [1]
 {
-//! [0]
+//! [1]
     m_ui->setupUi(this);
     m_console->setEnabled(false);
     setCentralWidget(m_console);
@@ -36,9 +42,12 @@ MainWindow::MainWindow(QWidget *parent) :
     initActionsConnections();
 
     connect(m_serial, &QSerialPort::errorOccurred, this, &MainWindow::handleError);
+    connect(m_timer, &QTimer::timeout, this, &MainWindow::handleWriteTimeout);
+    m_timer->setSingleShot(true);
 
 //! [2]
     connect(m_serial, &QSerialPort::readyRead, this, &MainWindow::readData);
+    connect(m_serial, &QSerialPort::bytesWritten, this, &MainWindow::handleBytesWritten);
 //! [2]
     connect(m_console, &Console::getData, this, &MainWindow::writeData);
 //! [3]
@@ -93,8 +102,8 @@ void MainWindow::closeSerialPort()
 
 void MainWindow::about()
 {
-    QMessageBox::about(this, tr("About Simple Terminal"),
-                       tr("The <b>Simple Terminal</b> example demonstrates how to "
+    QMessageBox::about(this, tr("About Serial Terminal"),
+                       tr("The <b>Serial Terminal</b> example demonstrates how to "
                           "use the Qt Serial Port module in modern GUI applications "
                           "using Qt, with a menu bar, toolbars, and a status bar."));
 }
@@ -102,7 +111,16 @@ void MainWindow::about()
 //! [6]
 void MainWindow::writeData(const QByteArray &data)
 {
-    m_serial->write(data);
+    const qint64 written = m_serial->write(data);
+    if (written == data.size()) {
+        m_bytesToWrite += written;
+        m_timer->start(kWriteTimeout);
+    } else {
+        const QString error = tr("Failed to write all data to port %1.\n"
+                                 "Error: %2").arg(m_serial->portName(),
+                                                  m_serial->errorString());
+        showWriteError(error);
+    }
 }
 //! [6]
 
@@ -124,6 +142,23 @@ void MainWindow::handleError(QSerialPort::SerialPortError error)
 }
 //! [8]
 
+//! [9]
+void MainWindow::handleBytesWritten(qint64 bytes)
+{
+    m_bytesToWrite -= bytes;
+    if (m_bytesToWrite == 0)
+        m_timer->stop();
+}
+//! [9]
+
+void MainWindow::handleWriteTimeout()
+{
+    const QString error = tr("Write operation timed out for port %1.\n"
+                             "Error: %2").arg(m_serial->portName(),
+                                              m_serial->errorString());
+    showWriteError(error);
+}
+
 void MainWindow::initActionsConnections()
 {
     connect(m_ui->actionConnect, &QAction::triggered, this, &MainWindow::openSerialPort);
@@ -138,4 +173,9 @@ void MainWindow::initActionsConnections()
 void MainWindow::showStatusMessage(const QString &message)
 {
     m_status->setText(message);
+}
+
+void MainWindow::showWriteError(const QString &message)
+{
+    QMessageBox::warning(this, tr("Warning"), message);
 }
