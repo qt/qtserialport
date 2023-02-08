@@ -134,7 +134,7 @@
     This slot reads the data from the serial port and displays that in the
     Console widget.
 
-    \sa {Blocking Receiver Example}
+    \sa {Blocking Receiver}
 
     \include examples-run.qdocinc
 */
