@@ -7,7 +7,7 @@
     \example blockingsender
     \title Blocking Sender
     \ingroup qtserialport-examples
-    \meta category Connectivity
+    \examplecategory Connectivity
 
     \brief Shows how to use the synchronous API of QSerialPort in a worker thread.
 

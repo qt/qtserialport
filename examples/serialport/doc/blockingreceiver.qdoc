@@ -6,7 +6,7 @@
     \example blockingreceiver
     \title Blocking Receiver
     \ingroup qtserialport-examples
-    \meta category Connectivity
+    \examplecategory Connectivity
 
     \brief Shows how to use the synchronous API of QSerialPort in a non-GUI thread.
 

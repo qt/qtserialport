@@ -6,7 +6,7 @@
     \example terminal
     \title Serial Terminal
     \ingroup qtserialport-examples
-    \meta category Connectivity
+    \examplecategory Connectivity
 
     \brief Shows how to use various features of QSerialPort.
 
