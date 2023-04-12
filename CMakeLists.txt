@@ -15,6 +15,7 @@ set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Gui Widgets)
+qt_internal_project_setup()
 
 if(INTEGRITY)
     message(NOTICE "Skipping the build as the condition \"NOT INTEGRITY\" is not met.")
