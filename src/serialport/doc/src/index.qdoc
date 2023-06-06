@@ -14,9 +14,9 @@
     The following items are not supported by this module:
     \list
     \li Terminal features, such as echo, control CR/LF, and so on.
-    \li Text mode.
-    \li Configuring timeouts and delays while reading or writing.
-    \li Pinout signal change notification.
+    \li Text mode display for data transfer.
+    \li Timeout and delay configuration while reading or writing.
+    \li Notification on changing pinout signal.
     \endlist
 
     \section1 Using the Module
