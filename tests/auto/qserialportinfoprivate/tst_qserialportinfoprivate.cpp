@@ -33,7 +33,7 @@ void tst_QSerialPortInfoPrivate::canonical_data()
     QTest::newRow("Test1") << "COM1" << "COM1" << "\\\\.\\COM1";
     QTest::newRow("Test2") << "\\\\.\\COM1" << "COM1" << "\\\\.\\COM1";
     QTest::newRow("Test3") << "//./COM1" << "COM1" << "//./COM1";
-#elif defined(Q_OS_OSX)
+#elif defined(Q_OS_MACOS)
     QTest::newRow("Test1") << "ttyS0" << "ttyS0" << "/dev/ttyS0";
     QTest::newRow("Test2") << "cu.serial1" << "cu.serial1" << "/dev/cu.serial1";
     QTest::newRow("Test3") << "tty.serial1" << "tty.serial1" << "/dev/tty.serial1";
