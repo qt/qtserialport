@@ -19,7 +19,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
 #if defined(MAC_OS_X_VERSION_10_4) && (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4)
 #include <IOKit/serial/ioss.h>
 #endif
@@ -614,7 +614,7 @@ bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directi
     return setStandardBaudRate(B38400, directions);
 }
 
-#elif defined(Q_OS_OSX)
+#elif defined(Q_OS_MACOS)
 
 bool QSerialPortPrivate::setCustomBaudRate(qint32 baudRate, QSerialPort::Directions directions)
 {
@@ -911,7 +911,7 @@ QSerialPortErrorInfo QSerialPortPrivate::getSystemError(int systemErrorCode) con
     case EBADF:
         error.errorCode = QSerialPort::ResourceError;
         break;
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     case ENXIO:
         error.errorCode = QSerialPort::ResourceError;
         break;
