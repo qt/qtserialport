@@ -129,6 +129,7 @@ public:
     HANDLE hSemaphore = nullptr;
     HANDLE hResultsMutex = nullptr;
     QAtomicInt waiting;
+    QAtomicInt signalSent;
     QQueue<IOResult> results;
 };
 
@@ -397,14 +398,34 @@ void QWinOverlappedIoNotifierPrivate::notify(DWORD numberOfBytes, DWORD errorCod
     results.enqueue(IOResult(numberOfBytes, errorCode, overlapped));
     ReleaseMutex(hResultsMutex);
     ReleaseSemaphore(hSemaphore, 1, NULL);
-    if (!waiting)
+    // Do not send a signal if we didn't process the previous one.
+    // This is done to prevent soft memory leaks when working in a completely
+    // synchronous way.
+    if (!waiting && !signalSent.loadAcquire()) {
+        signalSent.storeRelease(1);
         emit q->_q_notify();
+    }
 }
 
 void QWinOverlappedIoNotifierPrivate::_q_notified()
 {
-    if (WaitForSingleObject(hSemaphore, 0) == WAIT_OBJECT_0)
-        dispatchNextIoResult();
+    Q_Q(QWinOverlappedIoNotifier);
+    signalSent.storeRelease(0); // signal processed - ready for a new one
+    if (WaitForSingleObject(hSemaphore, 0) == WAIT_OBJECT_0) {
+        // As we do not queue signals anymore, we need to process the whole
+        // queue at once.
+        WaitForSingleObject(hResultsMutex, INFINITE);
+        QQueue<IOResult> values;
+        results.swap(values);
+        ReleaseMutex(hResultsMutex);
+        // 'q' can go out of scope if the user decides to close the serial port
+        // while processing some answer. So we need to guard against that.
+        QPointer<QWinOverlappedIoNotifier> qptr(q);
+        while (!values.empty() && qptr) {
+            IOResult ioresult = values.dequeue();
+            emit qptr->notified(ioresult.numberOfBytes, ioresult.errorCode, ioresult.overlapped);
+        }
+    }
 }
 
 OVERLAPPED *QWinOverlappedIoNotifierPrivate::dispatchNextIoResult()
