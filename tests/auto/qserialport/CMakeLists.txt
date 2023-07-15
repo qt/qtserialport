@@ -8,6 +8,8 @@
 qt_internal_add_test(tst_qserialport
     SOURCES
         tst_qserialport.cpp
+    DEFINES
+        QT_NO_CONTEXTLESS_CONNECT
     LIBRARIES
         Qt::SerialPort
         Qt::Test

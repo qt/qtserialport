@@ -11,6 +11,8 @@ qt_internal_add_module(SerialPort
         qserialport.cpp qserialport.h qserialport_p.h
         qserialportglobal.h
         qserialportinfo.cpp qserialportinfo.h qserialportinfo_p.h
+    DEFINES
+        QT_NO_CONTEXTLESS_CONNECT
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}
     LIBRARIES
