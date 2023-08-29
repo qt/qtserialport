@@ -23,7 +23,7 @@
 
     \include {module-use.qdocinc} {using the c++ api}
 
-    \section2 Building with Cmake
+    \section2 Building with CMake
 
     \include {module-use.qdocinc} {building with cmake} {SerialPort}
 
