@@ -849,6 +849,9 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
     if (mode & QIODevice::ReadOnly)
         setReadNotificationEnabled(true);
 
+    // flush IO buffers
+    clear(QSerialPort::AllDirections);
+
     return true;
 }
 
