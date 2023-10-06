@@ -572,7 +572,7 @@ bool QSerialPort::setDataBits(DataBits dataBits)
 {
     Q_D(QSerialPort);
     d->dataBits.removeBindingUnlessInWrapper();
-    const auto currentDataBits = d->dataBits.value();
+    const auto currentDataBits = d->dataBits.valueBypassingBindings();
     if (!isOpen() || d->setDataBits(dataBits)) {
         d->dataBits.setValueBypassingBindings(dataBits);
         if (currentDataBits != dataBits) {
@@ -623,7 +623,7 @@ bool QSerialPort::setParity(Parity parity)
 {
     Q_D(QSerialPort);
     d->parity.removeBindingUnlessInWrapper();
-    const auto currentParity = d->parity.value();
+    const auto currentParity = d->parity.valueBypassingBindings();
     if (!isOpen() || d->setParity(parity)) {
         d->parity.setValueBypassingBindings(parity);
         if (currentParity != parity) {
@@ -673,7 +673,7 @@ bool QSerialPort::setStopBits(StopBits stopBits)
 {
     Q_D(QSerialPort);
     d->stopBits.removeBindingUnlessInWrapper();
-    const auto currentStopBits = d->stopBits.value();
+    const auto currentStopBits = d->stopBits.valueBypassingBindings();
     if (!isOpen() || d->setStopBits(stopBits)) {
         d->stopBits.setValueBypassingBindings(stopBits);
         if (currentStopBits != stopBits) {
@@ -723,7 +723,7 @@ bool QSerialPort::setFlowControl(FlowControl flowControl)
 {
     Q_D(QSerialPort);
     d->flowControl.removeBindingUnlessInWrapper();
-    const auto currentFlowControl = d->flowControl.value();
+    const auto currentFlowControl = d->flowControl.valueBypassingBindings();
     if (!isOpen() || d->setFlowControl(flowControl)) {
         d->flowControl.setValueBypassingBindings(flowControl);
         if (currentFlowControl != flowControl) {
@@ -1143,7 +1143,7 @@ bool QSerialPort::setBreakEnabled(bool set)
 {
     Q_D(QSerialPort);
     d->isBreakEnabled.removeBindingUnlessInWrapper();
-    const auto currentSet = d->isBreakEnabled.value();
+    const auto currentSet = d->isBreakEnabled.valueBypassingBindings();
     if (isOpen()) {
         if (d->setBreakEnabled(set)) {
             d->isBreakEnabled.setValueBypassingBindings(set);

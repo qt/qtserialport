@@ -11,4 +11,5 @@ qt_internal_add_test(tst_qserialport
     LIBRARIES
         Qt::SerialPort
         Qt::Test
+        Qt::TestPrivate
 )
