@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtTest/QtTest>
+#include <QtTest/private/qpropertytesthelper_p.h>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
 
@@ -1267,149 +1268,81 @@ void tst_QSerialPort::bindingsAndProperties()
 
     // -- data bits
 
-    QProperty<QSerialPort::DataBits> dbProp(QSerialPort::DataBits::Data6);
-    QCOMPARE(dbProp.value(), QSerialPort::DataBits::Data6);
-
-    sp.bindableDataBits().setBinding(Qt::makePropertyBinding(dbProp));
-    QCOMPARE(sp.dataBits(), QSerialPort::DataBits::Data6);
-
-    const QSignalSpy dataBitsChangedSpy(&sp, &QSerialPort::dataBitsChanged);
-
-    dbProp = QSerialPort::DataBits::Data5;
-    QCOMPARE(sp.dataBits(), QSerialPort::DataBits::Data5);
-    QCOMPARE(dataBitsChangedSpy.size(), 1);
-    QCOMPARE(dataBitsChangedSpy.at(0).value(0).toInt(), QSerialPort::DataBits::Data5);
-
-    dbProp.setBinding(sp.bindableDataBits().makeBinding());
-    sp.setDataBits(QSerialPort::DataBits::Data8);
-    QCOMPARE(dbProp.value(), QSerialPort::DataBits::Data8);
-
-    dbProp.setBinding([&] { return sp.dataBits(); });
-    sp.setDataBits(QSerialPort::DataBits::Data7);
-    QCOMPARE(dbProp.value(), QSerialPort::DataBits::Data7);
+    QTestPrivate::testReadWritePropertyBasics(sp, QSerialPort::DataBits::Data6,
+                                              QSerialPort::DataBits::Data5, "dataBits");
+    if (QTest::currentTestFailed()) {
+        qDebug("Failed property test for QSetialPort::dataBits");
+        return;
+    }
 
     // -- parity
 
-    QProperty<QSerialPort::Parity> parityProp(QSerialPort::Parity::SpaceParity);
-    QCOMPARE(parityProp.value(), QSerialPort::Parity::SpaceParity);
-
-    sp.bindableParity().setBinding(Qt::makePropertyBinding(parityProp));
-    QCOMPARE(sp.parity(), QSerialPort::Parity::SpaceParity);
-
-    const QSignalSpy parityChangedSpy(&sp, &QSerialPort::parityChanged);
-
-    parityProp = QSerialPort::Parity::EvenParity;
-    QCOMPARE(sp.parity(), QSerialPort::Parity::EvenParity);
-    QCOMPARE(parityChangedSpy.size(), 1);
-    QCOMPARE(parityChangedSpy.at(0).value(0).toInt(), QSerialPort::Parity::EvenParity);
-
-    parityProp.setBinding(sp.bindableParity().makeBinding());
-    sp.setParity(QSerialPort::Parity::NoParity);
-    QCOMPARE(parityProp.value(), QSerialPort::Parity::NoParity);
-
-    parityProp.setBinding([&] { return sp.parity(); });
-    sp.setParity(QSerialPort::Parity::OddParity);
-    QCOMPARE(parityProp.value(), QSerialPort::Parity::OddParity);
+    QTestPrivate::testReadWritePropertyBasics(sp, QSerialPort::Parity::SpaceParity,
+                                              QSerialPort::Parity::EvenParity, "parity");
+    if (QTest::currentTestFailed()) {
+        qDebug("Failed property test for QSetialPort::parity");
+        return;
+    }
 
     // -- stop bits
 
-    QProperty<QSerialPort::StopBits> sbProp(QSerialPort::StopBits::OneAndHalfStop);
-    QCOMPARE(sbProp.value(), QSerialPort::StopBits::OneAndHalfStop);
-
-    sp.bindableStopBits().setBinding(Qt::makePropertyBinding(sbProp));
-    QCOMPARE(sp.stopBits(), QSerialPort::StopBits::OneAndHalfStop);
-
-    const QSignalSpy stopBitsChangedSpy(&sp, &QSerialPort::stopBitsChanged);
-
-    sbProp = QSerialPort::StopBits::OneStop;
-    QCOMPARE(sp.stopBits(), QSerialPort::StopBits::OneStop);
-    QCOMPARE(stopBitsChangedSpy.size(), 1);
-    QCOMPARE(stopBitsChangedSpy.at(0).value(0).toInt(), QSerialPort::StopBits::OneStop);
-
-    sbProp.setBinding(sp.bindableStopBits().makeBinding());
-    sp.setStopBits(QSerialPort::StopBits::TwoStop);
-    QCOMPARE(sbProp.value(), QSerialPort::StopBits::TwoStop);
-
-    sbProp.setBinding([&] { return sp.stopBits(); });
-    sp.setStopBits(QSerialPort::StopBits::OneAndHalfStop);
-    QCOMPARE(sbProp.value(), QSerialPort::StopBits::OneAndHalfStop);
+    QTestPrivate::testReadWritePropertyBasics(sp, QSerialPort::StopBits::OneAndHalfStop,
+                                              QSerialPort::StopBits::TwoStop, "stopBits");
+    if (QTest::currentTestFailed()) {
+        qDebug("Failed property test for QSetialPort::stopBits");
+        return;
+    }
 
     // -- flow control
 
-    QProperty<QSerialPort::FlowControl> fcProp(QSerialPort::FlowControl::HardwareControl);
-    QCOMPARE(fcProp.value(), QSerialPort::FlowControl::HardwareControl);
-
-    sp.bindableFlowControl().setBinding(Qt::makePropertyBinding(fcProp));
-    QCOMPARE(sp.flowControl(), QSerialPort::FlowControl::HardwareControl);
-
-    const QSignalSpy flowControlChangedSpy(&sp, &QSerialPort::flowControlChanged);
-
-    fcProp = QSerialPort::FlowControl::NoFlowControl;
-    QCOMPARE(sp.flowControl(), QSerialPort::FlowControl::NoFlowControl);
-    QCOMPARE(flowControlChangedSpy.size(), 1);
-    QCOMPARE(flowControlChangedSpy.at(0).value(0).toInt(), QSerialPort::FlowControl::NoFlowControl);
-
-    fcProp.setBinding(sp.bindableFlowControl().makeBinding());
-    sp.setFlowControl(QSerialPort::FlowControl::SoftwareControl);
-    QCOMPARE(fcProp.value(), QSerialPort::FlowControl::SoftwareControl);
-
-    fcProp.setBinding([&] { return sp.flowControl(); });
-    sp.setFlowControl(QSerialPort::FlowControl::NoFlowControl);
-    QCOMPARE(fcProp.value(), QSerialPort::FlowControl::NoFlowControl);
+    QTestPrivate::testReadWritePropertyBasics(sp, QSerialPort::FlowControl::HardwareControl,
+                                              QSerialPort::FlowControl::SoftwareControl,
+                                              "flowControl");
+    if (QTest::currentTestFailed()) {
+        qDebug("Failed property test for QSetialPort::flowControl");
+        return;
+    }
 
     // -- error
 
-    QProperty<QSerialPort::SerialPortError> errorProp(QSerialPort::SerialPortError::PermissionError);
-    QCOMPARE(errorProp.value(), QSerialPort::SerialPortError::PermissionError);
+    QTestPrivate::testReadOnlyPropertyBasics(
+            sp, QSerialPort::SerialPortError::NoError,
+            QSerialPort::SerialPortError::UnsupportedOperationError, "error",
+            [&sp]() { sp.open(QIODevice::Truncate); });
+    if (QTest::currentTestFailed()) {
+        qDebug("Failed property test for QSetialPort::error");
+        return;
+    }
 
-    sp.bindableError().setBinding(Qt::makePropertyBinding(errorProp));
-    QCOMPARE(sp.error(), QSerialPort::SerialPortError::NoError);
-
-    const QSignalSpy errorChangedSpy(&sp, &QSerialPort::errorOccurred);
-
-    // this shall not change the error, we do not have a public setter
-    errorProp = QSerialPort::SerialPortError::DeviceNotFoundError;
-    QCOMPARE(sp.error(), QSerialPort::SerialPortError::NoError);
-    QCOMPARE(errorChangedSpy.size(), 0);
-
-    errorProp.setBinding(sp.bindableError().makeBinding());
-    sp.clearError();
-    QCOMPARE(errorProp.value(), QSerialPort::SerialPortError::NoError);
-    QCOMPARE(errorChangedSpy.size(), 1);
-    QCOMPARE(errorChangedSpy.at(0).value(0).toInt(), QSerialPort::SerialPortError::NoError);
+    // -- break enabled
 
     sp.setPortName(m_receiverPortName);
     const bool portOpened = sp.open(QIODevice::ReadOnly);
 
-    // -- break enabled
-
     if (portOpened) {
-        QProperty<bool> beProp(false);
-        QCOMPARE(beProp.value(), false);
-
-        sp.bindableIsBreakEnabled().setBinding(Qt::makePropertyBinding(beProp));
-        QCOMPARE(sp.isBreakEnabled(), false);
-
-        const QSignalSpy breakEnabledChangedSpy(&sp, &QSerialPort::breakEnabledChanged);
-
-        beProp = true;
-        QCOMPARE(sp.isBreakEnabled(), true);
-        QCOMPARE(breakEnabledChangedSpy.size(), 1);
-        QCOMPARE(breakEnabledChangedSpy.at(0).value(0).toBool(), true);
-
-        beProp.setBinding(sp.bindableIsBreakEnabled().makeBinding());
-        sp.setBreakEnabled(false);
-        QCOMPARE(beProp.value(), false);
-
-        beProp.setBinding([&] { return sp.isBreakEnabled(); });
-        sp.setBreakEnabled(true);
-        QCOMPARE(beProp.value(), true);
+        // To test the binding loop we need to create another instance of
+        // QSerialPort, open it, and set breakEnabled == true as a default
+        // value, so use a custom lambda for that.
+        QTestPrivate::testReadWritePropertyBasics<QSerialPort, bool>(
+                sp, true, false, "breakEnabled",
+                [name = this->m_senderPortName]() {
+                    auto ptr = std::make_unique<QSerialPort>();
+                    ptr->setPortName(name);
+                    if (ptr->open(QIODevice::ReadOnly)) {
+                        ptr->setBreakEnabled(true);
+                        return ptr;
+                    }
+                    // skip binding loop test if we failed to open the port
+                    return std::unique_ptr<QSerialPort>{};
+                });
+        if (QTest::currentTestFailed()) {
+            qDebug("Failed property test for QSetialPort::breakEnabled");
+            return;
+        }
     } else {
         // setting isBreakEnabled() will return false and raise an error
-        const auto currErrorCount = errorChangedSpy.size();
         sp.setBreakEnabled(true);
-        QCOMPARE(errorProp.value(), QSerialPort::SerialPortError::NotOpenError);
-        QCOMPARE(errorChangedSpy.size(), currErrorCount + 1);
+        QCOMPARE(sp.error(), QSerialPort::SerialPortError::NotOpenError);
     }
 }
 
