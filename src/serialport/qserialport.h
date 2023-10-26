@@ -6,6 +6,7 @@
 #define QSERIALPORT_H
 
 #include <QtCore/qiodevice.h>
+#include <QtCore/qproperty.h>
 
 #include <QtSerialPort/qserialportglobal.h>
 
@@ -148,7 +149,10 @@ public:
 
     bool setStopBits(StopBits stopBits);
     StopBits stopBits() const;
+#if QT_SERIALPORT_REMOVED_SINCE(6, 7)
     QBindable<bool> bindableStopBits();
+#endif
+    QBindable<StopBits> bindableStopBits(QT6_DECL_NEW_OVERLOAD);
 
     bool setFlowControl(FlowControl flowControl);
     FlowControl flowControl() const;

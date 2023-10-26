@@ -1286,6 +1286,9 @@ void tst_QSerialPort::bindingsAndProperties()
 
     // -- stop bits
 
+    static_assert(std::is_same_v<decltype(sp.bindableStopBits()),
+                                 QBindable<QSerialPort::StopBits>>);
+
     QTestPrivate::testReadWritePropertyBasics(sp, QSerialPort::StopBits::OneAndHalfStop,
                                               QSerialPort::StopBits::TwoStop, "stopBits");
     if (QTest::currentTestFailed()) {

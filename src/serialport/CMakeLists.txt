@@ -11,6 +11,9 @@ qt_internal_add_module(SerialPort
         qserialport.cpp qserialport.h qserialport_p.h
         qserialportglobal.h
         qserialportinfo.cpp qserialportinfo.h qserialportinfo_p.h
+        removed_api.cpp
+    NO_PCH_SOURCES
+        removed_api.cpp
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_SOURCE_DIR}
     LIBRARIES

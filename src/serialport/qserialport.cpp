@@ -691,7 +691,7 @@ QSerialPort::StopBits QSerialPort::stopBits() const
     return d->stopBits;
 }
 
-QBindable<bool> QSerialPort::bindableStopBits()
+QBindable<QSerialPort::StopBits> QSerialPort::bindableStopBits(QT6_IMPL_NEW_OVERLOAD)
 {
     return &d_func()->stopBits;
 }
