@@ -533,6 +533,12 @@ bool QSerialPortPrivate::startAsyncRead()
 
 bool QSerialPortPrivate::_q_startAsyncWrite()
 {
+    if (handle == INVALID_HANDLE_VALUE) {
+        // Prevent a crash if the application incorrectly has not called open() before
+        // calling this (QTBUG-120412)
+        return false;
+    }
+
     if (writeBuffer.isEmpty() || writeStarted)
         return true;
 

@@ -56,7 +56,10 @@ void ReceiverThread::run()
 
     while (!m_quit) {
 //![6] //! [7]
-        if (currentPortNameChanged) {
+        if (currentPortName.isEmpty()) {
+            emit error(tr("Port not set"));
+            return;
+        } else if (currentPortNameChanged) {
             serial.close();
             serial.setPortName(currentPortName);
 
