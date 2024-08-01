@@ -11,11 +11,6 @@
     The \l{Qt Serial Port} module provides the following examples for reference
     to help understand the API usage.
 
-    \section1 Running the Examples
-
-    To run the examples from \l{Qt Creator Manual}{Qt Creator}, open the \gui
-    Welcome mode and select the example from \gui Examples.
-    For more information, visit
-    \l{Qt Creator: Building and Running an Example}{Building and Running an Example}.
+    \include examples-run.qdocinc
 
 */
