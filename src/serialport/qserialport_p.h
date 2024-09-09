@@ -127,9 +127,6 @@ public:
 
     bool initialize(QIODevice::OpenMode mode);
 
-    static QString portNameToSystemLocation(const QString &port);
-    static QString portNameFromSystemLocation(const QString &location);
-
     static QList<qint32> standardBaudRates();
 
     qint64 readBufferMaxSize = 0;
