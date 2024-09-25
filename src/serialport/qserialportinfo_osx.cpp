@@ -123,7 +123,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                            CFSTR(kIOSerialBSDAllTypes));
 
     io_iterator_t serialPortIterator = 0;
-    if (::IOServiceGetMatchingServices(kIOMasterPortDefault, serialPortDictionary,
+    if (::IOServiceGetMatchingServices(kIOMainPortDefault, serialPortDictionary,
                                        &serialPortIterator) != KERN_SUCCESS) {
         return QList<QSerialPortInfo>();
     }
