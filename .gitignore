@@ -22,3 +22,4 @@ Makefile.Release
 CMakeSettings.json
 out/*
 CMakeLists.txt.user*
+CMakeUserPresets.json
