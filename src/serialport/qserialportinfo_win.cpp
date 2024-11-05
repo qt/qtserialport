@@ -126,9 +126,6 @@ static QString getStringDescriptor(HANDLE hHubDevice, ULONG connectionIndex,
     if (stringDesc->bLength % 2 != 0)
         return {};
 
-    if ((languageID == 0) && ((stringDesc->bLength - sizeof(USHORT) / sizeof(USHORT))) == 0)
-        return {};
-
     // Offset per USB 2.0 standard, section 9.6.7 table 9-16.
     // bLength appears to include the size of the first 2 bytes of the descriptor
     constexpr int stringOffset = 2;
