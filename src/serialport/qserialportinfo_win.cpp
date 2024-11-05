@@ -513,8 +513,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         if (!deviceInfoSet)
             return serialPortInfoList;
 
-        SP_DEVINFO_DATA deviceInfoData;
-        ::memset(&deviceInfoData, 0, sizeof(deviceInfoData));
+        SP_DEVINFO_DATA deviceInfoData{};
         deviceInfoData.cbSize = sizeof(deviceInfoData);
 
         DWORD index = 0;
