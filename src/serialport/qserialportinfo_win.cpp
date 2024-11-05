@@ -374,15 +374,13 @@ static QString devicePortName(HDEVINFO deviceInfoSet, PSP_DEVINFO_DATA deviceInf
             L"PortNumber\0"
     };
 
-    enum { KeyTokensCount = sizeof(keyTokens) / sizeof(keyTokens[0]) };
-
     QString portName;
-    for (int i = 0; i < KeyTokensCount; ++i) {
+    for (auto keyToken : keyTokens) {
         DWORD dataType = 0;
         std::vector<wchar_t> outputBuffer(MAX_PATH + 1, 0);
         DWORD bytesRequired = MAX_PATH;
         for (;;) {
-            const LONG ret = ::RegQueryValueEx(key, keyTokens[i], nullptr, &dataType,
+            const LONG ret = ::RegQueryValueEx(key, keyToken, nullptr, &dataType,
                                                reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
             if (ret == ERROR_MORE_DATA) {
                 outputBuffer.resize(bytesRequired / sizeof(wchar_t) + 2, 0);
@@ -507,13 +505,11 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         { GUID_DEVINTERFACE_MODEM, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE }
     };
 
-    enum { SetupTokensCount = sizeof(setupTokens) / sizeof(setupTokens[0]) };
-
     QList<QSerialPortInfo> serialPortInfoList;
 
-    for (int i = 0; i < SetupTokensCount; ++i) {
-        const DevInfoHandle deviceInfoSet{ ::SetupDiGetClassDevs(&setupTokens[i].guid, nullptr,
-                                                                 nullptr, setupTokens[i].flags) };
+    for (const auto& setupToken : setupTokens) {
+        const DevInfoHandle deviceInfoSet{ ::SetupDiGetClassDevs(&setupToken.guid, nullptr,
+                                                                 nullptr, setupToken.flags) };
         if (!deviceInfoSet)
             return serialPortInfoList;
 
