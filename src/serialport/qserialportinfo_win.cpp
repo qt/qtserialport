@@ -11,6 +11,7 @@
 #include <QtCore/qpair.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/private/qwinregistry_p.h>
+#include <QtCore/private/quniquehandle_types_p.h>
 
 #include <vector>
 
@@ -30,6 +31,25 @@
 #endif
 
 QT_BEGIN_NAMESPACE
+
+namespace {
+
+struct DevInfoHandleTraits
+{
+    using Type = HDEVINFO;
+    static Type invalidValue() noexcept
+    {
+        return INVALID_HANDLE_VALUE;
+    }
+    static bool close(Type handle) noexcept
+    {
+        return SetupDiDestroyDeviceInfoList(handle) == TRUE;
+    }
+};
+
+using DevInfoHandle = QUniqueHandle<DevInfoHandleTraits>;
+
+} // namespace
 
 static QStringList portNamesFromHardwareDeviceMap()
 {
@@ -185,24 +205,23 @@ static bool getUSBLocationAndPath(DWORD devInst, int &devLocation, std::vector<w
 
         // Get info for this device. If it's a composite device we'll have to go up another level.
 
-        HDEVINFO currDeviceInformation =
-                ::SetupDiGetClassDevsW(nullptr, devicePath.data(), NULL,
-                                       DIGCF_ALLCLASSES|DIGCF_PRESENT|DIGCF_DEVICEINTERFACE);
+        const DevInfoHandle currDeviceInformation{ ::SetupDiGetClassDevsW(
+                nullptr, devicePath.data(), nullptr,
+                DIGCF_ALLCLASSES | DIGCF_PRESENT | DIGCF_DEVICEINTERFACE) };
 
-        if (currDeviceInformation == INVALID_HANDLE_VALUE)
+        if (!currDeviceInformation)
             return false;
 
         SP_DEVINFO_DATA currDeviceInfoData = {};
         currDeviceInfoData.cbSize = sizeof(currDeviceInfoData);
 
         // There should only be one since we're getting info for the parent device
-        if (!::SetupDiEnumDeviceInfo(currDeviceInformation, 0, &currDeviceInfoData)) {
-            ::SetupDiDestroyDeviceInfoList(currDeviceInformation);
+        if (!::SetupDiEnumDeviceInfo(currDeviceInformation.get(), 0, &currDeviceInfoData)) {
             return false;
         }
 
         // Find out if this device is a hub device, if so, we're done
-        const QString devDescription = deviceRegistryProperty(currDeviceInformation,
+        const QString devDescription = deviceRegistryProperty(currDeviceInformation.get(),
                                                               &currDeviceInfoData,
                                                               SPDRP_DEVICEDESC);
 
@@ -210,12 +229,11 @@ static bool getUSBLocationAndPath(DWORD devInst, int &devLocation, std::vector<w
             hubFound = true;
         }  else {
             devInst = parentDevInst;
-            devLocationStr = deviceRegistryProperty(currDeviceInformation, &currDeviceInfoData,
+            devLocationStr = deviceRegistryProperty(currDeviceInformation.get(),
+                                                    &currDeviceInfoData,
                                                     SPDRP_LOCATION_INFORMATION);
             count++;
         }
-
-        ::SetupDiDestroyDeviceInfoList(currDeviceInformation);
     }
 
     if (count == 3)
@@ -266,14 +284,12 @@ static UsbData getUSBDataFromDevice(DWORD devInst)
     // Open the Hub device. To get the information we want, we have to open the Hub device,
     // and pass in the port number in the argument structure.
 
-    HANDLE fileHandle = ::CreateFile(buffer.data(), GENERIC_READ, FILE_SHARE_READ, NULL,
-                                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    const QUniqueWin32Handle fileHandle{ ::CreateFile(buffer.data(), GENERIC_READ, FILE_SHARE_READ,
+                                                      nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                                                      nullptr) };
 
-
-    if (fileHandle == INVALID_HANDLE_VALUE)
+    if (!fileHandle)
         return {};
-
-    auto closeHandleGuard = qScopeGuard([&fileHandle] { ::CloseHandle(fileHandle); });
 
     // Some of the following code was from Microsoft's sample usbview code
     constexpr ULONG size = sizeof(USB_NODE_CONNECTION_INFORMATION);
@@ -285,7 +301,7 @@ static UsbData getUSBDataFromDevice(DWORD devInst)
     connectionInfo->ConnectionIndex = devLocation;
 
     ULONG dataSize = 0;
-    if (!::DeviceIoControl(fileHandle, IOCTL_USB_GET_NODE_CONNECTION_INFORMATION,
+    if (!::DeviceIoControl(fileHandle.get(), IOCTL_USB_GET_NODE_CONNECTION_INFORMATION,
                           connectionInfo, size, connectionInfo, size, &dataSize, nullptr)) {
         return {};
     }
@@ -294,7 +310,9 @@ static UsbData getUSBDataFromDevice(DWORD devInst)
     // use this information for the manufacturer returned to Qt's caller, and there's only 1 allowed
     // there
 
-    QString usbStringData = getStringDescriptor(fileHandle, connectionInfo->ConnectionIndex, 0, 0);
+    QString usbStringData = getStringDescriptor(fileHandle.get(),
+                                                connectionInfo->ConnectionIndex,
+                                                0, 0);
 
     if (usbStringData.isEmpty())
         return {};
@@ -303,12 +321,14 @@ static UsbData getUSBDataFromDevice(DWORD devInst)
     UsbData usbData;
 
     if (connectionInfo->DeviceDescriptor.iManufacturer != 0)
-        usbData.iManufacturer = getStringDescriptor(fileHandle, connectionInfo->ConnectionIndex,
+        usbData.iManufacturer = getStringDescriptor(fileHandle.get(),
+                                                    connectionInfo->ConnectionIndex,
                                                     connectionInfo->DeviceDescriptor.iManufacturer,
                                                     languageIDs);
 
     if (connectionInfo->DeviceDescriptor.iProduct != 0)
-        usbData.iProduct = getStringDescriptor(fileHandle, connectionInfo->ConnectionIndex,
+        usbData.iProduct = getStringDescriptor(fileHandle.get(),
+                                               connectionInfo->ConnectionIndex,
                                                connectionInfo->DeviceDescriptor.iProduct,
                                                languageIDs);
 
@@ -492,8 +512,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
     QList<QSerialPortInfo> serialPortInfoList;
 
     for (int i = 0; i < SetupTokensCount; ++i) {
-        const HDEVINFO deviceInfoSet = ::SetupDiGetClassDevs(&setupTokens[i].guid, nullptr, nullptr, setupTokens[i].flags);
-        if (deviceInfoSet == INVALID_HANDLE_VALUE)
+        const DevInfoHandle deviceInfoSet{ ::SetupDiGetClassDevs(&setupTokens[i].guid, nullptr,
+                                                                 nullptr, setupTokens[i].flags) };
+        if (!deviceInfoSet)
             return serialPortInfoList;
 
         SP_DEVINFO_DATA deviceInfoData;
@@ -501,8 +522,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         deviceInfoData.cbSize = sizeof(deviceInfoData);
 
         DWORD index = 0;
-        while (::SetupDiEnumDeviceInfo(deviceInfoSet, index++, &deviceInfoData)) {
-            const QString portName = devicePortName(deviceInfoSet, &deviceInfoData);
+        while (::SetupDiEnumDeviceInfo(deviceInfoSet.get(), index++, &deviceInfoData)) {
+            const QString portName = devicePortName(deviceInfoSet.get(), &deviceInfoData);
             if (portName.isEmpty() || portName.contains(QLatin1String("LPT")))
                 continue;
 
@@ -513,8 +534,8 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
             priv.portName = portName;
             priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(portName);
-            priv.description = deviceDescription(deviceInfoSet, &deviceInfoData);
-            priv.manufacturer = deviceManufacturer(deviceInfoSet, &deviceInfoData);
+            priv.description = deviceDescription(deviceInfoSet.get(), &deviceInfoData);
+            priv.manufacturer = deviceManufacturer(deviceInfoSet.get(), &deviceInfoData);
 
             const QString instanceIdentifier = deviceInstanceIdentifier(deviceInfoData.DevInst);
 
@@ -540,7 +561,6 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
             serialPortInfoList.append(priv);
         }
-        ::SetupDiDestroyDeviceInfoList(deviceInfoSet);
     }
 
     const auto portNames = portNamesFromHardwareDeviceMap();
