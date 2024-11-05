@@ -33,9 +33,11 @@ QT_BEGIN_NAMESPACE
 
 static QStringList portNamesFromHardwareDeviceMap()
 {
-    HKEY hKey = nullptr;
-    if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-        return QStringList();
+    const QWinRegistryKey key{ HKEY_LOCAL_MACHINE, L"HARDWARE\\DEVICEMAP\\SERIALCOMM", 0,
+                               KEY_QUERY_VALUE };
+
+    if (!key.isValid())
+        return { };
 
     QStringList result;
     DWORD index = 0;
@@ -49,7 +51,7 @@ static QStringList portNamesFromHardwareDeviceMap()
     DWORD bytesRequired = MAX_PATH;
     for (;;) {
         DWORD requiredValueNameChars = MaximumValueNameInChars;
-        const LONG ret = ::RegEnumValue(hKey, index, &outputValueName[0], &requiredValueNameChars,
+        const LONG ret = ::RegEnumValue(key, index, &outputValueName[0], &requiredValueNameChars,
                                         nullptr, nullptr, reinterpret_cast<PBYTE>(&outputBuffer[0]), &bytesRequired);
         if (ret == ERROR_MORE_DATA) {
             outputBuffer.resize(bytesRequired / sizeof(wchar_t) + 2, 0);
@@ -60,7 +62,6 @@ static QStringList portNamesFromHardwareDeviceMap()
             break;
         }
     }
-    ::RegCloseKey(hKey);
     return result;
 }
 
