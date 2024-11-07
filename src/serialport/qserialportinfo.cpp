@@ -41,6 +41,18 @@ static_assert(sizeof(std::unique_ptr<QSerialPortInfoPrivate>)
 
     \snippet doc_src_serialport.cpp enumerate_ports
 
+    \section1 Port enumeration on Linux
+
+    By default Linux uses \c {libudev} to enumerate the available serial ports.
+    If the library is not available, it falls back to reading files in the
+    \c {/sys/class/tty} directory.
+
+    It is known that some versions of \c {libudev} have a bug and incorrectly
+    report VID and PID of a USB hub instead of the actual device. In such cases,
+    define the \c {QT_SERIALPORT_SKIP_UDEV_LOOKUP} environment variable to skip
+    the \c {libudev} lookup and only use the information from the
+    \c {/sys/class/tty} directory.
+
     \sa QSerialPort
 */
 
@@ -250,6 +262,8 @@ QList<qint32> QSerialPortInfo::standardBaudRates()
     \fn QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 
     Returns a list of available serial ports on the system.
+
+    \sa {Port enumeration on Linux}
 */
 
 QT_END_NAMESPACE

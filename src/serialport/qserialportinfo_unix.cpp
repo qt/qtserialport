@@ -10,6 +10,7 @@
 #include <QtCore/qlockfile.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qtenvironmentvariables.h>
 
 #include <private/qcore_unix_p.h>
 
@@ -22,6 +23,8 @@
 #include "qtudev_p.h"
 
 QT_BEGIN_NAMESPACE
+
+constexpr char SkipUdevEnvVarName[] = "QT_SERIALPORT_SKIP_UDEV_LOOKUP";
 
 static QStringList filteredDeviceFilePaths()
 {
@@ -414,9 +417,12 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
 
 QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
 {
-    bool ok;
+    bool ok = false;
+    QList<QSerialPortInfo> serialPortInfoList;
 
-    QList<QSerialPortInfo> serialPortInfoList = availablePortsByUdev(ok);
+    const bool skipUdevLookup = qEnvironmentVariableIsSet(SkipUdevEnvVarName);
+    if (!skipUdevLookup)
+        serialPortInfoList = availablePortsByUdev(ok);
 
 #ifdef Q_OS_LINUX
     if (!ok)
