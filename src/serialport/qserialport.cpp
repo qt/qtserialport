@@ -129,11 +129,11 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     See the following example:
 
     \code
-     int numRead = 0, numReadTotal = 0;
+     qint64 numReadTotal = 0;
      char buffer[50];
 
      for (;;) {
-         numRead  = serial.read(buffer, 50);
+         const qint64 numRead  = serial.read(buffer, 50);
 
          // Do whatever with the array
 
