@@ -40,7 +40,7 @@ public:
     bool hasVendorIdentifier() const;
     bool hasProductIdentifier() const;
 
-    bool isNull() const;
+    bool isNull() const { return !d_ptr; }
 
     static QList<qint32> standardBaudRates();
     static QList<QSerialPortInfo> availablePorts();
@@ -52,9 +52,6 @@ private:
     friend QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok);
     std::unique_ptr<QSerialPortInfoPrivate> d_ptr;
 };
-
-inline bool QSerialPortInfo::isNull() const
-{ return !d_ptr; }
 
 QT_END_NAMESPACE
 
