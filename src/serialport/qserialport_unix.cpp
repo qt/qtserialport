@@ -1071,7 +1071,11 @@ qint64 QSerialPortPrivate::writePerChar(const char *data, qint64 maxSize)
         par ^= parity == QSerialPort::MarkParity;
         if (par ^ (tio.c_cflag & PARODD)) { // Need switch parity mode?
             tio.c_cflag ^= PARODD;
-            flush(); //force sending already buffered data, because setTermios(&tio); cleares buffers
+            //force sending already buffered data, because setTermios(&tio); cleares buffers
+            if (::tcdrain(descriptor) == -1) {
+                setError(getSystemError());
+                break;
+            }
             //todo: add receiving buffered data!!!
             if (!setTermios(&tio))
                 break;

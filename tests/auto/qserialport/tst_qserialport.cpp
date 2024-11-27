@@ -121,6 +121,9 @@ private slots:
     void readWriteWithDifferentBaudRate_data();
     void readWriteWithDifferentBaudRate();
 
+    void readWriteWithMarkSpaceParity_data();
+    void readWriteWithMarkSpaceParity();
+
     void bindingsAndProperties();
 
     void restoreSettingsOnClose();
@@ -1276,6 +1279,52 @@ void tst_QSerialPort::readWriteWithDifferentBaudRate()
         else
             QVERIFY(receiverSerialPort.readAll() != alphabetArray);
     }
+}
+
+void tst_QSerialPort::readWriteWithMarkSpaceParity_data()
+{
+    QTest::addColumn<QSerialPort::Parity>("parity");
+
+    QTest::newRow("parity_space") << QSerialPort::SpaceParity;
+    QTest::newRow("parity_mark") << QSerialPort::MarkParity;
+}
+
+void tst_QSerialPort::readWriteWithMarkSpaceParity()
+{
+    QFETCH(const QSerialPort::Parity, parity);
+
+    auto setupPort = [&parity](QSerialPort &port) {
+        port.setBaudRate(QSerialPort::Baud9600);
+        port.setParity(parity);
+        port.setDataBits(QSerialPort::Data8);
+        port.setStopBits(QSerialPort::OneStop);
+    };
+
+    QSerialPort sender(m_senderPortName);
+    QSignalSpy senderSpy(&sender, &QSerialPort::bytesWritten);
+    setupPort(sender);
+    QVERIFY(sender.open(QIODevice::ReadWrite));
+
+    QSerialPort receiver(m_receiverPortName);
+    QSignalSpy receiverSpy(&receiver, &QSerialPort::readyRead);
+    setupPort(receiver);
+    QVERIFY(receiver.open(QIODevice::ReadWrite));
+
+    const QByteArray data("some data");
+    const qint64 written = sender.write(data);
+    QCOMPARE(written, qint64(data.size()));
+    QTRY_COMPARE(senderSpy.size(), 1);
+    QCOMPARE(senderSpy.at(0).at(0).value<qint64>(), written);
+
+    QTRY_COMPARE_GE(receiver.bytesAvailable(), written);
+    QCOMPARE_GE(receiverSpy.size(), 1); // we should get *at least one* signal
+
+#if !defined(Q_OS_UNIX) || defined(CMSPAR)
+    // On UNIX with no CMSPAR the result is flaky, so we cannot even use
+    // QEXPECT_FAIL(). See QTBUG-131679.
+    const QByteArray receivedData = receiver.readAll();
+    QCOMPARE(receivedData, data);
+#endif
 }
 
 void tst_QSerialPort::bindingsAndProperties()
