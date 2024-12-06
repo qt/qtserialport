@@ -128,6 +128,8 @@ private slots:
 
     void restoreSettingsOnClose();
 
+    void readyReadNotRecursive();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -880,14 +882,14 @@ class AsyncWriterByTimer : public QObject
 {
     Q_OBJECT
 public:
-    explicit AsyncWriterByTimer(
-            QSerialPort &port, Qt::ConnectionType connectionType, const QByteArray &dataToWrite)
-        : serialPort(port), writeChunkSize(0)
+    explicit AsyncWriterByTimer(QSerialPort &port, Qt::ConnectionType connectionType,
+                                const QByteArray &dataToWrite, int interval = 0)
+        : serialPort(port), writeChunkSize(0), timerMsec(interval)
     {
         writeBuffer.setData(dataToWrite);
         writeBuffer.open(QIODevice::ReadOnly);
         connect(&timer, &QTimer::timeout, this, &AsyncWriterByTimer::send, connectionType);
-        timer.start(0);
+        timer.start(timerMsec);
     }
 
 private slots:
@@ -904,6 +906,7 @@ private:
     QBuffer writeBuffer;
     int writeChunkSize;
     QTimer timer;
+    int timerMsec;
 };
 
 void tst_QSerialPort::asynchronousWriteByTimer_data()
@@ -1587,6 +1590,79 @@ void tst_QSerialPort::restoreSettingsOnClose()
 
     // restore the original settings
     initialSettings.restorePortSettings();
+}
+
+// The reader connects to readyRead() and then calls waitForReadyRead()
+// inside the slot.
+// The tst_QSerialPort::readyReadNotRecursive() test needs to make sure
+// that the slot is entered only once.
+class SemiBlockingReader : public QObject
+{
+    Q_OBJECT
+public:
+    explicit SemiBlockingReader(const QString &portName)
+        : QObject(nullptr), m_portName(portName)
+    {}
+
+    int numSlotCalls() const { return m_numCalls; }
+    QByteArray receivedData() const { return m_data; }
+
+public slots:
+    void start()
+    {
+        m_reader = new QSerialPort(m_portName, this);
+        connect(m_reader, &QSerialPort::readyRead, this, &SemiBlockingReader::readData);
+        if (!m_reader->open(QIODevice::ReadOnly))
+            emit error();
+    }
+
+private slots:
+    void readData()
+    {
+        ++m_numCalls;
+        m_data.append(m_reader->readAll());
+        while (m_reader->waitForReadyRead(1000))
+            m_data.append(m_reader->readAll());
+        emit allDataReceived();
+    }
+
+signals:
+    void error();
+    void allDataReceived();
+
+private:
+    QString m_portName;
+    QByteArray m_data;
+    QSerialPort *m_reader = nullptr;
+    int m_numCalls = 0;
+};
+
+void tst_QSerialPort::readyReadNotRecursive()
+{
+    SemiBlockingReader reader(m_receiverPortName);
+    QThread readerThread;
+    connect(&readerThread, &QThread::started, &reader, &SemiBlockingReader::start);
+    connect(&reader, &SemiBlockingReader::allDataReceived, &readerThread, &QThread::quit);
+    int errorCount = 0;
+    connect(&reader, &SemiBlockingReader::error, this, [&] {
+        ++errorCount;
+        readerThread.quit();
+    });
+    bool readerThreadFinished = false;
+    connect(&readerThread, &QThread::finished, this, [&] { readerThreadFinished = true; });
+
+    reader.moveToThread(&readerThread);
+    readerThread.start();
+
+    QSerialPort senderPort(m_senderPortName);
+    QVERIFY(senderPort.open(QSerialPort::WriteOnly));
+    [[maybe_unused]] AsyncWriterByTimer writer(senderPort, Qt::DirectConnection,
+                                               alphabetArray, 50);
+
+    QTRY_VERIFY(readerThreadFinished);
+    QCOMPARE(errorCount, 0);
+    QCOMPARE(reader.numSlotCalls(), 1);
+    QCOMPARE(reader.receivedData(), alphabetArray);
 }
 
 QTEST_MAIN(tst_QSerialPort)
