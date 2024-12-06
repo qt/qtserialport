@@ -582,7 +582,11 @@ void QSerialPortPrivate::emitReadyRead()
 {
     Q_Q(QSerialPort);
 
-    emit q->readyRead();
+    if (!emittedReadyRead) {
+        emittedReadyRead = true;
+        emit q->readyRead();
+        emittedReadyRead = false;
+    }
 }
 
 qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
