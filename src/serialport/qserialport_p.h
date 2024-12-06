@@ -169,6 +169,8 @@ public:
 
     bool startAsyncRead();
 
+    bool emittedReadyRead = false;
+
 #if defined(Q_OS_WIN32)
 
     bool setDcb(DCB *dcb);
@@ -243,7 +245,6 @@ public:
     bool readPortNotifierState = false;
     bool readPortNotifierStateSet = false;
 
-    bool emittedReadyRead = false;
     bool emittedBytesWritten = false;
 
     qint64 pendingBytesWritten = 0;
