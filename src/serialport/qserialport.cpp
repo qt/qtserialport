@@ -1195,6 +1195,10 @@ QBindable<bool> QSerialPort::bindableIsBreakEnabled()
     discarded.
 
     The default value is \c true.
+
+    \note This property may have no effect on some operating systems.
+    For example, \macOS seems to always restore the default serial port settings
+    when the port is closed.
 */
 bool QSerialPort::settingsRestoredOnClose() const
 {

@@ -1540,6 +1540,7 @@ bool operator==(const PlatformSettings &lhs, const PlatformSettings &rhs)
 
 void tst_QSerialPort::restoreSettingsOnClose()
 {
+#ifndef Q_OS_APPLE
     PlatformSettings initialSettings(m_senderPortName);
     initialSettings.getPortSettings();
 
@@ -1590,6 +1591,9 @@ void tst_QSerialPort::restoreSettingsOnClose()
 
     // restore the original settings
     initialSettings.restorePortSettings();
+#else
+    QSKIP("macOS always resets the port on close.");
+#endif
 }
 
 // The reader connects to readyRead() and then calls waitForReadyRead()
