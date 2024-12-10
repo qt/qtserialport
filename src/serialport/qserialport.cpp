@@ -433,12 +433,16 @@ QString QSerialPort::portName() const
     successful; otherwise returns \c false and sets an error code which can be
     obtained by calling the error() method.
 
-    \note The method returns \c false if opening the port is successful, but could
+    The method returns \c false if opening the port is successful, but could
     not set any of the port settings successfully. In that case, the port is
     closed automatically not to leave the port around with incorrect settings.
 
     \warning The \a mode has to be QIODeviceBase::ReadOnly, QIODeviceBase::WriteOnly,
     or QIODeviceBase::ReadWrite. Other modes are unsupported.
+
+    \note Due to historical reasons, upon a successful open the
+    \l errorOccurred() signal is emitted with the \l {QSerialPort::}{NoError}
+    error code. This behavior is preserved to keep backwards compatibility.
 
     \sa QIODeviceBase::OpenMode, setPort()
 */
