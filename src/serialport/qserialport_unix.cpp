@@ -8,6 +8,7 @@
 
 #include <QtCore/qdeadlinetimer.h>
 #include <QtCore/qelapsedtimer.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qmap.h>
 #include <QtCore/qsocketnotifier.h>
 #include <QtCore/qstandardpaths.h>
@@ -64,6 +65,9 @@ struct termios2 {
 #endif
 
 #endif
+
+[[maybe_unused]]
+Q_STATIC_LOGGING_CATEGORY(lcUnixWarnings, "qt.serialport.unix.warnings");
 
 QT_BEGIN_NAMESPACE
 
@@ -227,6 +231,11 @@ static inline void qt_set_parity(termios *tio, QSerialPort::Parity parity)
         tio->c_cflag |= PARENB | PARODD;
         break;
     default:
+#ifndef CMSPAR
+    case QSerialPort::SpaceParity:
+    case QSerialPort::MarkParity:
+        qCWarning(lcUnixWarnings, "Space and Mark parity is not supported by the OS.");
+#endif
         tio->c_cflag |= PARENB;
         tio->c_iflag |= PARMRK | INPCK;
         tio->c_iflag &= ~IGNPAR;

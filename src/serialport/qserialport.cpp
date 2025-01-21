@@ -621,6 +621,11 @@ QBindable<QSerialPort::DataBits> QSerialPort::bindableDataBits()
     after that the opening of the port succeeds.
 
     The default value is NoParity, i.e. no parity.
+
+    \warning Some UNIX operating systems (i.e. \macOS) do not support
+    \l {https://www.man7.org/linux/man-pages/man3/termios.3.html#DESCRIPTION}
+    {the CMSPAR flag}. On such systems, setting \l {QSerialPort::Parity}
+    {Mark or Space} parity is not supported.
 */
 bool QSerialPort::setParity(Parity parity)
 {
