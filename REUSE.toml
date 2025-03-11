@@ -8,18 +8,18 @@ SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"
 
 [[annotations]]
 path = ["**.pro", "**.qrc", "**CMakeLists.txt", ".cmake.conf", "**.yaml",
-        "**.json", "**.cfg", "**.cmake"]
+        "**.json", "**.cfg", "**.cmake", ".tag"]
 precedence = "closest"
 comment = "build system"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
 SPDX-License-Identifier = "BSD-3-Clause"
 
 [[annotations]]
-path = [".tag", "**/.gitattributes", "**.gitignore"]
+path = ["**/.gitattributes", "**.gitignore"]
 precedence = "closest"
-comment = "build system"
+comment = "infrastructure"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
-SPDX-License-Identifier = "BSD-3-Clause"
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR BSD-3-Clause"
 
 [[annotations]]
 path = ["examples/**", "tests/manual/examples/**"]
@@ -38,9 +38,9 @@ SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-on
 [[annotations]]
 path = ["**.toml", "licenseRule.json"]
 precedence = "override"
-comment = "documentation"
+comment = "infrastructure"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
-SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only"
+SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR BSD-3-Clause"
 
 [[annotations]]
 path = ["**/qt_attribution.json"]
@@ -48,11 +48,4 @@ precedence = "override"
 comment = "not necessary but ready if such a file is added. documentation"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
 SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only"
-
-[[annotations]]
-path = ["**LICENSE*"]
-precedence = "override"
-comment = "License file."
-SPDX-FileCopyrightText = "None"
-SPDX-License-Identifier = "CC0-1.0"
 
