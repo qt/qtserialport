@@ -425,7 +425,7 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
                         udev.data(), ::udev_list_entry_get_name(dev_list_entry)));
 
         if (!dev)
-            return serialPortInfoList;
+            continue;
 
         QSerialPortInfoPrivate priv;
 
