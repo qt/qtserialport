@@ -151,11 +151,11 @@ static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
 
     const QByteArray content = f.readAll();
 
-    const int firstbound = content.indexOf(pattern);
+    const qsizetype firstbound = content.indexOf(pattern);
     if (firstbound == -1)
         return QString();
 
-    int lastbound = content.indexOf('\n', firstbound);
+    qsizetype lastbound = content.indexOf('\n', firstbound);
     if (lastbound == -1)
         lastbound = content.size();
     return QString::fromLatin1(

@@ -415,9 +415,9 @@ static QString deviceManufacturer(HDEVINFO deviceInfoSet,
 
 static quint16 parseDeviceIdentifier(const QString &instanceIdentifier,
                                      const QString &identifierPrefix,
-                                     int identifierSize, bool &ok)
+                                     qsizetype identifierSize, bool &ok)
 {
-    const int index = instanceIdentifier.indexOf(identifierPrefix);
+    const qsizetype index = instanceIdentifier.indexOf(identifierPrefix);
     if (index == -1)
         return quint16(0);
     return instanceIdentifier.mid(index + identifierPrefix.size(), identifierSize).toInt(&ok, 16);
@@ -425,7 +425,7 @@ static quint16 parseDeviceIdentifier(const QString &instanceIdentifier,
 
 static quint16 deviceVendorIdentifier(const QString &instanceIdentifier, bool &ok)
 {
-    static const int vendorIdentifierSize = 4;
+    static constexpr qsizetype vendorIdentifierSize = 4;
     quint16 result = parseDeviceIdentifier(
                 instanceIdentifier, QStringLiteral("VID_"), vendorIdentifierSize, ok);
     if (!ok)
@@ -436,7 +436,7 @@ static quint16 deviceVendorIdentifier(const QString &instanceIdentifier, bool &o
 
 static quint16 deviceProductIdentifier(const QString &instanceIdentifier, bool &ok)
 {
-    static const int productIdentifierSize = 4;
+    static constexpr qsizetype productIdentifierSize = 4;
     quint16 result = parseDeviceIdentifier(
                 instanceIdentifier, QStringLiteral("PID_"), productIdentifierSize, ok);
     if (!ok)
@@ -447,12 +447,12 @@ static quint16 deviceProductIdentifier(const QString &instanceIdentifier, bool &
 
 static QString parseDeviceSerialNumber(const QString &instanceIdentifier)
 {
-    int firstbound = instanceIdentifier.lastIndexOf(QLatin1Char('\\'));
-    int lastbound = instanceIdentifier.indexOf(QLatin1Char('_'), firstbound);
+    qsizetype firstbound = instanceIdentifier.lastIndexOf(QLatin1Char('\\'));
+    qsizetype lastbound = instanceIdentifier.indexOf(QLatin1Char('_'), firstbound);
     if (instanceIdentifier.startsWith(QLatin1String("USB\\"))) {
         if (lastbound != instanceIdentifier.size() - 3)
             lastbound = instanceIdentifier.size();
-        int ampersand = instanceIdentifier.indexOf(QLatin1Char('&'), firstbound);
+        qsizetype ampersand = instanceIdentifier.indexOf(QLatin1Char('&'), firstbound);
         if (ampersand != -1 && ampersand < lastbound)
             return QString();
     } else if (instanceIdentifier.startsWith(QLatin1String("FTDIBUS\\"))) {
