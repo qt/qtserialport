@@ -187,7 +187,9 @@ static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
     if (firstbound == -1)
         return QString();
 
-    const int lastbound = content.indexOf('\n', firstbound);
+    int lastbound = content.indexOf('\n', firstbound);
+    if (lastbound == -1)
+        lastbound = content.size();
     return QString::fromLatin1(
                 content.mid(firstbound + pattern.size(),
                             lastbound - firstbound - pattern.size()))
