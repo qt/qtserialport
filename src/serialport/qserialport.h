@@ -179,6 +179,9 @@ public:
     qint64 readBufferSize() const;
     void setReadBufferSize(qint64 size);
 
+    qint64 writeBufferSize() const;
+    void setWriteBufferSize(qint64 size);
+
     bool isSequential() const override;
 
     qint64 bytesAvailable() const override;

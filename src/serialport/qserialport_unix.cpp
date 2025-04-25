@@ -875,10 +875,15 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 
 qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
-    writeBuffer.append(data, maxSize);
+    qint64 toAppend = maxSize;
+
+    if (writeBufferMaxSize && (writeBuffer.size() + toAppend > writeBufferMaxSize))
+        toAppend = writeBufferMaxSize - writeBuffer.size();
+
+    writeBuffer.append(data, toAppend);
     if (!writeBuffer.isEmpty() && !isWriteNotificationEnabled())
         setWriteNotificationEnabled(true);
-    return maxSize;
+    return toAppend;
 }
 
 bool QSerialPortPrivate::setTermios(const termios *tio)

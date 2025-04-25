@@ -130,6 +130,7 @@ public:
     static QList<qint32> standardBaudRates();
 
     qint64 readBufferMaxSize = 0;
+    qint64 writeBufferMaxSize = 0;
 
     void setBindableError(QSerialPort::SerialPortError error)
     { setError(error); }

@@ -593,7 +593,12 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
 {
     Q_Q(QSerialPort);
 
-    writeBuffer.append(data, maxSize);
+    qint64 toAppend = maxSize;
+
+    if (writeBufferMaxSize && (writeBuffer.size() + toAppend > writeBufferMaxSize))
+        toAppend = writeBufferMaxSize - writeBuffer.size();
+
+    writeBuffer.append(data, toAppend);
 
     if (!writeBuffer.isEmpty() && !writeStarted) {
         if (!startAsyncWriteTimer) {
@@ -604,7 +609,7 @@ qint64 QSerialPortPrivate::writeData(const char *data, qint64 maxSize)
         if (!startAsyncWriteTimer->isActive())
             startAsyncWriteTimer->start();
     }
-    return maxSize;
+    return toAppend;
 }
 
 OVERLAPPED *QSerialPortPrivate::waitForNotified(QDeadlineTimer deadline)

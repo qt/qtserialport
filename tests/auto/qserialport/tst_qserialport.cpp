@@ -130,6 +130,9 @@ private slots:
 
     void readyReadNotRecursive();
 
+    void writeBufferSizeLimit_data();
+    void writeBufferSizeLimit();
+
 protected slots:
     void handleBytesWrittenAndExitLoopSlot(qint64 bytesWritten);
     void handleBytesWrittenAndExitLoopSlot2(qint64 bytesWritten);
@@ -1667,6 +1670,86 @@ void tst_QSerialPort::readyReadNotRecursive()
     QCOMPARE(errorCount, 0);
     QCOMPARE(reader.numSlotCalls(), 1);
     QCOMPARE(reader.receivedData(), alphabetArray);
+}
+
+void tst_QSerialPort::writeBufferSizeLimit_data()
+{
+    QTest::addColumn<qint64>("writeBufferSize");
+
+    QTest::newRow("NoLimit") << 0LL;
+    QTest::newRow("8Kb") << 8 * 1024LL;
+}
+
+void tst_QSerialPort::writeBufferSizeLimit()
+{
+    QFETCH(const qint64, writeBufferSize);
+
+    auto setupPort = [](QSerialPort &port) {
+        port.setBaudRate(QSerialPort::Baud115200);
+        port.setDataBits(QSerialPort::Data8);
+        port.setParity(QSerialPort::NoParity);
+        port.setStopBits(QSerialPort::OneStop);
+    };
+
+    QSerialPort sender(m_senderPortName);
+    QCOMPARE_EQ(sender.writeBufferSize(), 0); // unlimited by default
+    QSignalSpy senderSpy(&sender, &QSerialPort::bytesWritten);
+    setupPort(sender);
+    sender.setWriteBufferSize(writeBufferSize);
+    QCOMPARE_EQ(sender.writeBufferSize(), writeBufferSize);
+    QVERIFY(sender.open(QIODevice::ReadWrite));
+
+    QSerialPort receiver(m_receiverPortName);
+    setupPort(receiver);
+    QVERIFY(receiver.open(QIODevice::ReadWrite));
+
+    static constexpr qsizetype DataSize = 16 * 1024;
+    QVERIFY(DataSize > writeBufferSize); // to make sure that the test works correctly
+
+    const QByteArray data(DataSize, 'a');
+
+    qint64 written = 0;
+
+    const bool inputBufferLimited = (writeBufferSize > 0);
+    if (inputBufferLimited) {
+        written = sender.write(data);
+        QCOMPARE_EQ(written, writeBufferSize);
+        // Writing again should return 0, as the buffer is full
+        written = sender.write(data);
+        QCOMPARE_EQ(written, 0); // can't add more
+
+        // Wait until something is actually written to the device.
+        // NOTE: If the test fails here due to a timeout, you might
+        // want to use QTRY_VERIFY_WITH_TIMEOUT() and a larger interval.
+        // The behavior can depend on a OS & driver combination!
+        QTRY_VERIFY(senderSpy.size() > 0);
+        qint64 reportedWritten = 0;
+        for (const auto &val : std::as_const(senderSpy))
+            reportedWritten += val.at(0).toULongLong();
+
+        // Now we should be able to write at least reportedWritten bytes
+        written = sender.write(data);
+        QCOMPARE_GE(written, reportedWritten);
+    } else {
+        // Buffer is unlimited -> we should always write as much as we can
+        written = sender.write(data);
+        QCOMPARE_EQ(written, data.size());
+
+        written = sender.write(data);
+        QCOMPARE_EQ(written, data.size());
+
+        // Wait until something is actually written to the device.
+        // NOTE: If the test fails here due to a timeout, you might
+        // want to use QTRY_VERIFY_WITH_TIMEOUT() and a larger interval.
+        // The behavior can depend on a OS & driver combination!
+        QTRY_VERIFY(senderSpy.size() > 0);
+
+        written = sender.write(data);
+        QCOMPARE_EQ(written, data.size());
+    }
+
+    receiver.close();
+    sender.close();
 }
 
 QTEST_MAIN(tst_QSerialPort)

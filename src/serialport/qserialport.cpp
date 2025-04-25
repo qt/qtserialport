@@ -1030,6 +1030,59 @@ void QSerialPort::setReadBufferSize(qint64 size)
 }
 
 /*!
+    \since 6.10
+
+    Returns the size of the internal write buffer.
+
+    A write buffer size of \c 0 (the default) means that the buffer has
+    no size limit.
+
+    \sa setWriteBufferSize(), write()
+*/
+qint64 QSerialPort::writeBufferSize() const
+{
+    Q_D(const QSerialPort);
+    return d->writeBufferMaxSize;
+}
+
+/*!
+    \since 6.10
+
+    Sets the size of QSerialPort's internal write buffer to be \a
+    size bytes.
+
+    Sending the data over serial port is relatively slow, so in practice, when
+    \l write() is called, the data is not sent immediately. It is first stored
+    in an intermediate buffer and later written in chunks.
+
+    Thus, an attempt to write too much data or write data at a higher rate than
+    the underlying serial port can handle, can lead to a situation when the
+    internal buffer will grow. This can eventually cause the application to
+    run out of memory, specially on a device with low memory resources.
+
+    This method allows to limit the internal buffer to a certain size. If the
+    next write attempt exceeds the capacity of the buffer, the \l write()
+    method will return the amount of bytes that were actually stored in the
+    buffer. It's the user's responsibility to repeat the write attempt with the
+    rest of the bytes after the \l bytesWritten() signal was received, or after
+    the \l waitForBytesWritten() method returns \c true.
+
+    Passing \c 0 to this method means that the input buffer is not limited, and
+    all the incoming data is buffered. This is the default.
+
+    \sa writeBufferSize(), write()
+*/
+void QSerialPort::setWriteBufferSize(qint64 size)
+{
+    Q_D(QSerialPort);
+    if (size < 0)
+        size = 0;
+    d->writeBufferMaxSize = size;
+    if (isWritable())
+        d->flush();
+}
+
+/*!
     \reimp
 
     Always returns \c true. The serial port is a sequential device.
