@@ -1,7 +1,7 @@
 // Copyright (C) 2011-2012 Denis Shienkov <denis.shienkov@gmail.com>
 // Copyright (C) 2011 Sergey Belyashov <Sergey.Belyashov@gmail.com>
 // Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include "qserialportinfo.h"
 #include "qserialportinfo_p.h"
