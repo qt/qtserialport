@@ -36,6 +36,9 @@ imagedirs   += images
 
 examplesinstallpath = serialport
 
+# Path to the root of qtserialport (for automatic linking to source code)
+url.sources.rootdir     = ../../..
+
 depends += qtcore qtdoc qtnetwork qmake qtcmake
 
 navigation.landingpage = "Qt Serial Port"
