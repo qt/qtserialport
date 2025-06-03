@@ -750,13 +750,15 @@ bool QSerialPortPrivate::readNotification()
 
     buffer.chop(bytesToRead - qMax(readBytes, qint64(0)));
 
-    if (readBytes <= 0) {
+    if (readBytes < 0) {
         QSerialPortErrorInfo error = getSystemError();
         if (error.errorCode != QSerialPort::ResourceError)
             error.errorCode = QSerialPort::ReadError;
         else
             setReadNotificationEnabled(false);
         setError(error);
+        return false;
+    } else if (readBytes == 0) {
         return false;
     }
 
