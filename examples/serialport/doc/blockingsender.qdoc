@@ -14,7 +14,7 @@
     \e{Blocking Sender} shows how to create an application for a serial
     interface using the synchronous API of QSerialPort in a worker thread.
 
-    \image blockingsender-example.png
+    \image {blockingsender-example.png} {Qt serial port blocking sender}
 
     QSerialPort supports two programming alternatives:
 
