@@ -13,7 +13,7 @@
     \e{Blocking Receiver} shows how to create an application for a serial interface
     using QSerialPort's synchronous API in a non-GUI thread.
 
-    \image blockingreceiver-example.png
+    \image {blockingreceiver-example.png} {Qt serial port blocking receiver}
 
     QSerialPort supports two general programming approaches:
 

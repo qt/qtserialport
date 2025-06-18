@@ -13,7 +13,7 @@
     \e Terminal  shows how to create a terminal for a simple serial interface by
     using \l{Qt Serial Port}.
 
-    \image terminal-example.png
+    \image {terminal-example.png} {Qt serial port terminal}
 
     This example shows the main features of the QSerialPort class, like
     configuration, I/O implementation and so forth. Also, the class
