@@ -161,6 +161,29 @@ private:
     QSerialPortPrivate * const dptr;
 };
 
+class ExceptionNotifier : public QSocketNotifier
+{
+public:
+    explicit ExceptionNotifier(QSerialPortPrivate *d, QObject *parent)
+        : QSocketNotifier(d->descriptor, QSocketNotifier::Exception, parent),
+          dptr(d)
+    {
+    }
+
+protected:
+    bool event(QEvent *e) override
+    {
+        if (e->type() == QEvent::SockAct) {
+            dptr->handleException();
+            return true;
+        }
+        return QSocketNotifier::event(e);
+    }
+
+private:
+    QSerialPortPrivate * const dptr;
+};
+
 static inline void qt_set_common_props(termios *tio, QIODevice::OpenMode m)
 {
 #ifdef Q_OS_SOLARIS
@@ -343,6 +366,9 @@ void QSerialPortPrivate::close()
     delete writeNotifier;
     writeNotifier = nullptr;
 
+    delete exceptionNotifier;
+    exceptionNotifier = nullptr;
+
     qt_safe_close(descriptor);
 
     lockFileScopedPointer.reset(nullptr);
@@ -350,6 +376,7 @@ void QSerialPortPrivate::close()
     descriptor = -1;
     pendingBytesWritten = 0;
     writeSequenceStarted = false;
+    gotException = false;
 }
 
 QSerialPort::PinoutSignals QSerialPortPrivate::pinoutSignals()
@@ -769,6 +796,18 @@ bool QSerialPortPrivate::readNotification()
         setError(error);
         return false;
     } else if (readBytes == 0) {
+        // We can get here at least in two cases:
+        // * there is no data in the port
+        // * the device was disconnected (unplugged)
+        // The first case is perfectly valid, and we should simply keep
+        // reading. The second case should be reported as a ResourceError.
+        // We use exception notifier to detect this case.
+        if (gotException) {
+            setReadNotificationEnabled(false);
+            // Force a specific error
+            QSerialPortErrorInfo error = getSystemError(EIO);
+            setError(error);
+        }
         return false;
     }
 
@@ -833,6 +872,11 @@ bool QSerialPortPrivate::completeAsyncWrite()
     return startAsyncWrite();
 }
 
+void QSerialPortPrivate::handleException()
+{
+    gotException = true;
+}
+
 inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 {
 #ifdef TIOCEXCL
@@ -868,6 +912,9 @@ inline bool QSerialPortPrivate::initialize(QIODevice::OpenMode mode)
 
     // flush IO buffers
     clear(QSerialPort::AllDirections);
+
+    exceptionNotifier = new ExceptionNotifier(this, q_func());
+    gotException = false;
 
     restoreParametersOnError.dismiss();
     return true;
