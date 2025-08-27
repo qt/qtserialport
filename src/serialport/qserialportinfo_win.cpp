@@ -542,8 +542,9 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
                     deviceProductIdentifier(instanceIdentifier, priv.hasProductIdentifier);
 
             // This makes Windows return the same data that linux does for Manufacturer and Product
-            if (instanceIdentifier.startsWith(L"USB\\") && priv.hasVendorIdentifier &&
-                priv.hasProductIdentifier) {
+            if ((instanceIdentifier.startsWith(L"USB\\")
+                 || instanceIdentifier.startsWith(L"FTDIBUS\\"))
+                && priv.hasVendorIdentifier && priv.hasProductIdentifier) {
                 UsbData usbStrings = getUSBDataFromDevice(deviceInfoData.DevInst);
 
                 if (!usbStrings.iManufacturer.isEmpty())
