@@ -22,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>400</width>
-     <height>19</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuCalls">
