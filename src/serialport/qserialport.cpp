@@ -167,11 +167,11 @@ void QSerialPortPrivate::setError(const QSerialPortErrorInfo &errorInfo)
     See the following example:
 
     \code
-     int numRead = 0, numReadTotal = 0;
+     qint64 numReadTotal = 0;
      char buffer[50];
 
      for (;;) {
-         numRead  = serial.read(buffer, 50);
+         const qint64 numRead  = serial.read(buffer, 50);
 
          // Do whatever with the array
 
@@ -533,12 +533,15 @@ QString QSerialPort::portName() const
     successful; otherwise returns \c false and sets an error code which can be
     obtained by calling the error() method.
 
-    \note The method returns \c false if opening the port is successful, but could
-    not set any of the port settings successfully. In that case, the port is
-    closed automatically not to leave the port around with incorrect settings.
+    If the port is opened, but setting the desired port parameters fails, the
+    method returns \c false and closes the port automatically.
 
     \warning The \a mode has to be QIODevice::ReadOnly, QIODevice::WriteOnly,
     or QIODevice::ReadWrite. Other modes are unsupported.
+
+    \note Due to historical reasons, upon a successful open the
+    \l errorOccurred() signal is emitted with the \l {QSerialPort::}{NoError}
+    error code. This behavior is preserved to keep backwards compatibility.
 
     \sa QIODevice::OpenMode, setPort()
 */

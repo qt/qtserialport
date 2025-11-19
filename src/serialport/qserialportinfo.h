@@ -77,7 +77,7 @@ public:
     bool hasVendorIdentifier() const;
     bool hasProductIdentifier() const;
 
-    bool isNull() const;
+    bool isNull() const { return !d_ptr; }
 #if QT_DEPRECATED_SINCE(5, 6)
     bool isBusy() const;
 #endif
@@ -95,9 +95,6 @@ private:
     friend QList<QSerialPortInfo> availablePortsByFiltersOfDevices(bool &ok);
     QScopedPointer<QSerialPortInfoPrivate, QSerialPortInfoPrivateDeleter> d_ptr;
 };
-
-inline bool QSerialPortInfo::isNull() const
-{ return !d_ptr; }
 
 QT_END_NAMESPACE
 

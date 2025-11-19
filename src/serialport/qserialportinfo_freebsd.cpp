@@ -58,7 +58,9 @@ static QString deviceProperty(const QString &source, const QByteArray &pattern)
     const int firstbound = source.indexOf(QLatin1String(pattern));
     if (firstbound == -1)
         return QString();
-    const int lastbound = source.indexOf(QLatin1Char(' '), firstbound);
+    int lastbound = source.indexOf(QLatin1Char(' '), firstbound);
+    if (lastbound == -1)
+        lastbound = source.size();
     return source.mid(firstbound + pattern.size(), lastbound - firstbound - pattern.size());
 }
 
