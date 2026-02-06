@@ -2,6 +2,7 @@
 // Copyright (C) 2012 Laszlo Papp <lpapp@kde.org>
 // Copyright (C) 2012 Andre Hartmann <aha_1980@gmx.de>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant reason:default
 
 #include "qserialport_p.h"
 #include "qserialportinfo_p.h"
