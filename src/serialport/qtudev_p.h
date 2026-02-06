@@ -1,5 +1,6 @@
 // Copyright (C) 2013 Laszlo Papp <lpapp@kde.org>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:critical reason:execute-external-code
 
 #ifndef QTUDEV_P_H
 #define QTUDEV_P_H
