@@ -92,6 +92,8 @@ static QList<int> mibFromName(const QString &name)
 
 static QList<int> nextOid(const QList<int> &previousOid)
 {
+    Q_ASSERT(!previousOid.isEmpty());
+
     QList<int> mib;
     mib.append(0); // Magic undocumented code (CTL_UNSPEC ?)
     mib.append(2); // Magic undocumented code
