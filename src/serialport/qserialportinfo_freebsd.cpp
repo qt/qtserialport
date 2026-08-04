@@ -101,6 +101,12 @@ static QList<int> nextOid(const QList<int> &previousOid)
     size_t requiredLength = 0;
     if (::sysctl(&mib[0], mib.count(), nullptr, &requiredLength, nullptr, 0) < 0)
         return QList<int>();
+    // The returned length should not be zero, and should contain
+    // the whole amount of ints (OID components). Otherwise the next
+    // sysctl() call will either dereference the non-existing element
+    // or use the wrong length
+    if (requiredLength == 0 || requiredLength % sizeof(int) != 0)
+        return QList<int>();
     const size_t oidLength = requiredLength / sizeof(int);
     QList<int> oid(oidLength, 0);
     if (::sysctl(&mib[0], mib.count(), &oid[0], &requiredLength, nullptr, 0) < 0)
