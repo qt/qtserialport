@@ -1020,6 +1020,9 @@ qint64 QSerialPort::readBufferSize() const
     port should be protected against receiving too much data, which may
     eventually cause the application to run out of memory.
 
+    Passing a negative value disables the internal buffer, effectively blocking
+    any reads.
+
     \sa readBufferSize(), read()
 */
 void QSerialPort::setReadBufferSize(qint64 size)
@@ -1070,6 +1073,8 @@ qint64 QSerialPort::writeBufferSize() const
 
     Passing \c 0 to this method means that the input buffer is not limited, and
     all the incoming data is buffered. This is the default.
+
+    Passing a negative value has the same effect as passing \c 0.
 
     \sa writeBufferSize(), write()
 */
