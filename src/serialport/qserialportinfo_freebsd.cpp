@@ -270,16 +270,16 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
             const QString descnode = QString(QLatin1String("%1\%desc")).arg(nodebase);
 
             // search for description and manufacturer properties
-            for (const NodeInfo &node : nodes) {
-                if (node.name != descnode)
+            for (const NodeInfo &descriptionNode : nodes) {
+                if (descriptionNode.name != descnode)
                     continue;
 
-                if (node.value.isEmpty())
+                if (descriptionNode.value.isEmpty())
                     continue;
 
                 // We can not separate the description and the manufacturer
                 // properties from the node value, so lets just duplicate it.
-                priv.description = deviceDescriptionAndManufacturer(node.value);
+                priv.description = deviceDescriptionAndManufacturer(descriptionNode.value);
                 priv.manufacturer = priv.description;
                 break;
             }
