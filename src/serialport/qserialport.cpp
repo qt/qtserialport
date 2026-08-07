@@ -381,6 +381,13 @@ QSerialPort::~QSerialPort()
     The name of the serial port can be passed as either a short name or
     the long system location if necessary.
 
+    \note This function allows setting ports that are not included in the
+    \l{QSerialPortInfo::availablePorts()}{list of available ports}, or where
+    constructing a QSerialPortInfo instance with the name string yields a
+    \l{QSerialPortInfo::isNull}{null} object. If that is not a requirement, then
+    use setPort() instead after checking that the name results in a valid
+    QSerialPortInfo object.
+
     \sa portName(), QSerialPortInfo
 */
 void QSerialPort::setPortName(const QString &name)
