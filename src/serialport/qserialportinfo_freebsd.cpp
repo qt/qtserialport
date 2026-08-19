@@ -19,10 +19,12 @@ QT_BEGIN_NAMESPACE
 
 static QString deviceProperty(const QString &source, const QByteArray &pattern)
 {
-    const int firstbound = source.indexOf(QLatin1String(pattern));
+    const qsizetype firstbound = source.indexOf(QLatin1String(pattern));
     if (firstbound == -1)
         return QString();
-    const int lastbound = source.indexOf(QLatin1Char(' '), firstbound);
+    qsizetype lastbound = source.indexOf(QLatin1Char(' '), firstbound);
+    if (lastbound == -1)
+        lastbound = source.size();
     return source.mid(firstbound + pattern.size(), lastbound - firstbound - pattern.size());
 }
 
@@ -61,7 +63,7 @@ static QString deviceSerialNumber(const QString &pnpinfo)
 // which should be excluded from the result.
 static QString deviceDescriptionAndManufacturer(const QString &desc)
 {
-    const int classindex = desc.indexOf(QLatin1String(", class "));
+    const qsizetype classindex = desc.indexOf(QLatin1String(", class "));
     if (classindex == -1)
         return desc;
     return desc.mid(0, classindex);
@@ -216,7 +218,7 @@ QList<QSerialPortInfo> QSerialPortInfo::availablePorts()
         priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(portName);
 
         for (const NodeInfo &node : nodes) {
-            const int pnpinfoindex = node.name.indexOf(QLatin1String("\%pnpinfo"));
+            const qsizetype pnpinfoindex = node.name.indexOf(QLatin1String("\%pnpinfo"));
             if (pnpinfoindex == -1)
                 continue;
 
