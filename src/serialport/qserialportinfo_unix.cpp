@@ -148,11 +148,13 @@ static QString ueventProperty(const QDir &targetDir, const QByteArray &pattern)
 
     const QByteArray content = f.readAll();
 
-    const int firstbound = content.indexOf(pattern);
+    const qsizetype firstbound = content.indexOf(pattern);
     if (firstbound == -1)
         return QString();
 
-    const int lastbound = content.indexOf('\n', firstbound);
+    qsizetype lastbound = content.indexOf('\n', firstbound);
+    if (lastbound == -1)
+        lastbound = content.size();
     return QString::fromLatin1(
                 content.mid(firstbound + pattern.size(),
                             lastbound - firstbound - pattern.size()))
@@ -380,7 +382,7 @@ QList<QSerialPortInfo> availablePortsByUdev(bool &ok)
                         udev.get(), ::udev_list_entry_get_name(dev_list_entry)));
 
         if (!dev)
-            return serialPortInfoList;
+            continue;
 
         QSerialPortInfoPrivate priv;
 
