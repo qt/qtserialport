@@ -47,6 +47,7 @@
     \list
     \li \l{Qt Serial Port C++ Classes}{C++ Classes}
     \li \l{Qt Serial Port Examples}{Examples}
+    \li \l{Qt Serial Port Security Considerations}{Security Considerations}
     \endlist
 
 */
