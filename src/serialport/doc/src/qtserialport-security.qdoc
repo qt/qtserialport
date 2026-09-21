@@ -1,0 +1,73 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtserialport-security.html
+    \title Qt Serial Port Security Considerations
+    \ingroup security-considerations
+    \brief How to prevent security problems when using Qt Serial Port.
+
+    This page highlights potential security issues that can arise when using
+    the module and suggests how to avoid them.
+
+    \section1 Verify a port name
+
+    QSerialPort accepts a port name as a plain string and performs no
+    validation before trying to open it as a serial device.
+
+    An attacker-controlled name can therefore make the application open an
+    arbitrary file, a device node, or even a remote SMB share. In the first two
+    cases the file is closed immediately after QSerialPort detects that it is
+    not a serial device. The SMB case is different: authentication material is
+    sent to the remote server while the file is being opened, so it can leak
+    even if the open attempt ultimately fails.
+
+    To prevent this, do not use the APIs that take the name of the port as a
+    QString, and prefer those that use QSerialPortInfo:
+
+    \list
+      \li When developing a user interface, enumerate the available ports using
+          \l {QSerialPortInfo::availablePorts()} and let users choose from the
+          list.
+      \li When processing an arbitrary input string, construct a QSerialPortInfo
+          instance from it, and use \l {QSerialPortInfo::isNull()} to check
+          whether it refers to an existing port.
+    \endlist
+
+    \section1 Limit input and output buffers
+
+    By default, QSerialPort does not limit the size of the input and output
+    buffers. Unrestricted buffers can exhaust the available memory, which is
+    especially problematic on memory-constrained embedded devices.
+
+    If the remote device sends data faster than the application processes it,
+    the read buffer might grow indefinitely. Use
+    \l {QSerialPort::setReadBufferSize()} to limit it. Once the limit is
+    reached, QSerialPort stops reading from the device until the application
+    consumes the buffered data, so incoming data can be lost if the driver's
+    own buffer overflows in the meantime.
+
+    Similarly, if the application writes data faster than the driver can send
+    it, the write buffer might grow indefinitely. Use
+    \l {QSerialPort::setWriteBufferSize()} to limit it. In that case, the
+    application must check the result of the \l {QSerialPort::write()} call to
+    see how much data was actually accepted, and write the rest later.
+
+    \section1 Be aware of lock files
+
+    \note This section applies only to Unix-like systems.
+
+    QSerialPort uses lock files to determine whether the port is already in use
+    by another process before trying to open it. This is a common practice on
+    Unix, so the format and the location of the lock files are well known, and
+    the directories holding them are usually writable by every user.
+
+    QSerialPort detects and removes stale lock files, but a local attacker can
+    spawn a long-lived process and create a crafted lock file that refers to it.
+    Such a lock never becomes stale and indefinitely prevents the application
+    from accessing the serial port. The attacker never needs to touch the serial
+    device itself.
+
+    The only way to protect against this is to make sure that no malicious actor
+    has access to the system.
+*/
