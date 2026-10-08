@@ -234,12 +234,14 @@ public:
     bool readNotification();
     bool startAsyncWrite();
     bool completeAsyncWrite();
+    void handleException();
 
     struct termios restoredTermios;
     int descriptor = -1;
 
     QSocketNotifier *readNotifier = nullptr;
     QSocketNotifier *writeNotifier = nullptr;
+    QSocketNotifier *exceptionNotifier = nullptr;
 
     bool readPortNotifierCalled = false;
     bool readPortNotifierState = false;
@@ -249,6 +251,8 @@ public:
 
     qint64 pendingBytesWritten = 0;
     bool writeSequenceStarted = false;
+
+    bool gotException = false;
 
     std::unique_ptr<QLockFile> lockFileScopedPointer;
 
