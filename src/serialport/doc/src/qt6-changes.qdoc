@@ -5,6 +5,7 @@
 
     \title Changes to Qt SerialPort
     \ingroup changes-qt-5-to-6
+    \meta {toc} {nonessential}
     \brief Migrate Qt SerialPort to Qt 6.
 
     Qt 6 is a result of the conscious effort to make the framework more
