@@ -13,16 +13,20 @@ qhp.QtSerialPort.virtualFolder       = qtserialport
 qhp.QtSerialPort.indexTitle          = Qt Serial Port
 qhp.QtSerialPort.indexRoot           =
 
-qhp.QtSerialPort.subprojects         = classes examples
+qhp.QtSerialPort.subprojects         = security examples classes
 
 qhp.QtSerialPort.subprojects.classes.title = C++ Classes
 qhp.QtSerialPort.subprojects.classes.indexTitle = Qt Serial Port C++ Classes
-qhp.QtSerialPort.subprojects.classes.selectors = class fake:headerfile
+qhp.QtSerialPort.subprojects.classes.selectors = class namespace headerfile
 qhp.QtSerialPort.subprojects.classes.sortPages = true
+
+qhp.QtSerialPort.subprojects.security.title = Security Considerations
+qhp.QtSerialPort.subprojects.security.indexTitle = Qt Serial Port Security Considerations
+qhp.QtSerialPort.subprojects.security.selectors = none
 
 qhp.QtSerialPort.subprojects.examples.title = Examples
 qhp.QtSerialPort.subprojects.examples.indexTitle = Qt Serial Port Examples
-qhp.QtSerialPort.subprojects.examples.selectors = fake:example
+qhp.QtSerialPort.subprojects.examples.selectors = example
 qhp.QtSerialPort.subprojects.examples.sortPages = true
 
 headerdirs  += ..
